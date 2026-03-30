@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About — CyberSense.Solutions</title>
+  <meta name="description" content="The mission behind CyberSense — bridging the gap between the workforce and the cyber threat landscape.">
+  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Mission section */
+    .mission-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: start;
+    }
+    .mission-body p {
+      font-size: 17px;
+      color: var(--muted);
+      line-height: 1.8;
+      margin-bottom: 20px;
+    }
+    .mission-body p strong { color: var(--text); font-weight: 500; }
+    .mission-body em { color: var(--accent); font-style: normal; }
+    .mission-values { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; }
+    .value-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 6px 6px 0;
+      padding: 16px 20px;
+    }
+    .value-title { font-family: var(--condensed); font-size: 17px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .value-desc  { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+    /* Story timeline */
+    .timeline { position: relative; padding-left: 28px; }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 7px; top: 8px; bottom: 0;
+      width: 1px;
+      background: var(--border2);
+    }
+    .timeline-item { position: relative; margin-bottom: 36px; }
+    .timeline-dot {
+      position: absolute;
+      left: -25px; top: 4px;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--bg2);
+      border: 2px solid var(--accent);
+    }
+    .timeline-date { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; color: var(--accent); margin-bottom: 6px; }
+    .timeline-title { font-family: var(--condensed); font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .timeline-desc { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+    /* Training byte library */
+    .byte-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 40px; }
+    .byte-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 20px;
+      transition: border-color 0.2s;
+    }
+    .byte-card:hover { border-color: var(--border2); }
+    .byte-quarter { font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; color: var(--accent); margin-bottom: 8px; }
+    .byte-theme { font-family: var(--condensed); font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .byte-topics { font-size: 12px; color: var(--muted); line-height: 1.6; }
+    .byte-status {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      padding: 3px 8px;
+      border-radius: 2px;
+      margin-top: 12px;
+      display: inline-block;
+    }
+    .byte-status.active   { background: rgba(0,210,180,0.1);  color: var(--accent); }
+    .byte-status.upcoming { background: rgba(0,150,255,0.1);  color: var(--accent2); }
+    .byte-status.complete { background: rgba(90,122,154,0.15); color: var(--muted); }
+
+    /* Contact */
+    .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 48px; }
+    .contact-method {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 28px;
+      text-align: center;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .contact-method:hover { border-color: var(--border2); transform: translateY(-2px); }
+    .contact-icon { font-family: var(--mono); font-size: 28px; color: var(--accent); margin-bottom: 12px; opacity: 0.7; }
+    .contact-label { font-family: var(--condensed); font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .contact-sub   { font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 1.5; }
+
+    /* Hector card */
+    .hector-card {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      padding: 32px;
+      display: flex;
+      gap: 28px;
+      align-items: flex-start;
+      margin-bottom: 64px;
+    }
+    .hector-avatar {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      border: 2px solid var(--accent);
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    .hector-name { font-family: var(--condensed); font-size: 26px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .hector-title { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 12px; }
+    .hector-bio   { font-size: 14px; color: var(--muted); line-height: 1.7; }
+    .hector-links { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+    .hector-link  { font-family: var(--mono); font-size: 11px; color: var(--accent); text-decoration: none; border: 1px solid var(--border2); padding: 5px 12px; border-radius: 3px; transition: background 0.15s; }
+    .hector-link:hover { background: rgba(0,210,180,0.08); }
+
+    @media (max-width: 800px) {
+      .mission-split { grid-template-columns: 1fr; gap: 40px; }
+      .byte-grid { grid-template-columns: 1fr 1fr; }
+      .contact-grid { grid-template-columns: 1fr; }
+      .hector-card { flex-direction: column; }
+    }
+    @media (max-width: 520px) {
+      .byte-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">
+    <img src="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png" alt="CS" onerror="this.style.display='none'">
+    CYBERSENSE.SOLUTIONS
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">HOME</a></li>
+    <li><a href="radar.html">RADAR</a></li>
+    <li><a href="archive.html">ARCHIVE</a></li>
+    <li><a href="training.html">TRAINING</a></li>
+    <li><a href="about.html">ABOUT</a></li>
+    <li><a href="https://www.linkedin.com/build-relation/newsletter-follow?entityUrn=7388246712924069888" target="_blank" class="nav-cta">SUBSCRIBE</a></li>
+  </ul>
+  <button class="nav-mobile-toggle" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+
+<!-- Page hero -->
+<div class="page-hero">
+  <div class="container">
+    <div class="page-hero-eyebrow"><span class="pulse-dot"></span> THE MISSION</div>
+    <h1 class="page-title">Bridging the<br><em>gap.</em></h1>
+    <p class="page-sub">Cybersecurity intelligence that every person in the workforce can understand, use, and act on — every single day.</p>
+  </div>
+</div>
+
+<!-- Mission -->
+<section class="section" style="background: var(--bg);">
+  <div class="container">
+    <div class="mission-split">
+      <div class="mission-body">
+        <div class="section-label">WHY CYBERSENSE EXISTS</div>
+        <h2 class="section-title">The gap is the problem.</h2>
+        <p>The cyber threat landscape evolves <strong>daily</strong>. The workforce — the people who represent the largest attack surface in any organization — often hear about it <em>monthly</em>, if at all.</p>
+        <p>Most awareness programs are annual checkboxes. Most threat intelligence is written for analysts, not accountants, teachers, or operations managers. The gap between what's happening and what people know is where most breaches begin.</p>
+        <p>CyberSense exists to <em>close that gap</em>. Not with technical jargon. Not with fear. With <strong>clear, daily, plain-language intelligence</strong> that every person can use the moment they open it.</p>
+        <div style="margin-top:32px;">
+          <a href="index.html" class="btn-primary">SEE WHAT WE COVER</a>
+        </div>
+      </div>
+      <div class="mission-values">
+        <div class="value-item">
+          <div class="value-title">Awareness</div>
+          <div class="value-desc">Every person in the workforce deserves to know what threats exist and how they work — explained in a way that respects their time and intelligence.</div>
+        </div>
+        <div class="value-item">
+          <div class="value-title">Resilience</div>
+          <div class="value-desc">Knowledge alone isn't enough. CyberSense builds habits — small, consistent actions that accumulate into an organization-wide security posture.</div>
+        </div>
+        <div class="value-item">
+          <div class="value-title">Responsibility</div>
+          <div class="value-desc">Cybersecurity is not IT's job alone. Informed action from every individual reduces the attack surface in ways that no tool can replicate.</div>
+        </div>
+        <div class="value-item" style="border-left-color: var(--accent2);">
+          <div class="value-title">Informed action becomes instinct</div>
+          <div class="value-desc">The ultimate goal — a digitally disciplined community where secure behavior is second nature, not a training slide from last year.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Story -->
+<section class="section" style="background: var(--bg2); border-top: 1px solid var(--border);">
+  <div class="container">
+    <div class="section-label">THE STORY</div>
+    <h2 class="section-title" style="margin-bottom:48px;">How CyberSense<br>came to be.</h2>
+
+    <div style="max-width: 640px;">
+      <div class="hector-card">
+        <img src="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png"
+             alt="Hector Borges" class="hector-avatar"
+             onerror="this.style.background='var(--surface2)';this.src=''">
+        <div>
+          <div class="hector-name">Hector Borges</div>
+          <div class="hector-title">MANAGING EDITOR // CYBERSECURITY PROFESSIONAL</div>
+          <div class="hector-bio">
+            Cybersecurity professional, Managing Editor of the Daily Digital Awareness Briefing,
+            and founder of CyberSense. Building a portfolio that bridges the gap between
+            technical expertise and workforce-level awareness — one daily issue at a time.
+          </div>
+          <div class="hector-links">
+            <a href="https://www.hectorborges.com" target="_blank" class="hector-link">Portfolio</a>
+            <a href="https://www.linkedin.com/in/hector-borges" target="_blank" class="hector-link">LinkedIn</a>
+            <a href="https://github.com/BorgesLebron" target="_blank" class="hector-link">GitHub</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-date">THE IDEA</div>
+          <div class="timeline-title">Recognizing the gap</div>
+          <div class="timeline-desc">Years working in cybersecurity revealed a consistent pattern — the people most at risk were the ones with the least access to understandable threat information. The solution wasn't more technical tools. It was better communication.</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-date">THE BRIEF</div>
+          <div class="timeline-title">Daily Digital Awareness Briefing launches</div>
+          <div class="timeline-desc">A daily newsletter built around a consistent template: situational awareness, training bytes, career development, and AI insights — all in plain language. Published through LinkedIn, archived on GitHub.</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-date">THE PLATFORM</div>
+          <div class="timeline-title">CyberSense.Solutions goes live</div>
+          <div class="timeline-desc">The newsletter becomes the foundation of a broader platform — live threat radar, visual training modules, subscriber tiers, and a roadmap toward organizational awareness programs.</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot" style="border-color: var(--accent2);"></div>
+          <div class="timeline-date" style="color: var(--accent2);">WHAT'S NEXT</div>
+          <div class="timeline-title">Building the community</div>
+          <div class="timeline-desc">Team plans, organizational workshops, training partnerships, and a growing library of visual awareness content. The goal: a digitally disciplined community where informed action becomes instinct.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Training byte library -->
+<section class="section" style="background: var(--bg); border-top: 1px solid var(--border);">
+  <div class="container">
+    <div class="section-label">QUARTERLY CURRICULUM</div>
+    <h2 class="section-title">Training byte library</h2>
+    <p class="section-sub">Each quarter focuses on a core theme. Topics are planned in advance and woven through every issue.</p>
+    <div class="byte-grid">
+      <div class="byte-card">
+        <div class="byte-quarter">Q1 2026</div>
+        <div class="byte-theme">Phishing &amp; Social Engineering</div>
+        <div class="byte-topics">Email threats · Vishing · Pretexting · Spear phishing · QR code attacks</div>
+        <span class="byte-status complete">COMPLETE</span>
+      </div>
+      <div class="byte-card">
+        <div class="byte-quarter">Q2 2026</div>
+        <div class="byte-theme">Identity &amp; Access</div>
+        <div class="byte-topics">Password hygiene · MFA · Credential stuffing · Privilege management · Zero trust basics</div>
+        <span class="byte-status active">ACTIVE</span>
+      </div>
+      <div class="byte-card">
+        <div class="byte-quarter">Q3 2026</div>
+        <div class="byte-theme">Device &amp; Network Safety</div>
+        <div class="byte-topics">Endpoint security · Public Wi-Fi · VPN · Remote work risks · Mobile device hygiene</div>
+        <span class="byte-status upcoming">UPCOMING</span>
+      </div>
+      <div class="byte-card">
+        <div class="byte-quarter">Q4 2026</div>
+        <div class="byte-theme">Data Protection &amp; Compliance</div>
+        <div class="byte-topics">Data classification · Cloud storage risks · Insider threats · Regulatory basics · Incident reporting</div>
+        <span class="byte-status upcoming">UPCOMING</span>
+      </div>
+      <div class="byte-card">
+        <div class="byte-quarter">Q1 2027</div>
+        <div class="byte-theme">AI &amp; Emerging Threats</div>
+        <div class="byte-topics">AI-powered attacks · Deepfake awareness · Prompt injection · Quantum readiness · Synthetic media</div>
+        <span class="byte-status upcoming">PLANNED</span>
+      </div>
+      <div class="byte-card" style="border-style: dashed; display: flex; align-items: center; justify-content: center; min-height: 140px;">
+        <div style="text-align:center;">
+          <div class="byte-quarter">FUTURE</div>
+          <div style="font-size:13px;color:var(--muted);">Community-driven topics</div>
+          <a href="mailto:contact@HectorBorges.com?subject=Training Byte Suggestion" style="font-family:var(--mono);font-size:11px;color:var(--accent);text-decoration:none;margin-top:8px;display:block;">SUGGEST A TOPIC →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Contact -->
+<section class="section" style="background: var(--bg2); border-top: 1px solid var(--border);">
+  <div class="container">
+    <div class="section-label">GET IN TOUCH</div>
+    <h2 class="section-title">Let's connect.</h2>
+    <p class="section-sub">Whether you want to subscribe, explore a team plan, or just share feedback — reach out.</p>
+    <div class="contact-grid">
+      <div class="contact-method">
+        <div class="contact-icon">[✉]</div>
+        <div class="contact-label">Email</div>
+        <div class="contact-sub">For subscriptions, team plans, speaking, or any questions about CyberSense.</div>
+        <a href="mailto:contact@HectorBorges.com" class="btn-primary" style="font-size:11px;padding:11px 24px;">SEND A MESSAGE</a>
+      </div>
+      <div class="contact-method">
+        <div class="contact-icon">[in]</div>
+        <div class="contact-label">LinkedIn</div>
+        <div class="contact-sub">Follow the newsletter, connect with Hector, or share an issue with your network.</div>
+        <a href="https://www.linkedin.com/build-relation/newsletter-follow?entityUrn=7388246712924069888" target="_blank" class="linkedin-btn" style="margin:0 auto;">Subscribe on LinkedIn</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="footer-brand-name">CYBERSENSE.SOLUTIONS</div>
+      <div class="footer-brand-tagline">Daily digital awareness intelligence for the modern workforce. A CyberSense initiative by Hector Borges.</div>
+      <a href="https://www.linkedin.com/build-relation/newsletter-follow?entityUrn=7388246712924069888" target="_blank" class="linkedin-btn">Subscribe on LinkedIn</a>
+    </div>
+    <div>
+      <div class="footer-heading">NAVIGATE</div>
+      <ul class="footer-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="radar.html">Radar feed</a></li>
+        <li><a href="archive.html">Archive</a></li>
+        <li><a href="training.html">Training center</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-heading">CONTACT</div>
+      <ul class="footer-links">
+        <li><a href="mailto:contact@HectorBorges.com">contact@HectorBorges.com</a></li>
+        <li><a href="https://www.linkedin.com/in/hector-borges" target="_blank">LinkedIn</a></li>
+        <li><a href="https://github.com/BorgesLebron" target="_blank">GitHub</a></li>
+        <li><a href="https://www.hectorborges.com" target="_blank">hectorborges.com</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 CyberSense. Educational and awareness purposes.</span>
+    <span style="font-family:var(--mono);color:var(--accent);">// ABOUT</span>
+  </div>
+</footer>
+
+<script src="components.js"></script>
+</body>
+</html>

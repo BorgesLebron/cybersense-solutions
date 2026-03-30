@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Radar — CyberSense.Solutions</title>
+  <meta name="description" content="Live cybersecurity threat intelligence feed. Updated every 15 minutes. Subscriber access required.">
+  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .radar-page { padding-top: 56px; min-height: 100vh; }
+
+    /* Status bar */
+    .radar-statusbar {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--mono);
+      font-size: 11px;
+    }
+    .radar-statusbar-left { display: flex; align-items: center; gap: 20px; }
+    .radar-status-item { color: var(--muted); display: flex; align-items: center; gap: 6px; }
+    .radar-status-item span.val { color: var(--text); }
+    .radar-status-item span.danger { color: var(--danger); }
+    .radar-status-item span.warn   { color: var(--warn); }
+    .radar-status-item span.accent { color: var(--accent); }
+
+    /* Toolbar */
+    .radar-toolbar {
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .radar-search {
+      flex: 1;
+      min-width: 200px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px 14px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .radar-search:focus { border-color: var(--accent); }
+    .radar-search::placeholder { color: var(--muted); }
+    .filter-btn {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      padding: 8px 16px;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .filter-btn:hover, .filter-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(0,210,180,0.06); }
+    .filter-btn.f-high.active   { border-color: var(--danger); color: var(--danger); background: rgba(255,61,90,0.06); }
+    .filter-btn.f-medium.active { border-color: var(--warn);   color: var(--warn);   background: rgba(255,176,32,0.06); }
+
+    /* Feed -->*/
+    .radar-feed { padding: 0 24px 40px; max-width: 900px; margin: 0 auto; }
+    .feed-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      transition: background 0.15s;
+      border-radius: 4px;
+    }
+    .feed-row:hover { background: rgba(0,210,180,0.02); }
+    .feed-row-body { flex: 1; }
+    .feed-row-title { font-size: 14px; color: var(--text); line-height: 1.5; margin-bottom: 4px; }
+    .feed-row-title a { color: var(--text); text-decoration: none; }
+    .feed-row-title a:hover { color: var(--accent); }
+    .feed-row-meta { font-family: var(--mono); font-size: 10px; color: var(--muted); display: flex; gap: 12px; }
+    .feed-row-summary { font-size: 13px; color: var(--muted); line-height: 1.6; margin-top: 6px; }
+
+    /* Gate */
+    .radar-gate {
+      max-width: 560px;
+      margin: 80px auto;
+      text-align: center;
+      padding: 0 24px;
+    }
+    .gate-icon {
+      font-family: var(--mono);
+      font-size: 48px;
+      color: var(--accent);
+      margin-bottom: 24px;
+      opacity: 0.4;
+    }
+    .gate-title {
+      font-family: var(--condensed);
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+    .gate-sub {
+      font-size: 16px;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 32px;
+    }
+    .gate-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+    /* Blurred preview rows */
+    .preview-blurred { filter: blur(4px); user-select: none; pointer-events: none; opacity: 0.5; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">
+    <img src="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png" alt="CS" onerror="this.style.display='none'">
+    CYBERSENSE.SOLUTIONS
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">HOME</a></li>
+    <li><a href="radar.html">RADAR</a></li>
+    <li><a href="archive.html">ARCHIVE</a></li>
+    <li><a href="training.html">TRAINING</a></li>
+    <li><a href="about.html">ABOUT</a></li>
+    <li><a href="https://www.linkedin.com/build-relation/newsletter-follow?entityUrn=7388246712924069888" target="_blank" class="nav-cta">SUBSCRIBE</a></li>
+  </ul>
+  <button class="nav-mobile-toggle" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+
+<div class="radar-page">
+
+  <!-- Status bar -->
+  <div class="radar-statusbar">
+    <div class="radar-statusbar-left">
+      <div class="radar-status-item"><span class="pulse-dot"></span> RADAR ACTIVE</div>
+      <div class="radar-status-item">HIGH <span class="val danger" id="count-high">3</span></div>
+      <div class="radar-status-item">MED <span class="val warn" id="count-med">4</span></div>
+      <div class="radar-status-item">LOW <span class="val accent" id="count-low">2</span></div>
+    </div>
+    <div class="radar-status-item">Next refresh in <span class="val accent" id="countdown">15:00</span></div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="radar-toolbar">
+    <input class="radar-search" type="text" id="search" placeholder="// SEARCH THREATS..." oninput="filterFeed()">
+    <button class="filter-btn" data-sev="ALL"    onclick="setFilter('ALL')">ALL</button>
+    <button class="filter-btn f-high"   data-sev="HIGH"   onclick="setFilter('HIGH')">HIGH</button>
+    <button class="filter-btn f-medium" data-sev="MEDIUM" onclick="setFilter('MEDIUM')">MEDIUM</button>
+    <button class="filter-btn"          data-sev="LOW"    onclick="setFilter('LOW')">LOW</button>
+  </div>
+
+  <!-- Subscriber gate (shown to free users) -->
+  <div id="gate-section">
+    <!-- Blurred preview -->
+    <div class="radar-feed">
+      <div class="feed-row preview-blurred">
+        <span class="sev sev-HIGH">HIGH</span>
+        <div class="feed-row-body">
+          <div class="feed-row-title">Critical RCE vulnerability actively exploited in enterprise VPN</div>
+          <div class="feed-row-meta"><span>CISA</span><span>12 min ago</span></div>
+          <div class="feed-row-summary">Attackers are actively exploiting a remote code execution flaw in widely-deployed VPN appliances used by government and enterprise organizations.</div>
+        </div>
+      </div>
+      <div class="feed-row preview-blurred">
+        <span class="sev sev-HIGH">HIGH</span>
+        <div class="feed-row-body">
+          <div class="feed-row-title">Phishing campaign targeting federal contractor email chains</div>
+          <div class="feed-row-meta"><span>NIST NVD</span><span>34 min ago</span></div>
+        </div>
+      </div>
+      <div class="feed-row preview-blurred">
+        <span class="sev sev-MEDIUM">MEDIUM</span>
+        <div class="feed-row-body">
+          <div class="feed-row-title">Windows SmartScreen bypass used to deliver malware</div>
+          <div class="feed-row-meta"><span>CISA</span><span>1h ago</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gate CTA -->
+    <div class="radar-gate">
+      <div class="gate-icon">[ ]</div>
+      <div class="gate-title">Radar access is<br>subscriber-only</div>
+      <p class="gate-sub">
+        Get live threat intelligence updated every 15 minutes —
+        severity-ranked, plain-language, and always on.
+        Free readers see the daily newsletter. Subscribers see everything.
+      </p>
+      <div class="gate-actions">
+        <a href="index.html#pricing" class="btn-primary">UNLOCK RADAR — $12/MO</a>
+        <a href="https://www.linkedin.com/build-relation/newsletter-follow?entityUrn=7388246712924069888" target="_blank" class="btn-ghost">SUBSCRIBE FREE</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live feed (shown to subscribers — connect to your Flask API) -->
+  <div id="live-section" style="display:none;">
+    <div class="radar-feed" id="feed-container">
+      <!-- Populated by JS / Flask API at /api/v1/threats -->
+    </div>
+  </div>
+
+</div>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="footer-brand-name">CYBERSENSE.SOLUTIONS</div>
+      <div class="footer-brand-tagline">Daily digital awareness intelligence for the modern workforce.</div>
+      <a href="https://www.linkedin.com/build-relation/newsletter-follow?entityUrn=7388246712924069888" target="_blank" class="linkedin-btn">Subscribe on LinkedIn</a>
+    </div>
+    <div>
+      <div class="footer-heading">NAVIGATE</div>
+      <ul class="footer-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="archive.html">Archive</a></li>
+        <li><a href="training.html">Training center</a></li>
+        <li><a href="about.html">About</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-heading">CONTACT</div>
+      <ul class="footer-links">
+        <li><a href="mailto:contact@HectorBorges.com">contact@HectorBorges.com</a></li>
+        <li><a href="https://www.linkedin.com/in/hector-borges" target="_blank">LinkedIn</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 CyberSense. Educational and awareness purposes.</span>
+    <span style="font-family:var(--mono);color:var(--accent);">// RADAR</span>
+  </div>
+</footer>
+
+<script src="components.js"></script>
+<script>
+  let activeFilter = 'ALL';
+
+  function setFilter(sev) {
+    activeFilter = sev;
+    document.querySelectorAll('.filter-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.sev === sev);
+    });
+    filterFeed();
+  }
+
+  function filterFeed() {
+    const q = document.getElementById('search').value.toLowerCase();
+    document.querySelectorAll('.feed-row[data-sev]').forEach(row => {
+      const sev   = row.dataset.sev;
+      const text  = row.textContent.toLowerCase();
+      const match = (activeFilter === 'ALL' || sev === activeFilter) && text.includes(q);
+      row.style.display = match ? '' : 'none';
+    });
+  }
+
+  // Countdown timer
+  let secs = 15 * 60;
+  const el = document.getElementById('countdown');
+  setInterval(() => {
+    secs = secs > 0 ? secs - 1 : 15 * 60;
+    const m = Math.floor(secs / 60), s = secs % 60;
+    el.textContent = `${m}:${String(s).padStart(2,'0')}`;
+  }, 1000);
+
+  // Set ALL filter active on load
+  document.querySelector('[data-sev="ALL"]').classList.add('active');
+
+  // TODO: When wiring to Flask backend, replace #gate-section with #live-section
+  // and populate feed via: fetch('/api/v1/threats').then(r=>r.json()).then(renderFeed)
+</script>
+</body>
+</html>

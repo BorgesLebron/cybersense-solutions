@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Training Center — CyberSense.Solutions</title>
+  <meta name="description" content="Visual cybersecurity training — attack flows, mitigation walkthroughs, and interactive awareness content. Subscriber access.">
+  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Module grid */
+    .modules-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 48px;
+    }
+    .module-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.2s;
+      text-decoration: none;
+    }
+    .module-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+    .module-card.locked { opacity: 0.6; cursor: default; }
+    .module-card.locked:hover { transform: none; border-color: var(--border); }
+    .module-thumb {
+      height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      position: relative;
+      overflow: hidden;
+    }
+    .module-thumb-phishing  { background: linear-gradient(135deg, #0d1a2e 0%, #1a0d1f 100%); }
+    .module-thumb-ransomware{ background: linear-gradient(135deg, #1a0d0d 0%, #0d1424 100%); }
+    .module-thumb-social    { background: linear-gradient(135deg, #0d1a14 0%, #0d1424 100%); }
+    .module-thumb-mfa       { background: linear-gradient(135deg, #0d141a 0%, #0a1628 100%); }
+    .module-thumb-supply    { background: linear-gradient(135deg, #1a140d 0%, #0d1424 100%); }
+    .module-thumb-insider   { background: linear-gradient(135deg, #0d0d1a 0%, #141a0d 100%); }
+    .module-thumb-diagram {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .module-lock {
+      position: absolute; top: 10px; right: 10px;
+      font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em;
+      background: rgba(0,0,0,0.6); color: var(--muted);
+      padding: 3px 8px; border-radius: 2px;
+    }
+    .module-body { padding: 18px 20px; }
+    .module-tag { font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; color: var(--accent); margin-bottom: 6px; }
+    .module-title { font-family: var(--condensed); font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .module-desc { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 14px; }
+    .module-meta { display: flex; gap: 12px; font-family: var(--mono); font-size: 10px; color: var(--muted); }
+
+    /* Modal viewer */
+    .modal-backdrop {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      max-width: 800px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-header {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-title { font-family: var(--condensed); font-size: 22px; font-weight: 700; color: var(--text); }
+    .modal-close {
+      font-family: var(--mono); font-size: 18px; color: var(--muted);
+      background: none; border: none; cursor: pointer; padding: 4px 8px;
+      transition: color 0.15s;
+    }
+    .modal-close:hover { color: var(--accent); }
+    .modal-body { padding: 28px 28px; }
+
+    /* Attack flow diagram */
+    .attack-flow { margin-bottom: 32px; }
+    .flow-label { font-family: var(--mono); font-size: 11px; letter-spacing: 0.15em; color: var(--accent); margin-bottom: 16px; }
+    .flow-steps { display: flex; flex-direction: column; gap: 0; }
+    .flow-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 14px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0;
+      position: relative;
+    }
+    .flow-step:first-child { border-radius: 6px 6px 0 0; }
+    .flow-step:last-child  { border-radius: 0 0 6px 6px; }
+    .flow-step + .flow-step { border-top: none; }
+    .flow-step-num {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--bg);
+      background: var(--accent);
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .flow-step-num.danger-bg { background: var(--danger); }
+    .flow-step-num.warn-bg   { background: var(--warn); color: var(--bg); }
+    .flow-step-content {}
+    .flow-step-title { font-size: 14px; color: var(--text); font-weight: 500; margin-bottom: 3px; }
+    .flow-step-desc  { font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .flow-arrow {
+      font-family: var(--mono);
+      font-size: 18px; color: var(--danger);
+      text-align: center; padding: 4px 0;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+    }
+
+    /* Mitigation checklist */
+    .mitigation-list { list-style: none; }
+    .mit-item {
+      display: flex;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      align-items: flex-start;
+    }
+    .mit-check {
+      width: 18px; height: 18px;
+      border: 1px solid var(--accent);
+      border-radius: 3px;
+      flex-shrink: 0;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+      margin-top: 2px;
+    }
+    .mit-check.checked { background: var(--accent); }
+    .mit-check.checked::after { content: '✓'; font-size: 11px; color: var(--bg); font-weight: 700; }
+    .mit-text { font-size: 14px; color: var(--text); line-height: 1.5; }
+    .mit-sub  { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+    /* Subscriber gate */
+    .training-gate {
+      max-width: 540px; margin: 80px auto; text-align: center; padding: 0 24px;
+    }
+
+    @media (max-width: 900px) { .modules-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 560px) { .modules-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">
+    <img src="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png" alt="CS" onerror="this.style.display='none'">
+    CYBERSENSE.SOLUTIONS
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">HOME</a></li>
+    <li><a href="radar.html">RADAR</a></li>
+    <li><a href="archive.html">ARCHIVE</a></li>
+    <li><a href="training.html">TRAINING</a></li>
+    <li><a href="about.html">ABOUT</a></li>
+    <li><a href="https://www.linkedin.com/build-relation/newsletter-follow?entityUrn=7388246712924069888" target="_blank" class="nav-cta">SUBSCRIBE</a></li>
+  </ul>
+  <button class="nav-mobile-toggle" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+
+<!-- Page hero -->
+<div class="page-hero">
+  <div class="container">
+    <div class="page-hero-eyebrow"><span class="pulse-dot"></span> SUBSCRIBER CONTENT</div>
+    <h1 class="page-title">Training<br><em>Center</em></h1>
+    <p class="page-sub">Visual attack flows, step-by-step mitigations, and interactive awareness modules — built for every role, not just IT.</p>
+  </div>
+</div>
+
+<!-- Module grid -->
+<div class="container section" id="modules-section">
+  <div class="section-label">AWARENESS MODULES</div>
+  <h2 class="section-title">Learn how attacks happen.<br>Know how to stop them.</h2>
+
+  <div class="modules-grid">
+
+    <!-- Module 1: Phishing — OPEN (sample) -->
+    <div class="module-card" onclick="openModal('phishing')">
+      <div class="module-thumb module-thumb-phishing">
+        <div class="module-thumb-diagram">
+          <svg width="160" height="100" viewBox="0 0 160 100">
+            <rect x="10" y="40" width="40" height="24" rx="4" fill="none" stroke="#00d2b4" stroke-width="1"/>
+            <text x="30" y="56" text-anchor="middle" fill="#00d2b4" font-size="8" font-family="monospace">USER</text>
+            <line x1="50" y1="52" x2="80" y2="52" stroke="#ff3d5a" stroke-width="1" marker-end="url(#arr)"/>
+            <rect x="80" y="40" width="40" height="24" rx="4" fill="none" stroke="#ff3d5a" stroke-width="1"/>
+            <text x="100" y="56" text-anchor="middle" fill="#ff3d5a" font-size="7" font-family="monospace">FAKE SITE</text>
+            <line x1="120" y1="52" x2="148" y2="52" stroke="#ff3d5a" stroke-width="1" marker-end="url(#arr)"/>
+            <text x="148" y="56" text-anchor="start" fill="#ff3d5a" font-size="7" font-family="monospace">!</text>
+            <defs><marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="none" stroke="#ff3d5a" stroke-width="1"/></marker></defs>
+          </svg>
+        </div>
+      </div>
+      <div class="module-body">
+        <div class="module-tag">ATTACK FLOW // OPEN ACCESS</div>
+        <div class="module-title">Phishing Attack</div>
+        <div class="module-desc">How attackers craft convincing emails, what happens when you click, and how to spot the red flags.</div>
+        <div class="module-meta"><span>5 steps</span><span>Interactive checklist</span></div>
+      </div>
+    </div>
+
+    <!-- Module 2: Ransomware — SUBSCRIBER -->
+    <div class="module-card" onclick="openModal('ransomware')">
+      <div class="module-thumb module-thumb-ransomware">
+        <div class="module-thumb-diagram">
+          <svg width="160" height="100" viewBox="0 0 160 100">
+            <rect x="20" y="38" width="36" height="24" rx="4" fill="none" stroke="#ffb020" stroke-width="1"/>
+            <text x="38" y="54" text-anchor="middle" fill="#ffb020" font-size="7" font-family="monospace">ENTRY</text>
+            <line x1="56" y1="50" x2="70" y2="50" stroke="#ff3d5a" stroke-width="1"/>
+            <rect x="70" y="38" width="36" height="24" rx="4" fill="none" stroke="#ff3d5a" stroke-width="1"/>
+            <text x="88" y="54" text-anchor="middle" fill="#ff3d5a" font-size="7" font-family="monospace">ENCRYPT</text>
+            <line x1="106" y1="50" x2="120" y2="50" stroke="#ff3d5a" stroke-width="1"/>
+            <text x="130" y="54" text-anchor="middle" fill="#ff3d5a" font-size="18" font-family="monospace">$</text>
+          </svg>
+        </div>
+        <div class="module-lock">SUBSCRIBER</div>
+      </div>
+      <div class="module-body">
+        <div class="module-tag">ATTACK FLOW // SUBSCRIBER</div>
+        <div class="module-title">Ransomware</div>
+        <div class="module-desc">From initial access to encryption to ransom demand — how ransomware moves and where to break the chain.</div>
+        <div class="module-meta"><span>6 steps</span><span>Mitigation checklist</span></div>
+      </div>
+    </div>
+
+    <!-- Module 3: Social Engineering -->
+    <div class="module-card" onclick="openModal('social')">
+      <div class="module-thumb module-thumb-social">
+        <div class="module-thumb-diagram">
+          <svg width="160" height="100" viewBox="0 0 160 100">
+            <circle cx="40" cy="50" r="18" fill="none" stroke="#00d2b4" stroke-width="1"/>
+            <text x="40" y="54" text-anchor="middle" fill="#00d2b4" font-size="7" font-family="monospace">TARGET</text>
+            <circle cx="120" cy="50" r="18" fill="none" stroke="#ff3d5a" stroke-width="1" stroke-dasharray="3 2"/>
+            <text x="120" y="54" text-anchor="middle" fill="#ff3d5a" font-size="7" font-family="monospace">ATTACKER</text>
+            <line x1="58" y1="50" x2="100" y2="50" stroke="#ffb020" stroke-width="1" stroke-dasharray="4 2"/>
+            <text x="79" y="46" text-anchor="middle" fill="#ffb020" font-size="7" font-family="monospace">TRUST</text>
+          </svg>
+        </div>
+        <div class="module-lock">SUBSCRIBER</div>
+      </div>
+      <div class="module-body">
+        <div class="module-tag">ATTACK FLOW // SUBSCRIBER</div>
+        <div class="module-title">Social Engineering</div>
+        <div class="module-desc">Pretexting, vishing, and impersonation — how attackers exploit human trust and how to recognize the tactics.</div>
+        <div class="module-meta"><span>4 scenarios</span><span>Red flag guide</span></div>
+      </div>
+    </div>
+
+    <!-- Module 4: MFA Fatigue -->
+    <div class="module-card" onclick="openModal('mfa')">
+      <div class="module-thumb module-thumb-mfa">
+        <div class="module-thumb-diagram">
+          <svg width="160" height="100" viewBox="0 0 160 100">
+            <rect x="15" y="35" width="50" height="30" rx="4" fill="none" stroke="#0096ff" stroke-width="1"/>
+            <text x="40" y="54" text-anchor="middle" fill="#0096ff" font-size="7" font-family="monospace">MFA PROMPT</text>
+            <text x="85" y="54" text-anchor="middle" fill="#ffb020" font-size="18" font-family="monospace">×∞</text>
+            <rect x="105" y="35" width="40" height="30" rx="4" fill="none" stroke="#ff3d5a" stroke-width="1"/>
+            <text x="125" y="54" text-anchor="middle" fill="#ff3d5a" font-size="7" font-family="monospace">APPROVE</text>
+          </svg>
+        </div>
+        <div class="module-lock">SUBSCRIBER</div>
+      </div>
+      <div class="module-body">
+        <div class="module-tag">ATTACK FLOW // SUBSCRIBER</div>
+        <div class="module-title">MFA Fatigue</div>
+        <div class="module-desc">How attackers bombard users with authentication requests until they approve. Why it works and how to stop it.</div>
+        <div class="module-meta"><span>3 steps</span><span>Defense guide</span></div>
+      </div>
+    </div>
+
+    <!-- Module 5: Supply Chain -->
+    <div class="module-card" onclick="openModal('supply')">
+      <div class="module-thumb module-thumb-supply">
+        <div class="module-thumb-diagram">
+          <svg width="160" height="100" viewBox="0 0 160 100">
+            <rect x="10" y="38" width="36" height="24" rx="3" fill="none" stroke="#00d2b4" stroke-width="1"/>
+            <text x="28" y="54" text-anchor="middle" fill="#00d2b4" font-size="6" font-family="monospace">VENDOR</text>
+            <line x1="46" y1="50" x2="60" y2="50" stroke="#ffb020" stroke-width="1"/>
+            <rect x="60" y="38" width="40" height="24" rx="3" fill="none" stroke="#ffb020" stroke-width="1"/>
+            <text x="80" y="54" text-anchor="middle" fill="#ffb020" font-size="6" font-family="monospace">SOFTWARE</text>
+            <line x1="100" y1="50" x2="114" y2="50" stroke="#ff3d5a" stroke-width="1"/>
+            <rect x="114" y="38" width="36" height="24" rx="3" fill="none" stroke="#ff3d5a" stroke-width="1"/>
+            <text x="132" y="54" text-anchor="middle" fill="#ff3d5a" font-size="6" font-family="monospace">YOUR ORG</text>
+          </svg>
+        </div>
+        <div class="module-lock">SUBSCRIBER</div>
+      </div>
+      <div class="module-body">
+        <div class="module-tag">ATTACK FLOW // SUBSCRIBER</div>
+        <div class="module-title">Supply Chain Attack</div>
+        <div class="module-desc">How attackers compromise trusted vendors to reach your organization. The SolarWinds model explained plainly.</div>
+        <div class="module-meta"><span>5 steps</span><span>Vendor checklist</span></div>
+      </div>
+    </div>
+
+    <!-- Module 6: Insider Threat -->
+    <div class="module-card" onclick="openModal('insider')">
+      <div class="module-thumb module-thumb-insider">
+        <div class="module-thumb-diagram">
+          <svg width="160" height="100" viewBox="0 0 160 100">
+            <rect x="30" y="30" width="100" height="40" rx="6" fill="none" stroke="#5a7a9a" stroke-width="1" stroke-dasharray="4 2"/>
+            <text x="80" y="46" text-anchor="middle" fill="#5a7a9a" font-size="6" font-family="monospace">ORGANIZATION</text>
+            <circle cx="80" cy="62" r="10" fill="none" stroke="#ff3d5a" stroke-width="1"/>
+            <text x="80" y="66" text-anchor="middle" fill="#ff3d5a" font-size="7" font-family="monospace">!</text>
+          </svg>
+        </div>
+        <div class="module-lock">SUBSCRIBER</div>
+      </div>
+      <div class="module-body">
+        <div class="module-tag">AWARENESS // SUBSCRIBER</div>
+        <div class="module-title">Insider Threat</div>
+        <div class="module-desc">Malicious and unintentional insider threats — behavioral indicators, access patterns, and prevention strategies.</div>
+        <div class="module-meta"><span>4 scenarios</span><span>Policy guide</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Gate for non-subscribers -->
+<div class="training-gate" id="training-gate" style="display:none;">
+  <div style="font-family:var(--mono);font-size:40px;color:var(--accent);opacity:0.3;margin-bottom:24px;">[LOCKED]</div>
+  <div class="gate-title" style="font-family:var(--condensed);font-size:36px;font-weight:700;color:var(--text);margin-bottom:16px;">Training Center is<br>subscriber-only</div>
+  <p style="font-size:16px;color:var(--muted);line-height:1.7;margin-bottom:32px;">Visual attack flows and mitigation walkthroughs are included with the Subscriber plan. One phishing module is available free to preview.</p>
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+    <a href="index.html#pricing" class="btn-primary">UNLOCK TRAINING — $12/MO</a>
+    <a href="index.html" class="btn-ghost">LEARN MORE</a>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-backdrop" id="modal-backdrop" onclick="closeModalOutside(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title"></div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="footer-brand-name">CYBERSENSE.SOLUTIONS</div>
+      <div class="footer-brand-tagline">Daily digital awareness intelligence for the modern workforce.</div>
+      <a href="https://www.linkedin.com/build-relation/newsletter-follow?entityUrn=7388246712924069888" target="_blank" class="linkedin-btn">Subscribe on LinkedIn</a>
+    </div>
+    <div>
+      <div class="footer-heading">NAVIGATE</div>
+      <ul class="footer-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="radar.html">Radar feed</a></li>
+        <li><a href="archive.html">Archive</a></li>
+        <li><a href="about.html">About</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-heading">CONTACT</div>
+      <ul class="footer-links">
+        <li><a href="mailto:contact@HectorBorges.com">contact@HectorBorges.com</a></li>
+        <li><a href="https://www.linkedin.com/in/hector-borges" target="_blank">LinkedIn</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 CyberSense. Educational and awareness purposes.</span>
+    <span style="font-family:var(--mono);color:var(--accent);">// TRAINING CENTER</span>
+  </div>
+</footer>
+
+<script src="components.js"></script>
+<script>
+const modules = {
+  phishing: {
+    title: "Phishing Attack Flow",
+    flow: [
+      { num: 1, title: "Attacker crafts the lure", desc: "A convincing email is built — matching real sender addresses, brand logos, and urgent language. AI now helps make these near-perfect.", color: "" },
+      { num: 2, title: "Email reaches the inbox", desc: "The message bypasses filters using trusted infrastructure or legitimate-looking domains (e.g. paypa1.com instead of paypal.com).", color: "" },
+      { num: 3, title: "Target clicks the link", desc: "Urgency triggers action — 'Your account will be suspended', 'Verify immediately'. The link leads to a convincing fake site.", color: "warn-bg" },
+      { num: 4, title: "Credentials entered", desc: "The victim logs in — surrendering username and password directly to the attacker. Sometimes MFA codes are also captured in real time.", color: "danger-bg" },
+      { num: 5, title: "Account compromised", desc: "Attacker gains access. Depending on the account, this can mean email takeover, financial fraud, or a foothold into your organization's network.", color: "danger-bg" },
+    ],
+    mitigations: [
+      { text: "Hover before you click", sub: "Check the actual URL in the status bar before opening any link in email." },
+      { text: "Verify through a second channel", sub: "If an email asks you to take urgent action, call or message the sender directly using a known number — not one from the email." },
+      { text: "Look for brand inconsistencies", sub: "Mismatched logos, odd fonts, grammar errors, and urgent subject lines are red flags." },
+      { text: "Never enter credentials from an email link", sub: "Go directly to the website by typing the address yourself or using a saved bookmark." },
+      { text: "Report suspicious emails to your IT team", sub: "One click protects everyone — reporting helps block the attack at the organization level." },
+    ]
+  },
+  ransomware: {
+    title: "Ransomware Attack Flow",
+    flow: [
+      { num: 1, title: "Initial access gained", desc: "Via phishing email, exposed RDP, or a compromised credential. The attacker gets a foothold inside the network.", color: "" },
+      { num: 2, title: "Lateral movement", desc: "The attacker moves quietly through the network — mapping systems, escalating privileges, identifying backup locations.", color: "warn-bg" },
+      { num: 3, title: "Backups targeted first", desc: "Before encrypting, attackers delete or corrupt backups to prevent recovery. This is the move that makes ransomware devastating.", color: "danger-bg" },
+      { num: 4, title: "Data exfiltrated", desc: "Sensitive files are copied out before encryption — enabling double extortion (pay or we publish your data).", color: "danger-bg" },
+      { num: 5, title: "Files encrypted", desc: "Ransomware deploys across the network. Files become inaccessible. Systems halt. Operations stop.", color: "danger-bg" },
+      { num: 6, title: "Ransom demand delivered", desc: "A note appears with payment instructions. Average enterprise ransom demand: $2.7M. Average downtime: 24 days.", color: "danger-bg" },
+    ],
+    mitigations: [
+      { text: "Maintain offline backups", sub: "The 3-2-1 rule: 3 copies, 2 media types, 1 offsite. Disconnected from the network so ransomware can't reach them." },
+      { text: "Patch systems regularly", sub: "Most ransomware exploits known vulnerabilities — often months after the patch was available." },
+      { text: "Apply least-privilege access", sub: "Limit who can access what. A compromised low-level account shouldn't be able to reach executive files." },
+      { text: "Segment your network", sub: "If ransomware does get in, segmentation limits how far it can spread." },
+      { text: "Train employees on phishing", sub: "The majority of ransomware attacks start with a single phishing click." },
+    ]
+  },
+  social: {
+    title: "Social Engineering",
+    flow: [
+      { num: 1, title: "Target research", desc: "Attacker researches the target on LinkedIn, company websites, and social media — building a believable pretext.", color: "" },
+      { num: 2, title: "Pretexting / impersonation", desc: "Contact is made as IT support, HR, a vendor, or even an executive. The scenario is designed to feel urgent and legitimate.", color: "warn-bg" },
+      { num: 3, title: "Trust established", desc: "Small talk, insider-sounding knowledge, and authority cues build false trust quickly.", color: "warn-bg" },
+      { num: 4, title: "Information extracted or action taken", desc: "The target shares credentials, grants access, transfers funds, or installs software — believing it's legitimate.", color: "danger-bg" },
+    ],
+    mitigations: [
+      { text: "Verify identity before acting", sub: "Always confirm the identity of anyone requesting sensitive information or access — through a known channel." },
+      { text: "Slow down on urgency", sub: "Social engineers create artificial urgency. Pausing to verify breaks the manipulation loop." },
+      { text: "Know what IT will never ask for", sub: "Legitimate IT staff will never ask for your password. Ever. Make this organization-wide knowledge." },
+      { text: "Report unusual contact", sub: "If something feels off — a strange call, an odd email, an unexpected visit — report it." },
+    ]
+  },
+  mfa: {
+    title: "MFA Fatigue Attack",
+    flow: [
+      { num: 1, title: "Credentials already stolen", desc: "Attacker has a valid username and password — usually from a phishing attack or data breach. The only barrier left is MFA.", color: "" },
+      { num: 2, title: "Repeated push notifications sent", desc: "Attacker attempts to log in repeatedly, flooding the victim's phone with MFA approval requests — dozens, sometimes hundreds.", color: "warn-bg" },
+      { num: 3, title: "Victim approves to stop the noise", desc: "Exhausted or confused, the target taps 'Approve' just to make the notifications stop. Access granted.", color: "danger-bg" },
+    ],
+    mitigations: [
+      { text: "Use number-matching MFA", sub: "Apps that require you to match a number shown on screen prevent blind approvals." },
+      { text: "Never approve a request you didn't initiate", sub: "An MFA request you didn't trigger means someone else has your password." },
+      { text: "Report unexpected MFA prompts immediately", sub: "Contact IT right away — your password needs to be changed." },
+      { text: "Switch to phishing-resistant MFA where possible", sub: "Hardware keys (FIDO2/YubiKey) or passkeys are not susceptible to this attack at all." },
+    ]
+  },
+  supply: {
+    title: "Supply Chain Attack Flow",
+    flow: [
+      { num: 1, title: "Attacker targets a trusted vendor", desc: "Instead of attacking you directly, the attacker targets a software company, IT vendor, or service provider you trust and use.", color: "" },
+      { num: 2, title: "Vendor systems compromised", desc: "The vendor's build system, update server, or code repository is infiltrated. Malicious code is inserted into a legitimate product.", color: "warn-bg" },
+      { num: 3, title: "Malicious update distributed", desc: "A routine software update — automatically trusted and installed — delivers the malware directly into your environment.", color: "danger-bg" },
+      { num: 4, title: "Wide-scale compromise", desc: "Because the attack came through a trusted channel, it bypasses most security controls. Thousands of organizations can be hit simultaneously.", color: "danger-bg" },
+      { num: 5, title: "Attacker operates undetected", desc: "Malware disguised as legitimate software activity. Detection can take months — as seen in SolarWinds (9+ months undetected).", color: "danger-bg" },
+    ],
+    mitigations: [
+      { text: "Vet your vendors' security posture", sub: "Ask vendors about their software development practices, code signing, and incident response plans." },
+      { text: "Apply zero-trust principles", sub: "Even trusted software should operate with least privilege. Don't give vendor tools admin rights by default." },
+      { text: "Monitor for anomalous behavior", sub: "Behavioral monitoring can catch supply chain malware that signature-based tools miss." },
+      { text: "Delay non-critical updates briefly", sub: "A 24–72 hour delay on auto-updates gives the security community time to flag compromised releases." },
+    ]
+  },
+  insider: {
+    title: "Insider Threat Awareness",
+    flow: [
+      { num: 1, title: "Access already exists", desc: "Unlike external attacks, insiders already have legitimate credentials and access. There's no perimeter to breach.", color: "" },
+      { num: 2, title: "Behavioral indicators appear", desc: "Unusual access hours, large file downloads, accessing systems outside their role, or sudden resentment after a disciplinary action.", color: "warn-bg" },
+      { num: 3, title: "Data exfiltration or sabotage", desc: "Files are copied to personal devices, sent to personal email, or systems are deliberately damaged or disrupted.", color: "danger-bg" },
+      { num: 4, title: "Discovery — often delayed", desc: "Insider incidents are detected on average 85 days after they begin. The damage compounds with time.", color: "danger-bg" },
+    ],
+    mitigations: [
+      { text: "Apply least-privilege access", sub: "Employees should only access what they need for their role — nothing more." },
+      { text: "Monitor for anomalous data movement", sub: "Alerts on unusual download volumes or access to sensitive systems outside normal patterns." },
+      { text: "Offboarding process is critical", sub: "Immediately revoke all access when an employee leaves — especially under difficult circumstances." },
+      { text: "Create a culture of reporting", sub: "Employees who see concerning behavior should feel safe reporting it without retaliation." },
+    ]
+  }
+};
+
+function openModal(id) {
+  const m = modules[id];
+  if (!m) return;
+  document.getElementById('modal-title').textContent = m.title;
+
+  const flowHTML = m.flow.map((s, i) => `
+    <div class="flow-step">
+      <div class="flow-step-num ${s.color}">${s.num}</div>
+      <div class="flow-step-content">
+        <div class="flow-step-title">${s.title}</div>
+        <div class="flow-step-desc">${s.desc}</div>
+      </div>
+    </div>${i < m.flow.length - 1 ? '<div class="flow-arrow">↓</div>' : ''}`
+  ).join('');
+
+  const mitHTML = m.mitigations.map((m, i) => `
+    <li class="mit-item">
+      <div class="mit-check" onclick="this.classList.toggle('checked')"></div>
+      <div><div class="mit-text">${m.text}</div><div class="mit-sub">${m.sub}</div></div>
+    </li>`
+  ).join('');
+
+  document.getElementById('modal-body').innerHTML = `
+    <div class="attack-flow">
+      <div class="flow-label">ATTACK FLOW</div>
+      <div class="flow-steps">${flowHTML}</div>
+    </div>
+    <div>
+      <div class="flow-label" style="margin-top:32px;">MITIGATION CHECKLIST</div>
+      <ul class="mitigation-list">${mitHTML}</ul>
+    </div>`;
+
+  document.getElementById('modal-backdrop').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('modal-backdrop').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function closeModalOutside(e) {
+  if (e.target === document.getElementById('modal-backdrop')) closeModal();
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+</script>
+</body>
+</html>
