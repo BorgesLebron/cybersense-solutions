@@ -1,0 +1,475 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.db{font-family:var(--font-sans,sans-serif);font-size:13px}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary)}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.logo-mark{width:28px;height:28px;background:#185FA5;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#fff}
+.topbar-title{font-size:14px;font-weight:500;color:var(--color-text-primary)}
+.topbar-sub{font-size:11px;color:var(--color-text-tertiary)}
+.status-dot{width:7px;height:7px;border-radius:50%;background:#1D9E75;display:inline-block;margin-right:4px}
+.layout{display:grid;grid-template-columns:180px 1fr;min-height:600px}
+.sidebar{border-right:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);padding:12px 0}
+.nav-section{font-size:10px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-tertiary);padding:6px 14px 4px}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 14px;cursor:pointer;font-size:12px;color:var(--color-text-secondary);border-left:2px solid transparent;transition:all .12s}
+.nav-item:hover{background:var(--color-background-primary);color:var(--color-text-primary)}
+.nav-item.active{color:var(--color-text-info);border-left-color:#378ADD;background:var(--color-background-info);border-radius:0}
+.nav-icon{width:14px;height:14px;flex-shrink:0;opacity:.7}
+.main{background:var(--color-background-tertiary);padding:16px;overflow:hidden}
+.panel{display:none}
+.panel.active{display:block}
+.panel-title{font-size:15px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px}
+.panel-sub{font-size:12px;color:var(--color-text-secondary);margin-bottom:14px}
+.metric-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.metric-row.r3{grid-template-columns:repeat(3,1fr)}
+.metric-row.r5{grid-template-columns:repeat(5,1fr)}
+.met{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md,8px);padding:12px}
+.met-lbl{font-size:11px;color:var(--color-text-tertiary);margin-bottom:4px}
+.met-val{font-size:20px;font-weight:500;color:var(--color-text-primary);line-height:1}
+.met-delta{font-size:11px;margin-top:4px}
+.up{color:var(--color-text-success)}
+.dn{color:var(--color-text-danger)}
+.nt{color:var(--color-text-tertiary)}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg,12px);padding:14px}
+.card-hd{font-size:12px;font-weight:500;color:var(--color-text-primary);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{text-align:left;font-weight:500;color:var(--color-text-secondary);padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary);font-size:11px}
+.tbl td{padding:7px 8px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--color-background-secondary)}
+.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500}
+.b-green{background:#EAF3DE;color:#3B6D11}
+.b-red{background:#FCEBEB;color:#A32D2D}
+.b-amber{background:#FAEEDA;color:#854F0B}
+.b-blue{background:#E6F1FB;color:#185FA5}
+.b-gray{background:#F1EFE8;color:#5F5E5A}
+.b-purple{background:#EEEDFE;color:#534AB7}
+@media(prefers-color-scheme:dark){
+.b-green{background:#27500A;color:#C0DD97}
+.b-red{background:#791F1F;color:#F7C1C1}
+.b-amber{background:#633806;color:#FAC775}
+.b-blue{background:#0C447C;color:#B5D4F4}
+.b-gray{background:#444441;color:#D3D1C7}
+.b-purple{background:#3C3489;color:#CECBF6}
+}
+.bar-wrap{height:6px;background:var(--color-background-secondary);border-radius:3px;overflow:hidden;margin-top:4px}
+.bar-fill{height:100%;border-radius:3px}
+.feed-item{display:flex;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary);align-items:flex-start}
+.feed-item:last-child{border-bottom:none}
+.feed-dot{width:8px;height:8px;border-radius:50%;margin-top:3px;flex-shrink:0}
+.feed-txt{font-size:12px;color:var(--color-text-primary);line-height:1.4}
+.feed-time{font-size:11px;color:var(--color-text-tertiary);margin-top:1px}
+.progress-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.progress-lbl{font-size:12px;color:var(--color-text-secondary);width:110px;flex-shrink:0}
+.progress-bar{flex:1;height:6px;background:var(--color-background-secondary);border-radius:3px;overflow:hidden}
+.progress-val{font-size:12px;color:var(--color-text-primary);width:36px;text-align:right;flex-shrink:0}
+.ask-btn{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:var(--border-radius-md,8px);border:0.5px solid var(--color-border-secondary);font-size:12px;cursor:pointer;background:transparent;color:var(--color-text-secondary);margin-top:10px;font-family:inherit}
+.ask-btn:hover{background:var(--color-background-secondary)}
+.spark{display:flex;align-items:flex-end;gap:2px;height:28px}
+.spark span{width:8px;border-radius:2px;background:#378ADD;opacity:.6}
+.risk-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.risk-row:last-child{border-bottom:none}
+.risk-label{flex:1;font-size:12px;color:var(--color-text-primary)}
+.risk-level{font-size:11px;font-weight:500}
+</style>
+
+<div class="db">
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo-mark">CS</div>
+    <div>
+      <div class="topbar-title">CyberSense Admin</div>
+      <div class="topbar-sub">CyberSense.Solutions — restricted access</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px">
+    <span style="font-size:12px;color:var(--color-text-secondary)"><span class="status-dot"></span>All systems operational</span>
+    <span style="font-size:12px;color:var(--color-text-tertiary)">Henry — GM</span>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" onclick="showPanel('overview',this)">
+      <svg class="nav-icon" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.2"/><rect x="8" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.2"/><rect x="1" y="8" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.2"/><rect x="8" y="8" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.2"/></svg>
+      Command center
+    </div>
+
+    <div class="nav-section" style="margin-top:6px">Intelligence</div>
+    <div class="nav-item" onclick="showPanel('radar',this)">
+      <svg class="nav-icon" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/><circle cx="7" cy="7" r="3" stroke="currentColor" stroke-width="1.2"/><circle cx="7" cy="7" r=".8" fill="currentColor"/></svg>
+      Threat radar
+    </div>
+    <div class="nav-item" onclick="showPanel('intel',this)">
+      <svg class="nav-icon" viewBox="0 0 14 14" fill="none"><path d="M2 3h10M2 7h7M2 11h5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Intel brief
+    </div>
+    <div class="nav-item" onclick="showPanel('innovation',this)">
+      <svg class="nav-icon" viewBox="0 0 14 14" fill="none"><path d="M7 1v2M7 11v2M1 7h2M11 7h2M3.2 3.2l1.4 1.4M9.4 9.4l1.4 1.4M3.2 10.8l1.4-1.4M9.4 4.6l1.4-1.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Innovation radar
+    </div>
+
+    <div class="nav-section" style="margin-top:6px">Operations</div>
+    <div class="nav-item" onclick="showPanel('newsletter',this)">
+      <svg class="nav-icon" viewBox="0 0 14 14" fill="none"><rect x="1" y="3" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M1 5.5l6 3.5 6-3.5" stroke="currentColor" stroke-width="1.2"/></svg>
+      Newsletter
+    </div>
+    <div class="nav-item" onclick="showPanel('training',this)">
+      <svg class="nav-icon" viewBox="0 0 14 14" fill="none"><path d="M7 1L1 4l6 3 6-3-6-3z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M1 7l6 3 6-3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Training
+    </div>
+    <div class="nav-item" onclick="showPanel('social',this)">
+      <svg class="nav-icon" viewBox="0 0 14 14" fill="none"><circle cx="3.5" cy="7" r="2" stroke="currentColor" stroke-width="1.2"/><circle cx="10.5" cy="3.5" r="2" stroke="currentColor" stroke-width="1.2"/><circle cx="10.5" cy="10.5" r="2" stroke="currentColor" stroke-width="1.2"/><path d="M5.4 6l3.2-1.7M5.4 8l3.2 1.7" stroke="currentColor" stroke-width="1.2"/></svg>
+      Social media
+    </div>
+
+    <div class="nav-section" style="margin-top:6px">Business</div>
+    <div class="nav-item" onclick="showPanel('financial',this)">
+      <svg class="nav-icon" viewBox="0 0 14 14" fill="none"><path d="M2 11l3-3.5 2.5 2 2.5-4L13 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Financial
+    </div>
+    <div class="nav-item" onclick="showPanel('sales',this)">
+      <svg class="nav-icon" viewBox="0 0 14 14" fill="none"><path d="M1 13l3-8 3 4 2-3 4 7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Sales &amp; accounts
+    </div>
+    <div class="nav-item" onclick="showPanel('risk',this)">
+      <svg class="nav-icon" viewBox="0 0 14 14" fill="none"><path d="M7 1L1 12h12L7 1z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M7 5v3M7 10v.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Risk assessment
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- COMMAND CENTER -->
+    <div class="panel active" id="p-overview">
+      <div class="panel-title">Command center</div>
+      <div class="panel-sub">Live operational snapshot — Henry, Valerie, Victor</div>
+
+      <div class="metric-row r5">
+        <div class="met"><div class="met-lbl">Total subscribers</div><div class="met-val">4,812</div><div class="met-delta up">+214 this week</div></div>
+        <div class="met"><div class="met-lbl">Paid accounts</div><div class="met-val">1,047</div><div class="met-delta up">+38 MTD</div></div>
+        <div class="met"><div class="met-lbl">Enterprise accounts</div><div class="met-val">12</div><div class="met-delta up">+2 pipeline</div></div>
+        <div class="met"><div class="met-lbl">MRR</div><div class="met-val">$18,340</div><div class="met-delta up">+6.2%</div></div>
+        <div class="met"><div class="met-lbl">Open risk items</div><div class="met-val">3</div><div class="met-delta dn">1 high severity</div></div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-hd">Pipeline status <span class="badge b-green">All nominal</span></div>
+          <div class="progress-row"><span class="progress-lbl">Acquisition</span><div class="progress-bar"><div class="bar-fill" style="width:92%;background:#1D9E75"></div></div><span class="progress-val">92%</span></div>
+          <div class="progress-row"><span class="progress-lbl">Intel brief</span><div class="progress-bar"><div class="bar-fill" style="width:78%;background:#378ADD"></div></div><span class="progress-val">78%</span></div>
+          <div class="progress-row"><span class="progress-lbl">Awareness</span><div class="progress-bar"><div class="bar-fill" style="width:100%;background:#1D9E75"></div></div><span class="progress-val">100%</span></div>
+          <div class="progress-row"><span class="progress-lbl">Training</span><div class="progress-bar"><div class="bar-fill" style="width:65%;background:#BA7517"></div></div><span class="progress-val">65%</span></div>
+          <div class="progress-row"><span class="progress-lbl">Distribution</span><div class="progress-bar"><div class="bar-fill" style="width:88%;background:#378ADD"></div></div><span class="progress-val">88%</span></div>
+        </div>
+        <div class="card">
+          <div class="card-hd">Activity feed</div>
+          <div class="feed-item"><div class="feed-dot" style="background:#1D9E75"></div><div><div class="feed-txt">Ed approved Daily Briefing — published to Oliver</div><div class="feed-time">08:47 CT</div></div></div>
+          <div class="feed-item"><div class="feed-dot" style="background:#378ADD"></div><div><div class="feed-txt">Rob approved Intel Brief: CVE-2025-3841 analysis</div><div class="feed-time">08:12 CT</div></div></div>
+          <div class="feed-item"><div class="feed-dot" style="background:#BA7517"></div><div><div class="feed-txt">Jeff returned Training Byte — needs revision</div><div class="feed-time">07:55 CT</div></div></div>
+          <div class="feed-item"><div class="feed-dot" style="background:#1D9E75"></div><div><div class="feed-txt">Rick flagged 2 new critical CVEs — Barbara queued</div><div class="feed-time">07:30 CT</div></div></div>
+          <div class="feed-item"><div class="feed-dot" style="background:#E24B4A"></div><div><div class="feed-txt">Victor raised risk flag: vendor dependency</div><div class="feed-time">06:55 CT</div></div></div>
+        </div>
+      </div>
+
+      <div class="grid3">
+        <div class="card"><div class="card-hd">Content queue</div>
+          <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary)"><span style="font-size:12px;color:var(--color-text-secondary)">Pending QA</span><span class="badge b-amber">4</span></div>
+          <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary)"><span style="font-size:12px;color:var(--color-text-secondary)">Pending Maya</span><span class="badge b-blue">2</span></div>
+          <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary)"><span style="font-size:12px;color:var(--color-text-secondary)">Published today</span><span class="badge b-green">3</span></div>
+          <div style="display:flex;justify-content:space-between;padding:5px 0"><span style="font-size:12px;color:var(--color-text-secondary)">Returned for revision</span><span class="badge b-red">1</span></div>
+        </div>
+        <div class="card"><div class="card-hd">Acquisition funnel</div>
+          <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary)"><span style="font-size:12px;color:var(--color-text-secondary)">Free → Freemium</span><span style="font-size:12px;font-weight:500;color:var(--color-text-primary)">31%</span></div>
+          <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary)"><span style="font-size:12px;color:var(--color-text-secondary)">Freemium → Paid</span><span style="font-size:12px;font-weight:500;color:var(--color-text-primary)">22%</span></div>
+          <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary)"><span style="font-size:12px;color:var(--color-text-secondary)">Paid → Enterprise</span><span style="font-size:12px;font-weight:500;color:var(--color-text-primary)">1.1%</span></div>
+          <div style="display:flex;justify-content:space-between;padding:5px 0"><span style="font-size:12px;color:var(--color-text-secondary)">Churn rate</span><span style="font-size:12px;font-weight:500;color:var(--color-text-danger)">2.4%</span></div>
+        </div>
+        <div class="card"><div class="card-hd">Agent health</div>
+          <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary)"><span style="font-size:12px;color:var(--color-text-secondary)">Active agents</span><span class="badge b-green">24/25</span></div>
+          <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary)"><span style="font-size:12px;color:var(--color-text-secondary)">Tasks completed</span><span style="font-size:12px;font-weight:500;color:var(--color-text-primary)">137 today</span></div>
+          <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary)"><span style="font-size:12px;color:var(--color-text-secondary)">Avg latency</span><span style="font-size:12px;font-weight:500;color:var(--color-text-primary)">1.4 min</span></div>
+          <div style="display:flex;justify-content:space-between;padding:5px 0"><span style="font-size:12px;color:var(--color-text-secondary)">Blocked items</span><span class="badge b-red">1</span></div>
+        </div>
+      </div>
+      <button class="ask-btn" onclick="sendPrompt('What KPIs should Henry review daily in the CyberSense command center dashboard?')">Define daily KPI protocol ↗</button>
+    </div>
+
+    <!-- THREAT RADAR -->
+    <div class="panel" id="p-radar">
+      <div class="panel-title">Threat radar</div>
+      <div class="panel-sub">Live feed managed by Rick — linked to Intel Brief as articles complete</div>
+      <div class="metric-row">
+        <div class="met"><div class="met-lbl">Active threats tracked</div><div class="met-val">47</div><div class="met-delta dn">6 new today</div></div>
+        <div class="met"><div class="met-lbl">Critical (CVSS 9+)</div><div class="met-val">3</div><div class="met-delta dn">Needs immediate Intel</div></div>
+        <div class="met"><div class="met-lbl">Articles in progress</div><div class="met-val">8</div><div class="met-delta nt">James queue</div></div>
+        <div class="met"><div class="met-lbl">Published this week</div><div class="met-val">22</div><div class="met-delta up">+4 vs last week</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hd">Live threat feed</div>
+        <table class="tbl">
+          <tr><th>Severity</th><th>Threat name</th><th>CVE</th><th>CVSS</th><th>Status</th><th>Article</th></tr>
+          <tr><td><span class="badge b-red">Critical</span></td><td>FortiGate SSL-VPN RCE</td><td>CVE-2025-3841</td><td>9.8</td><td><span class="badge b-blue">In review</span></td><td><span class="badge b-blue">Draft</span></td></tr>
+          <tr><td><span class="badge b-red">Critical</span></td><td>Windows NTLM relay chain</td><td>CVE-2025-3701</td><td>9.1</td><td><span class="badge b-amber">Writing</span></td><td><span class="badge b-amber">In progress</span></td></tr>
+          <tr><td><span class="badge b-red">Critical</span></td><td>Apache Kafka deserialization</td><td>CVE-2025-3522</td><td>9.0</td><td><span class="badge b-red">New</span></td><td><span class="badge b-gray">Queued</span></td></tr>
+          <tr><td><span class="badge b-amber">High</span></td><td>Chrome V8 sandbox escape</td><td>CVE-2025-3489</td><td>8.8</td><td><span class="badge b-green">Published</span></td><td><span class="badge b-green">Live</span></td></tr>
+          <tr><td><span class="badge b-amber">High</span></td><td>OpenSSH pre-auth RCE</td><td>CVE-2025-3401</td><td>8.4</td><td><span class="badge b-green">Published</span></td><td><span class="badge b-green">Live</span></td></tr>
+          <tr><td><span class="badge b-blue">Medium</span></td><td>Kubernetes RBAC escalation</td><td>CVE-2025-3280</td><td>6.5</td><td><span class="badge b-amber">Writing</span></td><td><span class="badge b-amber">In progress</span></td></tr>
+          <tr><td><span class="badge b-blue">Medium</span></td><td>AWS IAM policy bypass</td><td>CVE-2025-3190</td><td>6.1</td><td><span class="badge b-amber">Writing</span></td><td><span class="badge b-amber">In progress</span></td></tr>
+        </table>
+      </div>
+      <button class="ask-btn" onclick="sendPrompt('What data fields should the CyberSense threat radar database schema include for Rick to structure his CVE intake properly?')">Design threat intake schema ↗</button>
+    </div>
+
+    <!-- INTEL BRIEF -->
+    <div class="panel" id="p-intel">
+      <div class="panel-title">Intel brief report</div>
+      <div class="panel-sub">Pipeline managed by James → Jason → Rob → Jeff → Maya → Laura</div>
+      <div class="metric-row r3">
+        <div class="met"><div class="met-lbl">Articles published (MTD)</div><div class="met-val">68</div><div class="met-delta up">+12 vs last month</div></div>
+        <div class="met"><div class="met-lbl">Avg time to publish</div><div class="met-val">4.2h</div><div class="met-delta up">Down from 6.1h</div></div>
+        <div class="met"><div class="met-lbl">Subscriber reads (avg)</div><div class="met-val">1,840</div><div class="met-delta up">+8% WoW</div></div>
+      </div>
+      <div class="grid2">
+        <div class="card"><div class="card-hd">Articles by section</div>
+          <div class="progress-row"><span class="progress-lbl">Threat intel</span><div class="progress-bar"><div class="bar-fill" style="width:55%;background:#E24B4A"></div></div><span class="progress-val">55%</span></div>
+          <div class="progress-row"><span class="progress-lbl">Policy updates</span><div class="progress-bar"><div class="bar-fill" style="width:18%;background:#378ADD"></div></div><span class="progress-val">18%</span></div>
+          <div class="progress-row"><span class="progress-lbl">Innovation</span><div class="progress-bar"><div class="bar-fill" style="width:14%;background:#7F77DD"></div></div><span class="progress-val">14%</span></div>
+          <div class="progress-row"><span class="progress-lbl">Pro growth</span><div class="progress-bar"><div class="bar-fill" style="width:8%;background:#1D9E75"></div></div><span class="progress-val">8%</span></div>
+          <div class="progress-row"><span class="progress-lbl">Training</span><div class="progress-bar"><div class="bar-fill" style="width:5%;background:#BA7517"></div></div><span class="progress-val">5%</span></div>
+        </div>
+        <div class="card"><div class="card-hd">Editorial pipeline status</div>
+          <table class="tbl">
+            <tr><th>Stage</th><th>Agent</th><th>Queue</th><th>Avg time</th></tr>
+            <tr><td>Acquisition</td><td>James</td><td>5 items</td><td>45 min</td></tr>
+            <tr><td>Dev edit</td><td>Jason</td><td>3 items</td><td>1.2h</td></tr>
+            <tr><td>EIC review</td><td>Rob</td><td>2 items</td><td>40 min</td></tr>
+            <tr><td>QA</td><td>Jeff</td><td>1 item</td><td>25 min</td></tr>
+            <tr><td>Final approval</td><td>Maya</td><td>1 item</td><td>15 min</td></tr>
+          </table>
+        </div>
+      </div>
+      <button class="ask-btn" onclick="sendPrompt('What are the right quality standards and rejection criteria for Jeff and Maya to use when reviewing Intel Brief articles?')">Define QA standards ↗</button>
+    </div>
+
+    <!-- INNOVATION RADAR -->
+    <div class="panel" id="p-innovation">
+      <div class="panel-title">Innovation &amp; AI/ML/Quantum radar</div>
+      <div class="panel-sub">Managed by Ivan — feeds Intel Brief, Awareness pipeline, and Innovation page</div>
+      <div class="metric-row">
+        <div class="met"><div class="met-lbl">Topics tracked</div><div class="met-val">142</div><div class="met-delta nt">Across 11 categories</div></div>
+        <div class="met"><div class="met-lbl">Articles published (MTD)</div><div class="met-val">19</div><div class="met-delta up">+3 vs last month</div></div>
+        <div class="met"><div class="met-lbl">Awareness inputs</div><div class="met-val">84</div><div class="met-delta nt">This month to Ruth</div></div>
+        <div class="met"><div class="met-lbl">Trending topic</div><div class="met-val" style="font-size:14px">Quantum AI</div><div class="met-delta up">+340% coverage</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hd">Coverage by category</div>
+        <table class="tbl">
+          <tr><th>Category</th><th>Articles MTD</th><th>Trend</th><th>Priority</th></tr>
+          <tr><td>Artificial intelligence</td><td>6</td><td class="up">Rising</td><td><span class="badge b-red">High</span></td></tr>
+          <tr><td>Quantum computing</td><td>4</td><td class="up">Rising fast</td><td><span class="badge b-red">High</span></td></tr>
+          <tr><td>Large language models</td><td>3</td><td class="up">Stable</td><td><span class="badge b-amber">Medium</span></td></tr>
+          <tr><td>Cloud computing</td><td>2</td><td class="nt">Stable</td><td><span class="badge b-amber">Medium</span></td></tr>
+          <tr><td>Cryptography</td><td>2</td><td class="up">Rising</td><td><span class="badge b-amber">Medium</span></td></tr>
+          <tr><td>Machine learning</td><td>1</td><td class="nt">Stable</td><td><span class="badge b-gray">Normal</span></td></tr>
+          <tr><td>Quantum research</td><td>1</td><td class="up">Rising</td><td><span class="badge b-blue">Watch</span></td></tr>
+        </table>
+      </div>
+      <button class="ask-btn" onclick="sendPrompt('How should Ivan structure the innovation intelligence intake process to feed both the daily briefing and long-form articles efficiently?')">Design Ivan intake workflow ↗</button>
+    </div>
+
+    <!-- NEWSLETTER -->
+    <div class="panel" id="p-newsletter">
+      <div class="panel-title">Newsletter report</div>
+      <div class="panel-sub">Daily Digital Awareness Briefing — Ruth → Peter → Ed → Jeff → Maya → Oliver</div>
+      <div class="metric-row">
+        <div class="met"><div class="met-lbl">Email subscribers</div><div class="met-val">3,847</div><div class="met-delta up">+114 this week</div></div>
+        <div class="met"><div class="met-lbl">Open rate (7d avg)</div><div class="met-val">41%</div><div class="met-delta up">+3pts vs benchmark</div></div>
+        <div class="met"><div class="met-lbl">Click-through rate</div><div class="met-val">8.2%</div><div class="met-delta up">+1.4pts WoW</div></div>
+        <div class="met"><div class="met-lbl">Published on time</div><div class="met-val">97%</div><div class="met-delta nt">23/24 this month</div></div>
+      </div>
+      <div class="grid2">
+        <div class="card"><div class="card-hd">Delivery performance (last 7 days)</div>
+          <table class="tbl">
+            <tr><th>Date</th><th>Draft</th><th>Published</th><th>Open rate</th></tr>
+            <tr><td>Apr 7</td><td>06:52</td><td>08:58</td><td class="up">44%</td></tr>
+            <tr><td>Apr 6</td><td>06:58</td><td>08:55</td><td class="up">43%</td></tr>
+            <tr><td>Apr 5</td><td>07:01</td><td>09:02</td><td class="nt">41%</td></tr>
+            <tr><td>Apr 4</td><td>06:48</td><td>08:49</td><td class="up">42%</td></tr>
+            <tr><td>Apr 3</td><td>07:12</td><td>09:15</td><td class="dn">38%</td></tr>
+            <tr><td>Apr 2</td><td>06:55</td><td>08:51</td><td class="up">43%</td></tr>
+            <tr><td>Apr 1</td><td>06:44</td><td>08:47</td><td class="up">45%</td></tr>
+          </table>
+        </div>
+        <div class="card"><div class="card-hd">Content section performance</div>
+          <div class="progress-row"><span class="progress-lbl">Threat items</span><div class="progress-bar"><div class="bar-fill" style="width:78%;background:#E24B4A"></div></div><span class="progress-val">78%</span></div>
+          <div class="progress-row"><span class="progress-lbl">Innovation items</span><div class="progress-bar"><div class="bar-fill" style="width:62%;background:#7F77DD"></div></div><span class="progress-val">62%</span></div>
+          <div class="progress-row"><span class="progress-lbl">Training byte</span><div class="progress-bar"><div class="bar-fill" style="width:55%;background:#BA7517"></div></div><span class="progress-val">55%</span></div>
+          <div class="progress-row"><span class="progress-lbl">Pro growth</span><div class="progress-bar"><div class="bar-fill" style="width:48%;background:#1D9E75"></div></div><span class="progress-val">48%</span></div>
+          <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:8px">Click-through rate by section</div>
+        </div>
+      </div>
+      <button class="ask-btn" onclick="sendPrompt('What should Ed and the Awareness team track to continuously improve the Daily Digital Awareness Briefing open and click-through rates?')">Optimize newsletter performance ↗</button>
+    </div>
+
+    <!-- TRAINING -->
+    <div class="panel" id="p-training">
+      <div class="panel-title">Training report</div>
+      <div class="panel-sub">Internal library (Kirby/Matt) + Zero-Trust enterprise platform</div>
+      <div class="metric-row r3">
+        <div class="met"><div class="met-lbl">Training modules published</div><div class="met-val">34</div><div class="met-delta up">+6 this month</div></div>
+        <div class="met"><div class="met-lbl">Enterprise users enrolled</div><div class="met-val">847</div><div class="met-delta up">Across 12 orgs</div></div>
+        <div class="met"><div class="met-lbl">Avg completion rate</div><div class="met-val">71%</div><div class="met-delta dn">Target: 85%</div></div>
+      </div>
+      <div class="grid2">
+        <div class="card"><div class="card-hd">Zero-Trust module completion</div>
+          <div class="progress-row"><span class="progress-lbl">Email security</span><div class="progress-bar"><div class="bar-fill" style="width:84%;background:#1D9E75"></div></div><span class="progress-val">84%</span></div>
+          <div class="progress-row"><span class="progress-lbl">Phishing awareness</span><div class="progress-bar"><div class="bar-fill" style="width:79%;background:#1D9E75"></div></div><span class="progress-val">79%</span></div>
+          <div class="progress-row"><span class="progress-lbl">Malware awareness</span><div class="progress-bar"><div class="bar-fill" style="width:71%;background:#BA7517"></div></div><span class="progress-val">71%</span></div>
+          <div class="progress-row"><span class="progress-lbl">Credential mgmt</span><div class="progress-bar"><div class="bar-fill" style="width:68%;background:#BA7517"></div></div><span class="progress-val">68%</span></div>
+          <div class="progress-row"><span class="progress-lbl">Cloud security</span><div class="progress-bar"><div class="bar-fill" style="width:54%;background:#E24B4A"></div></div><span class="progress-val">54%</span></div>
+          <div class="progress-row"><span class="progress-lbl">Insider threat</span><div class="progress-bar"><div class="bar-fill" style="width:48%;background:#E24B4A"></div></div><span class="progress-val">48%</span></div>
+          <div class="progress-row"><span class="progress-lbl">Endpoint protection</span><div class="progress-bar"><div class="bar-fill" style="width:45%;background:#E24B4A"></div></div><span class="progress-val">45%</span></div>
+          <div class="progress-row"><span class="progress-lbl">Software security</span><div class="progress-bar"><div class="bar-fill" style="width:42%;background:#E24B4A"></div></div><span class="progress-val">42%</span></div>
+        </div>
+        <div class="card"><div class="card-hd">Phase 3 simulation results (last 30 days)</div>
+          <table class="tbl">
+            <tr><th>Simulation type</th><th>Sent</th><th>Reported</th><th>Rate</th></tr>
+            <tr><td>Phishing email</td><td>1,240</td><td>894</td><td class="up">72%</td></tr>
+            <tr><td>Spear phishing</td><td>420</td><td>261</td><td class="nt">62%</td></tr>
+            <tr><td>Vishing call</td><td>180</td><td>94</td><td class="dn">52%</td></tr>
+            <tr><td>Smishing text</td><td>310</td><td>149</td><td class="dn">48%</td></tr>
+          </table>
+          <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:8px">% correctly identified and reported the simulation</div>
+        </div>
+      </div>
+      <button class="ask-btn" onclick="sendPrompt('How should Alex structure the enterprise Zero-Trust training reporting dashboard for client organizations in CyberSense?')">Design enterprise training dashboard ↗</button>
+    </div>
+
+    <!-- SOCIAL MEDIA -->
+    <div class="panel" id="p-social">
+      <div class="panel-title">Social media report</div>
+      <div class="panel-sub">Oliver · Lucy · Riley · Ethan — derivative content distribution</div>
+      <div class="metric-row">
+        <div class="met"><div class="met-lbl">LinkedIn followers</div><div class="met-val">9,240</div><div class="met-delta up">+340 WoW</div></div>
+        <div class="met"><div class="met-lbl">Total reach (7d)</div><div class="met-val">84K</div><div class="met-delta up">+12% WoW</div></div>
+        <div class="met"><div class="met-lbl">Engagement rate</div><div class="met-val">4.8%</div><div class="met-delta up">Above avg</div></div>
+        <div class="met"><div class="met-lbl">Conversions to sign-up</div><div class="met-val">214</div><div class="met-delta up">From social (7d)</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hd">Platform performance (7-day)</div>
+        <table class="tbl">
+          <tr><th>Platform</th><th>Agent</th><th>Posts</th><th>Reach</th><th>Eng rate</th><th>Sign-ups</th></tr>
+          <tr><td>LinkedIn</td><td>Oliver</td><td>21</td><td>42K</td><td class="up">6.2%</td><td class="up">112</td></tr>
+          <tr><td>Meta (FB+IG)</td><td>Lucy</td><td>18</td><td>22K</td><td class="nt">3.8%</td><td>54</td></tr>
+          <tr><td>X / TikTok</td><td>Riley</td><td>31</td><td>14K</td><td class="dn">3.1%</td><td>28</td></tr>
+          <tr><td>YouTube</td><td>Ethan</td><td>4</td><td>6K</td><td class="up">5.4%</td><td>20</td></tr>
+        </table>
+      </div>
+      <button class="ask-btn" onclick="sendPrompt('What content formats perform best for cybersecurity newsletters on LinkedIn and what should Oliver prioritize?')">Optimize LinkedIn strategy ↗</button>
+    </div>
+
+    <!-- FINANCIAL -->
+    <div class="panel" id="p-financial">
+      <div class="panel-title">Financial analysis</div>
+      <div class="panel-sub">Jim — subscription performance, revenue alignment, pricing efficiency</div>
+      <div class="metric-row">
+        <div class="met"><div class="met-lbl">MRR</div><div class="met-val">$18,340</div><div class="met-delta up">+6.2% MoM</div></div>
+        <div class="met"><div class="met-lbl">ARR (projected)</div><div class="met-val">$220K</div><div class="met-delta up">On target</div></div>
+        <div class="met"><div class="met-lbl">ARPU (paid)</div><div class="met-val">$17.52</div><div class="met-delta nt">Blended avg</div></div>
+        <div class="met"><div class="met-lbl">LTV (est)</div><div class="met-val">$210</div><div class="met-delta up">14-mo avg tenure</div></div>
+      </div>
+      <div class="grid2">
+        <div class="card"><div class="card-hd">Revenue by tier</div>
+          <div class="progress-row"><span class="progress-lbl">Enterprise</span><div class="progress-bar"><div class="bar-fill" style="width:58%;background:#185FA5"></div></div><span class="progress-val">58%</span></div>
+          <div class="progress-row"><span class="progress-lbl">Monthly sub</span><div class="progress-bar"><div class="bar-fill" style="width:32%;background:#378ADD"></div></div><span class="progress-val">32%</span></div>
+          <div class="progress-row"><span class="progress-lbl">Sponsors</span><div class="progress-bar"><div class="bar-fill" style="width:7%;background:#BA7517"></div></div><span class="progress-val">7%</span></div>
+          <div class="progress-row"><span class="progress-lbl">Affiliates</span><div class="progress-bar"><div class="bar-fill" style="width:3%;background:#1D9E75"></div></div><span class="progress-val">3%</span></div>
+        </div>
+        <div class="card"><div class="card-hd">Market opportunities</div>
+          <table class="tbl">
+            <tr><th>Opportunity</th><th>Est value</th><th>Stage</th></tr>
+            <tr><td>Healthcare org (500 seats)</td><td>$4,500/mo</td><td><span class="badge b-blue">Proposal</span></td></tr>
+            <tr><td>FinServ group (200 seats)</td><td>$1,800/mo</td><td><span class="badge b-amber">Negotiating</span></td></tr>
+            <tr><td>Gov contractor (100 seats)</td><td>$900/mo</td><td><span class="badge b-purple">Discovery</span></td></tr>
+            <tr><td>Sponsor — security vendor</td><td>$800/mo</td><td><span class="badge b-blue">Proposal</span></td></tr>
+          </table>
+        </div>
+      </div>
+      <button class="ask-btn" onclick="sendPrompt('What should Jim track monthly to give Valerie and Henry the financial intelligence needed for strategic planning at CyberSense?')">Define financial reporting cadence ↗</button>
+    </div>
+
+    <!-- SALES -->
+    <div class="panel" id="p-sales">
+      <div class="panel-title">Sales &amp; accounts</div>
+      <div class="panel-sub">Mary (SDR) · William (AE) · Joe (AM) — pipeline to retention</div>
+      <div class="metric-row">
+        <div class="met"><div class="met-lbl">Leads (MTD)</div><div class="met-val">89</div><div class="met-delta up">+22 vs last month</div></div>
+        <div class="met"><div class="met-lbl">Qualified leads</div><div class="met-val">34</div><div class="met-delta nt">38% qualify rate</div></div>
+        <div class="met"><div class="met-lbl">Open deals</div><div class="met-val">11</div><div class="met-delta nt">$14,200 pipeline</div></div>
+        <div class="met"><div class="met-lbl">Closed (MTD)</div><div class="met-val">4</div><div class="met-delta up">$5,400 ACV</div></div>
+      </div>
+      <div class="grid2">
+        <div class="card"><div class="card-hd">Current accounts</div>
+          <table class="tbl">
+            <tr><th>Account</th><th>Tier</th><th>Seats</th><th>Renewal</th><th>Health</th></tr>
+            <tr><td>Apex Defense LLC</td><td><span class="badge b-blue">Enterprise</span></td><td>250</td><td>Jul 25</td><td class="up">Strong</td></tr>
+            <tr><td>Meridian Health</td><td><span class="badge b-blue">Enterprise</span></td><td>180</td><td>Sep 25</td><td class="nt">Good</td></tr>
+            <tr><td>NovaTech Partners</td><td><span class="badge b-blue">Enterprise</span></td><td>90</td><td>May 25</td><td class="dn">At risk</td></tr>
+            <tr><td>Individual (bulk)</td><td><span class="badge b-gray">Monthly</span></td><td>—</td><td>Rolling</td><td class="up">Strong</td></tr>
+          </table>
+        </div>
+        <div class="card"><div class="card-hd">Partner pipeline</div>
+          <table class="tbl">
+            <tr><th>Partner</th><th>Type</th><th>Stage</th><th>Est value</th></tr>
+            <tr><td>CrowdStrike reseller</td><td>Affiliate</td><td><span class="badge b-amber">Negotiating</span></td><td>$800/mo</td></tr>
+            <tr><td>SANS Institute</td><td>Co-marketing</td><td><span class="badge b-blue">Proposal</span></td><td>TBD</td></tr>
+            <tr><td>AWS Marketplace</td><td>Distribution</td><td><span class="badge b-purple">Discovery</span></td><td>TBD</td></tr>
+            <tr><td>ISC2 Chapter</td><td>Referral</td><td><span class="badge b-green">Active</span></td><td>$200/mo</td></tr>
+          </table>
+        </div>
+      </div>
+      <button class="ask-btn" onclick="sendPrompt('What is the ideal sales playbook for William to convert a qualified enterprise lead into a Zero-Trust platform deal at CyberSense?')">Build enterprise sales playbook ↗</button>
+    </div>
+
+    <!-- RISK -->
+    <div class="panel" id="p-risk">
+      <div class="panel-title">Risk assessment</div>
+      <div class="panel-sub">Victor — operational, reputational, and intelligence risk monitoring</div>
+      <div class="metric-row r3">
+        <div class="met"><div class="met-lbl">Open risk items</div><div class="met-val">3</div><div class="met-delta dn">1 high severity</div></div>
+        <div class="met"><div class="met-lbl">Mitigated (MTD)</div><div class="met-val">7</div><div class="met-delta up">On pace</div></div>
+        <div class="met"><div class="met-lbl">Risk score (composite)</div><div class="met-val">34/100</div><div class="met-delta nt">Moderate</div></div>
+      </div>
+      <div class="grid2">
+        <div class="card"><div class="card-hd">Open risk register</div>
+          <div class="risk-row"><span class="feed-dot" style="background:#E24B4A;width:8px;height:8px;border-radius:50%;flex-shrink:0"></span><div style="flex:1"><div class="risk-label">Single vendor dependency — threat data source</div><div style="font-size:11px;color:var(--color-text-tertiary)">Victor · Owner: Barret · Due: Apr 14</div></div><span class="badge b-red">High</span></div>
+          <div class="risk-row"><span class="feed-dot" style="background:#BA7517;width:8px;height:8px;border-radius:50%;flex-shrink:0"></span><div style="flex:1"><div class="risk-label">NovaTech account at churn risk — 45 days to renewal</div><div style="font-size:11px;color:var(--color-text-tertiary)">Victor · Owner: Joe · Due: Apr 20</div></div><span class="badge b-amber">Medium</span></div>
+          <div class="risk-row"><span class="feed-dot" style="background:#BA7517;width:8px;height:8px;border-radius:50%;flex-shrink:0"></span><div style="flex:1"><div class="risk-label">Training completion below 85% SLA target for 2 clients</div><div style="font-size:11px;color:var(--color-text-tertiary)">Victor · Owner: Alex · Due: Apr 30</div></div><span class="badge b-amber">Medium</span></div>
+        </div>
+        <div class="card"><div class="card-hd">Risk landscape by domain</div>
+          <div class="progress-row"><span class="progress-lbl">Operational</span><div class="progress-bar"><div class="bar-fill" style="width:28%;background:#1D9E75"></div></div><span class="progress-val">28/100</span></div>
+          <div class="progress-row"><span class="progress-lbl">Intelligence</span><div class="progress-bar"><div class="bar-fill" style="width:42%;background:#BA7517"></div></div><span class="progress-val">42/100</span></div>
+          <div class="progress-row"><span class="progress-lbl">Reputational</span><div class="progress-bar"><div class="bar-fill" style="width:18%;background:#1D9E75"></div></div><span class="progress-val">18/100</span></div>
+          <div class="progress-row"><span class="progress-lbl">Financial</span><div class="progress-bar"><div class="bar-fill" style="width:35%;background:#BA7517"></div></div><span class="progress-val">35/100</span></div>
+          <div class="progress-row"><span class="progress-lbl">Compliance</span><div class="progress-bar"><div class="bar-fill" style="width:22%;background:#1D9E75"></div></div><span class="progress-val">22/100</span></div>
+        </div>
+      </div>
+      <button class="ask-btn" onclick="sendPrompt('What risk assessment framework should Victor use to score and prioritize operational risks at CyberSense?')">Build Victor risk framework ↗</button>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<script>
+function showPanel(id, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('p-' + id).classList.add('active');
+  el.classList.add('active');
+}
+</script>

@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — CyberSense.Solutions</title>
+<meta name="description" content="CyberSense.Solutions administration dashboard.">
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* Override body padding for full-height gate */
+  body { background: var(--cs-navy); }
+
+  /* Login gate: full-page overlay */
+  #login-gate {
+    min-height: calc(100vh - var(--nav-h));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: var(--cs-navy);
+    position: relative;
+    overflow: hidden;
+  }
+  #login-gate::before {
+    content: '';
+    position: absolute;
+    top: -100px; left: 50%;
+    transform: translateX(-50%);
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(0,212,255,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .login-card {
+    background: var(--cs-blue-dark);
+    border: 1px solid rgba(0,212,255,0.2);
+    border-radius: var(--radius-lg);
+    padding: 48px 44px;
+    width: 100%;
+    max-width: 420px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Dashboard shell: hidden initially */
+  #dashboard-shell {
+    display: none;
+    background: var(--cs-gray-100);
+  }
+
+  .dash-main { padding: 32px; overflow-y: auto; }
+  .activity-feed { display: flex; flex-direction: column; gap: 0; }
+  .activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .activity-item:last-child { border-bottom: none; }
+  .activity-icon {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 14px;
+  }
+  .activity-icon-cyan { background: rgba(0,212,255,0.1); }
+  .activity-icon-green { background: rgba(16,185,129,0.1); }
+  .activity-icon-amber { background: rgba(245,158,11,0.1); }
+  .activity-icon-red { background: rgba(239,68,68,0.1); }
+  .activity-text { flex: 1; }
+  .activity-text p { font-size: 14px; color: #334155; line-height: 1.4; margin-bottom: 3px; }
+  .activity-text span { font-size: 12px; color: var(--cs-gray-400); }
+
+  @media(max-width:768px){
+    .login-card { padding: 32px 24px; }
+    .dash-main { padding: 20px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav" role="navigation">
+  <a href="index.html" class="nav-wordmark">CyberSense<span>.Solutions</span></a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li><li><a href="radar.html">Radar</a></li><li><a href="intelligence.html">Intel</a></li><li><a href="newsletter.html">Newsletter</a></li><li><a href="training.html">Training</a></li><li><a href="growth.html">Proficient</a></li><li><a href="innovation.html">Innovation</a></li><li><a href="zerotrust.html">Zero-Trust</a></li>
+  </ul>
+  <button class="nav-login" id="nav-logout" style="display:none;" onclick="location.reload()">Sign Out</button>
+  <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+</nav>
+<div class="nav-drawer" id="nav-drawer">
+  <ul><li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li><li><a href="radar.html">Radar</a></li><li><a href="intelligence.html">Intel</a></li><li><a href="newsletter.html">Newsletter</a></li><li><a href="training.html">Training</a></li><li><a href="growth.html">Proficient</a></li><li><a href="innovation.html">Innovation</a></li><li><a href="zerotrust.html">Zero-Trust</a></li></ul>
+</div>
+
+<!-- ═══ LOGIN GATE ═══ -->
+<div id="login-gate" role="main" aria-label="Login">
+  <div class="login-card">
+    <div style="text-align:center;margin-bottom:32px;">
+      <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--cs-cyan);margin-bottom:12px;">Administration</div>
+      <h1 style="font-size:24px;font-weight:700;color:var(--cs-white);margin-bottom:6px;">CyberSense Administration</h1>
+      <p style="font-size:14px;color:rgba(255,255,255,0.45);">Authorized personnel only.</p>
+    </div>
+    <form id="login-form" style="display:flex;flex-direction:column;gap:16px;" novalidate>
+      <div class="form-group">
+        <label class="form-label" for="login-email" style="color:rgba(255,255,255,0.6);">Email Address</label>
+        <input class="form-input form-input-dark" type="email" id="login-email" placeholder="admin@cybersense.solutions" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="login-password" style="color:rgba(255,255,255,0.6);">Password</label>
+        <input class="form-input form-input-dark" type="password" id="login-password" placeholder="••••••••••" autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px;">Sign In</button>
+    </form>
+    <p style="text-align:center;font-size:12px;color:rgba(255,255,255,0.25);margin-top:20px;">Access is logged and monitored. Unauthorized access is prohibited.</p>
+  </div>
+</div>
+
+<!-- ═══ DASHBOARD SHELL (revealed on login) ═══ -->
+<div id="dashboard-shell" class="dashboard-layout" aria-label="Admin dashboard">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" role="navigation" aria-label="Dashboard navigation">
+    <div style="padding:16px 16px 12px;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:8px;">
+      <div style="font-size:13px;font-weight:700;color:var(--cs-white);">Admin Console</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:2px;">CyberSense.Solutions</div>
+    </div>
+
+    <span class="sidebar-section-label">Overview</span>
+    <a href="#" class="sidebar-link active"><span class="sidebar-icon">📊</span> Command Center</a>
+    <a href="#" class="sidebar-link"><span class="sidebar-icon">📡</span> Live Radar</a>
+    <a href="#" class="sidebar-link"><span class="sidebar-icon">🔔</span> Alerts</a>
+
+    <span class="sidebar-section-label" style="margin-top:12px;">Content</span>
+    <a href="#" class="sidebar-link"><span class="sidebar-icon">📝</span> Briefings</a>
+    <a href="#" class="sidebar-link"><span class="sidebar-icon">🛡</span> Threat Records</a>
+    <a href="#" class="sidebar-link"><span class="sidebar-icon">💡</span> Intel Briefs</a>
+    <a href="#" class="sidebar-link"><span class="sidebar-icon">🎓</span> Training Modules</a>
+    <a href="#" class="sidebar-link"><span class="sidebar-icon">🔬</span> Innovation Articles</a>
+
+    <span class="sidebar-section-label" style="margin-top:12px;">Subscribers</span>
+    <a href="#" class="sidebar-link"><span class="sidebar-icon">👤</span> Subscriber List</a>
+    <a href="#" class="sidebar-link"><span class="sidebar-icon">💳</span> Billing &amp; Plans</a>
+    <a href="#" class="sidebar-link"><span class="sidebar-icon">📈</span> Growth Analytics</a>
+
+    <span class="sidebar-section-label" style="margin-top:12px;">Enterprise</span>
+    <a href="#" class="sidebar-link"><span class="sidebar-icon">🏢</span> Organizations</a>
+    <a href="#" class="sidebar-link"><span class="sidebar-icon">⚡</span> Simulations</a>
+    <a href="#" class="sidebar-link"><span class="sidebar-icon">📋</span> Compliance Reports</a>
+
+    <span class="sidebar-section-label" style="margin-top:12px;">System</span>
+    <a href="#" class="sidebar-link"><span class="sidebar-icon">⚙</span> Settings</a>
+    <a href="#" class="sidebar-link"><span class="sidebar-icon">🔑</span> API Keys</a>
+    <a href="#" class="sidebar-link" onclick="location.reload();return false;"><span class="sidebar-icon">🚪</span> Sign Out</a>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="dash-main">
+
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:28px;">
+      <div>
+        <h1 style="font-size:24px;font-weight:700;color:var(--cs-navy);">Command Center</h1>
+        <p style="font-size:14px;color:var(--cs-gray-400);">Monday, January 13, 2025 — 07:00 CT</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="live-dot"></span>
+        <span style="font-size:13px;color:var(--cs-gray-400);">Live data</span>
+        <a href="newsletter.html" class="btn btn-outline btn-sm">Preview Briefing</a>
+      </div>
+    </div>
+
+    <!-- Integration notice -->
+    <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:var(--radius);padding:12px 16px;margin-bottom:24px;font-size:13px;color:#92400e;display:flex;align-items:center;gap:8px;">
+      <span>⚠</span>
+      <span><strong>Note:</strong> Full dashboard requires backend integration. Metric data shown below is illustrative. Contact the engineering team for API configuration.</span>
+    </div>
+
+    <!-- Metric Cards -->
+    <div class="grid-4" style="margin-bottom:28px;">
+      <div class="metric-card">
+        <div class="metric-label">Total Subscribers</div>
+        <div class="metric-value">4,847</div>
+        <div class="metric-change metric-up">↑ +134 this week</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Paid Accounts</div>
+        <div class="metric-value">1,203</div>
+        <div class="metric-change metric-up">↑ +28 this week</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">MRR</div>
+        <div class="metric-value" style="font-size:26px;">$10,827</div>
+        <div class="metric-change metric-up">↑ +$252 vs last month</div>
+      </div>
+      <div class="metric-card" style="border-left:3px solid var(--cs-red);">
+        <div class="metric-label">Open Risks</div>
+        <div class="metric-value" style="color:var(--cs-red);">7</div>
+        <div class="metric-change metric-down">↑ +2 since yesterday</div>
+      </div>
+    </div>
+
+    <!-- Grid: Activity Feed + Quick Stats -->
+    <div class="grid-2" style="align-items:start;">
+
+      <!-- Activity Feed -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+          <h2 style="font-size:16px;font-weight:700;color:var(--cs-navy);">Recent Activity</h2>
+          <span style="font-size:12px;color:var(--cs-gray-400);">Last 24 hours</span>
+        </div>
+        <div class="activity-feed">
+          <div class="activity-item">
+            <div class="activity-icon activity-icon-cyan">📡</div>
+            <div class="activity-text">
+              <p><strong>New Threat Record Published</strong> — CVE-2024-21762 (Fortinet FortiOS) added to radar with Critical severity.</p>
+              <span>07:02 CT — Threat Intelligence Team</span>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-icon activity-icon-green">✉</div>
+            <div class="activity-text">
+              <p><strong>Daily Briefing Sent</strong> — Monday Jan 13 edition delivered to 4,847 subscribers. Open rate tracking active.</p>
+              <span>07:00 CT — Newsletter Pipeline</span>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-icon activity-icon-green">👤</div>
+            <div class="activity-text">
+              <p><strong>28 New Subscriber Signups</strong> — Organic growth from Radar page and LinkedIn post referrals.</p>
+              <span>06:55 CT — Growth</span>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-icon activity-icon-amber">⚡</div>
+            <div class="activity-text">
+              <p><strong>Simulation Scheduled</strong> — Acme Corp phishing simulation approved for Jan 15. 247 participants enrolled.</p>
+              <span>Yesterday 4:12 PM — Enterprise Team</span>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-icon activity-icon-red">🚨</div>
+            <div class="activity-text">
+              <p><strong>New Critical CVE Tracked</strong> — CVE-2024-3400 (Palo Alto PAN-OS) escalated to radar. Intel article in progress.</p>
+              <span>Yesterday 2:44 PM — Threat Intelligence Team</span>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-icon activity-icon-green">💳</div>
+            <div class="activity-text">
+              <p><strong>Enterprise Renewal</strong> — Meridian Health Group ($1,200/mo) renewed for 12 months.</p>
+              <span>Yesterday 11:08 AM — Sales</span>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-icon activity-icon-cyan">📝</div>
+            <div class="activity-text">
+              <p><strong>Intel Brief Published</strong> — "NIST CSF 2.0: Govern Function Implementation Guide" live on intelligence.html.</p>
+              <span>Yesterday 10:30 AM — Editorial</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Stats Column -->
+      <div style="display:flex;flex-direction:column;gap:20px;">
+        <!-- Content Pipeline -->
+        <div class="card">
+          <h3 style="font-size:15px;font-weight:700;color:var(--cs-navy);margin-bottom:16px;">Content Pipeline Status</h3>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;">
+              <span style="color:#334155;">Today's Briefing</span>
+              <span class="badge badge-published">Sent</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;">
+              <span style="color:#334155;">Radar (12 threats)</span>
+              <span class="badge badge-published">Live</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;">
+              <span style="color:#334155;">Intel Brief — Ivanti Analysis</span>
+              <span class="badge badge-inprogress">In Progress</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;">
+              <span style="color:#334155;">Training Module — AD Attack Paths</span>
+              <span class="badge badge-inprogress">In Progress</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;">
+              <span style="color:#334155;">Feb 18 Webinar Setup</span>
+              <span class="badge badge-new">Pending</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Pages -->
+        <div class="card">
+          <h3 style="font-size:15px;font-weight:700;color:var(--cs-navy);margin-bottom:16px;">Top Pages — Last 7 Days</h3>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;justify-content:space-between;font-size:13px;">
+              <span style="color:#334155;">radar.html</span>
+              <span style="font-weight:600;color:var(--cs-navy);">12,441</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;">
+              <span style="color:#334155;">newsletter.html</span>
+              <span style="font-weight:600;color:var(--cs-navy);">9,876</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;">
+              <span style="color:#334155;">index.html</span>
+              <span style="font-weight:600;color:var(--cs-navy);">7,234</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;">
+              <span style="color:#334155;">intelligence.html</span>
+              <span style="font-weight:600;color:var(--cs-navy);">5,102</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;">
+              <span style="color:#334155;">training.html</span>
+              <span style="font-weight:600;color:var(--cs-navy);">3,887</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Open Risk Items -->
+        <div class="card" style="border-left:3px solid var(--cs-red);">
+          <h3 style="font-size:15px;font-weight:700;color:var(--cs-navy);margin-bottom:16px;">⚠ Open Risk Items</h3>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="font-size:13px;padding:8px 12px;background:#fef2f2;border-radius:var(--radius);color:#991b1b;">CVE-2024-3400 — Intel article pending QA review</div>
+            <div style="font-size:13px;padding:8px 12px;background:#fffbeb;border-radius:var(--radius);color:#92400e;">3 enterprise trial accounts expiring in 48 hours</div>
+            <div style="font-size:13px;padding:8px 12px;background:#fffbeb;border-radius:var(--radius);color:#92400e;">Webinar registration page not linked from growth.html</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+</div><!-- /dashboard-shell -->
+
+<script src="main.js"></script>
+<script>
+  // Show sign out button on successful login
+  document.getElementById('login-form').addEventListener('submit', function() {
+    setTimeout(function() {
+      document.getElementById('nav-logout').style.display = 'block';
+    }, 100);
+  });
+</script>
+</body>
+</html>

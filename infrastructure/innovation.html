@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Innovation &amp; New Technology — CyberSense.Solutions</title>
+<meta name="description" content="Emerging technology coverage across AI, quantum computing, cloud, cryptography, and more.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="nav" role="navigation">
+  <a href="index.html" class="nav-wordmark">CyberSense<span>.Solutions</span></a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li><li><a href="radar.html">Radar</a></li><li><a href="intelligence.html">Intel</a></li><li><a href="newsletter.html">Newsletter</a></li><li><a href="training.html">Training</a></li><li><a href="growth.html">Proficient</a></li><li><a href="innovation.html">Innovation</a></li><li><a href="zerotrust.html">Zero-Trust</a></li>
+  </ul>
+  <button class="nav-login" onclick="window.location='dashboard.html'">Login</button>
+  <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+</nav>
+<div class="nav-drawer" id="nav-drawer">
+  <ul><li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li><li><a href="radar.html">Radar</a></li><li><a href="intelligence.html">Intel</a></li><li><a href="newsletter.html">Newsletter</a></li><li><a href="training.html">Training</a></li><li><a href="growth.html">Proficient</a></li><li><a href="innovation.html">Innovation</a></li><li><a href="zerotrust.html">Zero-Trust</a></li></ul>
+  <a href="dashboard.html" class="drawer-login">Login</a>
+</div>
+
+<section class="hero-dark section" style="padding:64px 24px 56px;">
+  <div class="container" style="position:relative;z-index:1;">
+    <p class="section-label">Innovation</p>
+    <h1 class="section-heading section-heading-light" style="font-size:clamp(30px,5vw,48px);">Innovation &amp; New Technology</h1>
+    <p class="section-sub section-sub-light">Emerging technology coverage written for security practitioners — what's coming, what it means for your threat model, and what to do about it.</p>
+  </div>
+</section>
+
+<section class="section" style="background:var(--cs-gray-100);">
+  <div class="container">
+
+    <!-- Subscriber gate notice -->
+    <div class="freemium-banner">
+      <p><strong>Showing first two articles per category.</strong> Monthly subscribers unlock all innovation content plus the full archive.</p>
+      <a href="newsletter.html" class="btn btn-primary btn-sm">Subscribe</a>
+    </div>
+
+    <!-- Artificial Intelligence -->
+    <div class="category-section">
+      <div class="category-label-bar">Artificial Intelligence</div>
+      <div class="grid-2">
+        <div class="article-card">
+          <span class="badge badge-medium">AI Security</span>
+          <div class="card-headline">NIST AI Risk Management Framework: Applying AI RMF 1.0 to Security Operations Platforms</div>
+          <div class="card-teaser">NIST's AI RMF 1.0 provides the governance structure for managing risks specific to AI-enabled systems, but applying it to SOC tooling requires translating general guidance into operational controls. This article maps AI RMF categories to concrete SOC implementation requirements for AI-assisted alert triage and automated response.</div>
+          <a href="#" class="card-link">Read more →</a>
+        </div>
+        <div class="article-card">
+          <span class="badge badge-medium">AI Security</span>
+          <div class="card-headline">Prompt Injection in AI Security Tools: Attack Patterns and Defense Architectures</div>
+          <div class="card-teaser">As security operations platforms integrate large language models for log analysis and alert summarization, prompt injection becomes a first-class attack vector — an adversary who can craft log entries that manipulate the AI's output can suppress alerts, generate false summaries, or cause analyst misdirection at scale.</div>
+          <a href="#" class="card-link">Read more →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Machine Learning -->
+    <div class="category-section">
+      <div class="category-label-bar">Machine Learning</div>
+      <div class="grid-2">
+        <div class="article-card">
+          <span class="badge badge-medium">ML</span>
+          <div class="card-headline">Anomaly Detection at Scale: How eBPF and ML Are Replacing Signature-Based EDR</div>
+          <div class="card-teaser">Next-generation endpoint detection platforms are combining kernel-level eBPF telemetry with behavioral ML models to detect process injection, credential access, and lateral movement without relying on signatures. This architectural shift reduces evasion via polymorphic malware while dramatically increasing detection fidelity.</div>
+          <a href="#" class="card-link">Read more →</a>
+        </div>
+        <div class="article-card">
+          <span class="badge badge-medium">ML</span>
+          <div class="card-headline">Graph Neural Networks for Insider Threat Detection: Early Results from Financial Sector Deployments</div>
+          <div class="card-teaser">Three major financial institutions have published preliminary results from GNN-based insider threat detection programs, showing 67% improvement in detection rates against deliberate data exfiltration compared to traditional user behavior analytics, with a 40% reduction in analyst alert fatigue from false positives.</div>
+          <a href="#" class="card-link">Read more →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- LLMs -->
+    <div class="category-section">
+      <div class="category-label-bar">Large Language Models</div>
+      <div class="grid-2">
+        <div class="article-card">
+          <span class="badge badge-medium">LLM</span>
+          <div class="card-headline">LLM-Generated Malware: How Threat Actors Are Using AI Coding Assistants to Accelerate Exploit Development</div>
+          <div class="card-teaser">Threat intelligence teams at multiple vendors have confirmed the use of large language models in adversary workflows — not for autonomous attack generation, but for accelerating the coding of custom loaders, obfuscation layers, and C2 communication modules that previously required specialized exploit development skills.</div>
+          <a href="#" class="card-link">Read more →</a>
+        </div>
+        <div class="gate-wrapper" style="border-radius:var(--radius-lg);">
+          <div class="article-card blurred" aria-hidden="true">
+            <span class="badge badge-medium">LLM</span>
+            <div class="card-headline">Retrieval-Augmented Generation for Threat Intelligence: Building an AI-Native CTI Platform</div>
+            <div class="card-teaser">RAG architectures allow security teams to build AI-powered threat intelligence assistants grounded in their own private intelligence data — MISP feeds, internal incident reports, and vendor advisories — without the hallucination risk of prompting a base LLM on factual threat data.</div>
+            <a href="#" class="card-link">Read more →</a>
+          </div>
+          <div class="gate-overlay"><div class="gate-card"><h3>Subscribers only</h3><p>Unlock full innovation coverage for $9/month.</p><a href="newsletter.html" class="btn btn-primary btn-sm">Subscribe</a></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cloud Computing -->
+    <div class="category-section">
+      <div class="category-label-bar">Cloud Computing</div>
+      <div class="grid-2">
+        <div class="article-card">
+          <span class="badge badge-medium">Cloud</span>
+          <div class="card-headline">AWS IMDSv2 Enforcement: Why Every EC2 Instance Still Running IMDSv1 Is a Live Credential Theft Risk</div>
+          <div class="card-teaser">Instance Metadata Service v1 allows any process running on an EC2 instance — including SSRF-vulnerable web applications — to retrieve IAM credentials without authentication. IMDSv2's session-oriented protocol closes this attack vector, but AWS data shows over 30% of EC2 instances still accept v1 requests.</div>
+          <a href="#" class="card-link">Read more →</a>
+        </div>
+        <div class="article-card">
+          <span class="badge badge-medium">Cloud</span>
+          <div class="card-headline">Confidential Computing in 2025: AMD SEV-SNP and Intel TDX Move from Research to Production</div>
+          <div class="card-teaser">Memory encryption via AMD SEV-SNP and Intel TDX now enables cryptographic attestation that cloud provider infrastructure cannot access workload memory — a capability that removes the fundamental cloud trust assumption that has prevented regulated healthcare and financial workloads from moving fully cloud-native.</div>
+          <a href="#" class="card-link">Read more →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Programming -->
+    <div class="category-section">
+      <div class="category-label-bar">Programming</div>
+      <div class="grid-2">
+        <div class="article-card">
+          <span class="badge badge-medium">Dev Security</span>
+          <div class="card-headline">Memory Safety Languages in Systems Programming: CISA's Roadmap for Eliminating a Vulnerability Class</div>
+          <div class="card-teaser">CISA's joint advisory with NSA and FBI calls for technology manufacturers to eliminate memory-unsafe programming languages from new development, citing that 70% of Microsoft and Google CVEs traced to memory safety vulnerabilities. The advisory provides a practical migration roadmap for organizations evaluating Rust adoption.</div>
+          <a href="#" class="card-link">Read more →</a>
+        </div>
+        <div class="article-card">
+          <span class="badge badge-medium">Dev Security</span>
+          <div class="card-headline">Software Bill of Materials (SBOM) in Practice: Lessons from the First Year of NTIA Compliance</div>
+          <div class="card-teaser">One year into mandatory SBOM requirements for federal software suppliers, early adopters have documented significant reductions in response time to supply chain vulnerability notifications — including same-day identification of vulnerable components during the XZ Utils backdoor incident, compared to weeks for organizations without SBOM programs.</div>
+          <a href="#" class="card-link">Read more →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Applications -->
+    <div class="category-section">
+      <div class="category-label-bar">Applications</div>
+      <div class="grid-2">
+        <div class="article-card">
+          <span class="badge badge-medium">AppSec</span>
+          <div class="card-headline">DAST in CI/CD: Integrating Dynamic Application Security Testing into Automated Build Pipelines</div>
+          <div class="card-teaser">Shifting dynamic application security testing left into CI/CD pipelines — rather than treating it as a pre-production gate — has demonstrably reduced mean time to remediation for web application vulnerabilities in organizations adopting modern DevSecOps practices.</div>
+          <a href="#" class="card-link">Read more →</a>
+        </div>
+        <div class="article-card">
+          <span class="badge badge-medium">AppSec</span>
+          <div class="card-headline">API Security Testing in 2025: Why the OWASP API Top 10 2023 Update Changes Your Testing Scope</div>
+          <div class="card-teaser">The 2023 OWASP API Security Top 10 revision introduces Unrestricted Access to Sensitive Business Flows and Server-Side Request Forgery as new categories, reflecting the shift in API attack patterns toward business logic exploitation and cloud metadata service abuse rather than classic injection vulnerabilities.</div>
+          <a href="#" class="card-link">Read more →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cryptography -->
+    <div class="category-section">
+      <div class="category-label-bar">Cryptography</div>
+      <div class="grid-2">
+        <div class="article-card">
+          <span class="badge badge-medium">Cryptography</span>
+          <div class="card-headline">NIST PQC Standards Finalized: ML-KEM, ML-DSA, and SLH-DSA — What Security Teams Need to Know</div>
+          <div class="card-teaser">The August 2024 finalization of NIST's post-quantum cryptography standards marks the beginning — not the end — of the cryptographic transition challenge. This article explains each standard's use case, the timeline for deprecating vulnerable algorithms, and the organizational steps required to begin migration planning.</div>
+          <a href="#" class="card-link">Read more →</a>
+        </div>
+        <div class="article-card">
+          <span class="badge badge-medium">Cryptography</span>
+          <div class="card-headline">Certificate Transparency Monitoring: Detecting Phishing Infrastructure Before Your Users Are Hit</div>
+          <div class="card-teaser">Certificate Transparency logs make every TLS certificate issuance publicly auditable — and threat actors who spin up phishing infrastructure using legitimate CA-issued certificates leave a detectable footprint. This article covers building an automated CT log monitoring pipeline to alert on certificates issued for lookalike domains targeting your organization.</div>
+          <a href="#" class="card-link">Read more →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sensors -->
+    <div class="category-section">
+      <div class="category-label-bar">Sensors</div>
+      <div class="grid-2">
+        <div class="article-card">
+          <span class="badge badge-medium">IoT/OT</span>
+          <div class="card-headline">OT Network Visibility: Deploying Passive Sensors in Industrial Control Environments Without Disrupting Operations</div>
+          <div class="card-teaser">Operational technology environments require specialized network monitoring approaches that accommodate legacy protocols, air-gapped segments, and zero-downtime constraints that rule out active scanning. This deployment guide covers passive network taps, protocol-aware sensors, and Purdue Model-aligned visibility architecture.</div>
+          <a href="#" class="card-link">Read more →</a>
+        </div>
+        <div class="article-card">
+          <span class="badge badge-medium">IoT</span>
+          <div class="card-headline">SBOM for IoT: How Matter Protocol and Connectivity Standards Alliance Are Addressing Firmware Security</div>
+          <div class="card-teaser">The Matter smart home protocol's security architecture requires manufacturers to provide cryptographically signed firmware attestation and component transparency, addressing a fundamental IoT security deficit where device firmware contents have historically been opaque to both operators and security researchers.</div>
+          <a href="#" class="card-link">Read more →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quantum Computing -->
+    <div class="category-section">
+      <div class="category-label-bar">Quantum Computing</div>
+      <div class="grid-2">
+        <div class="article-card">
+          <span class="badge badge-medium">Quantum</span>
+          <div class="card-headline">Harvest Now, Decrypt Later: Assessing Your Organization's Quantum Risk Exposure Today</div>
+          <div class="card-teaser">Nation-state adversaries are actively collecting encrypted network traffic — particularly data classified as long-term sensitive — with the intention of decrypting it once sufficiently capable quantum computers are available. Organizations protecting data with a 10+ year sensitivity horizon face a credible, present risk that demands immediate cryptographic inventory action.</div>
+          <a href="#" class="card-link">Read more →</a>
+        </div>
+        <div class="article-card">
+          <span class="badge badge-medium">Quantum</span>
+          <div class="card-headline">IBM Heron Processor and the Road to Cryptographically Relevant Quantum Computing</div>
+          <div class="card-teaser">IBM's 133-qubit Heron processor achieves significantly lower error rates than its predecessors, but expert consensus holds that breaking 2048-bit RSA requires millions of logical qubits — still decades away at current error correction trajectories. Understanding where we actually are on the quantum roadmap is essential for calibrating migration urgency.</div>
+          <a href="#" class="card-link">Read more →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quantum Research -->
+    <div class="category-section">
+      <div class="category-label-bar">Quantum Research</div>
+      <div class="grid-2">
+        <div class="article-card">
+          <span class="badge badge-medium">Research</span>
+          <div class="card-headline">Quantum Key Distribution in Financial Networks: A Practical Assessment for Security Architects</div>
+          <div class="card-teaser">QKD offers information-theoretically secure key exchange — but the physical infrastructure requirements, fiber distance limitations, and cost structure limit near-term deployment to high-value, fixed connections between major financial clearing institutions. This assessment separates QKD's genuine security properties from the marketing claims surrounding its commercial availability.</div>
+          <a href="#" class="card-link">Read more →</a>
+        </div>
+        <div class="article-card">
+          <span class="badge badge-medium">Research</span>
+          <div class="card-headline">NIST IR 8413: A Third NIST PQC Candidate Report — What Didn't Make the Cut and Why</div>
+          <div class="card-teaser">The third-round candidate algorithms that did not advance to NIST's final PQC standard offer instructive lessons in cryptographic standardization — some were broken before completion, others sacrificed performance for security margins that exceeded requirements. Understanding the selection criteria illuminates what the winning algorithms protect against and what they do not.</div>
+          <a href="#" class="card-link">Read more →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- New Technology -->
+    <div class="category-section">
+      <div class="category-label-bar">New Technology</div>
+      <div class="grid-2">
+        <div class="article-card">
+          <span class="badge badge-medium">Emerging Tech</span>
+          <div class="card-headline">Secure Enclaves for Browser Extensions: Google's Project Planchet and the Future of Extension Trust</div>
+          <div class="card-teaser">Browser extensions with access to sensitive web sessions represent a significant but undermonitored attack surface — the 2023 credential theft campaigns targeting password managers demonstrated how trusted extensions can be weaponized. Google's Project Planchet proposes isolating extension execution in hardware-backed enclaves as a structural fix.</div>
+          <a href="#" class="card-link">Read more →</a>
+        </div>
+        <div class="article-card">
+          <span class="badge badge-medium">Emerging Tech</span>
+          <div class="card-headline">Passkeys at Scale: Identity Provider Integration Challenges and the Path to Phishing-Resistant Enterprise MFA</div>
+          <div class="card-teaser">FIDO2 passkeys eliminate the phishing attack surface for credential theft, but enterprise deployment requires IdP integration, device trust policy updates, and user experience design that prevents the enrollment-time social engineering attacks that now target organizations making the transition from traditional MFA.</div>
+          <a href="#" class="card-link">Read more →</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div><div class="footer-logo">CyberSense<span>.Solutions</span></div><p class="footer-mission">Delivering actionable cybersecurity intelligence, daily awareness briefings, and professional training to teams that can't afford to be caught off guard.</p><div class="footer-socials"><a href="#" class="footer-social-icon">in</a><a href="#" class="footer-social-icon">f</a><a href="#" class="footer-social-icon">▶</a><a href="#" class="footer-social-icon">𝕏</a><a href="#" class="footer-social-icon">tt</a></div></div>
+      <div class="footer-col"><h4>Platform</h4><ul><li><a href="index.html">Home</a></li><li><a href="radar.html">Threat Radar</a></li><li><a href="intelligence.html">Intel Briefs</a></li><li><a href="newsletter.html">Newsletter</a></li><li><a href="training.html">Training</a></li><li><a href="zerotrust.html">Zero-Trust</a></li></ul></div>
+      <div class="footer-col"><h4>Legal</h4><ul><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li><li><a href="about.html">Contact Us</a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><span>&copy; 2025 CyberSense.Solutions. All rights reserved.</span><span>Built for the defenders.</span></div>
+  </div>
+</footer>
+<script src="main.js"></script>
+</body>
+</html>

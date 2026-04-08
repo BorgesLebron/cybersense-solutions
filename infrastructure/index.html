@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberSense.Solutions — Cybersecurity Intelligence, Delivered Daily</title>
+<meta name="description" content="Real-time threat intelligence, professional training, and daily awareness briefings for security teams.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="nav" role="navigation" aria-label="Main navigation">
+  <a href="index.html" class="nav-wordmark">CyberSense<span>.Solutions</span></a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="radar.html">Radar</a></li>
+    <li><a href="intelligence.html">Intel</a></li>
+    <li><a href="newsletter.html">Newsletter</a></li>
+    <li><a href="training.html">Training</a></li>
+    <li><a href="growth.html">Proficient</a></li>
+    <li><a href="innovation.html">Innovation</a></li>
+    <li><a href="zerotrust.html">Zero-Trust</a></li>
+  </ul>
+  <button class="nav-login" onclick="window.location='dashboard.html'">Login</button>
+  <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="nav-drawer" id="nav-drawer" role="dialog" aria-label="Mobile navigation">
+  <ul>
+    <li><a href="index.html">Home</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="radar.html">Radar</a></li>
+    <li><a href="intelligence.html">Intel</a></li>
+    <li><a href="newsletter.html">Newsletter</a></li>
+    <li><a href="training.html">Training</a></li>
+    <li><a href="growth.html">Proficient</a></li>
+    <li><a href="innovation.html">Innovation</a></li>
+    <li><a href="zerotrust.html">Zero-Trust</a></li>
+  </ul>
+  <a href="dashboard.html" class="drawer-login">Login</a>
+</div>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero-dark section" style="padding:96px 24px 80px;">
+  <div class="container" style="position:relative;z-index:1;">
+    <p class="section-label">Live Intelligence Platform</p>
+    <h1 style="font-size:clamp(36px,6vw,64px);font-weight:700;color:var(--cs-white);letter-spacing:-1.5px;line-height:1.08;margin-bottom:20px;max-width:720px;">
+      Cybersecurity Intelligence.<br>Delivered Daily.
+    </h1>
+    <p style="font-size:clamp(16px,2.5vw,20px);color:rgba(255,255,255,0.65);max-width:600px;line-height:1.65;margin-bottom:40px;">
+      Real-time threat intelligence, professional training, and daily awareness briefings — built for teams that can't afford to be caught off guard.
+    </p>
+    <div class="flex gap-16 wrap hero-ctas">
+      <a href="newsletter.html" class="btn btn-primary btn-lg">Start Free</a>
+      <a href="radar.html" class="btn btn-outline-white btn-lg">See the Radar</a>
+    </div>
+    <div style="display:flex;gap:32px;margin-top:48px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="live-dot"></span>
+        <span style="font-size:13px;color:rgba(255,255,255,0.5);">Threat radar updated continuously</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="width:10px;height:10px;border-radius:50%;background:var(--cs-cyan);display:inline-block;"></span>
+        <span style="font-size:13px;color:rgba(255,255,255,0.5);">Daily briefing by 09:00 CT</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ RADAR PREVIEW ═══ -->
+<section class="section" style="background:var(--cs-white);padding:72px 24px;">
+  <div class="container">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;">
+      <span class="live-dot"></span>
+      <p class="section-label" style="margin:0;">Live Threat Radar</p>
+    </div>
+    <h2 class="section-heading" style="margin-bottom:6px;">Active Threats &amp; Vulnerabilities</h2>
+    <p class="section-sub" style="margin-bottom:32px;">A rolling feed of tracked CVEs, active exploits, and vendor advisories. Full access for subscribers.</p>
+
+    <div class="gate-wrapper" style="border-radius:var(--radius-lg);overflow:hidden;">
+      <!-- Visible rows -->
+      <div class="table-wrap">
+        <table class="data-table" aria-label="Threat radar preview">
+          <thead>
+            <tr>
+              <th>Severity</th>
+              <th>Threat Name</th>
+              <th>CVSS</th>
+              <th>CVE</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-critical">Critical</span></td>
+              <td>Fortinet FortiOS SSL-VPN Remote Code Execution</td>
+              <td class="mono">9.8</td>
+              <td class="mono">CVE-2024-21762</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-critical">Critical</span></td>
+              <td>Ivanti Connect Secure Auth Bypass &amp; RCE Chain</td>
+              <td class="mono">9.6</td>
+              <td class="mono">CVE-2024-21887</td>
+            </tr>
+            <tr style="position:relative;">
+              <td><span class="badge badge-high">High</span></td>
+              <td>Palo Alto PAN-OS GlobalProtect Command Injection</td>
+              <td class="mono">8.7</td>
+              <td class="mono">CVE-2024-3400</td>
+            </tr>
+          </tbody>
+        </table>
+        <!-- Blurred bottom region -->
+        <div class="gate-wrapper">
+          <div class="blurred">
+            <table class="data-table" aria-hidden="true">
+              <tbody>
+                <tr>
+                  <td><span class="badge badge-high">High</span></td>
+                  <td>Microsoft SharePoint Server Elevation of Privilege</td>
+                  <td class="mono">8.8</td>
+                  <td class="mono">CVE-2024-38094</td>
+                </tr>
+                <tr>
+                  <td><span class="badge badge-medium">Medium</span></td>
+                  <td>Cisco IOS XE Web UI Privilege Escalation</td>
+                  <td class="mono">6.5</td>
+                  <td class="mono">CVE-2024-20399</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="gate-overlay">
+            <div class="gate-card">
+              <h3>Subscribe to see the live feed</h3>
+              <p>Full radar access includes 12+ active threats, CVSS scores, status tracking, and linked intelligence articles.</p>
+              <a href="newsletter.html" class="btn btn-primary">Get Access</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p style="margin-top:16px;font-size:13px;color:var(--cs-gray-400);text-align:right;"><a href="radar.html">View full radar →</a></p>
+  </div>
+</section>
+
+<!-- ═══ NEWSLETTER PREVIEW ═══ -->
+<section class="section" style="background:var(--cs-white);padding:72px 24px;">
+  <div class="container">
+    <p class="section-label">Today's Briefing</p>
+    <h2 class="section-heading" style="margin-bottom:6px;">Daily Digital Awareness Briefing</h2>
+    <p class="section-sub" style="margin-bottom:36px;">Your daily dose of threat awareness, delivered before 09:00 CT every morning.</p>
+
+    <div class="card" style="max-width:780px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #f1f5f9;">
+        <div>
+          <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--cs-gray-400);margin-bottom:4px;">Edition</div>
+          <div style="font-size:18px;font-weight:700;color:var(--cs-navy);">Monday, January 13, 2025</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <span class="badge badge-critical" style="gap:5px;"><span class="badge-dot"></span>3 Threats</span>
+          <span class="badge badge-medium">2 Innovations</span>
+          <span class="badge badge-published">1 Training Byte</span>
+        </div>
+      </div>
+
+      <div class="newsletter-preview-wrap">
+        <div class="newsletter-preview-body" id="newsletter-preview-body">
+          <div class="briefing-section">
+            <div class="briefing-type">⚠ Threat Item 1</div>
+            <h3>Fortinet SSL-VPN Zero-Day Actively Exploited by Chinese Threat Actor</h3>
+            <p>A critical remote code execution vulnerability in Fortinet FortiOS (CVE-2024-21762) is being actively exploited by the threat actor tracked as Volt Typhoon, targeting critical infrastructure organizations in North America. Exploitation does not require authentication and allows full device takeover via crafted HTTP requests to the SSL-VPN interface.</p>
+          </div>
+          <div class="briefing-section">
+            <div class="briefing-type">⚠ Threat Item 2</div>
+            <h3>Ivanti Connect Secure Mass Exploitation Campaign Underway</h3>
+            <p>CISA has issued an emergency directive requiring federal agencies to patch or disconnect Ivanti Connect Secure and Policy Secure appliances following confirmed exploitation of CVE-2024-21887 and CVE-2023-46805. The vulnerability chain enables unauthenticated remote code execution and has been used to deploy the LIGHTWIRE web shell across government networks.</p>
+          </div>
+          <div class="briefing-section">
+            <div class="briefing-type">⚠ Threat Item 3</div>
+            <h3>GitHub Actions Supply Chain Attack Targets CI/CD Pipelines</h3>
+            <p>Researchers at Palo Alto Unit 42 have identified a coordinated supply chain campaign targeting GitHub Actions workflows across thousands of open-source repositories. Attackers are injecting malicious workflow modifications that exfiltrate CI/CD secrets including cloud provider credentials and code signing keys during automated build processes.</p>
+          </div>
+          <div class="briefing-section">
+            <div class="briefing-type">💡 Innovation Item 1</div>
+            <h3>NIST Releases SP 800-228: AI Model Risk Management for Cybersecurity Applications</h3>
+            <p>NIST has published a draft special publication addressing the specific risk management challenges posed by integrating large language models into security operations platforms, including prompt injection defenses, hallucination mitigation strategies, and model supply chain verification requirements for SOC tooling.</p>
+          </div>
+          <div class="briefing-section">
+            <div class="briefing-type">💡 Innovation Item 2</div>
+            <h3>Post-Quantum TLS 1.3 Hybrid Key Exchange Enters Production at Major CDNs</h3>
+            <p>Cloudflare and Fastly have both announced production rollout of X25519Kyber768 hybrid key exchange in TLS 1.3, marking the first large-scale deployment of NIST-standardized post-quantum cryptography protecting internet traffic against harvest-now-decrypt-later attacks.</p>
+          </div>
+          <div class="briefing-section">
+            <div class="briefing-type">📈 Professional Growth</div>
+            <h3>CompTIA Releases Updated CySA+ CS0-003 Exam Objectives with AI/ML Focus</h3>
+            <p>The updated Cybersecurity Analyst certification exam now includes 18% coverage of AI-assisted threat detection and response workflows, reflecting the industry shift toward augmented SOC operations. Candidates holding CS0-002 have until March 2025 to complete the transition or face credential recertification under new requirements.</p>
+          </div>
+          <div class="briefing-section">
+            <div class="briefing-type">🎓 Training Byte</div>
+            <h3>How to Detect Credential Stuffing in Authentication Logs</h3>
+            <p>Credential stuffing attacks are characterized by high-volume authentication attempts from rotating IP addresses, geographically distributed login attempts against a single account within short timeframes, and success rates below 0.5%. In your SIEM, build a rule that fires when a single username receives more than 10 failed authentication attempts from more than 5 unique IPs within any 15-minute window. Tag these events for immediate SOC triage — they indicate active credential list testing, not forgotten passwords.</p>
+          </div>
+          <div style="margin-top:24px;padding-top:16px;border-top:1px solid #f1f5f9;">
+            <a href="newsletter.html" style="font-size:14px;font-weight:600;color:var(--cs-cyan);">Read the full briefing →</a>
+          </div>
+        </div>
+        <div class="newsletter-fade" id="newsletter-fade"></div>
+      </div>
+
+      <div style="margin-top:16px;text-align:center;">
+        <button id="newsletter-toggle" class="btn btn-outline btn-sm">Show more ↓</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ SOCIAL PROOF ═══ -->
+<section class="section-sm" style="background:var(--cs-gray-100);">
+  <div class="container">
+    <div class="grid-3">
+      <div class="card stat-card">
+        <div class="stat-value">4,800+</div>
+        <div class="stat-label">Subscribers &amp; Growing</div>
+      </div>
+      <div class="card stat-card">
+        <div class="stat-value">365</div>
+        <div class="stat-label">Daily Intelligence Briefings Per Year</div>
+      </div>
+      <div class="card stat-card" style="border-left:3px solid var(--cs-cyan);">
+        <div class="stat-value" style="font-size:clamp(18px,3vw,26px);letter-spacing:-0.5px;">100% Original</div>
+        <div class="stat-label">Zero outside links — all our own analysis</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FEATURE STRIP ═══ -->
+<section class="section" style="background:var(--cs-white);">
+  <div class="container">
+    <p class="section-label">What We Cover</p>
+    <h2 class="section-heading" style="margin-bottom:40px;">Intelligence that moves at the speed of the threat.</h2>
+    <div class="grid-3" style="gap:20px;">
+      <div class="card" style="border-top:3px solid var(--cs-red);">
+        <div style="font-size:28px;margin-bottom:12px;">🛡</div>
+        <h3 style="font-size:17px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;">Threat Intelligence</h3>
+        <p style="font-size:14px;color:var(--cs-gray-600);line-height:1.6;">Active CVEs, zero-days, and exploits — tracked, scored, and contextualized for your team before they become incidents.</p>
+      </div>
+      <div class="card" style="border-top:3px solid var(--cs-cyan);">
+        <div style="font-size:28px;margin-bottom:12px;">📡</div>
+        <h3 style="font-size:17px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;">Daily Briefings</h3>
+        <p style="font-size:14px;color:var(--cs-gray-600);line-height:1.6;">Seven-item structured awareness briefings delivered before 09:00 CT — threats, innovations, and a training byte, every day.</p>
+      </div>
+      <div class="card" style="border-top:3px solid var(--cs-green);">
+        <div style="font-size:28px;margin-bottom:12px;">🎓</div>
+        <h3 style="font-size:17px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;">Professional Training</h3>
+        <p style="font-size:14px;color:var(--cs-gray-600);line-height:1.6;">Labs, video courses, simulation scenarios, and certification guides — built on current threat intelligence, not textbook theory.</p>
+      </div>
+      <div class="card" style="border-top:3px solid var(--cs-amber);">
+        <div style="font-size:28px;margin-bottom:12px;">🔬</div>
+        <h3 style="font-size:17px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;">Innovation Tracking</h3>
+        <p style="font-size:14px;color:var(--cs-gray-600);line-height:1.6;">From post-quantum cryptography to AI-driven SOC tooling — we track what's emerging before it's a requirement.</p>
+      </div>
+      <div class="card" style="border-top:3px solid var(--cs-blue-mid);">
+        <div style="font-size:28px;margin-bottom:12px;">📈</div>
+        <h3 style="font-size:17px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;">Career Development</h3>
+        <p style="font-size:14px;color:var(--cs-gray-600);line-height:1.6;">Certification paths, webinars, and workforce intelligence to keep your team ahead of the skills gap.</p>
+      </div>
+      <div class="card" style="border-top:3px solid var(--cs-gray-400);background:var(--cs-navy);">
+        <div style="font-size:28px;margin-bottom:12px;">🏢</div>
+        <h3 style="font-size:17px;font-weight:700;color:var(--cs-white);margin-bottom:8px;">Zero-Trust for Teams</h3>
+        <p style="font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">Enterprise platform with phishing simulations, live vishing exercises, and a real-time employee compliance dashboard.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CTA BAND ═══ -->
+<section style="background:var(--cs-navy);padding:72px 24px;text-align:center;position:relative;overflow:hidden;">
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:300px;background:radial-gradient(ellipse,rgba(0,212,255,0.08) 0%,transparent 70%);pointer-events:none;"></div>
+  <div class="container" style="position:relative;z-index:1;">
+    <p class="section-label">Get Started</p>
+    <h2 style="font-size:clamp(28px,4vw,44px);font-weight:700;color:var(--cs-white);letter-spacing:-1px;margin-bottom:14px;">Start protecting your team today.</h2>
+    <p style="font-size:17px;color:rgba(255,255,255,0.6);margin-bottom:36px;max-width:500px;margin-left:auto;margin-right:auto;">Free newsletter. Paid platform. Enterprise solutions. We scale with your security program.</p>
+    <div class="flex gap-16 wrap" style="justify-content:center;">
+      <a href="newsletter.html" class="btn btn-primary btn-lg">Start Free</a>
+      <a href="zerotrust.html" class="btn btn-outline-white btn-lg">Enterprise Demo</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-logo">CyberSense<span>.Solutions</span></div>
+        <p class="footer-mission">Delivering actionable cybersecurity intelligence, daily awareness briefings, and professional training to teams that can't afford to be caught off guard.</p>
+        <div class="footer-socials">
+          <a href="#" class="footer-social-icon" aria-label="LinkedIn">in</a>
+          <a href="#" class="footer-social-icon" aria-label="Facebook">f</a>
+          <a href="#" class="footer-social-icon" aria-label="YouTube">▶</a>
+          <a href="#" class="footer-social-icon" aria-label="X">𝕏</a>
+          <a href="#" class="footer-social-icon" aria-label="TikTok">tt</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Platform</h4>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="radar.html">Threat Radar</a></li>
+          <li><a href="intelligence.html">Intel Briefs</a></li>
+          <li><a href="newsletter.html">Newsletter</a></li>
+          <li><a href="training.html">Training</a></li>
+          <li><a href="growth.html">Proficient</a></li>
+          <li><a href="innovation.html">Innovation</a></li>
+          <li><a href="zerotrust.html">Zero-Trust</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+          <li><a href="about.html">Contact Us</a></li>
+          <li><a href="#">Cookie Policy</a></li>
+          <li><a href="#">Accessibility</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2025 CyberSense.Solutions. All rights reserved.</span>
+      <span>Built for the defenders.</span>
+    </div>
+  </div>
+</footer>
+
+<script src="main.js"></script>
+</body>
+</html>

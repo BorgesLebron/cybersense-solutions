@@ -1,0 +1,529 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans,sans-serif)}
+.wrap{padding:1rem 0}
+.cluster-nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.cn-btn{padding:5px 12px;border-radius:var(--border-radius-md,8px);border:0.5px solid var(--color-border-secondary);font-size:12px;cursor:pointer;background:transparent;color:var(--color-text-secondary);font-family:inherit;transition:all .12s}
+.cn-btn.active{font-weight:500}
+.cluster{display:none}
+.cluster.active{display:block}
+.cluster-desc{font-size:12px;color:var(--color-text-secondary);margin-bottom:14px;line-height:1.5}
+.tables-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-bottom:16px}
+.tbl-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg,12px);overflow:hidden}
+.tbl-header{padding:10px 14px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;gap:8px}
+.tbl-name{font-size:13px;font-weight:500;color:var(--color-text-primary)}
+.tbl-tag{font-size:10px;padding:2px 7px;border-radius:99px;font-weight:500}
+.tag-core{background:#E6F1FB;color:#185FA5}
+.tag-ref{background:#EAF3DE;color:#3B6D11}
+.tag-link{background:#EEEDFE;color:#534AB7}
+.tag-log{background:#F1EFE8;color:#5F5E5A}
+.tag-ent{background:#FAEEDA;color:#854F0B}
+@media(prefers-color-scheme:dark){
+.tag-core{background:#0C447C;color:#B5D4F4}
+.tag-ref{background:#27500A;color:#C0DD97}
+.tag-link{background:#3C3489;color:#CECBF6}
+.tag-log{background:#444441;color:#D3D1C7}
+.tag-ent{background:#633806;color:#FAC775}
+}
+.field-list{padding:8px 0}
+.field-row{display:flex;align-items:center;gap:8px;padding:4px 14px;font-size:12px}
+.field-row:hover{background:var(--color-background-secondary)}
+.field-name{color:var(--color-text-primary);font-weight:500;min-width:140px;font-family:var(--font-mono,monospace);font-size:11px}
+.field-type{color:var(--color-text-tertiary);font-size:11px;min-width:70px}
+.field-note{color:var(--color-text-secondary);font-size:11px;flex:1}
+.pk{color:#185FA5;font-size:10px;font-weight:500;background:#E6F1FB;padding:1px 5px;border-radius:3px}
+.fk{color:#534AB7;font-size:10px;font-weight:500;background:#EEEDFE;padding:1px 5px;border-radius:3px}
+.uk{color:#3B6D11;font-size:10px;font-weight:500;background:#EAF3DE;padding:1px 5px;border-radius:3px}
+@media(prefers-color-scheme:dark){
+.pk{color:#B5D4F4;background:#0C447C}
+.fk{color:#CECBF6;background:#3C3489}
+.uk{color:#C0DD97;background:#27500A}
+}
+.rel-section{margin-top:12px}
+.rel-title{font-size:11px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:8px}
+.rel-row{display:flex;align-items:flex-start;gap:10px;padding:6px 10px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md,8px);margin-bottom:6px;background:var(--color-background-primary)}
+.rel-from{font-size:11px;font-weight:500;color:var(--color-text-primary);font-family:var(--font-mono,monospace);min-width:160px}
+.rel-arrow{font-size:11px;color:var(--color-text-tertiary);min-width:28px;text-align:center;margin-top:1px}
+.rel-to{font-size:11px;color:var(--color-text-primary);font-family:var(--font-mono,monospace);min-width:160px}
+.rel-note{font-size:11px;color:var(--color-text-secondary);flex:1}
+.ask-btn{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:var(--border-radius-md,8px);border:0.5px solid var(--color-border-secondary);font-size:12px;cursor:pointer;background:transparent;color:var(--color-text-secondary);margin-top:10px;font-family:inherit}
+.ask-btn:hover{background:var(--color-background-secondary)}
+.divider{height:0.5px;background:var(--color-border-tertiary);margin:14px 0}
+</style>
+
+<div class="wrap">
+<div class="cluster-nav">
+  <button class="cn-btn active" style="border-color:#378ADD;color:#185FA5" onclick="showCluster('users',this)">Users &amp; Auth</button>
+  <button class="cn-btn" style="" onclick="showCluster('intel',this)">Intelligence</button>
+  <button class="cn-btn" style="" onclick="showCluster('content',this)">Content</button>
+  <button class="cn-btn" style="" onclick="showCluster('training',this)">Training &amp; ZT</button>
+  <button class="cn-btn" style="" onclick="showCluster('revenue',this)">Revenue &amp; Sales</button>
+  <button class="cn-btn" style="" onclick="showCluster('ops',this)">Operations</button>
+</div>
+
+<!-- USERS & AUTH -->
+<div class="cluster active" id="cl-users">
+  <div class="cluster-desc">Core identity layer. Every subscriber, enterprise org, and admin role anchors here. Drives access control for all four revenue tiers and the admin dashboard role permissions.</div>
+  <div class="tables-grid">
+    <div class="tbl-card">
+      <div class="tbl-header"><div class="tbl-name">users</div><span class="tbl-tag tag-core">core</span></div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-name">id</span><span class="field-type">uuid</span><span class="pk">PK</span></div>
+        <div class="field-row"><span class="field-name">email</span><span class="field-type">varchar</span><span class="uk">UNIQUE</span></div>
+        <div class="field-row"><span class="field-name">password_hash</span><span class="field-type">varchar</span><span class="field-note">bcrypt</span></div>
+        <div class="field-row"><span class="field-name">full_name</span><span class="field-type">varchar</span></div>
+        <div class="field-row"><span class="field-name">tier</span><span class="field-type">enum</span><span class="field-note">free|freemium|monthly|enterprise</span></div>
+        <div class="field-row"><span class="field-name">org_id</span><span class="field-type">uuid</span><span class="fk">FK → organizations</span></div>
+        <div class="field-row"><span class="field-name">stripe_customer_id</span><span class="field-type">varchar</span></div>
+        <div class="field-row"><span class="field-name">email_verified</span><span class="field-type">boolean</span></div>
+        <div class="field-row"><span class="field-name">email_subscribed</span><span class="field-type">boolean</span></div>
+        <div class="field-row"><span class="field-name">last_login_at</span><span class="field-type">timestamp</span></div>
+        <div class="field-row"><span class="field-name">created_at</span><span class="field-type">timestamp</span></div>
+        <div class="field-row"><span class="field-name">deleted_at</span><span class="field-type">timestamp</span><span class="field-note">soft delete</span></div>
+      </div>
+    </div>
+    <div class="tbl-card">
+      <div class="tbl-header"><div class="tbl-name">organizations</div><span class="tbl-tag tag-core">core</span></div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-name">id</span><span class="field-type">uuid</span><span class="pk">PK</span></div>
+        <div class="field-row"><span class="field-name">name</span><span class="field-type">varchar</span></div>
+        <div class="field-row"><span class="field-name">domain</span><span class="field-type">varchar</span><span class="field-note">email domain for SSO</span></div>
+        <div class="field-row"><span class="field-name">seat_count</span><span class="field-type">integer</span></div>
+        <div class="field-row"><span class="field-name">seat_used</span><span class="field-type">integer</span></div>
+        <div class="field-row"><span class="field-name">stripe_subscription_id</span><span class="field-type">varchar</span></div>
+        <div class="field-row"><span class="field-name">billing_contact_id</span><span class="field-type">uuid</span><span class="fk">FK → users</span></div>
+        <div class="field-row"><span class="field-name">account_manager_id</span><span class="field-type">uuid</span><span class="fk">FK → agents</span></div>
+        <div class="field-row"><span class="field-name">health_score</span><span class="field-type">integer</span><span class="field-note">0–100, Joe's view</span></div>
+        <div class="field-row"><span class="field-name">renewal_date</span><span class="field-type">date</span></div>
+        <div class="field-row"><span class="field-name">created_at</span><span class="field-type">timestamp</span></div>
+      </div>
+    </div>
+    <div class="tbl-card">
+      <div class="tbl-header"><div class="tbl-name">admin_roles</div><span class="tbl-tag tag-ref">ref</span></div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-name">id</span><span class="field-type">uuid</span><span class="pk">PK</span></div>
+        <div class="field-row"><span class="field-name">user_id</span><span class="field-type">uuid</span><span class="fk">FK → users</span></div>
+        <div class="field-row"><span class="field-name">role</span><span class="field-type">enum</span><span class="field-note">gm|editor|analyst|sales|training</span></div>
+        <div class="field-row"><span class="field-name">dashboard_sections</span><span class="field-type">jsonb</span><span class="field-note">array of permitted panels</span></div>
+        <div class="field-row"><span class="field-name">granted_by</span><span class="field-type">uuid</span><span class="fk">FK → users</span></div>
+        <div class="field-row"><span class="field-name">granted_at</span><span class="field-type">timestamp</span></div>
+      </div>
+    </div>
+    <div class="tbl-card">
+      <div class="tbl-header"><div class="tbl-name">sessions</div><span class="tbl-tag tag-log">log</span></div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-name">id</span><span class="field-type">uuid</span><span class="pk">PK</span></div>
+        <div class="field-row"><span class="field-name">user_id</span><span class="field-type">uuid</span><span class="fk">FK → users</span></div>
+        <div class="field-row"><span class="field-name">token_hash</span><span class="field-type">varchar</span></div>
+        <div class="field-row"><span class="field-name">ip_address</span><span class="field-type">inet</span></div>
+        <div class="field-row"><span class="field-name">user_agent</span><span class="field-type">text</span></div>
+        <div class="field-row"><span class="field-name">expires_at</span><span class="field-type">timestamp</span></div>
+        <div class="field-row"><span class="field-name">created_at</span><span class="field-type">timestamp</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="rel-section">
+    <div class="rel-title">Key relationships</div>
+    <div class="rel-row"><span class="rel-from">users.org_id</span><span class="rel-arrow">→</span><span class="rel-to">organizations.id</span><span class="rel-note">many users belong to one org (enterprise tier only)</span></div>
+    <div class="rel-row"><span class="rel-from">organizations.billing_contact_id</span><span class="rel-arrow">→</span><span class="rel-to">users.id</span><span class="rel-note">primary billing contact within the org</span></div>
+    <div class="rel-row"><span class="rel-from">admin_roles.user_id</span><span class="rel-arrow">→</span><span class="rel-to">users.id</span><span class="rel-note">1-to-1; one user may hold one admin role</span></div>
+    <div class="rel-row"><span class="rel-from">sessions.user_id</span><span class="rel-arrow">→</span><span class="rel-to">users.id</span><span class="rel-note">many sessions per user; rotated on each login</span></div>
+  </div>
+  <button class="ask-btn" onclick="sendPrompt('What indexes should be created on the users and organizations tables for the CyberSense platform?')">Design indexes ↗</button>
+</div>
+
+<!-- INTELLIGENCE -->
+<div class="cluster" id="cl-intel">
+  <div class="cluster-desc">The intelligence repository — everything Rick, Ivan/Charlie, and Barbara produce. Feeds the Threat Radar page, Intel Brief pipeline, and Awareness pipeline. Every threat record and article traces back to this cluster.</div>
+  <div class="tables-grid">
+    <div class="tbl-card">
+      <div class="tbl-header"><div class="tbl-name">threat_records</div><span class="tbl-tag tag-core">core</span></div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-name">id</span><span class="field-type">uuid</span><span class="pk">PK</span></div>
+        <div class="field-row"><span class="field-name">cve_id</span><span class="field-type">varchar</span><span class="uk">UNIQUE</span></div>
+        <div class="field-row"><span class="field-name">threat_name</span><span class="field-type">varchar</span></div>
+        <div class="field-row"><span class="field-name">severity</span><span class="field-type">enum</span><span class="field-note">critical|high|medium|low</span></div>
+        <div class="field-row"><span class="field-name">cvss_score</span><span class="field-type">decimal(3,1)</span></div>
+        <div class="field-row"><span class="field-name">category</span><span class="field-type">varchar</span><span class="field-note">RCE, SQLi, privilege-esc…</span></div>
+        <div class="field-row"><span class="field-name">source_url</span><span class="field-type">text</span><span class="field-note">internal only, never published</span></div>
+        <div class="field-row"><span class="field-name">raw_data</span><span class="field-type">jsonb</span><span class="field-note">Rick's structured output</span></div>
+        <div class="field-row"><span class="field-name">tags</span><span class="field-type">text[]</span></div>
+        <div class="field-row"><span class="field-name">priority</span><span class="field-type">enum</span><span class="field-note">immediate|high|normal|watch</span></div>
+        <div class="field-row"><span class="field-name">ingested_by</span><span class="field-type">varchar</span><span class="field-note">agent name (Rick)</span></div>
+        <div class="field-row"><span class="field-name">ingested_at</span><span class="field-type">timestamp</span></div>
+        <div class="field-row"><span class="field-name">article_id</span><span class="field-type">uuid</span><span class="fk">FK → articles (nullable)</span></div>
+      </div>
+    </div>
+    <div class="tbl-card">
+      <div class="tbl-header"><div class="tbl-name">intel_items</div><span class="tbl-tag tag-core">core</span></div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-name">id</span><span class="field-type">uuid</span><span class="pk">PK</span></div>
+        <div class="field-row"><span class="field-name">type</span><span class="field-type">enum</span><span class="field-note">innovation|pro_growth|policy</span></div>
+        <div class="field-row"><span class="field-name">category</span><span class="field-type">varchar</span><span class="field-note">AI, quantum, cloud…</span></div>
+        <div class="field-row"><span class="field-name">headline</span><span class="field-type">text</span></div>
+        <div class="field-row"><span class="field-name">summary</span><span class="field-type">text</span></div>
+        <div class="field-row"><span class="field-name">tags</span><span class="field-type">text[]</span></div>
+        <div class="field-row"><span class="field-name">priority</span><span class="field-type">enum</span><span class="field-note">high|normal|watch</span></div>
+        <div class="field-row"><span class="field-name">ingested_by</span><span class="field-type">varchar</span><span class="field-note">Ivan or Charlie</span></div>
+        <div class="field-row"><span class="field-name">ingested_at</span><span class="field-type">timestamp</span></div>
+        <div class="field-row"><span class="field-name">used_in_briefing</span><span class="field-type">boolean</span></div>
+        <div class="field-row"><span class="field-name">article_id</span><span class="field-type">uuid</span><span class="fk">FK → articles (nullable)</span></div>
+      </div>
+    </div>
+    <div class="tbl-card">
+      <div class="tbl-header"><div class="tbl-name">intel_repository</div><span class="tbl-tag tag-core">core</span></div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-name">id</span><span class="field-type">uuid</span><span class="pk">PK</span></div>
+        <div class="field-row"><span class="field-name">source_type</span><span class="field-type">enum</span><span class="field-note">threat|innovation|growth|policy</span></div>
+        <div class="field-row"><span class="field-name">source_id</span><span class="field-type">uuid</span><span class="field-note">threat_records.id or intel_items.id</span></div>
+        <div class="field-row"><span class="field-name">normalized_data</span><span class="field-type">jsonb</span><span class="field-note">Barbara's output</span></div>
+        <div class="field-row"><span class="field-name">correlation_tags</span><span class="field-type">text[]</span><span class="field-note">cross-item pattern links</span></div>
+        <div class="field-row"><span class="field-name">ready_for_intel</span><span class="field-type">boolean</span></div>
+        <div class="field-row"><span class="field-name">ready_for_awareness</span><span class="field-type">boolean</span></div>
+        <div class="field-row"><span class="field-name">processed_by</span><span class="field-type">varchar</span><span class="field-note">Barbara</span></div>
+        <div class="field-row"><span class="field-name">processed_at</span><span class="field-type">timestamp</span></div>
+      </div>
+    </div>
+    <div class="tbl-card">
+      <div class="tbl-header"><div class="tbl-name">policy_updates</div><span class="tbl-tag tag-ref">ref</span></div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-name">id</span><span class="field-type">uuid</span><span class="pk">PK</span></div>
+        <div class="field-row"><span class="field-name">framework</span><span class="field-type">varchar</span><span class="field-note">NIST|ISO|PCI-DSS|HIPAA…</span></div>
+        <div class="field-row"><span class="field-name">version</span><span class="field-type">varchar</span></div>
+        <div class="field-row"><span class="field-name">change_summary</span><span class="field-type">text</span></div>
+        <div class="field-row"><span class="field-name">effective_date</span><span class="field-type">date</span></div>
+        <div class="field-row"><span class="field-name">article_id</span><span class="field-type">uuid</span><span class="fk">FK → articles (nullable)</span></div>
+        <div class="field-row"><span class="field-name">ingested_at</span><span class="field-type">timestamp</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="rel-section">
+    <div class="rel-title">Key relationships</div>
+    <div class="rel-row"><span class="rel-from">threat_records.article_id</span><span class="rel-arrow">→</span><span class="rel-to">articles.id</span><span class="rel-note">nullable; set when Intel team completes the article — powers the Radar live-link</span></div>
+    <div class="rel-row"><span class="rel-from">intel_repository.source_id</span><span class="rel-arrow">→</span><span class="rel-to">threat_records / intel_items</span><span class="rel-note">polymorphic ref; source_type disambiguates</span></div>
+    <div class="rel-row"><span class="rel-from">intel_items.article_id</span><span class="rel-arrow">→</span><span class="rel-to">articles.id</span><span class="rel-note">nullable; set when long-form article is published</span></div>
+  </div>
+  <button class="ask-btn" onclick="sendPrompt('What should Barbara use as the normalization and tagging rules when processing raw threat records into the intel_repository?')">Design Barbara normalization rules ↗</button>
+</div>
+
+<!-- CONTENT -->
+<div class="cluster" id="cl-content">
+  <div class="cluster-desc">All published and draft content — Intel Briefs, newsletter editions, and individual articles. Drives the Intel Brief page, Newsletter page, and the freemium blur/paywall logic. Pipeline state tracked per article.</div>
+  <div class="tables-grid">
+    <div class="tbl-card">
+      <div class="tbl-header"><div class="tbl-name">articles</div><span class="tbl-tag tag-core">core</span></div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-name">id</span><span class="field-type">uuid</span><span class="pk">PK</span></div>
+        <div class="field-row"><span class="field-name">title</span><span class="field-type">varchar</span></div>
+        <div class="field-row"><span class="field-name">slug</span><span class="field-type">varchar</span><span class="uk">UNIQUE</span></div>
+        <div class="field-row"><span class="field-name">section</span><span class="field-type">enum</span><span class="field-note">threat|policy|innovation|growth|training</span></div>
+        <div class="field-row"><span class="field-name">body_md</span><span class="field-type">text</span><span class="field-note">Markdown source</span></div>
+        <div class="field-row"><span class="field-name">body_html</span><span class="field-type">text</span><span class="field-note">rendered output</span></div>
+        <div class="field-row"><span class="field-name">access_tier</span><span class="field-type">enum</span><span class="field-note">freemium|monthly|enterprise</span></div>
+        <div class="field-row"><span class="field-name">pipeline_status</span><span class="field-type">enum</span><span class="field-note">draft|dev_edit|eic_review|qa|maya|approved|published</span></div>
+        <div class="field-row"><span class="field-name">qa_passed_at</span><span class="field-type">timestamp</span></div>
+        <div class="field-row"><span class="field-name">maya_approved_at</span><span class="field-type">timestamp</span></div>
+        <div class="field-row"><span class="field-name">published_at</span><span class="field-type">timestamp</span></div>
+        <div class="field-row"><span class="field-name">view_count</span><span class="field-type">integer</span></div>
+        <div class="field-row"><span class="field-name">read_time_min</span><span class="field-type">integer</span></div>
+      </div>
+    </div>
+    <div class="tbl-card">
+      <div class="tbl-header"><div class="tbl-name">briefings</div><span class="tbl-tag tag-core">core</span></div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-name">id</span><span class="field-type">uuid</span><span class="pk">PK</span></div>
+        <div class="field-row"><span class="field-name">edition_date</span><span class="field-type">date</span><span class="uk">UNIQUE</span></div>
+        <div class="field-row"><span class="field-name">subject_line</span><span class="field-type">varchar</span></div>
+        <div class="field-row"><span class="field-name">body_md</span><span class="field-type">text</span></div>
+        <div class="field-row"><span class="field-name">body_html</span><span class="field-type">text</span></div>
+        <div class="field-row"><span class="field-name">threat_item_ids</span><span class="field-type">uuid[]</span><span class="fk">FK[] → threat_records</span></div>
+        <div class="field-row"><span class="field-name">innovation_item_ids</span><span class="field-type">uuid[]</span><span class="fk">FK[] → intel_items</span></div>
+        <div class="field-row"><span class="field-name">growth_item_id</span><span class="field-type">uuid</span><span class="fk">FK → intel_items</span></div>
+        <div class="field-row"><span class="field-name">training_byte_id</span><span class="field-type">uuid</span><span class="fk">FK → training_modules</span></div>
+        <div class="field-row"><span class="field-name">pipeline_status</span><span class="field-type">enum</span><span class="field-note">draft|dev_edit|eic|qa|maya|published</span></div>
+        <div class="field-row"><span class="field-name">draft_completed_at</span><span class="field-type">timestamp</span><span class="field-note">Ruth's 0700 deadline</span></div>
+        <div class="field-row"><span class="field-name">published_at</span><span class="field-type">timestamp</span><span class="field-note">Laura's 0900 release</span></div>
+        <div class="field-row"><span class="field-name">open_count</span><span class="field-type">integer</span></div>
+        <div class="field-row"><span class="field-name">click_count</span><span class="field-type">integer</span></div>
+      </div>
+    </div>
+    <div class="tbl-card">
+      <div class="tbl-header"><div class="tbl-name">pipeline_events</div><span class="tbl-tag tag-log">log</span></div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-name">id</span><span class="field-type">uuid</span><span class="pk">PK</span></div>
+        <div class="field-row"><span class="field-name">content_type</span><span class="field-type">enum</span><span class="field-note">article|briefing|training</span></div>
+        <div class="field-row"><span class="field-name">content_id</span><span class="field-type">uuid</span></div>
+        <div class="field-row"><span class="field-name">from_status</span><span class="field-type">varchar</span></div>
+        <div class="field-row"><span class="field-name">to_status</span><span class="field-type">varchar</span></div>
+        <div class="field-row"><span class="field-name">agent_name</span><span class="field-type">varchar</span><span class="field-note">which agent actioned</span></div>
+        <div class="field-row"><span class="field-name">notes</span><span class="field-type">text</span><span class="field-note">rejection reason if returned</span></div>
+        <div class="field-row"><span class="field-name">created_at</span><span class="field-type">timestamp</span></div>
+      </div>
+    </div>
+    <div class="tbl-card">
+      <div class="tbl-header"><div class="tbl-name">social_posts</div><span class="tbl-tag tag-log">log</span></div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-name">id</span><span class="field-type">uuid</span><span class="pk">PK</span></div>
+        <div class="field-row"><span class="field-name">briefing_id</span><span class="field-type">uuid</span><span class="fk">FK → briefings</span></div>
+        <div class="field-row"><span class="field-name">platform</span><span class="field-type">enum</span><span class="field-note">linkedin|meta|x|tiktok|youtube</span></div>
+        <div class="field-row"><span class="field-name">agent_name</span><span class="field-type">varchar</span><span class="field-note">Oliver|Lucy|Riley|Ethan</span></div>
+        <div class="field-row"><span class="field-name">post_body</span><span class="field-type">text</span></div>
+        <div class="field-row"><span class="field-name">phase</span><span class="field-type">enum</span><span class="field-note">0700_main|0900_byte|1200_note</span></div>
+        <div class="field-row"><span class="field-name">scheduled_at</span><span class="field-type">timestamp</span></div>
+        <div class="field-row"><span class="field-name">published_at</span><span class="field-type">timestamp</span></div>
+        <div class="field-row"><span class="field-name">reach</span><span class="field-type">integer</span></div>
+        <div class="field-row"><span class="field-name">engagements</span><span class="field-type">integer</span></div>
+        <div class="field-row"><span class="field-name">conversions</span><span class="field-type">integer</span><span class="field-note">sign-ups attributed</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="rel-section">
+    <div class="rel-title">Key relationships</div>
+    <div class="rel-row"><span class="rel-from">briefings.threat_item_ids[]</span><span class="rel-arrow">→</span><span class="rel-to">threat_records.id</span><span class="rel-note">array FK; Ruth selects 3 threat items per edition</span></div>
+    <div class="rel-row"><span class="rel-from">articles.pipeline_status</span><span class="rel-arrow">→</span><span class="rel-to">pipeline_events.content_id</span><span class="rel-note">every status change logged with agent name and timestamp</span></div>
+    <div class="rel-row"><span class="rel-from">social_posts.briefing_id</span><span class="rel-arrow">→</span><span class="rel-to">briefings.id</span><span class="rel-note">each briefing generates up to 12 social posts across 4 platforms × 3 phases</span></div>
+    <div class="rel-row"><span class="rel-from">articles.access_tier</span><span class="rel-arrow">→</span><span class="rel-to">users.tier</span><span class="rel-note">gate logic: if article.access_tier > user.tier → blur body_html</span></div>
+  </div>
+  <button class="ask-btn" onclick="sendPrompt('How should the freemium blur gate work technically — what logic determines which articles are blurred for which users in CyberSense?')">Design the paywall gate logic ↗</button>
+</div>
+
+<!-- TRAINING & ZERO TRUST -->
+<div class="cluster" id="cl-training">
+  <div class="cluster-desc">Powers both the internal Training Library and the enterprise Zero-Trust Culture Platform. Tracks module completion per employee, per department, and per organization. Feeds the enterprise client dashboard and Alex's training reports.</div>
+  <div class="tables-grid">
+    <div class="tbl-card">
+      <div class="tbl-header"><div class="tbl-name">training_modules</div><span class="tbl-tag tag-core">core</span></div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-name">id</span><span class="field-type">uuid</span><span class="pk">PK</span></div>
+        <div class="field-row"><span class="field-name">title</span><span class="field-type">varchar</span></div>
+        <div class="field-row"><span class="field-name">type</span><span class="field-type">enum</span><span class="field-note">video|lab|step_by_step|glossary|training_byte</span></div>
+        <div class="field-row"><span class="field-name">phase</span><span class="field-type">enum</span><span class="field-note">1_video|2_lab|3_simulation|library</span></div>
+        <div class="field-row"><span class="field-name">zt_module</span><span class="field-type">varchar</span><span class="field-note">email_security|phishing|malware…</span></div>
+        <div class="field-row"><span class="field-name">access_tier</span><span class="field-type">enum</span><span class="field-note">monthly|enterprise</span></div>
+        <div class="field-row"><span class="field-name">duration_min</span><span class="field-type">integer</span></div>
+        <div class="field-row"><span class="field-name">content_url</span><span class="field-type">text</span><span class="field-note">S3 or CDN link</span></div>
+        <div class="field-row"><span class="field-name">pipeline_status</span><span class="field-type">enum</span><span class="field-note">draft|qa|maya|published</span></div>
+        <div class="field-row"><span class="field-name">created_by</span><span class="field-type">varchar</span><span class="field-note">Kirby|Matt</span></div>
+        <div class="field-row"><span class="field-name">published_at</span><span class="field-type">timestamp</span></div>
+      </div>
+    </div>
+    <div class="tbl-card">
+      <div class="tbl-header"><div class="tbl-name">training_completions</div><span class="tbl-tag tag-ent">enterprise</span></div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-name">id</span><span class="field-type">uuid</span><span class="pk">PK</span></div>
+        <div class="field-row"><span class="field-name">user_id</span><span class="field-type">uuid</span><span class="fk">FK → users</span></div>
+        <div class="field-row"><span class="field-name">module_id</span><span class="field-type">uuid</span><span class="fk">FK → training_modules</span></div>
+        <div class="field-row"><span class="field-name">org_id</span><span class="field-type">uuid</span><span class="fk">FK → organizations</span></div>
+        <div class="field-row"><span class="field-name">department</span><span class="field-type">varchar</span><span class="field-note">org-defined grouping</span></div>
+        <div class="field-row"><span class="field-name">status</span><span class="field-type">enum</span><span class="field-note">not_started|in_progress|completed</span></div>
+        <div class="field-row"><span class="field-name">score</span><span class="field-type">integer</span><span class="field-note">quiz result 0–100</span></div>
+        <div class="field-row"><span class="field-name">time_spent_min</span><span class="field-type">integer</span></div>
+        <div class="field-row"><span class="field-name">completed_at</span><span class="field-type">timestamp</span></div>
+        <div class="field-row"><span class="field-name">assigned_at</span><span class="field-type">timestamp</span></div>
+      </div>
+    </div>
+    <div class="tbl-card">
+      <div class="tbl-header"><div class="tbl-name">simulations</div><span class="tbl-tag tag-ent">enterprise</span></div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-name">id</span><span class="field-type">uuid</span><span class="pk">PK</span></div>
+        <div class="field-row"><span class="field-name">org_id</span><span class="field-type">uuid</span><span class="fk">FK → organizations</span></div>
+        <div class="field-row"><span class="field-name">type</span><span class="field-type">enum</span><span class="field-note">phishing|spear_phishing|vishing|smishing</span></div>
+        <div class="field-row"><span class="field-name">campaign_name</span><span class="field-type">varchar</span></div>
+        <div class="field-row"><span class="field-name">target_count</span><span class="field-type">integer</span></div>
+        <div class="field-row"><span class="field-name">reported_count</span><span class="field-type">integer</span><span class="field-note">correctly identified</span></div>
+        <div class="field-row"><span class="field-name">clicked_count</span><span class="field-type">integer</span><span class="field-note">fell for it</span></div>
+        <div class="field-row"><span class="field-name">launched_at</span><span class="field-type">timestamp</span></div>
+        <div class="field-row"><span class="field-name">closed_at</span><span class="field-type">timestamp</span></div>
+      </div>
+    </div>
+    <div class="tbl-card">
+      <div class="tbl-header"><div class="tbl-name">simulation_results</div><span class="tbl-tag tag-ent">enterprise</span></div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-name">id</span><span class="field-type">uuid</span><span class="pk">PK</span></div>
+        <div class="field-row"><span class="field-name">simulation_id</span><span class="field-type">uuid</span><span class="fk">FK → simulations</span></div>
+        <div class="field-row"><span class="field-name">user_id</span><span class="field-type">uuid</span><span class="fk">FK → users</span></div>
+        <div class="field-row"><span class="field-name">outcome</span><span class="field-type">enum</span><span class="field-note">reported|clicked|ignored</span></div>
+        <div class="field-row"><span class="field-name">response_time_sec</span><span class="field-type">integer</span></div>
+        <div class="field-row"><span class="field-name">department</span><span class="field-type">varchar</span></div>
+        <div class="field-row"><span class="field-name">created_at</span><span class="field-type">timestamp</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="rel-section">
+    <div class="rel-title">Key relationships</div>
+    <div class="rel-row"><span class="rel-from">training_completions.user_id</span><span class="rel-arrow">→</span><span class="rel-to">users.id</span><span class="rel-note">per-employee completion — drives the enterprise dashboard by-name report</span></div>
+    <div class="rel-row"><span class="rel-from">training_completions.org_id + department</span><span class="rel-arrow">→</span><span class="rel-to">organizations.id</span><span class="rel-note">GROUP BY org_id, department gives per-department completion stats</span></div>
+    <div class="rel-row"><span class="rel-from">simulation_results.simulation_id</span><span class="rel-arrow">→</span><span class="rel-to">simulations.id</span><span class="rel-note">one row per employee per campaign; outcome drives Phase 3 reporting</span></div>
+    <div class="rel-row"><span class="rel-from">briefings.training_byte_id</span><span class="rel-arrow">→</span><span class="rel-to">training_modules.id</span><span class="rel-note">Kirby supplies one training byte per daily briefing to Ruth</span></div>
+  </div>
+  <button class="ask-btn" onclick="sendPrompt('What SQL queries should power the enterprise Zero-Trust dashboard for completion stats by employee and by department in CyberSense?')">Write enterprise dashboard queries ↗</button>
+</div>
+
+<!-- REVENUE & SALES -->
+<div class="cluster" id="cl-revenue">
+  <div class="cluster-desc">Stripe integration, subscription lifecycle, sales pipeline, and partner/affiliate tracking. Jim reads from this cluster for financial reports. Mary, William, and Joe operate here for lead and account management.</div>
+  <div class="tables-grid">
+    <div class="tbl-card">
+      <div class="tbl-header"><div class="tbl-name">subscriptions</div><span class="tbl-tag tag-core">core</span></div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-name">id</span><span class="field-type">uuid</span><span class="pk">PK</span></div>
+        <div class="field-row"><span class="field-name">user_id</span><span class="field-type">uuid</span><span class="fk">FK → users</span></div>
+        <div class="field-row"><span class="field-name">org_id</span><span class="field-type">uuid</span><span class="fk">FK → organizations (nullable)</span></div>
+        <div class="field-row"><span class="field-name">stripe_subscription_id</span><span class="field-type">varchar</span><span class="uk">UNIQUE</span></div>
+        <div class="field-row"><span class="field-name">tier</span><span class="field-type">enum</span><span class="field-note">monthly|enterprise</span></div>
+        <div class="field-row"><span class="field-name">status</span><span class="field-type">enum</span><span class="field-note">active|past_due|cancelled|paused</span></div>
+        <div class="field-row"><span class="field-name">mrr_cents</span><span class="field-type">integer</span><span class="field-note">in cents to avoid float</span></div>
+        <div class="field-row"><span class="field-name">current_period_start</span><span class="field-type">timestamp</span></div>
+        <div class="field-row"><span class="field-name">current_period_end</span><span class="field-type">timestamp</span></div>
+        <div class="field-row"><span class="field-name">cancelled_at</span><span class="field-type">timestamp</span></div>
+        <div class="field-row"><span class="field-name">cancel_reason</span><span class="field-type">text</span></div>
+      </div>
+    </div>
+    <div class="tbl-card">
+      <div class="tbl-header"><div class="tbl-name">leads</div><span class="tbl-tag tag-core">core</span></div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-name">id</span><span class="field-type">uuid</span><span class="pk">PK</span></div>
+        <div class="field-row"><span class="field-name">email</span><span class="field-type">varchar</span></div>
+        <div class="field-row"><span class="field-name">full_name</span><span class="field-type">varchar</span></div>
+        <div class="field-row"><span class="field-name">company</span><span class="field-type">varchar</span></div>
+        <div class="field-row"><span class="field-name">source</span><span class="field-type">enum</span><span class="field-note">linkedin|meta|x|youtube|direct|referral</span></div>
+        <div class="field-row"><span class="field-name">status</span><span class="field-type">enum</span><span class="field-note">new|qualified|proposal|negotiating|won|lost</span></div>
+        <div class="field-row"><span class="field-name">assigned_to</span><span class="field-type">varchar</span><span class="field-note">Mary → William handoff</span></div>
+        <div class="field-row"><span class="field-name">target_tier</span><span class="field-type">enum</span><span class="field-note">monthly|enterprise</span></div>
+        <div class="field-row"><span class="field-name">est_seats</span><span class="field-type">integer</span></div>
+        <div class="field-row"><span class="field-name">est_value_cents</span><span class="field-type">integer</span></div>
+        <div class="field-row"><span class="field-name">notes</span><span class="field-type">text</span></div>
+        <div class="field-row"><span class="field-name">created_at</span><span class="field-type">timestamp</span></div>
+        <div class="field-row"><span class="field-name">converted_at</span><span class="field-type">timestamp</span></div>
+      </div>
+    </div>
+    <div class="tbl-card">
+      <div class="tbl-header"><div class="tbl-name">partners</div><span class="tbl-tag tag-ref">ref</span></div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-name">id</span><span class="field-type">uuid</span><span class="pk">PK</span></div>
+        <div class="field-row"><span class="field-name">name</span><span class="field-type">varchar</span></div>
+        <div class="field-row"><span class="field-name">type</span><span class="field-type">enum</span><span class="field-note">affiliate|sponsor|co_marketing|reseller</span></div>
+        <div class="field-row"><span class="field-name">status</span><span class="field-type">enum</span><span class="field-note">prospect|discovery|proposal|active|paused</span></div>
+        <div class="field-row"><span class="field-name">monthly_value_cents</span><span class="field-type">integer</span></div>
+        <div class="field-row"><span class="field-name">commission_pct</span><span class="field-type">decimal(5,2)</span><span class="field-note">for affiliate type</span></div>
+        <div class="field-row"><span class="field-name">contract_start</span><span class="field-type">date</span></div>
+        <div class="field-row"><span class="field-name">contract_end</span><span class="field-type">date</span></div>
+        <div class="field-row"><span class="field-name">owner_agent</span><span class="field-type">varchar</span><span class="field-note">William or Joe</span></div>
+      </div>
+    </div>
+    <div class="tbl-card">
+      <div class="tbl-header"><div class="tbl-name">stripe_events</div><span class="tbl-tag tag-log">log</span></div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-name">id</span><span class="field-type">uuid</span><span class="pk">PK</span></div>
+        <div class="field-row"><span class="field-name">stripe_event_id</span><span class="field-type">varchar</span><span class="uk">UNIQUE</span></div>
+        <div class="field-row"><span class="field-name">event_type</span><span class="field-type">varchar</span><span class="field-note">invoice.paid, sub.cancelled…</span></div>
+        <div class="field-row"><span class="field-name">subscription_id</span><span class="field-type">uuid</span><span class="fk">FK → subscriptions</span></div>
+        <div class="field-row"><span class="field-name">amount_cents</span><span class="field-type">integer</span></div>
+        <div class="field-row"><span class="field-name">payload</span><span class="field-type">jsonb</span><span class="field-note">full Stripe webhook body</span></div>
+        <div class="field-row"><span class="field-name">processed_at</span><span class="field-type">timestamp</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="rel-section">
+    <div class="rel-title">Key relationships</div>
+    <div class="rel-row"><span class="rel-from">subscriptions.user_id</span><span class="rel-arrow">→</span><span class="rel-to">users.id</span><span class="rel-note">individual subscription; org subscriptions use org_id instead</span></div>
+    <div class="rel-row"><span class="rel-from">stripe_events.subscription_id</span><span class="rel-arrow">→</span><span class="rel-to">subscriptions.id</span><span class="rel-note">every Stripe webhook lands here; triggers subscription status updates</span></div>
+    <div class="rel-row"><span class="rel-from">leads.converted_at + target_tier</span><span class="rel-arrow">→</span><span class="rel-to">subscriptions</span><span class="rel-note">when lead converts, a subscription record is created; feeds Jim's funnel analysis</span></div>
+  </div>
+  <button class="ask-btn" onclick="sendPrompt('Walk me through the Stripe webhook handler architecture for CyberSense — what events to listen for and how they update the subscriptions table?')">Design Stripe webhook handler ↗</button>
+</div>
+
+<!-- OPERATIONS -->
+<div class="cluster" id="cl-ops">
+  <div class="cluster-desc">The operational backbone — agent task queues, pipeline timing, risk register, and dashboard metrics snapshots. Laura, Victor, Barret, and Henry all operate from this cluster. Feeds the Command Center and Risk Assessment panels.</div>
+  <div class="tables-grid">
+    <div class="tbl-card">
+      <div class="tbl-header"><div class="tbl-name">agent_tasks</div><span class="tbl-tag tag-log">log</span></div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-name">id</span><span class="field-type">uuid</span><span class="pk">PK</span></div>
+        <div class="field-row"><span class="field-name">agent_name</span><span class="field-type">varchar</span><span class="field-note">Rick|Barbara|Ruth…</span></div>
+        <div class="field-row"><span class="field-name">task_type</span><span class="field-type">varchar</span></div>
+        <div class="field-row"><span class="field-name">content_type</span><span class="field-type">enum</span><span class="field-note">threat|intel|briefing|training|social</span></div>
+        <div class="field-row"><span class="field-name">content_id</span><span class="field-type">uuid</span></div>
+        <div class="field-row"><span class="field-name">status</span><span class="field-type">enum</span><span class="field-note">queued|in_progress|complete|failed|escalated</span></div>
+        <div class="field-row"><span class="field-name">sla_deadline</span><span class="field-type">timestamp</span><span class="field-note">Awareness pipeline: 0700/0900</span></div>
+        <div class="field-row"><span class="field-name">started_at</span><span class="field-type">timestamp</span></div>
+        <div class="field-row"><span class="field-name">completed_at</span><span class="field-type">timestamp</span></div>
+        <div class="field-row"><span class="field-name">latency_sec</span><span class="field-type">integer</span><span class="field-note">computed on completion</span></div>
+        <div class="field-row"><span class="field-name">error_message</span><span class="field-type">text</span></div>
+      </div>
+    </div>
+    <div class="tbl-card">
+      <div class="tbl-header"><div class="tbl-name">risk_register</div><span class="tbl-tag tag-core">core</span></div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-name">id</span><span class="field-type">uuid</span><span class="pk">PK</span></div>
+        <div class="field-row"><span class="field-name">domain</span><span class="field-type">enum</span><span class="field-note">operational|intelligence|reputational|financial|compliance</span></div>
+        <div class="field-row"><span class="field-name">title</span><span class="field-type">varchar</span></div>
+        <div class="field-row"><span class="field-name">description</span><span class="field-type">text</span></div>
+        <div class="field-row"><span class="field-name">severity</span><span class="field-type">enum</span><span class="field-note">high|medium|low</span></div>
+        <div class="field-row"><span class="field-name">score</span><span class="field-type">integer</span><span class="field-note">0–100 composite</span></div>
+        <div class="field-row"><span class="field-name">status</span><span class="field-type">enum</span><span class="field-note">open|mitigating|resolved</span></div>
+        <div class="field-row"><span class="field-name">owner_agent</span><span class="field-type">varchar</span></div>
+        <div class="field-row"><span class="field-name">raised_by</span><span class="field-type">varchar</span><span class="field-note">Victor</span></div>
+        <div class="field-row"><span class="field-name">due_date</span><span class="field-type">date</span></div>
+        <div class="field-row"><span class="field-name">resolved_at</span><span class="field-type">timestamp</span></div>
+        <div class="field-row"><span class="field-name">created_at</span><span class="field-type">timestamp</span></div>
+      </div>
+    </div>
+    <div class="tbl-card">
+      <div class="tbl-header"><div class="tbl-name">dashboard_snapshots</div><span class="tbl-tag tag-log">log</span></div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-name">id</span><span class="field-type">uuid</span><span class="pk">PK</span></div>
+        <div class="field-row"><span class="field-name">snapshot_date</span><span class="field-type">date</span></div>
+        <div class="field-row"><span class="field-name">total_subscribers</span><span class="field-type">integer</span></div>
+        <div class="field-row"><span class="field-name">paid_accounts</span><span class="field-type">integer</span></div>
+        <div class="field-row"><span class="field-name">enterprise_accounts</span><span class="field-type">integer</span></div>
+        <div class="field-row"><span class="field-name">mrr_cents</span><span class="field-type">integer</span></div>
+        <div class="field-row"><span class="field-name">churn_rate</span><span class="field-type">decimal(5,2)</span></div>
+        <div class="field-row"><span class="field-name">articles_published</span><span class="field-type">integer</span></div>
+        <div class="field-row"><span class="field-name">briefings_published</span><span class="field-type">integer</span></div>
+        <div class="field-row"><span class="field-name">avg_open_rate</span><span class="field-type">decimal(5,2)</span></div>
+        <div class="field-row"><span class="field-name">open_risk_count</span><span class="field-type">integer</span></div>
+        <div class="field-row"><span class="field-name">agent_tasks_completed</span><span class="field-type">integer</span></div>
+        <div class="field-row"><span class="field-name">created_at</span><span class="field-type">timestamp</span></div>
+      </div>
+    </div>
+    <div class="tbl-card">
+      <div class="tbl-header"><div class="tbl-name">handoff_sla_log</div><span class="tbl-tag tag-log">log</span></div>
+      <div class="field-list">
+        <div class="field-row"><span class="field-name">id</span><span class="field-type">uuid</span><span class="pk">PK</span></div>
+        <div class="field-row"><span class="field-name">from_agent</span><span class="field-type">varchar</span></div>
+        <div class="field-row"><span class="field-name">to_agent</span><span class="field-type">varchar</span></div>
+        <div class="field-row"><span class="field-name">content_id</span><span class="field-type">uuid</span></div>
+        <div class="field-row"><span class="field-name">expected_at</span><span class="field-type">timestamp</span></div>
+        <div class="field-row"><span class="field-name">actual_at</span><span class="field-type">timestamp</span></div>
+        <div class="field-row"><span class="field-name">delta_sec</span><span class="field-type">integer</span><span class="field-note">negative = early, positive = late</span></div>
+        <div class="field-row"><span class="field-name">breached</span><span class="field-type">boolean</span><span class="field-note">Barret alert trigger</span></div>
+        <div class="field-row"><span class="field-name">escalated_to</span><span class="field-type">varchar</span><span class="field-note">Barret|Henry if breached</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="rel-section">
+    <div class="rel-title">Key relationships</div>
+    <div class="rel-row"><span class="rel-from">agent_tasks.sla_deadline</span><span class="rel-arrow">→</span><span class="rel-to">handoff_sla_log</span><span class="rel-note">every task with a deadline generates a handoff_sla_log record; breach triggers Barret</span></div>
+    <div class="rel-row"><span class="rel-from">dashboard_snapshots</span><span class="rel-arrow">→</span><span class="rel-to">all clusters</span><span class="rel-note">nightly materialized view — Henry's command center reads from this, not live tables</span></div>
+    <div class="rel-row"><span class="rel-from">risk_register.owner_agent</span><span class="rel-arrow">→</span><span class="rel-to">agents (logical)</span><span class="rel-note">Victor assigns ownership; Henry receives escalation when due_date approaches unresolved</span></div>
+  </div>
+  <button class="ask-btn" onclick="sendPrompt('What should the nightly materialized view query look like to populate the dashboard_snapshots table for CyberSense?')">Write the snapshot query ↗</button>
+</div>
+
+</div>
+<script>
+const colors={users:'#185FA5',intel:'#A32D2D',content:'#534AB7',training:'#854F0B',revenue:'#3B6D11',ops:'#5F5E5A'};
+const bgs={users:'#E6F1FB',intel:'#FCEBEB',content:'#EEEDFE',training:'#FAEEDA',revenue:'#EAF3DE',ops:'#F1EFE8'};
+function showCluster(id,btn){
+  document.querySelectorAll('.cluster').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('.cn-btn').forEach(b=>{b.classList.remove('active');b.style.color='';b.style.borderColor='';b.style.background='';});
+  document.getElementById('cl-'+id).classList.add('active');
+  btn.classList.add('active');
+  btn.style.color=colors[id];
+  btn.style.borderColor=colors[id];
+  btn.style.background=bgs[id];
+}
+</script>
