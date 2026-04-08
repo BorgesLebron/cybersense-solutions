@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Threat Radar — CyberSense.Solutions</title>
+<meta name="description" content="Live threat tracking — active vulnerabilities, CVEs, and adversary campaigns.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="nav" role="navigation">
+  <a href="index.html" class="nav-wordmark">CyberSense<span>.Solutions</span></a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="radar.html">Radar</a></li>
+    <li><a href="intelligence.html">Intel</a></li>
+    <li><a href="newsletter.html">Newsletter</a></li>
+    <li><a href="training.html">Training</a></li>
+    <li><a href="growth.html">Proficient</a></li>
+    <li><a href="innovation.html">Innovation</a></li>
+    <li><a href="zerotrust.html">Zero-Trust</a></li>
+  </ul>
+  <button class="nav-login" onclick="window.location='dashboard.html'">Login</button>
+  <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+</nav>
+<div class="nav-drawer" id="nav-drawer">
+  <ul>
+    <li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li><li><a href="radar.html">Radar</a></li><li><a href="intelligence.html">Intel</a></li><li><a href="newsletter.html">Newsletter</a></li><li><a href="training.html">Training</a></li><li><a href="growth.html">Proficient</a></li><li><a href="innovation.html">Innovation</a></li><li><a href="zerotrust.html">Zero-Trust</a></li>
+  </ul>
+  <a href="dashboard.html" class="drawer-login">Login</a>
+</div>
+
+<section class="hero-dark section" style="padding:64px 24px 56px;">
+  <div class="container" style="position:relative;z-index:1;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+      <p class="section-label" style="margin:0;">Live Intelligence</p>
+      <span class="live-dot"></span>
+    </div>
+    <h1 class="section-heading section-heading-light" style="font-size:clamp(30px,5vw,48px);">Threat Radar</h1>
+    <p class="section-sub section-sub-light">Tracked vulnerabilities and active threats — updated as our team publishes intelligence.</p>
+  </div>
+</section>
+
+<section class="section" style="background:var(--cs-white);">
+  <div class="container">
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <select class="filter-select" id="severity-filter" aria-label="Filter by severity">
+        <option value="">All Severities</option>
+        <option value="critical">Critical</option>
+        <option value="high">High</option>
+        <option value="medium">Medium</option>
+        <option value="low">Low</option>
+      </select>
+      <input class="search-input" type="text" id="threat-search" placeholder="Search threats, CVE IDs, vendors..." aria-label="Search threats">
+    </div>
+
+    <!-- Full Radar Table + Gate -->
+    <div class="gate-wrapper" style="border-radius:var(--radius-lg);">
+      <div class="table-wrap">
+        <table class="data-table" aria-label="Threat radar">
+          <thead>
+            <tr>
+              <th>Severity</th>
+              <th>Threat Name</th>
+              <th>CVE</th>
+              <th>CVSS</th>
+              <th>Status</th>
+              <th>Intel Article</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Rows 1–7 visible -->
+            <tr class="threat-row" data-severity="critical">
+              <td><span class="badge badge-critical">Critical</span></td>
+              <td>Fortinet FortiOS SSL-VPN Remote Code Execution</td>
+              <td class="mono">CVE-2024-21762</td>
+              <td class="mono">9.8</td>
+              <td><span class="badge badge-published">Published</span></td>
+              <td><a href="intelligence.html" style="font-size:13px;color:var(--cs-cyan);font-weight:500;">Read Intel Brief →</a></td>
+            </tr>
+            <tr class="threat-row" data-severity="critical">
+              <td><span class="badge badge-critical">Critical</span></td>
+              <td>Ivanti Connect Secure Auth Bypass &amp; RCE Chain</td>
+              <td class="mono">CVE-2024-21887</td>
+              <td class="mono">9.6</td>
+              <td><span class="badge badge-published">Published</span></td>
+              <td><a href="intelligence.html" style="font-size:13px;color:var(--cs-cyan);font-weight:500;">Read Intel Brief →</a></td>
+            </tr>
+            <tr class="threat-row" data-severity="critical">
+              <td><span class="badge badge-critical">Critical</span></td>
+              <td>Palo Alto PAN-OS GlobalProtect OS Command Injection</td>
+              <td class="mono">CVE-2024-3400</td>
+              <td class="mono">10.0</td>
+              <td><span class="badge badge-published">Published</span></td>
+              <td><a href="intelligence.html" style="font-size:13px;color:var(--cs-cyan);font-weight:500;">Read Intel Brief →</a></td>
+            </tr>
+            <tr class="threat-row" data-severity="high">
+              <td><span class="badge badge-high">High</span></td>
+              <td>Microsoft SharePoint Server Remote Code Execution</td>
+              <td class="mono">CVE-2024-38094</td>
+              <td class="mono">7.2</td>
+              <td><span class="badge badge-published">Published</span></td>
+              <td><a href="intelligence.html" style="font-size:13px;color:var(--cs-cyan);font-weight:500;">Read Intel Brief →</a></td>
+            </tr>
+            <tr class="threat-row" data-severity="high">
+              <td><span class="badge badge-high">High</span></td>
+              <td>Progress MOVEit Transfer SQL Injection</td>
+              <td class="mono">CVE-2024-5806</td>
+              <td class="mono">8.8</td>
+              <td><span class="badge badge-inprogress">In Progress</span></td>
+              <td style="font-size:13px;color:var(--cs-gray-400);">Article coming soon</td>
+            </tr>
+            <tr class="threat-row" data-severity="high">
+              <td><span class="badge badge-high">High</span></td>
+              <td>VMware vCenter Server RCE via DCERPC Protocol</td>
+              <td class="mono">CVE-2024-37079</td>
+              <td class="mono">9.8</td>
+              <td><span class="badge badge-inprogress">In Progress</span></td>
+              <td style="font-size:13px;color:var(--cs-gray-400);">Article coming soon</td>
+            </tr>
+            <tr class="threat-row" data-severity="medium">
+              <td><span class="badge badge-medium">Medium</span></td>
+              <td>Cisco IOS XE Web UI Privilege Escalation</td>
+              <td class="mono">CVE-2024-20399</td>
+              <td class="mono">6.0</td>
+              <td><span class="badge badge-new">New</span></td>
+              <td style="font-size:13px;color:var(--cs-gray-400);">—</td>
+            </tr>
+
+            <!-- Rows 8–12: blurred (rendered as separate section below) -->
+          </tbody>
+        </table>
+
+        <!-- Blurred rows 8–12 -->
+        <div class="gate-wrapper">
+          <div class="blurred" aria-hidden="true">
+            <table class="data-table">
+              <tbody>
+                <tr class="blurred-row">
+                  <td><span class="badge badge-critical">Critical</span></td>
+                  <td>Apache HTTP Server mod_rewrite Path Traversal</td>
+                  <td class="mono">CVE-2024-38475</td>
+                  <td class="mono">9.1</td>
+                  <td><span class="badge badge-published">Published</span></td>
+                  <td>Read Intel Brief →</td>
+                </tr>
+                <tr class="blurred-row">
+                  <td><span class="badge badge-high">High</span></td>
+                  <td>SolarWinds Web Help Desk Hardcoded Credential</td>
+                  <td class="mono">CVE-2024-28986</td>
+                  <td class="mono">9.8</td>
+                  <td><span class="badge badge-published">Published</span></td>
+                  <td>Read Intel Brief →</td>
+                </tr>
+                <tr class="blurred-row">
+                  <td><span class="badge badge-high">High</span></td>
+                  <td>Atlassian Confluence Data Center Server-Side Template Injection</td>
+                  <td class="mono">CVE-2024-21683</td>
+                  <td class="mono">8.8</td>
+                  <td><span class="badge badge-inprogress">In Progress</span></td>
+                  <td>Article coming soon</td>
+                </tr>
+                <tr class="blurred-row">
+                  <td><span class="badge badge-medium">Medium</span></td>
+                  <td>GitLab CE/EE User Impersonation via Slack Integration</td>
+                  <td class="mono">CVE-2024-4835</td>
+                  <td class="mono">6.8</td>
+                  <td><span class="badge badge-new">New</span></td>
+                  <td>—</td>
+                </tr>
+                <tr class="blurred-row">
+                  <td><span class="badge badge-low">Low</span></td>
+                  <td>OpenSSH Remote Code Execution in Portable GLIBC</td>
+                  <td class="mono">CVE-2024-6387</td>
+                  <td class="mono">8.1</td>
+                  <td><span class="badge badge-new">New</span></td>
+                  <td>—</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="gate-overlay">
+            <div class="gate-card">
+              <h3>Subscribe to unlock full radar</h3>
+              <p>5 additional tracked threats plus real-time alerts when new critical CVEs are published. Free to start.</p>
+              <a href="newsletter.html" class="btn btn-primary">Subscribe Free</a>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /table-wrap -->
+    </div><!-- /gate-wrapper -->
+
+    <p style="margin-top:20px;font-size:13px;color:var(--cs-gray-400);">Showing 7 of 12 tracked threats. Severity data sourced from NVD CVSS scores and CyberSense analyst assessment. Last updated: <strong>Jan 13, 2025 — 07:00 CT</strong>.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-logo">CyberSense<span>.Solutions</span></div>
+        <p class="footer-mission">Delivering actionable cybersecurity intelligence, daily awareness briefings, and professional training to teams that can't afford to be caught off guard.</p>
+        <div class="footer-socials">
+          <a href="#" class="footer-social-icon" aria-label="LinkedIn">in</a>
+          <a href="#" class="footer-social-icon" aria-label="Facebook">f</a>
+          <a href="#" class="footer-social-icon" aria-label="YouTube">▶</a>
+          <a href="#" class="footer-social-icon" aria-label="X">𝕏</a>
+          <a href="#" class="footer-social-icon" aria-label="TikTok">tt</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Platform</h4>
+        <ul><li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li><li><a href="radar.html">Threat Radar</a></li><li><a href="intelligence.html">Intel Briefs</a></li><li><a href="newsletter.html">Newsletter</a></li><li><a href="training.html">Training</a></li><li><a href="growth.html">Proficient</a></li><li><a href="innovation.html">Innovation</a></li><li><a href="zerotrust.html">Zero-Trust</a></li></ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li><li><a href="about.html">Contact Us</a></li></ul>
+      </div>
+    </div>
+    <div class="footer-bottom"><span>&copy; 2025 CyberSense.Solutions. All rights reserved.</span><span>Built for the defenders.</span></div>
+  </div>
+</footer>
+<script src="main.js"></script>
+</body>
+</html>
