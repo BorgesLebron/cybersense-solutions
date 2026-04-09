@@ -18,14 +18,13 @@ function requestLogger(req, res, next) {
 }
 
 function errorHandler(err, req, res, next) {
-  console.error(JSON.stringify({
-    ts: new Date().toISOString(),
-    error: err.message,
-    stack: err.stack
-  }));
+  console.error(JSON.stringify({ ts: new Date().toISOString(), error: err.message, stack: err.stack }));
 
   if (err.type === 'entity.parse.failed') {
     return res.status(400).json({ error: { code: 'INVALID_JSON', message: 'Request body is not valid JSON' } });
+  }
+  if (err.code === 'EBADCSRFTOKEN') {
+    return res.status(403).json({ error: { code: 'INVALID_CSRF', message: 'CSRF token invalid' } });
   }
 
   const status = err.status || err.statusCode || 500;
