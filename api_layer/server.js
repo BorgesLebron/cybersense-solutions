@@ -1,25 +1,28 @@
 'use strict';
 
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
+const express      = require('express');
+const cors         = require('cors');
+const helmet       = require('helmet');
 const cookieParser = require('cookie-parser');
-const rateLimit = require('express-rate-limit');
+const rateLimit    = require('express-rate-limit');
 
 const { requestLogger, errorHandler } = require('./middleware/logger');
-const enterpriseRoutes = require('./routes/enterprise');
 
-const authRoutes = require('./routes/auth');
-const userRoutes = require('./routes/users');
-const contentRoutes = require('./routes/content');
-const pipelineRoutes = require('./routes/pipeline');
-const taskRoutes = require('./routes/tasks');
-const trainingRoutes = require('./routes/training');
-const revenueRoutes = require('./routes/revenue');
-const salesRoutes = require('./routes/sales');
-const opsRoutes = require('./routes/ops');
-const socialRoutes = require('./routes/social');
-const adminRoutes = require('./routes/admin');
+const {
+  contentRouter:  contentRoutes,
+  usersRouter:    userRoutes,
+  tasksRouter:    taskRoutes,
+  trainingRouter: trainingRoutes,
+  revenueRouter:  revenueRoutes,
+  salesRouter:    salesRoutes,
+  opsRouter:      opsRoutes,
+  socialRouter:   socialRoutes,
+  adminRouter:    adminRoutes,
+} = require('./routes/all-routes');
+
+const authRoutes       = require('./routes/auth');
+const pipelineRoutes   = require('./routes/pipeline');
+const enterpriseRoutes = require('./routes/enterprise');
 
 const app = express();
 
@@ -39,7 +42,7 @@ const unauthLimit = rateLimit({
   max: 60,
   keyGenerator: (req) => req.ip,
   skip: (req) => !!req.headers.authorization,
-  message: { error: { code: 'RATE_LIMITED', message: 'Too many requests. Please slow down.' } },
+  message: { error: { code: 'RATE_LIMITED', message: 'Too many requests.' } },
 });
 
 const userLimit = rateLimit({
@@ -58,18 +61,17 @@ const agentLimit = rateLimit({
   message: { error: { code: 'RATE_LIMITED', message: 'Agent rate limit exceeded.' } },
 });
 
-app.use('/api/auth', unauthLimit, authRoutes);
-app.use('/api/users', userLimit, agentLimit, userRoutes);
-app.use('/api/content', userLimit, agentLimit, contentRoutes);
-app.use('/api/pipeline', agentLimit, pipelineRoutes);
-app.use('/api/tasks', userLimit, agentLimit, taskRoutes);
-app.use('/api/training', userLimit, agentLimit, trainingRoutes);
-app.use('/api/revenue', userLimit, agentLimit, revenueRoutes);
-app.use('/api/sales', userLimit, agentLimit, salesRoutes);
-app.use('/api/ops', userLimit, agentLimit, opsRoutes);
-app.use('/api/social', agentLimit, socialRoutes);
-app.use('/api/admin', userLimit, adminRoutes);
-
+app.use('/api/auth',       unauthLimit, authRoutes);
+app.use('/api/users',      userLimit, agentLimit, userRoutes);
+app.use('/api/content',    userLimit, agentLimit, contentRoutes);
+app.use('/api/pipeline',   agentLimit, pipelineRoutes);
+app.use('/api/tasks',      userLimit, agentLimit, taskRoutes);
+app.use('/api/training',   userLimit, agentLimit, trainingRoutes);
+app.use('/api/revenue',    userLimit, agentLimit, revenueRoutes);
+app.use('/api/sales',      userLimit, agentLimit, salesRoutes);
+app.use('/api/ops',        userLimit, agentLimit, opsRoutes);
+app.use('/api/social',     agentLimit, socialRoutes);
+app.use('/api/admin',      userLimit, adminRoutes);
 app.use('/api/enterprise', userLimit, agentLimit, enterpriseRoutes);
 
 app.get('/health', (req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }));
