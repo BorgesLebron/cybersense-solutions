@@ -1,0 +1,16 @@
+# railway.toml
+# Place this file in the ROOT of the api_layer/ folder
+# Railway reads this to configure the deployment
+
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "node server.js"
+healthcheckPath = "/health"
+healthcheckTimeout = 30
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+[environments.production]
+NODE_ENV = "production"
