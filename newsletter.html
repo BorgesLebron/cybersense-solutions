@@ -26,7 +26,7 @@
   <div class="container" style="position:relative;z-index:1;">
     <p class="section-label">Daily Briefing</p>
     <h1 class="section-heading section-heading-light" style="font-size:clamp(28px,5vw,46px);">Daily Digital Awareness Briefing</h1>
-    <p class="section-sub section-sub-light">Seven items. Every morning by 09:00 CT. Threats, innovations, professional growth, and a training byte — all analyst-written.</p>
+    <p class="section-sub section-sub-light">Seven items. Every weekday morning by 07:00 am CT. Situational Awareness (threats, vulnerabilities, breaches), Modernization and AI Insight (innovations), Career Development (professional growth), and a Training Byte — all free and in plain language.</p>
   </div>
 </section>
 
@@ -47,7 +47,7 @@
           <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid #f1f5f9;">
             <div>
               <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--cs-gray-400);margin-bottom:4px;">Current Edition</div>
-              <div style="font-size:20px;font-weight:700;color:var(--cs-navy);">Monday, January 13, 2025</div>
+              <div style="font-size:20px;font-weight:700;color:var(--cs-navy);">Friday, April 10, 2026</div>
             </div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;">
               <span class="badge badge-critical">3 Threats</span>
@@ -57,45 +57,49 @@
           </div>
 
           <div class="briefing-section">
-            <div class="briefing-type">⚠ Threat Item 1</div>
-            <h3>Fortinet SSL-VPN Zero-Day Actively Exploited by Volt Typhoon Targeting Critical Infrastructure</h3>
-            <p>CVE-2024-21762 in Fortinet FortiOS allows unauthenticated remote code execution via crafted HTTP requests to the SSL-VPN web management interface. The Chinese state-sponsored group Volt Typhoon has been confirmed exploiting this vulnerability to pre-position inside U.S. energy and water sector networks — patch immediately or take affected devices offline.</p>
+            <div class="briefing-type">Situational Awareness</div>
+            <h3>CISA Adds Three Actively Exploited Vulnerabilities to KEV Catalog</h3>
+            <p>CISA has added three newly confirmed actively exploited vulnerabilities to the Known Exploited Vulnerabilities catalog, spanning products from a major network device vendor, a widely deployed enterprise application framework, and a cloud management interface. Federal agencies face binding remediation deadlines, but the practical implication extends beyond compliance: KEV additions represent confirmed exploitation in the wild, not theoretical risk. Organizations that use KEV additions as a patch prioritization signal — applying them before the broader patch cycle — consistently reduce exposure windows during the periods when threat actors are most active.</p>
           </div>
 
           <div class="briefing-section">
-            <div class="briefing-type">⚠ Threat Item 2</div>
-            <h3>Ivanti Connect Secure Emergency Directive: CISA Orders Federal Disconnection or Patch</h3>
-            <p>CISA Emergency Directive 24-01 requires all federal civilian agencies to either patch Ivanti Connect Secure and Policy Secure appliances against CVE-2024-21887 / CVE-2023-46805 or disconnect them from agency networks within 48 hours. The chained vulnerability enables unauthenticated RCE and has been confirmed exploited in the wild against government targets.</p>
+            <div class="briefing-type">Situational Awareness</div>
+            <h3>Scattered Spider Resurfaces with Refined Social Engineering Playbook</h3>
+            <p>The threat group tracked as Scattered Spider — responsible for high-profile intrusions at MGM Resorts, Caesars Entertainment, and several cloud service providers — has been observed resuming operations with an updated approach to initial access. Recent activity indicates a shift toward more targeted impersonation of IT vendors and managed service providers, exploiting the trust relationships between organizations and their technology partners rather than targeting employees directly. Help desk and IT operations staff remain the primary target — not because they are unsophisticated, but because their role requires them to be responsive and to resolve access issues quickly. That responsiveness, without verification protocols, is the attack surface.</p>
           </div>
 
           <div class="briefing-section">
-            <div class="briefing-type">⚠ Threat Item 3</div>
-            <h3>GitHub Actions Supply Chain Compromise Exfiltrates CI/CD Secrets from 3,000+ Repositories</h3>
-            <p>Attackers modified workflow files in public and private repositories to extract environment variables containing cloud credentials, GitHub tokens, and code-signing keys during automated build runs. Any repository using third-party GitHub Actions from compromised publishers should audit its secrets store and rotate all CI/CD credentials immediately.</p>
+            <div class="briefing-type">Situational Awareness</div>
+            <h3>Supply Chain Risk in Open Source AI Libraries Accelerates</h3>
+            <p>Security researchers have documented an increasing rate of malicious package publications targeting the Python and npm ecosystems, with particular concentration in libraries associated with machine learning frameworks, AI model integrations, and data pipeline tooling. The pattern follows a consistent model: packages are named to exploit typosquatting or dependency confusion, published with minimal version history, and designed to exfiltrate environment variables, API keys, and cloud credentials during installation. For development teams integrating open source AI tooling, the risk is not hypothetical — it is embedded in the dependency resolution process itself. Package provenance verification and supply chain monitoring are no longer optional security controls for organizations operating in AI-adjacent development environments.</p>
           </div>
 
           <div class="briefing-section">
-            <div class="briefing-type">💡 Innovation Item 1</div>
-            <h3>NIST Publishes SP 800-228 Draft: AI Risk Management for Security Operations</h3>
-            <p>NIST's new special publication addresses the specific risk challenges of deploying large language models in SOC platforms, including prompt injection attack mitigation, AI hallucination impact in security alert triage, and supply chain verification requirements for AI model providers used in security tooling.</p>
+            <div class="briefing-type">💡 Innovation</div>
+            <h3>NIST Releases Updated AI Risk Management Framework Guidance</h3>
+            <p>NIST has released supplementary guidance to the AI Risk Management Framework addressing deployment in high-stakes environments, including critical infrastructure, healthcare, and financial services. The guidance formalizes expectations around transparency, accountability, and adversarial robustness that were treated as optional in earlier versions, reflecting a broader regulatory shift: AI systems in consequential environments are increasingly being evaluated not only on capability but on the verifiability of their safety properties. For security teams evaluating AI tooling or advising on AI deployment governance, the updated framework provides a standards-aligned foundation for risk assessment already referenced in emerging federal procurement requirements.</p>
           </div>
 
           <div class="briefing-section">
-            <div class="briefing-type">💡 Innovation Item 2</div>
-            <h3>Post-Quantum Cryptography Goes Live: X25519Kyber768 Hybrid TLS Now in Production at Major CDNs</h3>
-            <p>Cloudflare and Fastly have both completed production rollout of NIST-standardized post-quantum key exchange in TLS 1.3, protecting traffic against harvest-now-decrypt-later attacks. Organizations managing their own TLS termination should begin evaluating migration timelines for their PKI infrastructure.</p>
+            <div class="briefing-type">💡 Innovation</div>
+            <h3>Agentic AI Systems and the Emerging Attack Surface</h3>
+            <p>Security researchers at multiple institutions have begun publishing analyses of the attack surface introduced by agentic AI systems — models granted the ability to take actions, execute code, browse the web, and interact with external services autonomously. The risk is structural rather than incidental: when a language model can take actions on behalf of a user, the threat model expands to include prompt injection through external content, credential exposure through tool use, and unintended data exfiltration through agentic workflows. Organizations deploying or evaluating AI agents should treat the agent's permission scope and external interaction surface as a primary security review area, not an operational afterthought. The security discipline required is new, but the underlying principle is not — least privilege applies.</p>
           </div>
 
           <div class="briefing-section">
             <div class="briefing-type">📈 Professional Growth</div>
-            <h3>CompTIA CySA+ CS0-003 Update: AI/ML Threat Detection Now 18% of Exam Weight</h3>
-            <p>The updated Cybersecurity Analyst exam objectives include new competency areas for AI-assisted anomaly detection, behavioral analytics in SIEM platforms, and prompt injection recognition. Candidates currently preparing for CS0-002 have until March 2025 to test under the prior version before mandatory transition.</p>
+            <h3>ISC2 Certified in Cybersecurity (CC) — Zero Cost Entry Point</h3>
+            <p>ISC2's Certified in Cybersecurity credential is currently available at no cost — exam and training included — for individuals pursuing an entry point into the field. The certification covers security concepts, network security, access controls, incident response, and security operations at a level suitable for early-career practitioners and career changers. For individuals who have been reading this brief and building their awareness vocabulary, the CC provides a structured credential framework that formalizes that knowledge and signals commitment to prospective employers. Zero cost removes the primary barrier. The discipline required to complete it is exactly what this brief has been building every day for one hundred editions.</p>
           </div>
 
           <div class="briefing-section">
             <div class="briefing-type">🎓 Training Byte</div>
-            <h3>Detecting Credential Stuffing in Authentication Logs</h3>
-            <p>Credential stuffing is characterized by high-volume authentication failures from geographically dispersed IPs against the same account — not brute force against multiple accounts. In your SIEM, build an alert: single username + more than 10 failed logins + more than 5 unique source IPs + within a 15-minute window. Success rates below 0.5% confirm stuffing, not guessing. Tag these for immediate SOC triage.</p>
+            <h3>Verify Before You Comply — The IT Vendor Impersonation Test</h3>
+            <p class="text-gray-800 mb-2 text-md font-base">The threat pattern:</p>
+            <p>Attackers impersonating IT vendors or help desk staff create urgency — a system is down, credentials need to be reset, access needs to be granted immediately. The request sounds legitimate because the attacker has done enough reconnaissance to make it sound that way. The goal is to get you to act before you verify.</p>
+            <p class="text-gray-800 mb-2 text-md font-base">The discipline:</p>
+            <p>Any request arriving through an unexpected channel that asks you to grant access, reset credentials, or bypass a security control should trigger one action before compliance: independent verification. Do not call the number the caller provided. Do not reply to the email. Look up the contact information independently and confirm through that channel. Urgency is a social engineering technique. Thirty seconds of verification is not a failure to be responsive — it is the response.</p>
+            <p class="text-sky-500 mb-2 text-md font-base">One verification step prevents the intrusion that takes three days to contain.</p>
           </div>
         </div>
 
