@@ -591,113 +591,113 @@ CREATE TABLE IF NOT EXISTS escalations (
 -- ══════════════════════════════════════════════════════════════════════════════
 
 -- Users
-CREATE INDEX IF NOT EXIST idx_users_email         ON users (lower(email)) WHERE deleted_at IS NULL;
-CREATE INDEX IF NOT EXIST idx_users_tier          ON users (tier)         WHERE deleted_at IS NULL;
-CREATE INDEX IF NOT EXIST idx_users_org_id        ON users (org_id)       WHERE org_id IS NOT NULL;
-CREATE INDEX IF NOT EXIST idx_users_stripe        ON users (stripe_customer_id) WHERE stripe_customer_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_users_email         ON users (lower(email)) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_users_tier          ON users (tier)         WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_users_org_id        ON users (org_id)       WHERE org_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_users_stripe        ON users (stripe_customer_id) WHERE stripe_customer_id IS NOT NULL;
 
 -- Sessions
-CREATE INDEX IF NOT EXIST idx_sessions_user_id    ON sessions (user_id);
-CREATE INDEX IF NOT EXIST idx_sessions_expires    ON sessions (expires_at);
+CREATE INDEX IF NOT EXISTS idx_sessions_user_id    ON sessions (user_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_expires    ON sessions (expires_at);
 
 -- Threat records
-CREATE INDEX IF NOT EXIST idx_threat_severity     ON threat_records (severity);
-CREATE INDEX IF NOT EXIST idx_threat_priority     ON threat_records (priority);
-CREATE INDEX IF NOT EXIST idx_threat_ingested_at  ON threat_records (ingested_at DESC);
-CREATE INDEX IF NOT EXIST idx_threat_article_id   ON threat_records (article_id) WHERE article_id IS NOT NULL;
-CREATE INDEX IF NOT EXIST idx_threat_cve_trgm     ON threat_records USING gin (cve_id gin_trgm_ops);
-CREATE INDEX IF NOT EXIST idx_threat_name_trgm    ON threat_records USING gin (threat_name gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_threat_severity     ON threat_records (severity);
+CREATE INDEX IF NOT EXISTS idx_threat_priority     ON threat_records (priority);
+CREATE INDEX IF NOT EXISTS idx_threat_ingested_at  ON threat_records (ingested_at DESC);
+CREATE INDEX IF NOT EXISTS idx_threat_article_id   ON threat_records (article_id) WHERE article_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_threat_cve_trgm     ON threat_records USING gin (cve_id gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_threat_name_trgm    ON threat_records USING gin (threat_name gin_trgm_ops);
 
 -- Intel items
-CREATE INDEX IF NOT EXIST idx_intel_type          ON intel_items (type);
-CREATE INDEX IF NOT EXIST idx_intel_priority      ON intel_items (priority);
-CREATE INDEX IF NOT EXIST idx_intel_unused        ON intel_items (used_in_briefing) WHERE used_in_briefing = false;
-CREATE INDEX IF NOT EXIST idx_intel_ingested_at   ON intel_items (ingested_at DESC);
+CREATE INDEX IF NOT EXISTS idx_intel_type          ON intel_items (type);
+CREATE INDEX IF NOT EXISTS idx_intel_priority      ON intel_items (priority);
+CREATE INDEX IF NOT EXISTS idx_intel_unused        ON intel_items (used_in_briefing) WHERE used_in_briefing = false;
+CREATE INDEX IF NOT EXISTS idx_intel_ingested_at   ON intel_items (ingested_at DESC);
 
 -- Intel repository
-CREATE INDEX IF NOT EXIST idx_repo_ready_intel    ON intel_repository (ready_for_intel)   WHERE ready_for_intel = true;
-CREATE INDEX IF NOT EXIST idx_repo_ready_aware    ON intel_repository (ready_for_awareness) WHERE ready_for_awareness = true;
-CREATE INDEX IF NOT EXIST idx_repo_source_type    ON intel_repository (source_type);
+CREATE INDEX IF NOT EXISTS idx_repo_ready_intel    ON intel_repository (ready_for_intel)   WHERE ready_for_intel = true;
+CREATE INDEX IF NOT EXISTS idx_repo_ready_aware    ON intel_repository (ready_for_awareness) WHERE ready_for_awareness = true;
+CREATE INDEX IF NOT EXISTS idx_repo_source_type    ON intel_repository (source_type);
 
 -- Articles
-CREATE INDEX IF NOT EXIST idx_articles_status     ON articles (pipeline_status);
-CREATE INDEX IF NOT EXIST idx_articles_section    ON articles (section, pipeline_status);
-CREATE INDEX IF NOT EXIST idx_articles_published  ON articles (published_at DESC) WHERE pipeline_status = 'published';
-CREATE INDEX IF NOT EXIST idx_articles_tier       ON articles (access_tier);
-CREATE INDEX IF NOT EXIST idx_articles_title_trgm ON articles USING gin (title gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_articles_status     ON articles (pipeline_status);
+CREATE INDEX IF NOT EXISTS idx_articles_section    ON articles (section, pipeline_status);
+CREATE INDEX IF NOT EXISTS idx_articles_published  ON articles (published_at DESC) WHERE pipeline_status = 'published';
+CREATE INDEX IF NOT EXISTS idx_articles_tier       ON articles (access_tier);
+CREATE INDEX IF NOT EXISTS idx_articles_title_trgm ON articles USING gin (title gin_trgm_ops);
 
 -- Briefings
-CREATE INDEX IF NOT EXIST idx_briefings_date      ON briefings (edition_date DESC);
-CREATE INDEX IF NOT EXIST idx_briefings_status    ON briefings (pipeline_status);
+CREATE INDEX IF NOT EXISTS idx_briefings_date      ON briefings (edition_date DESC);
+CREATE INDEX IF NOT EXISTS idx_briefings_status    ON briefings (pipeline_status);
 
 -- Pipeline events
-CREATE INDEX IF NOT EXIST idx_pe_content          ON pipeline_events (content_type, content_id);
-CREATE INDEX IF NOT EXIST idx_pe_created_at       ON pipeline_events (created_at DESC);
-CREATE INDEX IF NOT EXIST idx_pe_agent            ON pipeline_events (agent_name);
-CREATE INDEX IF NOT EXIST idx_pe_rejections       ON pipeline_events (to_status, created_at) WHERE to_status = 'draft';
+CREATE INDEX IF NOT EXISTS idx_pe_content          ON pipeline_events (content_type, content_id);
+CREATE INDEX IF NOT EXISTS idx_pe_created_at       ON pipeline_events (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_pe_agent            ON pipeline_events (agent_name);
+CREATE INDEX IF NOT EXISTS idx_pe_rejections       ON pipeline_events (to_status, created_at) WHERE to_status = 'draft';
 
 -- Social posts
-CREATE INDEX IF NOT EXIST idx_social_briefing     ON social_posts (briefing_id);
-CREATE INDEX IF NOT EXIST idx_social_platform     ON social_posts (platform);
-CREATE INDEX IF NOT EXIST idx_social_published    ON social_posts (published_at DESC);
-CREATE INDEX IF NOT EXIST idx_social_phase        ON social_posts (phase);
+CREATE INDEX IF NOT EXISTS idx_social_briefing     ON social_posts (briefing_id);
+CREATE INDEX IF NOT EXISTS idx_social_platform     ON social_posts (platform);
+CREATE INDEX IF NOT EXISTS idx_social_published    ON social_posts (published_at DESC);
+CREATE INDEX IF NOT EXISTS idx_social_phase        ON social_posts (phase);
 
 -- Training
-CREATE INDEX IF NOT EXIST idx_tm_status           ON training_modules (pipeline_status);
-CREATE INDEX IF NOT EXIST idx_tm_type             ON training_modules (type);
-CREATE INDEX IF NOT EXIST idx_tm_phase            ON training_modules (phase);
-CREATE INDEX IF NOT EXIST idx_tm_zt               ON training_modules (zt_module) WHERE zt_module IS NOT NULL;
-CREATE INDEX IF NOT EXIST idx_tc_user             ON training_completions (user_id);
-CREATE INDEX IF NOT EXIST idx_tc_org              ON training_completions (org_id);
-CREATE INDEX IF NOT EXIST idx_tc_org_dept         ON training_completions (org_id, department);
-CREATE INDEX IF NOT EXIST idx_tc_module           ON training_completions (module_id);
-CREATE INDEX IF NOT EXIST idx_sim_org             ON simulations (org_id);
-CREATE INDEX IF NOT EXIST idx_simres_sim          ON simulation_results (simulation_id);
-CREATE INDEX IF NOT EXIST idx_simres_user         ON simulation_results (user_id);
+CREATE INDEX IF NOT EXISTS idx_tm_status           ON training_modules (pipeline_status);
+CREATE INDEX IF NOT EXISTS idx_tm_type             ON training_modules (type);
+CREATE INDEX IF NOT EXISTS idx_tm_phase            ON training_modules (phase);
+CREATE INDEX IF NOT EXISTS idx_tm_zt               ON training_modules (zt_module) WHERE zt_module IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_tc_user             ON training_completions (user_id);
+CREATE INDEX IF NOT EXISTS idx_tc_org              ON training_completions (org_id);
+CREATE INDEX IF NOT EXISTS idx_tc_org_dept         ON training_completions (org_id, department);
+CREATE INDEX IF NOT EXISTS idx_tc_module           ON training_completions (module_id);
+CREATE INDEX IF NOT EXISTS idx_sim_org             ON simulations (org_id);
+CREATE INDEX IF NOT EXISTS idx_simres_sim          ON simulation_results (simulation_id);
+CREATE INDEX IF NOT EXISTS idx_simres_user         ON simulation_results (user_id);
 
 -- Revenue
-CREATE INDEX IF NOT EXIST idx_sub_user            ON subscriptions (user_id);
-CREATE INDEX IF NOT EXIST idx_sub_org             ON subscriptions (org_id);
-CREATE INDEX IF NOT EXIST idx_sub_status          ON subscriptions (status);
-CREATE INDEX IF NOT EXIST idx_sub_tier            ON subscriptions (tier);
-CREATE INDEX IF NOT EXIST idx_sub_period_end      ON subscriptions (current_period_end) WHERE status = 'active';
-CREATE INDEX IF NOT EXIST idx_stripe_type         ON stripe_events (event_type);
+CREATE INDEX IF NOT EXISTS idx_sub_user            ON subscriptions (user_id);
+CREATE INDEX IF NOT EXISTS idx_sub_org             ON subscriptions (org_id);
+CREATE INDEX IF NOT EXISTS idx_sub_status          ON subscriptions (status);
+CREATE INDEX IF NOT EXISTS idx_sub_tier            ON subscriptions (tier);
+CREATE INDEX IF NOT EXISTS idx_sub_period_end      ON subscriptions (current_period_end) WHERE status = 'active';
+CREATE INDEX IF NOT EXISTS idx_stripe_type         ON stripe_events (event_type);
 
 -- ══════════════════════════════════════════════════════════════════════════════
 -- SALES & OPERATIONS (DEFENSIVE INDEXING)
 -- ══════════════════════════════════════════════════════════════════════════════
 
 -- Sales
-CREATE INDEX IF NOT EXIST idx_leads_status    ON leads (status);
-CREATE INDEX IF NOT EXIST idx_leads_assigned  ON leads (assigned_to);
+CREATE INDEX IF NOT EXISTS idx_leads_status    ON leads (status);
+CREATE INDEX IF NOT EXISTS idx_leads_assigned  ON leads (assigned_to);
 
 DO $$ BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='leads' AND column_name='created_at') THEN
-        CREATE INDEX IF NOT EXIST idx_leads_created ON leads (created_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_leads_created ON leads (created_at DESC);
     END IF;
 END $$;
 
 -- Operations
-CREATE INDEX IF NOT EXIST idx_tasks_agent     ON agent_tasks (agent_name);
-CREATE INDEX IF NOT EXIST idx_tasks_status    ON agent_tasks (status);
-CREATE INDEX IF NOT EXIST idx_tasks_content   ON agent_tasks (content_type, content_id);
-CREATE INDEX IF NOT EXIST idx_tasks_sla       ON agent_tasks (sla_deadline) WHERE sla_deadline IS NOT NULL;
-CREATE INDEX IF NOT EXIST idx_tasks_failed    ON agent_tasks (agent_name, status, started_at) WHERE status = 'failed';
-CREATE INDEX IF NOT EXIST idx_risk_status     ON risk_register (status, severity);
-CREATE INDEX IF NOT EXIST idx_risk_domain     ON risk_register (domain);
-CREATE INDEX IF NOT EXIST idx_sla_breached    ON handoff_sla_log (breached) WHERE breached = true;
-CREATE INDEX IF NOT EXIST idx_sla_content     ON handoff_sla_log (content_id);
-CREATE INDEX IF NOT EXIST idx_audit_actor     ON audit_trail (actor);
-CREATE INDEX IF NOT EXIST idx_escalations_status ON escalations (status, severity);
-CREATE INDEX IF NOT EXIST idx_escalations_to   ON escalations (to_agent, status);
+CREATE INDEX IF NOT EXISTS idx_tasks_agent     ON agent_tasks (agent_name);
+CREATE INDEX IF NOT EXISTS idx_tasks_status    ON agent_tasks (status);
+CREATE INDEX IF NOT EXISTS idx_tasks_content   ON agent_tasks (content_type, content_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_sla       ON agent_tasks (sla_deadline) WHERE sla_deadline IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_tasks_failed    ON agent_tasks (agent_name, status, started_at) WHERE status = 'failed';
+CREATE INDEX IF NOT EXISTS idx_risk_status     ON risk_register (status, severity);
+CREATE INDEX IF NOT EXISTS idx_risk_domain     ON risk_register (domain);
+CREATE INDEX IF NOT EXISTS idx_sla_breached    ON handoff_sla_log (breached) WHERE breached = true;
+CREATE INDEX IF NOT EXISTS idx_sla_content     ON handoff_sla_log (content_id);
+CREATE INDEX IF NOT EXISTS idx_audit_actor     ON audit_trail (actor);
+CREATE INDEX IF NOT EXISTS idx_escalations_status ON escalations (status, severity);
+CREATE INDEX IF NOT EXISTS idx_escalations_to   ON escalations (to_agent, status);
 
 DO $$ BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='agent_tasks' AND column_name='started_at') THEN
-        CREATE INDEX IF NOT EXIST idx_tasks_started ON agent_tasks (started_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_tasks_started ON agent_tasks (started_at DESC);
     END IF;
     
     IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='audit_trail' AND column_name='created_at') THEN
-        CREATE INDEX IF NOT EXIST idx_audit_created ON audit_trail (created_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_trail (created_at DESC);
     END IF;
 END $$;
 
