@@ -763,30 +763,39 @@ CREATE TRIGGER trg_briefing_mark_items_used
 -- MATERIALIZED VIEW: nightly dashboard snapshot
 -- ══════════════════════════════════════════════════════════════════════════════
 
-CREATE MATERIALIZED VIEW mv_dashboard_current AS
-SELECT
-  CURRENT_DATE                                                          AS snapshot_date,
-  (SELECT COUNT(*) FROM users WHERE deleted_at IS NULL)                 AS total_subscribers,
-  (SELECT COUNT(*) FROM subscriptions WHERE status = 'active')          AS paid_accounts,
-  (SELECT COUNT(*) FROM subscriptions WHERE status = 'active' AND tier = 'enterprise') AS enterprise_accounts,
-  (SELECT COALESCE(SUM(mrr_cents), 0) FROM subscriptions WHERE status = 'active') AS mrr_cents,
-  (SELECT ROUND(
-    COUNT(*) FILTER (WHERE cancelled_at > now() - interval '30 days')::DECIMAL /
-    NULLIF(COUNT(*) FILTER (WHERE created_at < now() - interval '30 days'), 0) * 100, 2
-  ) FROM subscriptions)                                                 AS churn_rate,
-  (SELECT COUNT(*) FROM articles WHERE pipeline_status = 'published'
-    AND published_at > now() - interval '30 days')                      AS articles_published,
-  (SELECT COUNT(*) FROM briefings WHERE pipeline_status = 'published'
-    AND published_at > now() - interval '30 days')                      AS briefings_published,
-  (SELECT ROUND(AVG(
-    CASE WHEN open_count > 0 AND click_count > 0
-         THEN open_count::DECIMAL / NULLIF(click_count, 0) ELSE 0 END
-  ), 2) FROM briefings WHERE published_at > now() - interval '30 days') AS avg_open_rate,
-  (SELECT COUNT(*) FROM risk_register WHERE status = 'open')            AS open_risk_count,
-  (SELECT COUNT(*) FROM agent_tasks WHERE DATE(started_at) = CURRENT_DATE) AS agent_tasks_completed
-WITH NO DATA;
+-- ── Materialized View Safety Wrap ──
+DO $$ BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'users') AND
+       EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'subscriptions') THEN
+        
+        DROP MATERIALIZED VIEW IF EXISTS mv_dashboard_current;
+        
+        CREATE MATERIALIZED VIEW mv_dashboard_current AS
+        SELECT
+            CURRENT_DATE AS snapshot_date,
+            (SELECT COUNT(*) FROM users WHERE deleted_at IS NULL) AS total_subscribers,
+            (SELECT COUNT(*) FROM subscriptions WHERE status = 'active') AS paid_accounts,
+            (SELECT COUNT(*) FROM subscriptions WHERE status = 'active' AND tier = 'enterprise') AS enterprise_accounts,
+            (SELECT COALESCE(SUM(mrr_cents), 0) FROM subscriptions WHERE status = 'active') AS mrr_cents,
+            (SELECT ROUND(
+                COUNT(*) FILTER (WHERE cancelled_at > now() - interval '30 days')::DECIMAL /
+                NULLIF(COUNT(*) FILTER (WHERE created_at < now() - interval '30 days'), 0) * 100, 2
+            ) FROM subscriptions) AS churn_rate,
+            (SELECT COUNT(*) FROM articles WHERE pipeline_status = 'published'
+                AND published_at > now() - interval '30 days') AS articles_published,
+            (SELECT COUNT(*) FROM briefings WHERE pipeline_status = 'published'
+                AND published_at > now() - interval '30 days') AS briefings_published,
+            (SELECT ROUND(AVG(
+                CASE WHEN open_count > 0 AND click_count > 0
+                     THEN open_count::DECIMAL / NULLIF(click_count, 0) ELSE 0 END
+            ), 2) FROM briefings WHERE published_at > now() - interval '30 days') AS avg_open_rate,
+            (SELECT COUNT(*) FROM risk_register WHERE status = 'open') AS open_risk_count,
+            (SELECT COUNT(*) FROM agent_tasks WHERE DATE(started_at) = CURRENT_DATE) AS agent_tasks_completed
+        WITH NO DATA;
 
-CREATE UNIQUE INDEX idx_mv_dashboard ON mv_dashboard_current (snapshot_date);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_dashboard ON mv_dashboard_current (snapshot_date);
+    END IF;
+END $$;
 
 -- Refresh command (run nightly via pg_cron or app scheduler):
 -- REFRESH MATERIALIZED VIEW CONCURRENTLY mv_dashboard_current;
