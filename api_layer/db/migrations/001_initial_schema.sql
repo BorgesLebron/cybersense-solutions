@@ -256,7 +256,7 @@ CREATE TABLE IF NOT EXISTS threat_records (
 CREATE TABLE IF NOT EXISTS intel_items (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   type                  intel_item_type NOT NULL,
-  category              VARCHAR(100)  NOT NULL,               -- AI, quantum, cloud, NIST, new tchnology, etc.
+  category              VARCHAR(100)  NOT NULL,               -- AI, quantum, cloud, NIST, new technology, etc.
   headline              TEXT          NOT NULL,
   summary               TEXT          NOT NULL,
   tags                  TEXT[]        NOT NULL DEFAULT '{}',
@@ -663,26 +663,43 @@ CREATE INDEX IF NOT EXISTS idx_sub_tier            ON subscriptions (tier);
 CREATE INDEX IF NOT EXISTS idx_sub_period_end      ON subscriptions (current_period_end) WHERE status = 'active';
 CREATE INDEX IF NOT EXISTS idx_stripe_type         ON stripe_events (event_type);
 
+-- ══════════════════════════════════════════════════════════════════════════════
+-- SALES & OPERATIONS (DEFENSIVE INDEXING)
+-- ══════════════════════════════════════════════════════════════════════════════
+
 -- Sales
-CREATE INDEX IF NOT EXISTS idx_leads_status        ON leads (status);
-CREATE INDEX IF NOT EXISTS idx_leads_assigned      ON leads (assigned_to);
-CREATE INDEX IF NOT EXISTS idx_leads_created       ON leads (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_leads_status    ON leads (status);
+CREATE INDEX IF NOT EXISTS idx_leads_assigned  ON leads (assigned_to);
+
+DO $$ BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='leads' AND column_name='created_at') THEN
+        CREATE INDEX IF NOT EXISTS idx_leads_created ON leads (created_at DESC);
+    END IF;
+END $$;
 
 -- Operations
-CREATE INDEX IF NOT EXISTS idx_tasks_agent         ON agent_tasks (agent_name);
-CREATE INDEX IF NOT EXISTS idx_tasks_status        ON agent_tasks (status);
-CREATE INDEX IF NOT EXISTS idx_tasks_content       ON agent_tasks (content_type, content_id);
-CREATE INDEX IF NOT EXISTS idx_tasks_started       ON agent_tasks (started_at DESC);
-CREATE INDEX IF NOT EXISTS idx_tasks_sla           ON agent_tasks (sla_deadline) WHERE sla_deadline IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_tasks_failed        ON agent_tasks (agent_name, status, started_at) WHERE status = 'failed';
-CREATE INDEX IF NOT EXISTS idx_risk_status         ON risk_register (status, severity);
-CREATE INDEX IF NOT EXISTS idx_risk_domain         ON risk_register (domain);
-CREATE INDEX IF NOT EXISTS idx_sla_breached        ON handoff_sla_log (breached) WHERE breached = true;
-CREATE INDEX IF NOT EXISTS idx_sla_content         ON handoff_sla_log (content_id);
-CREATE INDEX IF NOT EXISTS idx_audit_actor         ON audit_trail (actor);
-CREATE INDEX IF NOT EXISTS idx_audit_created       ON audit_trail (created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_escalations_status  ON escalations (status, severity);
-CREATE INDEX IF NOT EXISTS idx_escalations_to      ON escalations (to_agent, status);
+CREATE INDEX IF NOT EXISTS idx_tasks_agent     ON agent_tasks (agent_name);
+CREATE INDEX IF NOT EXISTS idx_tasks_status    ON agent_tasks (status);
+CREATE INDEX IF NOT EXISTS idx_tasks_content   ON agent_tasks (content_type, content_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_sla       ON agent_tasks (sla_deadline) WHERE sla_deadline IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_tasks_failed    ON agent_tasks (agent_name, status, started_at) WHERE status = 'failed';
+CREATE INDEX IF NOT EXISTS idx_risk_status     ON risk_register (status, severity);
+CREATE INDEX IF NOT EXISTS idx_risk_domain     ON risk_register (domain);
+CREATE INDEX IF NOT EXISTS idx_sla_breached    ON handoff_sla_log (breached) WHERE breached = true;
+CREATE INDEX IF NOT EXISTS idx_sla_content     ON handoff_sla_log (content_id);
+CREATE INDEX IF NOT EXISTS idx_audit_actor     ON audit_trail (actor);
+CREATE INDEX IF NOT EXISTS idx_escalations_status ON escalations (status, severity);
+CREATE INDEX IF NOT EXISTS idx_escalations_to   ON escalations (to_agent, status);
+
+DO $$ BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='agent_tasks' AND column_name='started_at') THEN
+        CREATE INDEX IF NOT EXISTS idx_tasks_started ON agent_tasks (started_at DESC);
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='audit_trail' AND column_name='created_at') THEN
+        CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_trail (created_at DESC);
+    END IF;
+END $$;
 
 -- ══════════════════════════════════════════════════════════════════════════════
 -- TRIGGERS
