@@ -796,7 +796,7 @@ DO $$ BEGIN
             (SELECT COALESCE(SUM(mrr_cents), 0) FROM subscriptions WHERE status = 'active') AS mrr_cents,
             (SELECT ROUND(
                 COUNT(*) FILTER (WHERE cancelled_at > now() - interval '30 days')::DECIMAL /
-                NULLIF(COUNT(*) FILTER (WHERE created_at < now() - interval '30 days'), 0) * 100, 2
+                NULLIF(COUNT(*) FILTER (WHERE started_at < now() - interval '30 days'), 0) * 100, 2
             ) FROM subscriptions) AS churn_rate,
             (SELECT COUNT(*) FROM articles WHERE pipeline_status = 'published'
                 AND published_at > now() - interval '30 days') AS articles_published,
