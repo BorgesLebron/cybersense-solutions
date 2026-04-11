@@ -256,7 +256,7 @@ CREATE TABLE IF NOT EXISTS threat_records (
 CREATE TABLE IF NOT EXISTS intel_items (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   type                  intel_item_type NOT NULL,
-  category              VARCHAR(100)  NOT NULL,               -- AI, quantum, cloud, NIST, etc.
+  category              VARCHAR(100)  NOT NULL,               -- AI, quantum, cloud, NIST, new tchnology, etc.
   headline              TEXT          NOT NULL,
   summary               TEXT          NOT NULL,
   tags                  TEXT[]        NOT NULL DEFAULT '{}',
