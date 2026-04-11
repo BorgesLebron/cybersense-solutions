@@ -6,9 +6,9 @@ BEGIN;
 
 -- ── Extensions ────────────────────────────────────────────────────────────────
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-CREATE EXTENSION IF NOT EXISTS "pg_trgm";  -- for ILIKE search performance
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 
--- ── Slugify function (for article URLs) ───────────────────────────────────────
+-- ── Slugify function ─────────────────────────────────────────────────────────
 CREATE OR REPLACE FUNCTION slugify(val TEXT)
 RETURNS TEXT AS $$
   SELECT lower(
@@ -22,11 +22,144 @@ RETURNS TEXT AS $$
   );
 $$ LANGUAGE SQL IMMUTABLE;
 
+-- ── Idempotent Type Creation ──────────────────────────────────────────────────
+-- We group all ENUMs here so they exist before tables try to use them.
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_tier') THEN
+        CREATE TYPE user_tier AS ENUM ('free', 'freemium', 'monthly', 'enterprise');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'admin_role_type') THEN
+        CREATE TYPE admin_role_type AS ENUM ('gm', 'editor', 'analyst', 'sales', 'training');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'threat_severity') THEN
+        CREATE TYPE threat_severity AS ENUM ('critical', 'high', 'medium', 'low');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'threat_priority') THEN
+        CREATE TYPE threat_priority AS ENUM ('immediate', 'high', 'normal', 'watch');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'intel_item_type') THEN
+        CREATE TYPE intel_item_type AS ENUM ('innovation', 'growth', 'policy');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'intel_priority') THEN
+        CREATE TYPE intel_priority AS ENUM ('high', 'normal', 'watch');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'source_type') THEN
+        CREATE TYPE source_type AS ENUM ('threat', 'innovation', 'growth', 'policy');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'article_section') THEN
+        CREATE TYPE article_section AS ENUM ('threat', 'policy', 'innovation', 'growth', 'training');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'content_tier') THEN
+        CREATE TYPE content_tier AS ENUM ('freemium', 'monthly', 'enterprise');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'article_status') THEN
+        CREATE TYPE article_status AS ENUM ('draft', 'dev_edit', 'eic_review', 'qa', 'maya', 'approved', 'published');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'briefing_status') THEN
+        CREATE TYPE briefing_status AS ENUM ('draft', 'dev_edit', 'eic_review', 'qa', 'maya', 'approved', 'published');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'pipeline_content_type') THEN
+        CREATE TYPE pipeline_content_type AS ENUM ('article', 'briefing', 'training', 'system');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'social_platform') THEN
+        CREATE TYPE social_platform AS ENUM ('linkedin', 'meta', 'x', 'tiktok', 'youtube');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'social_phase') THEN
+        CREATE TYPE social_phase AS ENUM ('0700_main', '0900_byte', '1200_note');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'module_type') THEN
+        CREATE TYPE module_type AS ENUM ('video', 'lab', 'step_by_step', 'glossary', 'training_byte');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'module_phase') THEN
+        CREATE TYPE module_phase AS ENUM ('1_video', '2_lab', '3_simulation', 'library');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'module_status') THEN
+        CREATE TYPE module_status AS ENUM ('draft', 'qa', 'maya', 'published');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'completion_status') THEN
+        CREATE TYPE completion_status AS ENUM ('not_started', 'in_progress', 'completed');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'simulation_type') THEN
+        CREATE TYPE simulation_type AS ENUM ('phishing', 'spear_phishing', 'vishing', 'smishing');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'simulation_outcome') THEN
+        CREATE TYPE simulation_outcome AS ENUM ('reported', 'clicked', 'ignored');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'subscription_tier') THEN
+        CREATE TYPE subscription_tier   AS ENUM ('monthly', 'enterprise');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'subscription_status') THEN
+        CREATE TYPE subscription_status AS ENUM ('active', 'past_due', 'cancelled', 'paused');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'lead_status') THEN
+        CREATE TYPE lead_status AS ENUM ('new', 'qualified', 'proposal', 'negotiating', 'won', 'lost');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'lead_source') THEN
+        CREATE TYPE lead_source AS ENUM ('linkedin', 'meta', 'x', 'youtube', 'direct', 'referral', 'partner');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'partner_type') THEN
+        CREATE TYPE partner_type   AS ENUM ('affiliate', 'sponsor', 'co_marketing', 'reseller');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'partner_status') THEN
+        CREATE TYPE partner_status AS ENUM ('prospect', 'discovery', 'proposal', 'active', 'paused');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'task_status') THEN
+        CREATE TYPE task_status AS ENUM ('queued', 'in_progress', 'complete', 'failed', 'escalated');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'risk_domain') THEN
+        CREATE TYPE risk_domain AS ENUM ('operational', 'intelligence', 'reputational', 'financial', 'compliance');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'risk_severity') THEN
+        CREATE TYPE risk_severity AS ENUM ('high', 'medium', 'low');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'risk_status') THEN
+        CREATE TYPE risk_status   AS ENUM ('open', 'mitigating', 'resolved');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'escalation_severity') THEN
+        CREATE TYPE escalation_severity AS ENUM ('critical', 'high', 'medium', 'low');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'escalation_status') THEN
+        CREATE TYPE escalation_status AS ENUM ('open', 'acknowledged', 'resolved');
+    END IF;
+
+END $$;
+
 -- ══════════════════════════════════════════════════════════════════════════════
 -- DOMAIN 1: USERS & AUTH
 -- ══════════════════════════════════════════════════════════════════════════════
 
-CREATE TABLE organizations (
+CREATE TABLE IF NOT EXISTS organizations (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name                  VARCHAR(255)  NOT NULL,
   domain                VARCHAR(255),                          -- email domain for SSO matching
@@ -41,9 +174,7 @@ CREATE TABLE organizations (
   CONSTRAINT organizations_seat_used_check CHECK (seat_used <= seat_count)
 );
 
-CREATE TYPE user_tier AS ENUM ('free', 'freemium', 'monthly', 'enterprise');
-
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email                 VARCHAR(320)  NOT NULL,
   password_hash         VARCHAR(255)  NOT NULL,
@@ -66,9 +197,7 @@ ALTER TABLE organizations
   ADD CONSTRAINT fk_org_billing_contact
   FOREIGN KEY (billing_contact_id) REFERENCES users(id) ON DELETE SET NULL;
 
-CREATE TYPE admin_role_type AS ENUM ('gm', 'editor', 'analyst', 'sales', 'training');
-
-CREATE TABLE admin_roles (
+CREATE TABLE IF NOT EXISTS admin_roles (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id               UUID          NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   role                  admin_role_type NOT NULL,
@@ -78,7 +207,7 @@ CREATE TABLE admin_roles (
   CONSTRAINT admin_roles_user_unique UNIQUE (user_id)
 );
 
-CREATE TABLE sessions (
+CREATE TABLE IF NOT EXISTS sessions (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id               UUID          NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   token_hash            VARCHAR(64)   NOT NULL,               -- SHA-256 of refresh/verify token
@@ -89,7 +218,7 @@ CREATE TABLE sessions (
   CONSTRAINT sessions_token_hash_unique UNIQUE (token_hash)
 );
 
-CREATE TABLE agent_tokens (
+CREATE TABLE IF NOT EXISTS agent_tokens (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   agent_name            VARCHAR(100)  NOT NULL,
   team                  VARCHAR(100)  NOT NULL,
@@ -104,10 +233,7 @@ CREATE TABLE agent_tokens (
 -- DOMAIN 2: INTELLIGENCE
 -- ══════════════════════════════════════════════════════════════════════════════
 
-CREATE TYPE threat_severity AS ENUM ('critical', 'high', 'medium', 'low');
-CREATE TYPE threat_priority AS ENUM ('immediate', 'high', 'normal', 'watch');
-
-CREATE TABLE threat_records (
+CREATE TABLE IF NOT EXISTS threat_records (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   cve_id                VARCHAR(30)   NOT NULL,
   threat_name           VARCHAR(500)  NOT NULL,
@@ -124,10 +250,7 @@ CREATE TABLE threat_records (
   CONSTRAINT threat_records_cve_unique UNIQUE (cve_id)
 );
 
-CREATE TYPE intel_item_type AS ENUM ('innovation', 'growth', 'policy');
-CREATE TYPE intel_priority   AS ENUM ('high', 'normal', 'watch');
-
-CREATE TABLE intel_items (
+CREATE TABLE IF NOT EXISTS intel_items (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   type                  intel_item_type NOT NULL,
   category              VARCHAR(100)  NOT NULL,               -- AI, quantum, cloud, NIST, etc.
@@ -141,9 +264,7 @@ CREATE TABLE intel_items (
   article_id            UUID                                  -- FK added after articles table
 );
 
-CREATE TYPE source_type AS ENUM ('threat', 'innovation', 'growth', 'policy');
-
-CREATE TABLE intel_repository (
+CREATE TABLE IF NOT EXISTS intel_repository (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   source_type           source_type   NOT NULL,
   source_id             UUID          NOT NULL,               -- polymorphic: threat_records or intel_items
@@ -156,7 +277,7 @@ CREATE TABLE intel_repository (
   CONSTRAINT intel_repository_source_unique UNIQUE (source_id)
 );
 
-CREATE TABLE policy_updates (
+CREATE TABLE IF NOT EXISTS policy_updates (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   framework             VARCHAR(100)  NOT NULL,               -- NIST, ISO, PCI-DSS, HIPAA, etc.
   version               VARCHAR(50),
@@ -170,14 +291,7 @@ CREATE TABLE policy_updates (
 -- DOMAIN 3: CONTENT
 -- ══════════════════════════════════════════════════════════════════════════════
 
-CREATE TYPE article_section AS ENUM ('threat', 'policy', 'innovation', 'growth', 'training');
-CREATE TYPE content_tier    AS ENUM ('freemium', 'monthly', 'enterprise');
-
-CREATE TYPE article_status AS ENUM (
-  'draft', 'dev_edit', 'eic_review', 'qa', 'maya', 'approved', 'published'
-);
-
-CREATE TABLE articles (
+CREATE TABLE IF NOT EXISTS articles (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title                 VARCHAR(500)  NOT NULL,
   slug                  VARCHAR(500)  NOT NULL,
@@ -208,11 +322,7 @@ ALTER TABLE policy_updates
   ADD CONSTRAINT fk_policy_article
   FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE SET NULL;
 
-CREATE TYPE briefing_status AS ENUM (
-  'draft', 'dev_edit', 'eic_review', 'qa', 'maya', 'approved', 'published'
-);
-
-CREATE TABLE briefings (
+CREATE TABLE IF NOT EXISTS briefings (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   edition_date          DATE          NOT NULL,
   subject_line          VARCHAR(500)  NOT NULL,
@@ -234,9 +344,7 @@ CREATE TABLE briefings (
   CONSTRAINT briefings_innovation_count CHECK (array_length(innovation_item_ids, 1) = 2)
 );
 
-CREATE TYPE pipeline_content_type AS ENUM ('article', 'briefing', 'training', 'system');
-
-CREATE TABLE pipeline_events (
+CREATE TABLE IF NOT EXISTS pipeline_events (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   content_type          pipeline_content_type NOT NULL,
   content_id            UUID          NOT NULL,
@@ -247,10 +355,7 @@ CREATE TABLE pipeline_events (
   created_at            TIMESTAMPTZ   NOT NULL DEFAULT now()
 );
 
-CREATE TYPE social_platform AS ENUM ('linkedin', 'meta', 'x', 'tiktok', 'youtube');
-CREATE TYPE social_phase     AS ENUM ('0700_main', '0900_byte', '1200_note');
-
-CREATE TABLE social_posts (
+CREATE TABLE IF NOT EXISTS social_posts (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   briefing_id           UUID          NOT NULL REFERENCES briefings(id),
   platform              social_platform NOT NULL,
@@ -268,11 +373,7 @@ CREATE TABLE social_posts (
 -- DOMAIN 4: TRAINING & ZERO-TRUST
 -- ══════════════════════════════════════════════════════════════════════════════
 
-CREATE TYPE module_type AS ENUM ('video', 'lab', 'step_by_step', 'glossary', 'training_byte');
-CREATE TYPE module_phase AS ENUM ('1_video', '2_lab', '3_simulation', 'library');
-CREATE TYPE module_status AS ENUM ('draft', 'qa', 'maya', 'published');
-
-CREATE TABLE training_modules (
+CREATE TABLE IF NOT EXISTS training_modules (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title                 VARCHAR(500)  NOT NULL,
   type                  module_type   NOT NULL,
@@ -294,9 +395,7 @@ ALTER TABLE briefings
   ADD CONSTRAINT fk_briefing_training_byte
   FOREIGN KEY (training_byte_id) REFERENCES training_modules(id) ON DELETE SET NULL;
 
-CREATE TYPE completion_status AS ENUM ('not_started', 'in_progress', 'completed');
-
-CREATE TABLE training_completions (
+CREATE TABLE IF NOT EXISTS training_completions (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id               UUID          NOT NULL REFERENCES users(id),
   module_id             UUID          NOT NULL REFERENCES training_modules(id),
@@ -310,9 +409,7 @@ CREATE TABLE training_completions (
   CONSTRAINT training_completions_user_module_unique UNIQUE (user_id, module_id)
 );
 
-CREATE TYPE simulation_type AS ENUM ('phishing', 'spear_phishing', 'vishing', 'smishing');
-
-CREATE TABLE simulations (
+CREATE TABLE IF NOT EXISTS simulations (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   org_id                UUID          NOT NULL REFERENCES organizations(id),
   type                  simulation_type NOT NULL,
@@ -324,9 +421,7 @@ CREATE TABLE simulations (
   closed_at             TIMESTAMPTZ
 );
 
-CREATE TYPE simulation_outcome AS ENUM ('reported', 'clicked', 'ignored');
-
-CREATE TABLE simulation_results (
+CREATE TABLE IF NOT EXISTS simulation_results (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   simulation_id         UUID          NOT NULL REFERENCES simulations(id),
   user_id               UUID          NOT NULL REFERENCES users(id),
@@ -340,10 +435,7 @@ CREATE TABLE simulation_results (
 -- DOMAIN 5: REVENUE & SALES
 -- ══════════════════════════════════════════════════════════════════════════════
 
-CREATE TYPE subscription_tier   AS ENUM ('monthly', 'enterprise');
-CREATE TYPE subscription_status AS ENUM ('active', 'past_due', 'cancelled', 'paused');
-
-CREATE TABLE subscriptions (
+CREATE TABLE IF NOT EXISTS subscriptions (
   id                       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id                  UUID          REFERENCES users(id),
   org_id                   UUID          REFERENCES organizations(id),
@@ -359,7 +451,7 @@ CREATE TABLE subscriptions (
   CONSTRAINT subscriptions_owner_check CHECK (user_id IS NOT NULL OR org_id IS NOT NULL)
 );
 
-CREATE TABLE stripe_events (
+CREATE TABLE IF NOT EXISTS stripe_events (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   stripe_event_id       VARCHAR(255)  NOT NULL,
   event_type            VARCHAR(255)  NOT NULL,
@@ -370,10 +462,7 @@ CREATE TABLE stripe_events (
   CONSTRAINT stripe_events_event_id_unique UNIQUE (stripe_event_id)
 );
 
-CREATE TYPE lead_status AS ENUM ('new', 'qualified', 'proposal', 'negotiating', 'won', 'lost');
-CREATE TYPE lead_source AS ENUM ('linkedin', 'meta', 'x', 'youtube', 'direct', 'referral', 'partner');
-
-CREATE TABLE leads (
+CREATE TABLE IF NOT EXISTS leads (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email                 VARCHAR(320)  NOT NULL,
   full_name             VARCHAR(255)  NOT NULL,
@@ -389,10 +478,7 @@ CREATE TABLE leads (
   converted_at          TIMESTAMPTZ
 );
 
-CREATE TYPE partner_type   AS ENUM ('affiliate', 'sponsor', 'co_marketing', 'reseller');
-CREATE TYPE partner_status AS ENUM ('prospect', 'discovery', 'proposal', 'active', 'paused');
-
-CREATE TABLE partners (
+CREATE TABLE IF NOT EXISTS partners (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name                  VARCHAR(255)  NOT NULL,
   type                  partner_type  NOT NULL,
@@ -408,9 +494,7 @@ CREATE TABLE partners (
 -- DOMAIN 6: OPERATIONS
 -- ══════════════════════════════════════════════════════════════════════════════
 
-CREATE TYPE task_status AS ENUM ('queued', 'in_progress', 'complete', 'failed', 'escalated');
-
-CREATE TABLE agent_tasks (
+CREATE TABLE IF NOT EXISTS agent_tasks (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   agent_name            VARCHAR(100)  NOT NULL,
   task_type             VARCHAR(100)  NOT NULL,
@@ -424,11 +508,7 @@ CREATE TABLE agent_tasks (
   error_message         TEXT
 );
 
-CREATE TYPE risk_domain   AS ENUM ('operational', 'intelligence', 'reputational', 'financial', 'compliance');
-CREATE TYPE risk_severity AS ENUM ('high', 'medium', 'low');
-CREATE TYPE risk_status   AS ENUM ('open', 'mitigating', 'resolved');
-
-CREATE TABLE risk_register (
+CREATE TABLE IF NOT EXISTS risk_register (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   domain                risk_domain   NOT NULL,
   title                 VARCHAR(500)  NOT NULL,
@@ -443,7 +523,7 @@ CREATE TABLE risk_register (
   created_at            TIMESTAMPTZ   NOT NULL DEFAULT now()
 );
 
-CREATE TABLE handoff_sla_log (
+CREATE TABLE IF NOT EXISTS handoff_sla_log (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   from_agent            VARCHAR(100)  NOT NULL,
   to_agent              VARCHAR(100)  NOT NULL,
@@ -455,7 +535,7 @@ CREATE TABLE handoff_sla_log (
   escalated_to          VARCHAR(100)                          -- Barret or Henry if breached
 );
 
-CREATE TABLE dashboard_snapshots (
+CREATE TABLE IF NOT EXISTS dashboard_snapshots (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   snapshot_date         DATE          NOT NULL,
   total_subscribers     INTEGER       NOT NULL DEFAULT 0,
@@ -472,7 +552,7 @@ CREATE TABLE dashboard_snapshots (
   CONSTRAINT dashboard_snapshots_date_unique UNIQUE (snapshot_date)
 );
 
-CREATE TABLE audit_trail (
+CREATE TABLE IF NOT EXISTS audit_trail (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   actor                 VARCHAR(255)  NOT NULL,               -- user_id or agent_name
   action                VARCHAR(255)  NOT NULL,
@@ -482,10 +562,7 @@ CREATE TABLE audit_trail (
   created_at            TIMESTAMPTZ   NOT NULL DEFAULT now()
 );
 
-CREATE TYPE escalation_severity AS ENUM ('critical', 'high', 'medium', 'low');
-CREATE TYPE escalation_status   AS ENUM ('open', 'acknowledged', 'resolved');
-
-CREATE TABLE escalations (
+CREATE TABLE IF NOT EXISTS escalations (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   from_agent            VARCHAR(100)  NOT NULL,
   to_agent              VARCHAR(100)  NOT NULL,
