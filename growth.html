@@ -6,42 +6,46 @@
 <title>Proficient — Professional Growth — CyberSense.Solutions</title>
 <meta name="description" content="Webinars, certification paths, and curated resources for cybersecurity professionals.">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="auth.css">
+<link rel="icon" type="image/png" href="/assets/csicon.png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+
 </head>
 <body>
-
-<div style="position:fixed;top:0;left:0;right:0;bottom:0;z-index:999;pointer-events:none;">
-  <div style="position:absolute;top:64px;left:0;right:0;bottom:0;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);background:rgba(10,22,40,0.5);"></div>
-  <div style="position:absolute;top:64px;left:0;right:0;display:flex;align-items:flex-start;justify-content:center;padding-top:80px;pointer-events:all;">
-    <div style="background:rgba(10,22,40,0.95);border:1px solid rgba(0,212,255,0.25);border-radius:12px;padding:24px 36px;text-align:center;max-width:420px;">
-      <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#00D4FF;margin-bottom:10px;"> Professional Growth</div>
-      <div style="font-size:18px;font-weight:700;color:#ffffff;margin-bottom:8px;">Full access launching soon.</div>
-    </div>
-  </div>
-</div> 
-
   
-<div style="position:fixed;top:0;left:0;right:0;bottom:0;z-index:999;pointer-events:none;">
-  <div style="position:absolute;top:64px;left:0;right:0;bottom:0;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);background:rgba(10,22,40,0.5);"></div>
-  <div style="position:absolute;top:64px;left:0;right:0;display:flex;align-items:flex-start;justify-content:center;padding-top:80px;pointer-events:all;">
-    <div style="background:rgba(10,22,40,0.95);border:1px solid rgba(0,212,255,0.25);border-radius:12px;padding:24px 36px;text-align:center;max-width:420px;">
-      <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#00D4FF;margin-bottom:10px;"> Professional Growth </div>
-      <div style="font-size:18px;font-weight:700;color:#ffffff;margin-bottom:8px;">Full access launching soon.</div>
-    </div>
-  </div>
-</div> 
-
+<div style="background:rgba(0,180,204,0.08);border-bottom:1px solid rgba(0,180,204,0.2);padding:12px 24px;text-align:center;font-size:14px;color:#00B4CC;letter-spacing:0.5px;">
+  Professional Growth resources are being updated — full access coming soon.
+</div>
   
 <nav class="nav" role="navigation">
   <a href="index.html" class="nav-wordmark">CyberSense<span>.Solutions</span></a>
   <ul class="nav-links">
-    <li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li><li><a href="radar.html">Radar</a></li><li><a href="intelligence.html">Intel</a></li><li><a href="newsletter.html">Newsletter</a></li><li><a href="training.html">Training</a></li><li><a href="growth.html">Proficient</a></li><li><a href="innovation.html">Innovation</a></li><li><a href="zerotrust.html">Zero-Trust</a></li>
+    <li><a href="index.html">Home</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="radar.html">Radar</a></li>
+    <li><a href="intelligence.html">Intel</a></li>
+    <li><a href="newsletter.html">Newsletter</a></li>
+    <li><a href="training.html">Training</a></li>
+    <li><a href="growth.html" class="disabled">Proficient</a></li>
+    <li><a href="innovation.html">Innovation</a></li>
+    <li><a href="zerotrust.html">Zero-Trust</a></li>
   </ul>
-  <button class="nav-login" onclick="window.location='dashboard.html'">Login</button>
+  <button class="nav-login" onclick="CS.Auth.showLoginModal()">Login</button>
   <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
 </nav>
 <div class="nav-drawer" id="nav-drawer">
-  <ul><li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li><li><a href="radar.html">Radar</a></li><li><a href="intelligence.html">Intel</a></li><li><a href="newsletter.html">Newsletter</a></li><li><a href="training.html">Training</a></li><li><a href="growth.html">Proficient</a></li><li><a href="innovation.html">Innovation</a></li><li><a href="zerotrust.html">Zero-Trust</a></li></ul>
-  <a href="dashboard.html" class="drawer-login">Login</a>
+  <ul>
+    <li><a href="index.html">Home</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="radar.html">Radar</a></li>
+    <li><a href="intelligence.html">Intel</a></li>
+    <li><a href="newsletter.html">Newsletter</a></li>
+    <li><a href="training.html">Training</a></li>
+    <li><a href="growth.html" class="disabled">Proficient</a></li>
+    <li><a href="innovation.html">Innovation</a></li>
+    <li><a href="zerotrust.html">Zero-Trust</a></li>
+  </ul>
+  <a href="#" class="drawer-login" onclick="CS.Auth.showLoginModal();return false;">Login</a>
 </div>
 
 <section class="hero-dark section" style="padding:64px 24px 56px;">
@@ -55,42 +59,12 @@
 <section class="section" style="background:var(--cs-white);">
   <div class="container">
 
-    <!-- Upcoming Webinars -->
-    <div class="category-section">
-      <div class="category-label-bar">Upcoming Webinars</div>
-      <div class="grid-3">
-        <div class="card">
-          <div style="background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.2);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;display:inline-block;">
-            <div style="font-size:11px;font-weight:700;color:var(--cs-cyan);letter-spacing:1px;text-transform:uppercase;">February 18, 2025</div>
-            <div style="font-size:13px;font-weight:600;color:var(--cs-navy);">2:00 PM CT — Live</div>
-          </div>
-          <h3 style="font-size:16px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;line-height:1.35;">Building a Threat-Intel-Driven Security Operations Program from Scratch</h3>
-          <p style="font-size:13.5px;color:var(--cs-gray-600);line-height:1.6;margin-bottom:16px;">A practitioner-led session on the intelligence cycle, source selection, analyst workflow, and how to operationalize threat intel outputs within existing SIEM and SOAR investments. Suitable for SOC leads and security managers.</p>
-          <p style="font-size:12px;color:var(--cs-gray-400);margin-bottom:12px;">Provider: CyberSense.Solutions</p>
-          <a href="#" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">Register Now →</a>
-        </div>
-        <div class="card">
-          <div style="background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.2);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;display:inline-block;">
-            <div style="font-size:11px;font-weight:700;color:var(--cs-cyan);letter-spacing:1px;text-transform:uppercase;">March 5, 2025</div>
-            <div style="font-size:13px;font-weight:600;color:var(--cs-navy);">1:00 PM CT — Live</div>
-          </div>
-          <h3 style="font-size:16px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;line-height:1.35;">Post-Quantum Cryptography Transition: What Every Security Architect Needs to Know in 2025</h3>
-          <p style="font-size:13.5px;color:var(--cs-gray-600);line-height:1.6;margin-bottom:16px;">Covering NIST's finalized PQC standards (ML-KEM, ML-DSA, SLH-DSA), hybrid key exchange in TLS 1.3, PKI migration timelines, and practical advice for enterprise security teams beginning their cryptographic transition planning.</p>
-          <p style="font-size:12px;color:var(--cs-gray-400);margin-bottom:12px;">Provider: CyberSense.Solutions</p>
-          <a href="#" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">Register Now →</a>
-        </div>
-        <div class="card">
-          <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;display:inline-block;">
-            <div style="font-size:11px;font-weight:700;color:var(--cs-amber);letter-spacing:1px;text-transform:uppercase;">March 20, 2025</div>
-            <div style="font-size:13px;font-weight:600;color:var(--cs-navy);">11:00 AM CT — Live</div>
-          </div>
-          <h3 style="font-size:16px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;line-height:1.35;">AI in the SOC: Using LLMs for Triage, Summarization, and Playbook Generation</h3>
-          <p style="font-size:13.5px;color:var(--cs-gray-600);line-height:1.6;margin-bottom:16px;">A hands-on demonstration of production-grade AI-assisted SOC workflows: alert triage augmentation, automated case summarization, playbook generation from threat intelligence, and the guardrails required to prevent AI hallucinations in high-stakes security decisions.</p>
-          <p style="font-size:12px;color:var(--cs-gray-400);margin-bottom:12px;">Provider: CyberSense.Solutions</p>
-          <a href="#" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">Register →</a>
-        </div>
-      </div>
-    </div>
+<!-- Upcoming Webinars — placeholder content, uncomment when events are scheduled
+<div class="category-section">
+  <div class="category-label-bar">Upcoming Webinars</div>
+  ...all three webinar cards...
+</div>
+-->
 
     <!-- Certification Paths -->
     <div class="category-section">
@@ -164,9 +138,14 @@
       <div class="footer-col"><h4>Platform</h4><ul><li><a href="index.html">Home</a></li><li><a href="radar.html">Threat Radar</a></li><li><a href="intelligence.html">Intel Briefs</a></li><li><a href="newsletter.html">Newsletter</a></li><li><a href="training.html">Training</a></li><li><a href="zerotrust.html">Zero-Trust</a></li></ul></div>
       <div class="footer-col"><h4>Legal</h4><ul><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li><li><a href="about.html">Contact Us</a></li></ul></div>
     </div>
-    <div class="footer-bottom"><span>&copy; 2025 CyberSense.Solutions. All rights reserved.</span><span>Built for the defenders.</span></div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 CyberSense.Solutions. All rights reserved.</span>
+      <span>Security awareness starts here.</span>
+    </div>
   </div>
 </footer>
+<script>window.CS_API_BASE = 'https://api.cybersense.solutions';</script>
+<script src="auth.js"></script>
 <script src="main.js"></script>
 </body>
 </html>
