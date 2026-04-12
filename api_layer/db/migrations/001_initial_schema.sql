@@ -458,7 +458,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   current_period_end       TIMESTAMPTZ,
   cancelled_at             TIMESTAMPTZ,
   cancel_reason            TEXT,
-  created_at               TIMESTAMPTZ   NOT NULL DEFAULT now() -- <--- ADD THIS LINE
+  created_at               TIMESTAMPTZ   NOT NULL DEFAULT now(),
   CONSTRAINT subscriptions_stripe_id_unique UNIQUE (stripe_subscription_id),
   CONSTRAINT subscriptions_owner_check CHECK (user_id IS NOT NULL OR org_id IS NOT NULL)
 );
@@ -808,7 +808,7 @@ DO $$ BEGIN
                      THEN open_count::DECIMAL / NULLIF(click_count, 0) ELSE 0 END
             ), 2) FROM briefings WHERE published_at > now() - interval '30 days') AS avg_open_rate,
             (SELECT COUNT(*) FROM risk_register WHERE status = 'open') AS open_risk_count,
-            (SELECT COUNT(*) FROM agent_tasks WHERE DATE(created_at) = CURRENT_DATE) AS agent_tasks_completed
+            (SELECT COUNT(*) FROM agent_tasks WHERE DATE(started_at) = CURRENT_DATE) AS agent_tasks_completed
         WITH NO DATA;
 
         CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_dashboard ON mv_dashboard_current (snapshot_date);
