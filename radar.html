@@ -72,7 +72,7 @@
               <th>Intel Article</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody id="threat-table-body">
             <!-- Rows 1–7 visible -->
             <tr class="threat-row" data-severity="high">
               <td><span class="badge badge-medium">High</span></td>
@@ -225,5 +225,40 @@
   </div>
 </footer>
 <script src="main.js"></script>
+<script>
+async function loadThreatRadar() {
+    try {
+        // Point this to your live Railway API
+        const response = await fetch('https://api.cybersense.solutions/api/threats');
+        const threats = await response.json();
+
+        const tableBody = document.getElementById('threat-table-body');
+        if (!tableBody) return;
+
+        tableBody.innerHTML = ''; // Wipes the static placeholders
+
+        threats.forEach(threat => {
+            const row = `
+                <tr class="threat-row" data-severity="${threat.severity.toLowerCase()}">
+                    <td><span class="badge badge-${threat.severity.toLowerCase()}">${threat.severity}</span></td>
+                    <td>${threat.threat_name}</td>
+                    <td class="mono">${threat.cve_id}</td>
+                    <td class="mono">${threat.cvss_score}</td>
+                    <td><span class="badge badge-published">Live</span></td>
+                    <td style="font-size:13px; color:var(--cs-gray-400);">
+                        ${new Date(threat.ingested_at).toLocaleDateString()}
+                    </td>
+                </tr>
+            `;
+            tableBody.insertAdjacentHTML('beforeend', row);
+        });
+    } catch (error) {
+        console.error("Radar sync failed:", error);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadThreatRadar);
+</script>
+  
 </body>
 </html>
