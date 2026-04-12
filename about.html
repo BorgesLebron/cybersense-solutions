@@ -7,6 +7,7 @@
 <title>About — CyberSense.Solutions</title>
 <meta name="description" content="Our mission, vision, and the story behind CyberSense.Solutions.">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="auth.css">
 </head>
 <body>
 
@@ -23,7 +24,7 @@
     <li><a href="innovation.html">Innovation</a></li>
     <li><a href="zerotrust.html">Zero-Trust</a></li>
   </ul>
-  <button class="nav-login" onclick="window.location='dashboard.html'">Login</button>
+  <button class="nav-login" onclick="CS.Auth.showLoginModal()">Login</button>
   <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
     <span></span><span></span><span></span>
   </button>
@@ -40,7 +41,7 @@
     <li><a href="innovation.html">Innovation</a></li>
     <li><a href="zerotrust.html">Zero-Trust</a></li>
   </ul>
-  <a href="dashboard.html" class="drawer-login">Login</a>
+  <a href="#" class="drawer-login" onclick="CS.Auth.showLoginModal();return false;">Login</a>
 </div>
 
 <!-- Page Header -->
@@ -133,7 +134,7 @@
     <h2 class="section-heading">A veteran's transition. A gap that couldn't be ignored.</h2>
     <p style="font-size:17px;color:var(--cs-gray-600);line-height:1.7;margin-bottom:16px;">CyberSense.Solutions was founded by a U.S. Army veteran — an 82nd Airborne Jumpmaster who spent a career training people to perform under pressure — who transitioned into cybersecurity and found a landscape that had the technology mostly right and the people problem almost entirely wrong.</p>
     <p style="font-size:17px;color:var(--cs-gray-600);line-height:1.7;margin-bottom:16px;">Entering the cybersecurity field as a career transitioner made the gap between the security sector and the rest of the workforce immediately visible — and immediately recognizable. It was the same gap the military had already solved: not with better equipment, but with deliberate, sustained, realistic training that builds a culture capable of taking care of itself.</p>
-    <p style="font-size:17px;color:var(--cs-gray-600);line-height:1.7;">CyberSense.Solutions is early in its journey. The newsletter is live. The platform is in development. The mission is defined. The model is proven — just not yet applied at scale to the digital world. <strong>That is the work.</strong></p>
+    <p style="font-size:17px;color:var(--cs-gray-600);line-height:1.7;">CyberSense.Solutions is early in its journey. The newsletter is live. The platform is live. The mission is defined. The model is proven — just not yet applied at scale to the digital world. <strong>That is the work.</strong></p>
   </div>
 </section>
 
@@ -212,10 +213,12 @@
     </div>
     <div class="footer-bottom">
       <span>&copy; 2026 CyberSense.Solutions. All rights reserved.</span>
-      <span>Built for the defenders.</span>
+      <span>Security awareness starts here.</span>
     </div>
   </div>
 </footer>
+<script>window.CS_API_BASE = 'https://api.cybersense.solutions';</script>
+<script src="auth.js"></script>
 <script src="main.js"></script>
 </body>
 </html>
