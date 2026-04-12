@@ -6,20 +6,40 @@
 <title>Daily Digital Awareness Briefing — CyberSense.Solutions</title>
 <meta name="description" content="Your daily cybersecurity briefing: threats, innovations, professional growth, and a training byte.">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="auth.css">
+<link rel="icon" type="image/png" href="/assets/csicon.png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">  
 </head>
 <body>
 
 <nav class="nav" role="navigation">
   <a href="index.html" class="nav-wordmark">CyberSense<span>.Solutions</span></a>
   <ul class="nav-links">
-    <li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li><li><a href="radar.html">Radar</a></li><li><a href="intelligence.html">Intel</a></li><li><a href="newsletter.html">Newsletter</a></li><li><a href="training.html">Training</a></li><li><a href="growth.html">Proficient</a></li><li><a href="innovation.html">Innovation</a></li><li><a href="zerotrust.html">Zero-Trust</a></li>
+    <li><a href="index.html">Home</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="radar.html">Radar</a></li>
+    <li><a href="intelligence.html">Intel</a></li>
+    <li><a href="newsletter.html">Newsletter</a></li>
+    <li><a href="training.html">Training</a></li>
+    <li><a href="growth.html">Proficient</a></li>
+    <li><a href="innovation.html">Innovation</a></li>
+    <li><a href="zerotrust.html">Zero-Trust</a></li>
   </ul>
-  <button class="nav-login" onclick="window.location='dashboard.html'">Login</button>
+  <button class="nav-login" onclick="CS.Auth.showLoginModal()">Login</button>
   <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
 </nav>
 <div class="nav-drawer" id="nav-drawer">
-  <ul><li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li><li><a href="radar.html">Radar</a></li><li><a href="intelligence.html">Intel</a></li><li><a href="newsletter.html">Newsletter</a></li><li><a href="training.html">Training</a></li><li><a href="growth.html">Proficient</a></li><li><a href="innovation.html">Innovation</a></li><li><a href="zerotrust.html">Zero-Trust</a></li></ul>
-  <a href="dashboard.html" class="drawer-login">Login</a>
+  <ul><li><a href="index.html">Home</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="radar.html">Radar</a></li>
+    <li><a href="intelligence.html">Intel</a></li>
+    <li><a href="newsletter.html">Newsletter</a></li>
+    <li><a href="training.html">Training</a></li>
+    <li><a href="growth.html">Proficient</a></li>
+    <li><a href="innovation.html">Innovation</a></li>
+    <li><a href="zerotrust.html">Zero-Trust</a></li>
+  </ul>
+  <a href="#" class="drawer-login" onclick="CS.Auth.showLoginModal();return false;">Login</a>
 </div>
 
 <section class="hero-dark section" style="padding:64px 24px 56px;">
@@ -141,8 +161,8 @@
           <h3 style="font-size:14px;font-weight:700;color:var(--cs-navy);margin-bottom:16px;letter-spacing:0.3px;">Previous Editions</h3>
           <div class="edition-row active" data-edition="current">
             <div>
-              <div class="edition-date">Mon, Jan 13, 2025</div>
-              <div class="edition-meta">Today's edition • 7 items</div>
+              <div class="edition-date">Fri, Apr 10, 2026</div>
+              <div class="edition-meta">Edition 100 • 7 items</div>
             </div>
             <span style="font-size:12px;color:var(--cs-cyan);">Current</span>
           </div>
@@ -183,18 +203,22 @@
         <!-- Subscribe CTA -->
         <div id="subscribe" class="card card-dark" style="margin-top:20px;">
           <p class="section-label" style="margin-bottom:8px;">Subscribe</p>
-          <h3 style="color:var(--cs-white);font-size:20px;margin-bottom:8px;">Now through LinkedIn, but starting Monday, April 13, 2026, you will get it in your inbox.</h3>
-          <p style="color:rgba(255,255,255,0.6);font-size:14px;margin-bottom:20px;line-height:1.55;">Free daily briefing delivered every weekday morning by 7:00 am CT. No ads. No syndicated content. All ours.</p>
+          <h3 style="color:var(--cs-white);font-size:20px;margin-bottom:8px;">Get it in your inbox.</h3>
+          <p style="color:rgba(255,255,255,0.6);font-size:14px;margin-bottom:20px;line-height:1.55;">Free daily briefing every weekday by 7:00 am CT. No ads. No syndicated content. All ours.</p>
           <div style="display:flex;flex-direction:column;gap:10px;">
-            <input class="form-input" style="background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.15);color:var(--cs-white);" type="email" placeholder="your@email.com">
-            <a class="libutton shadow-md" href="https://www.linkedin.com/build-relation/newsletter-follow?entityUrn=7388246712924069888" target="_blank">
-                    Subscribe on LinkedIn
-                </a>
+            <input id="subscribe-email" class="form-input"
+              style="background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.15);color:var(--cs-white);"
+              type="email" placeholder="your@email.com">
+            <input id="subscribe-name" class="form-input"
+              style="background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.15);color:var(--cs-white);"
+              type="text" placeholder="First name (optional)">
+            <button class="btn btn-primary" id="sub-btn" onclick="handleSubscribe()">Subscribe Free</button>
+            <div id="sub-success" style="display:none;color:#10B981;font-size:13px;text-align:center;">✓ You're in. Check your inbox.</div>
+            <div id="sub-error" style="display:none;color:#EF4444;font-size:13px;text-align:center;"></div>
           </div>
           <p style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:10px;">No spam. Unsubscribe anytime.</p>
-        </div>
+        </div>        
       </div>
-
     </div>
   </div>
 </section>
@@ -206,9 +230,68 @@
       <div class="footer-col"><h4>Platform</h4><ul><li><a href="index.html">Home</a></li><li><a href="radar.html">Threat Radar</a></li><li><a href="intelligence.html">Intel Briefs</a></li><li><a href="newsletter.html">Newsletter</a></li><li><a href="training.html">Training</a></li><li><a href="zerotrust.html">Zero-Trust</a></li></ul></div>
       <div class="footer-col"><h4>Legal</h4><ul><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li><li><a href="about.html">Contact Us</a></li></ul></div>
     </div>
-    <div class="footer-bottom"><span>&copy; 2025 CyberSense.Solutions. All rights reserved.</span><span>Built for the defenders.</span></div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 CyberSense.Solutions. All rights reserved.</span>
+      <span>Security awareness starts here.</span>
+    </div>
   </div>
 </footer>
+  
+<script>window.CS_API_BASE = 'https://api.cybersense.solutions';</script>
+<script src="auth.js"></script>
 <script src="main.js"></script>
+
+<script>
+async function handleSubscribe() {
+  const email   = document.getElementById('subscribe-email').value.trim();
+  const name    = document.getElementById('subscribe-name').value.trim();
+  const btn     = document.getElementById('sub-btn');
+  const success = document.getElementById('sub-success');
+  const error   = document.getElementById('sub-error');
+
+  error.style.display = 'none';
+  success.style.display = 'none';
+
+  if (!email || !email.includes('@')) {
+    error.textContent = 'Please enter a valid email address.';
+    error.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Subscribing…';
+
+  try {
+    const res = await fetch('https://api.cybersense.solutions/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        full_name: name || email.split('@')[0],
+        password: crypto.randomUUID()
+      })
+    });
+
+    if (res.ok) {
+      success.textContent = '✓ You\'re in. Check your inbox for a confirmation email.';
+      success.style.display = 'block';
+      document.getElementById('subscribe-email').value = '';
+      document.getElementById('subscribe-name').value = '';
+    } else if (res.status === 409) {
+      success.textContent = '✓ You\'re already subscribed. Check your inbox.';
+      success.style.display = 'block';
+    } else {
+      throw new Error();
+    }
+  } catch(e) {
+    error.textContent = 'Something went wrong. Try again in a moment.';
+    error.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Subscribe Free';
+  }
+}
+</script>  
+  
 </body>
 </html>
