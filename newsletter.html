@@ -60,167 +60,82 @@
     </div>
 
     <div class="grid-2" style="align-items:start;gap:32px;">
-
-      <!-- Main Content -->
+    
+      <!-- LEFT: Main Content -->
       <div style="grid-column:span 1;">
-        <div class="card" id="edition-current" style="display:block;">
+        <div class="card" id="edition-current">
           <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid #f1f5f9;">
             <div>
               <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--cs-gray-400);margin-bottom:4px;">Current Edition</div>
               <div style="font-size:20px;font-weight:700;color:var(--cs-navy);">Friday, April 10, 2026</div>
             </div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;">
-              <span class="badge badge-critical">3 Threats</span>
-              <span class="badge badge-medium">2 Innovations</span>
+              <span class="badge badge-critical">3 Situational Awareness</span>
+              <span class="badge badge-medium">2 Modernization & Innovation</span>
               <span class="badge badge-published">7 Items</span>
             </div>
           </div>
-
           <div class="briefing-section">
-            <div class="briefing-type">📡 Situational Awareness</div>
-            <h3>CISA Adds Three Actively Exploited Vulnerabilities to KEV Catalog</h3>
-            <p>CISA has added three newly confirmed actively exploited vulnerabilities to the Known Exploited Vulnerabilities catalog, spanning products from a major network device vendor, a widely deployed enterprise application framework, and a cloud management interface. Federal agencies face binding remediation deadlines, but the practical implication extends beyond compliance: KEV additions represent confirmed exploitation in the wild, not theoretical risk. Organizations that use KEV additions as a patch prioritization signal — applying them before the broader patch cycle — consistently reduce exposure windows during the periods when threat actors are most active.</p>
+            <div class="briefing-type">📡 Edition 100 — One Hundred Days of Clarity</div>
+            <h3>One hundred consecutive editions. The brief begins a new chapter.</h3>
+            <p>Three active threats tracked this week including KEV catalog additions and Scattered Spider's updated social engineering playbook. Two AI insight items covering NIST's updated AI Risk Management Framework and the emerging attack surface of agentic AI systems. One career development signal and a training byte on IT vendor impersonation defense.</p>
           </div>
-
-          <div class="briefing-section">
-            <div class="briefing-type">📡 Situational Awareness</div>
-            <h3>Scattered Spider Resurfaces with Refined Social Engineering Playbook</h3>
-            <p>The threat group tracked as Scattered Spider — responsible for high-profile intrusions at MGM Resorts, Caesars Entertainment, and several cloud service providers — has been observed resuming operations with an updated approach to initial access. Recent activity indicates a shift toward more targeted impersonation of IT vendors and managed service providers, exploiting the trust relationships between organizations and their technology partners rather than targeting employees directly. Help desk and IT operations staff remain the primary target — not because they are unsophisticated, but because their role requires them to be responsive and to resolve access issues quickly. That responsiveness, without verification protocols, is the attack surface.</p>
-          </div>
-
-          <div class="briefing-section">
-            <div class="briefing-type">📡 Situational Awareness</div>
-            <h3>Supply Chain Risk in Open Source AI Libraries Accelerates</h3>
-            <p>Security researchers have documented an increasing rate of malicious package publications targeting the Python and npm ecosystems, with particular concentration in libraries associated with machine learning frameworks, AI model integrations, and data pipeline tooling. The pattern follows a consistent model: packages are named to exploit typosquatting or dependency confusion, published with minimal version history, and designed to exfiltrate environment variables, API keys, and cloud credentials during installation. For development teams integrating open source AI tooling, the risk is not hypothetical — it is embedded in the dependency resolution process itself. Package provenance verification and supply chain monitoring are no longer optional security controls for organizations operating in AI-adjacent development environments.</p>
-          </div>
-
-          <div class="briefing-section">
-            <div class="briefing-type">💡 Innovation</div>
-            <h3>NIST Releases Updated AI Risk Management Framework Guidance</h3>
-            <p>NIST has released supplementary guidance to the AI Risk Management Framework addressing deployment in high-stakes environments, including critical infrastructure, healthcare, and financial services. The guidance formalizes expectations around transparency, accountability, and adversarial robustness that were treated as optional in earlier versions, reflecting a broader regulatory shift: AI systems in consequential environments are increasingly being evaluated not only on capability but on the verifiability of their safety properties. For security teams evaluating AI tooling or advising on AI deployment governance, the updated framework provides a standards-aligned foundation for risk assessment already referenced in emerging federal procurement requirements.</p>
-          </div>
-
-          <div class="briefing-section">
-            <div class="briefing-type">💡 Innovation</div>
-            <h3>Agentic AI Systems and the Emerging Attack Surface</h3>
-            <p>Security researchers at multiple institutions have begun publishing analyses of the attack surface introduced by agentic AI systems — models granted the ability to take actions, execute code, browse the web, and interact with external services autonomously. The risk is structural rather than incidental: when a language model can take actions on behalf of a user, the threat model expands to include prompt injection through external content, credential exposure through tool use, and unintended data exfiltration through agentic workflows. Organizations deploying or evaluating AI agents should treat the agent's permission scope and external interaction surface as a primary security review area, not an operational afterthought. The security discipline required is new, but the underlying principle is not — least privilege applies.</p>
-          </div>
-
-          <div class="briefing-section">
-            <div class="briefing-type">📈 Professional Growth</div>
-            <h3>ISC2 Certified in Cybersecurity (CC) — Zero Cost Entry Point</h3>
-            <p>ISC2's Certified in Cybersecurity credential is currently available at no cost — exam and training included — for individuals pursuing an entry point into the field. The certification covers security concepts, network security, access controls, incident response, and security operations at a level suitable for early-career practitioners and career changers. For individuals who have been reading this brief and building their awareness vocabulary, the CC provides a structured credential framework that formalizes that knowledge and signals commitment to prospective employers. Zero cost removes the primary barrier. The discipline required to complete it is exactly what this brief has been building every day for one hundred editions.</p>
-          </div>
-
-          <div class="briefing-section">
-            <div class="briefing-type">🎓 Training Byte</div>
-            <h3>Verify Before You Comply — The IT Vendor Impersonation Test</h3>
-            <p class="text-gray-800 mb-2 text-md font-semibold flex gap-2">The threat pattern:</p>
-            <p>Attackers impersonating IT vendors or help desk staff create urgency — a system is down, credentials need to be reset, access needs to be granted immediately. The request sounds legitimate because the attacker has done enough reconnaissance to make it sound that way. The goal is to get you to act before you verify.</p>
-            <p class="text-gray-800 mb-2 text-md font-semibold flex gap-2">The discipline:</p>
-            <p>Any request arriving through an unexpected channel that asks you to grant access, reset credentials, or bypass a security control should trigger one action before compliance: independent verification. Do not call the number the caller provided. Do not reply to the email. Look up the contact information independently and confirm through that channel. Urgency is a social engineering technique. Thirty seconds of verification is not a failure to be responsive — it is the response.</p>
-            <p class="text-sky-500 mb-2 text-md font-base flex gap-2">One verification step prevents the intrusion that takes three days to contain.</p>
+          <div style="margin-top:20px;">
+            <a href="newsletter/2026/Apr/04102026_edition100.html" class="btn btn-primary btn-sm">Read Full Edition →</a>
           </div>
         </div>
-
-        <!-- Previous edition placeholders (hidden by default) -->
-        <div class="card" id="edition-1" style="display:none;">
-          <div style="font-size:20px;font-weight:700;color:var(--cs-navy);margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #f1f5f9;">Friday, January 10, 2025</div>
-          <div class="briefing-section"><div class="briefing-type">⚠ Threat Item 1</div><h3>Palo Alto PAN-OS GlobalProtect Zero-Day Achieves Maximum 10.0 CVSS Score</h3><p>CVE-2024-3400, a command injection vulnerability in Palo Alto PAN-OS GlobalProtect gateway, has received a CVSS 3.1 base score of 10.0 and is being actively exploited by the threat actor UTA0218. The vulnerability requires no authentication and allows arbitrary OS command execution as root on affected firewall appliances.</p></div>
-          <div class="briefing-section"><div class="briefing-type">⚠ Threat Item 2</div><h3>LockBit 3.0 Resurfaces with New Encryptor Following Law Enforcement Takedown</h3><p>Following Operation Cronos, which disrupted LockBit infrastructure in February 2024, the group has released LockBit 3.1 with a rewritten encryptor and new leak site infrastructure. Law enforcement agencies across five countries have issued updated indicators of compromise and YARA detection rules.</p></div>
-          <div class="briefing-section"><div class="briefing-type">⚠ Threat Item 3</div><h3>ALPHV/BlackCat Shutters Operations After $22M Change Healthcare Ransom Payment</h3><p>The ALPHV/BlackCat ransomware group has apparently conducted an exit scam following the payment of an estimated $22 million ransom from the Change Healthcare attack, disappearing with the full payment and leaving their affiliate network unpaid. The attack disrupted prescription processing across the United States for three weeks.</p></div>
-          <div class="briefing-section"><div class="briefing-type">💡 Innovation Item 1</div><h3>DARPA Awards $14.5M for AI-Driven Autonomous Cyber Defense Research</h3><p>DARPA's Autonomous Cyber Operations program has awarded contracts to four research teams developing systems that can autonomously detect, attribute, and respond to adversary cyberattacks within contested networks without requiring human-in-the-loop decision-making for time-critical defensive actions.</p></div>
-          <div class="briefing-section"><div class="briefing-type">💡 Innovation Item 2</div><h3>eBPF-Based Security Telemetry Matures: Eliminating the Agent-as-Attack-Surface Problem</h3><p>Production deployments of eBPF-based runtime security monitoring at scale are now demonstrating 40% lower overhead than agent-based alternatives while providing deeper kernel-level visibility. Major SIEM vendors are integrating eBPF telemetry as a primary data source, reducing reliance on vulnerable endpoint agents.</p></div>
-          <div class="briefing-section"><div class="briefing-type">📈 Professional Growth</div><h3>ISC2 2024 Cybersecurity Workforce Study: 4 Million Professional Gap Widens</h3><p>The global cybersecurity workforce gap has grown to 4.8 million unfilled positions, with the most acute shortages in cloud security architecture, OT/ICS security, and AI governance roles. The study identifies AI-adjacent security skills as the fastest-growing demand category for 2025.</p></div>
-          <div class="briefing-section"><div class="briefing-type">🎓 Training Byte</div><h3>How to Identify a Pass-the-Hash Attack in Windows Event Logs</h3><p>Pass-the-Hash attacks generate Event ID 4624 with Logon Type 3 (Network) using NTLM authentication, often followed immediately by privilege escalation events. Filter for Type 3 NTLM logons originating from non-standard workstation accounts during off-hours, particularly where the source and destination are both domain-joined systems.</p></div>
-        </div>
-
-        <div class="card" id="edition-2" style="display:none;">
-          <div style="font-size:20px;font-weight:700;color:var(--cs-navy);margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #f1f5f9;">Thursday, January 9, 2025</div>
-          <div class="briefing-section"><div class="briefing-type">⚠ Threat Item 1</div><h3>Microsoft Patch Tuesday: 73 Vulnerabilities Patched, 3 Actively Exploited Zero-Days</h3><p>January's Patch Tuesday includes patches for three actively exploited vulnerabilities: CVE-2024-21338 (Windows Kernel Elevation of Privilege), CVE-2024-21351 (Windows SmartScreen Bypass), and CVE-2024-21412 (Internet Shortcut File Security Feature Bypass). Organizations should prioritize these three and test deployment immediately.</p></div>
-          <div class="briefing-section"><div class="briefing-type">⚠ Threat Item 2</div><h3>Midnight Blizzard Compromises Microsoft Corporate Email Using Password Spray</h3><p>Russian SVR-linked threat actor Midnight Blizzard (Cozy Bear) successfully compromised Microsoft corporate email accounts through a targeted password spray attack against a legacy non-production OAuth test tenant account that lacked multi-factor authentication enforcement — a reminder that legacy system hygiene is a critical attack surface.</p></div>
-          <div class="briefing-section"><div class="briefing-type">⚠ Threat Item 3</div><h3>ConnectWise ScreenConnect Auth Bypass Earns CVSS 10.0 — Active Exploitation Confirmed</h3><p>CVE-2024-1709, an authentication bypass in ConnectWise ScreenConnect, allows unauthenticated attackers to create new administrator accounts and gain full control of affected server instances. Exploitation was confirmed within 48 hours of public disclosure, with ransomware deployment observed in multiple cases.</p></div>
-          <div class="briefing-section"><div class="briefing-type">💡 Innovation Item 1</div><h3>Confidential Computing Matures: AMD SEV-SNP Memory Encryption Now Available in Azure and GCP</h3><p>AMD Secure Encrypted Virtualization with Secure Nested Paging enables cryptographic attestation of VM memory integrity, preventing the cloud provider from accessing workload data in memory. This capability is now generally available in Azure and Google Cloud, enabling regulated workloads to move cloud-native without regulatory exceptions.</p></div>
-          <div class="briefing-section"><div class="briefing-type">💡 Innovation Item 2</div><h3>FIDO2 Passkeys Hit 1 Billion Users: What This Means for Enterprise Authentication Strategy</h3><p>Google, Apple, and Microsoft collectively report over 1 billion FIDO2 passkey authentications per month as of Q4 2024. Enterprise identity teams should be evaluating passkey rollout timelines, particularly for privileged access scenarios where phishing-resistant MFA is now an explicit CISA requirement.</p></div>
-          <div class="briefing-section"><div class="briefing-type">📈 Professional Growth</div><h3>SANS 2025 Salary Survey: Cloud Security and AI Security Roles Command 22% Premium</h3><p>The 2025 SANS Security Workforce and Salary Survey identifies cloud security architects and AI/ML security engineers as the two highest-compensated cybersecurity specializations, with median compensation 22% above the overall security professional median. Demand significantly outpaces available credentialed talent.</p></div>
-          <div class="briefing-section"><div class="briefing-type">🎓 Training Byte</div><h3>Understanding Living-Off-the-Land Binaries (LOLBins) in Windows Defense</h3><p>Living-off-the-land attacks use legitimate Windows binaries to execute malicious payloads, evading signature-based detection. The most commonly abused LOLBins include certutil.exe (for downloading payloads), mshta.exe (for executing HTA scripts), and regsvr32.exe (for DLL loading). Enable Sysmon and alert on these binaries executing with unusual parent processes or network connections.</p></div>
-        </div>
-
-        <div class="card" id="edition-3" style="display:none;">
-          <div style="font-size:20px;font-weight:700;color:var(--cs-navy);margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #f1f5f9;">Wednesday, January 8, 2025</div>
-          <div class="briefing-section"><div class="briefing-type">⚠ Threat Item 1</div><h3>JetBrains TeamCity On-Premises Auth Bypass Targeted by North Korean Actors</h3><p>CVE-2024-27198, an authentication bypass in JetBrains TeamCity, has been weaponized by the North Korean Lazarus Group to gain access to software development pipelines and inject malicious code into build artifacts. The CISA KEV catalog now includes this vulnerability with a mandatory remediation deadline for federal agencies.</p></div>
-          <div class="briefing-section"><div class="briefing-type">💡 Innovation Item 1</div><h3>Wiz Research Discovers Azure Cross-Tenant Privilege Escalation via Managed Identity</h3><p>A design flaw in Azure's managed identity implementation allowed attackers with access to one Azure tenant to escalate privileges across tenant boundaries under specific conditions. Microsoft has patched the underlying issue and is notifying affected customers — organizations using managed identities should audit their cross-tenant access policies.</p></div>
-          <div class="briefing-section"><div class="briefing-type">🎓 Training Byte</div><h3>Reading a Packet Capture: The First 10 Seconds of a Cobalt Strike Beacon</h3><p>A newly executed Cobalt Strike beacon generates distinctive network artifacts in its first 10 seconds: a GET request to the C2 server with a specific URI pattern, an HTTP 200 response containing a base64-encoded payload in the response body, and subsequent check-in requests at regular jitter intervals. In Wireshark, filter for http.request.method == "GET" with a User-Agent field that appears legitimate but lacks standard browser fingerprinting headers.</p></div>
-        </div>
-
       </div>
-
-      <!-- Previous Editions Sidebar -->
+    
+      <!-- RIGHT: Sidebar -->
       <div>
         <div class="card">
           <h3 style="font-size:14px;font-weight:700;color:var(--cs-navy);margin-bottom:16px;letter-spacing:0.3px;">Previous Editions</h3>
-          <div class="edition-row active" data-edition="current">
-            <div>
+          <div class="edition-row active">
+            <a href="newsletter/2026/Apr/04102026_edition100.html" style="text-decoration:none;display:block;width:100%;">
               <div class="edition-date">Fri, Apr 10, 2026</div>
-              <div class="edition-meta">Edition 100 • 7 items</div>
-            </div>
-            <span style="font-size:12px;color:var(--cs-cyan);">Current</span>
+              <div class="edition-meta">Edition 100 — One Hundred Days of Clarity</div>
+            </a>
           </div>
-          <div class="edition-row" data-edition="1">
-            <div>
-              <div class="edition-date">Fri, Jan 10, 2025</div>
-              <div class="edition-meta">7 items</div>
-            </div>
-          </div>
-          <div class="edition-row" data-edition="2">
-            <div>
-              <div class="edition-date">Thu, Jan 9, 2025</div>
-              <div class="edition-meta">7 items</div>
-            </div>
-          </div>
-          <div class="edition-row" data-edition="3">
-            <div>
-              <div class="edition-date">Wed, Jan 8, 2025</div>
-              <div class="edition-meta">7 items</div>
-            </div>
+          <div class="edition-row">
+            <a href="newsletter/2026/Apr/04092026.html" style="text-decoration:none;display:block;width:100%;">
+              <div class="edition-date">Thu, Apr 9, 2026</div>
+              <div class="edition-meta">Isolation Is Not Enough — Cloud, Update, and AI Systems</div>
+            </a>
           </div>
           <div class="gate-wrapper" style="border-radius:var(--radius);margin-top:4px;">
             <div class="blurred" aria-hidden="true" style="pointer-events:none;">
-              <div class="edition-row"><div><div class="edition-date">Tue, Jan 7, 2025</div><div class="edition-meta">7 items</div></div></div>
-              <div class="edition-row"><div><div class="edition-date">Mon, Jan 6, 2025</div><div class="edition-meta">7 items</div></div></div>
-              <div class="edition-row"><div><div class="edition-date">Fri, Jan 3, 2025</div><div class="edition-meta">7 items</div></div></div>
+              <div class="edition-row"><div><div class="edition-date">Wed, Apr 8, 2026</div><div class="edition-meta">7 items</div></div></div>
+              <div class="edition-row"><div><div class="edition-date">Tue, Apr 7, 2026</div><div class="edition-meta">7 items</div></div></div>
+              <div class="edition-row"><div><div class="edition-date">Mon, Apr 6, 2026</div><div class="edition-meta">7 items</div></div></div>
             </div>
             <div class="gate-overlay">
               <div class="gate-card" style="padding:20px 24px;">
                 <h3 style="font-size:16px;">Full archive</h3>
-                <p style="font-size:12.5px;margin-bottom:14px;">Subscribe free for access to the complete edition archive.</p>
+                <p style="font-size:12.5px;margin-bottom:14px;">Subscribe free for access to all 100 editions.</p>
                 <a href="#subscribe" class="btn btn-primary btn-sm">Subscribe Free</a>
               </div>
             </div>
           </div>
         </div>
-
+    
         <!-- Subscribe CTA -->
         <div id="subscribe" class="card card-dark" style="margin-top:20px;">
           <p class="section-label" style="margin-bottom:8px;">Subscribe</p>
           <h3 style="color:var(--cs-white);font-size:20px;margin-bottom:8px;">Get it in your inbox.</h3>
           <p style="color:rgba(255,255,255,0.6);font-size:14px;margin-bottom:20px;line-height:1.55;">Free daily briefing every weekday by 7:00 am CT. No ads. No syndicated content. All ours.</p>
           <div style="display:flex;flex-direction:column;gap:10px;">
-            <input id="subscribe-email" class="form-input"
-              style="background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.15);color:var(--cs-white);"
-              type="email" placeholder="your@email.com">
-            <input id="subscribe-name" class="form-input"
-              style="background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.15);color:var(--cs-white);"
-              type="text" placeholder="First name (optional)">
+            <input id="subscribe-email" class="form-input" style="background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.15);color:var(--cs-white);" type="email" placeholder="your@email.com">
+            <input id="subscribe-name" class="form-input" style="background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.15);color:var(--cs-white);" type="text" placeholder="First name (optional)">
             <button class="btn btn-primary" id="sub-btn" onclick="handleSubscribe()">Subscribe Free</button>
             <div id="sub-success" style="display:none;color:#10B981;font-size:13px;text-align:center;">✓ You're in. Check your inbox.</div>
             <div id="sub-error" style="display:none;color:#EF4444;font-size:13px;text-align:center;"></div>
           </div>
           <p style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:10px;">No spam. Unsubscribe anytime.</p>
-        </div>        
+        </div>
       </div>
-    </div>
-  </div>
+    
+    </div><!-- /grid-2 -->
+  </div> 
 </section>
 
 <footer>
