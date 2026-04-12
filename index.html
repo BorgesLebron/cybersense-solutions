@@ -6,13 +6,12 @@
 <title>CyberSense.Solutions — Cybersecurity Intelligence, Delivered Daily</title>
 <meta name="description" content="Real-time threat intelligence, professional training, and daily awareness briefings for security teams.">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="auth.css">  
 <link rel="icon" type="image/png" href="/assets/csicon.png">
-
-<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-  
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">  
 </head>
+  
 <body>
-
 <nav class="nav" role="navigation" aria-label="Main navigation">
   <a href="index.html" class="nav-wordmark">CyberSense<span>.Solutions</span></a>
   <ul class="nav-links">
@@ -26,7 +25,7 @@
     <li><a href="innovation.html">Innovation</a></li>
     <li><a href="zerotrust.html">Zero-Trust</a></li>
   </ul>
-  <button class="nav-login" onclick="window.location='dashboard.html'">Login</button>
+  <button class="nav-login" onclick="CS.Auth.showLoginModal()">Login</button>
   <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
     <span></span><span></span><span></span>
   </button>
@@ -43,7 +42,7 @@
     <li><a href="innovation.html">Innovation</a></li>
     <li><a href="zerotrust.html">Zero-Trust</a></li>
   </ul>
-  <a href="dashboard.html" class="drawer-login">Login</a>
+  <a href="#" class="drawer-login" onclick="CS.Auth.showLoginModal();return false;">Login</a>
 </div>
 
 <!-- ═══ HERO ═══ -->
@@ -336,12 +335,13 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>&copy; 2025 CyberSense.Solutions. All rights reserved.</span>
+      <span>&copy; 2026 CyberSense.Solutions. All rights reserved.</span>
       <span>Built for the defenders.</span>
     </div>
   </div>
 </footer>
-
+<script>window.CS_API_BASE = 'https://api.cybersense.solutions';</script>
+<script src="auth.js"></script>
 <script src="main.js"></script>
 </body>
 </html>
