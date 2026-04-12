@@ -458,6 +458,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   current_period_end       TIMESTAMPTZ,
   cancelled_at             TIMESTAMPTZ,
   cancel_reason            TEXT,
+  created_at               TIMESTAMPTZ   NOT NULL DEFAULT now(), -- <--- ADD THIS LINE
   CONSTRAINT subscriptions_stripe_id_unique UNIQUE (stripe_subscription_id),
   CONSTRAINT subscriptions_owner_check CHECK (user_id IS NOT NULL OR org_id IS NOT NULL)
 );
