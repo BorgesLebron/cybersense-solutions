@@ -6,6 +6,10 @@
 <title>Threat Radar — CyberSense.Solutions</title>
 <meta name="description" content="Live threat tracking — active vulnerabilities, CVEs, and adversary campaigns.">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="auth.css">
+<link rel="icon" type="image/png" href="/assets/csicon.png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+
 </head>
 <body>
 
@@ -22,14 +26,22 @@
     <li><a href="innovation.html">Innovation</a></li>
     <li><a href="zerotrust.html">Zero-Trust</a></li>
   </ul>
-  <button class="nav-login" onclick="window.location='dashboard.html'">Login</button>
+  <button class="nav-login" onclick="CS.Auth.showLoginModal()">Login</button>
   <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
 </nav>
 <div class="nav-drawer" id="nav-drawer">
   <ul>
-    <li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li><li><a href="radar.html">Radar</a></li><li><a href="intelligence.html">Intel</a></li><li><a href="newsletter.html">Newsletter</a></li><li><a href="training.html">Training</a></li><li><a href="growth.html">Proficient</a></li><li><a href="innovation.html">Innovation</a></li><li><a href="zerotrust.html">Zero-Trust</a></li>
+    <li><a href="index.html">Home</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="radar.html">Radar</a></li>
+    <li><a href="intelligence.html">Intel</a></li>
+    <li><a href="newsletter.html">Newsletter</a></li>
+    <li><a href="training.html">Training</a></li>
+    <li><a href="growth.html">Proficient</a></li>
+    <li><a href="innovation.html">Innovation</a></li>
+    <li><a href="zerotrust.html">Zero-Trust</a></li>
   </ul>
-  <a href="dashboard.html" class="drawer-login">Login</a>
+  <a href="#" class="drawer-login" onclick="CS.Auth.showLoginModal();return false;">Login</a>
 </div>
 
 <section class="hero-dark section" style="padding:64px 24px 56px;">
@@ -75,7 +87,7 @@
           <tbody id="threat-table-body">
             <!-- Rows 1–7 visible -->
             <tr class="threat-row" data-severity="high">
-              <td><span class="badge badge-medium">High</span></td>
+              <td><span class="badge badge-high">High</span></td>
               <td>Microsoft MMC MSC EvilTwin - Local Admin Creation</td>
               <td class="mono">CVE-2025-26633</td>
               <td class="mono">7.5</td>
@@ -115,7 +127,7 @@
               <td style="font-size:13px;color:var(--cs-gray-400);">Article coming soon</td>
             </tr>
             <tr class="threat-row" data-severity="high">
-              <td><span class="badge badge-critical">High</span></td>
+              <td><span class="badge badge-high">High</span></td>
               <td>RomM 4.4.0 - XSS_CSRF Chain</td>
               <td class="mono">CVE-2025-65027</td>
               <td class="mono">7.6</td>
@@ -214,29 +226,45 @@
       </div>
       <div class="footer-col">
         <h4>Platform</h4>
-        <ul><li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li><li><a href="radar.html">Threat Radar</a></li><li><a href="intelligence.html">Intel Briefs</a></li><li><a href="newsletter.html">Newsletter</a></li><li><a href="training.html">Training</a></li><li><a href="growth.html">Proficient</a></li><li><a href="innovation.html">Innovation</a></li><li><a href="zerotrust.html">Zero-Trust</a></li></ul>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="radar.html">Threat Radar</a></li>
+          <li><a href="intelligence.html">Intel Briefs</a></li>
+          <li><a href="newsletter.html">Newsletter</a></li>
+          <li><a href="training.html">Training</a></li>
+          <li><a href="growth.html">Proficient</a></li>
+          <li><a href="innovation.html">Innovation</a></li>
+          <li><a href="zerotrust.html">Zero-Trust</a></li>
+        </ul>
       </div>
       <div class="footer-col">
         <h4>Legal</h4>
-        <ul><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li><li><a href="about.html">Contact Us</a></li></ul>
+        <ul>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+          <li><a href="about.html">Contact Us</a></li></ul>
       </div>
     </div>
-    <div class="footer-bottom"><span>&copy; 2025 CyberSense.Solutions. All rights reserved.</span><span>Built for the defenders.</span></div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 CyberSense.Solutions. All rights reserved.</span>
+      <span>Security awareness starts here.</span> 
   </div>
 </footer>
-<script src="main.js"></script>
 <script>
+  
 async function loadThreatRadar() {
     try {
-        // Point this to your live Railway API
-        const response = await fetch('https://api.cybersense.solutions/api/threats');
-        const threats = await response.json();
-
+        const response = await fetch('https://api.cybersense.solutions/api/content/radar');
+        const data = await response.json();
+        const threats = data.data || [];
+        
+        // Only replace static rows if API actually has data
+        if (threats.length === 0) return;
+        
         const tableBody = document.getElementById('threat-table-body');
         if (!tableBody) return;
-
-        tableBody.innerHTML = ''; // Wipes the static placeholders
-
+        tableBody.innerHTML = '';
         threats.forEach(threat => {
             const row = `
                 <tr class="threat-row" data-severity="${threat.severity.toLowerCase()}">
@@ -245,20 +273,22 @@ async function loadThreatRadar() {
                     <td class="mono">${threat.cve_id}</td>
                     <td class="mono">${threat.cvss_score}</td>
                     <td><span class="badge badge-published">Live</span></td>
-                    <td style="font-size:13px; color:var(--cs-gray-400);">
+                    <td style="font-size:13px;color:var(--cs-gray-400);">
                         ${new Date(threat.ingested_at).toLocaleDateString()}
                     </td>
-                </tr>
-            `;
+                </tr>`;
             tableBody.insertAdjacentHTML('beforeend', row);
         });
     } catch (error) {
-        console.error("Radar sync failed:", error);
+        // API unavailable — static rows remain visible
+        console.warn('Radar API unavailable, showing static data');
     }
 }
-
+  
 document.addEventListener('DOMContentLoaded', loadThreatRadar);
 </script>
-  
+<script>window.CS_API_BASE = 'https://api.cybersense.solutions';</script>
+<script src="auth.js"></script>
+<script src="main.js"></script>  
 </body>
 </html>
