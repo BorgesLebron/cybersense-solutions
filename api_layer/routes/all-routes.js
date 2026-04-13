@@ -76,8 +76,9 @@ const stripeService = require('../services/stripe');
 usersRouter.get('/me', requireUserToken(), async (req, res, next) => {
   try {
     const sub = await db.pool.query("SELECT tier,status,mrr_cents,current_period_end FROM subscriptions WHERE user_id=$1 AND status='active' LIMIT 1", [req.user.id]).then(r => r.rows[0] || null);
+    const adminRole = await db.getAdminRole(req.user.id);
     const { password_hash, ...safe } = req.user;
-    res.json({ ...safe, subscription: sub });
+    res.json({ ...safe, subscription: sub, admin_role: adminRole || null });
   } catch (e) { next(e); }
 });
 
