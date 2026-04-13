@@ -6,6 +6,10 @@
 <title>Admin Dashboard — CyberSense.Solutions</title>
 <meta name="description" content="CyberSense.Solutions administration dashboard.">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="auth.css">
+<link rel="icon" type="image/png" href="/assets/csicon.png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  
 <style>
   /* Override body padding for full-height gate */
   body { background: var(--cs-navy); }
@@ -85,7 +89,7 @@
   <ul class="nav-links">
     <li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li><li><a href="radar.html">Radar</a></li><li><a href="intelligence.html">Intel</a></li><li><a href="newsletter.html">Newsletter</a></li><li><a href="training.html">Training</a></li><li><a href="growth.html">Proficient</a></li><li><a href="innovation.html">Innovation</a></li><li><a href="zerotrust.html">Zero-Trust</a></li>
   </ul>
-  <button class="nav-login" id="nav-logout" style="display:none;" onclick="location.reload()">Sign Out</button>
+  <button class="nav-login" id="nav-logout" style="display:none;" onclick="localStorage.removeItem('cs_token');localStorage.removeItem('cs_user');location.reload();">Sign Out</button>
   <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
 </nav>
 <div class="nav-drawer" id="nav-drawer">
@@ -110,6 +114,7 @@
         <input class="form-input form-input-dark" type="password" id="login-password" placeholder="••••••••••" autocomplete="current-password">
       </div>
       <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px;">Sign In</button>
+      <div id="login-error" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:9px 12px;font-size:13.5px;color:#dc2626;"></div>
     </form>
     <p style="text-align:center;font-size:12px;color:rgba(255,255,255,0.25);margin-top:20px;">Access is logged and monitored. Unauthorized access is prohibited.</p>
   </div>
@@ -150,7 +155,7 @@
     <span class="sidebar-section-label" style="margin-top:12px;">System</span>
     <a href="#" class="sidebar-link"><span class="sidebar-icon">⚙</span> Settings</a>
     <a href="#" class="sidebar-link"><span class="sidebar-icon">🔑</span> API Keys</a>
-    <a href="#" class="sidebar-link" onclick="location.reload();return false;"><span class="sidebar-icon">🚪</span> Sign Out</a>
+    <a href="#" class="sidebar-link" onclick="localStorage.removeItem('cs_token');localStorage.removeItem('cs_user');location.reload();return false;"><span class="sidebar-icon"></span> Sign Out</a>
   </aside>
 
   <!-- Main Content -->
@@ -160,7 +165,7 @@
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:28px;">
       <div>
         <h1 style="font-size:24px;font-weight:700;color:var(--cs-navy);">Command Center</h1>
-        <p style="font-size:14px;color:var(--cs-gray-400);">Monday, January 13, 2025 — 07:00 CT</p>
+        <p style="font-size:14px;color:var(--cs-gray-400);"></p>
       </div>
       <div style="display:flex;align-items:center;gap:10px;">
         <span class="live-dot"></span>
@@ -332,15 +337,91 @@
   </main>
 
 </div><!-- /dashboard-shell -->
-
+<script>window.CS_API_BASE = 'https://api.cybersense.solutions';</script>
+<script src="auth.js"></script>
 <script src="main.js"></script>
 <script>
-  // Show sign out button on successful login
-  document.getElementById('login-form').addEventListener('submit', function() {
-    setTimeout(function() {
-      document.getElementById('nav-logout').style.display = 'block';
-    }, 100);
+document.addEventListener('DOMContentLoaded', function() {
+  // Check if already logged in with admin role
+  const token = localStorage.getItem('cs_token');
+  const user = JSON.parse(localStorage.getItem('cs_user') || '{}');
+  
+  if (token && user.id) {
+    // Verify admin role via API
+    fetch(`${window.CS_API_BASE}/api/users/me`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.admin_role) {
+        showDashboard(data);
+      } else {
+        showGate('Access denied — admin privileges required.');
+      }
+    })
+    .catch(() => showGate());
+  }
+
+  // Wire login form   
+  document.getElementById('login-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const email    = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const btn      = this.querySelector('button[type="submit"]');
+    const errEl    = document.getElementById('login-error');
+
+    btn.disabled = true;
+    btn.textContent = 'Signing in…';
+    if (errEl) errEl.style.display = 'none';
+
+    try {
+      const res = await fetch(`${window.CS_API_BASE}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error?.message || 'Login failed');
+
+      localStorage.setItem('cs_token', data.access_token);
+      localStorage.setItem('cs_user', JSON.stringify(data.user));
+
+      // Check admin role
+      const meRes = await fetch(`${window.CS_API_BASE}/api/users/me`, {
+        headers: { Authorization: `Bearer ${data.access_token}` }
+      });
+      const me = await meRes.json();
+
+      if (me.admin_role) {
+        showDashboard(me);
+      } else {
+        throw new Error('Admin privileges required.');
+      }
+    } catch(e) {
+      if (errEl) {
+        errEl.textContent = e.message;
+        errEl.style.display = 'block';
+      }
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
+    }
   });
+});
+
+function showDashboard(user) {
+  document.getElementById('login-gate').style.display = 'none';
+  document.getElementById('dashboard-shell').style.display = 'grid';
+  document.getElementById('nav-logout').style.display = 'block';
+  // Update date
+  const dateEl = document.querySelector('#dashboard-shell p');
+  if (dateEl) dateEl.textContent = new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' }) + ' — 07:00 CT';
+}
+
+function showGate(msg) {
+  document.getElementById('login-gate').style.display = 'flex';
+  document.getElementById('dashboard-shell').style.display = 'none';
+}
 </script>
 </body>
 </html>
