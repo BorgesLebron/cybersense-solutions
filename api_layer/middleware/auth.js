@@ -217,5 +217,6 @@ module.exports = {
   validatePipelineTransition,
   TIER_RANK,
   ADMIN_ROLE_SECTIONS,
+  AGENT_PERMISSIONS,
   err,
 };
