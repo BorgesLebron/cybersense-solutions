@@ -93,6 +93,32 @@ router.post('/login', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+// POST /api/auth/admin-login
+router.post('/admin-login', async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json(err('MISSING_FIELDS', 'email and password required'));
+
+    const user = await db.getUserByEmail(email);
+    if (!user || user.deleted_at) return res.status(401).json(err('INVALID_CREDENTIALS', 'Invalid email or password'));
+
+    const valid = await bcrypt.compare(password, user.password_hash);
+    if (!valid) return res.status(401).json(err('INVALID_CREDENTIALS', 'Invalid email or password'));
+
+    const adminRole = await db.getAdminRole(user.id);
+    if (!adminRole) return res.status(403).json(err('NOT_ADMIN', 'Admin access not granted'));
+
+    const adminToken = jwt.sign(
+      { type: 'admin', user_id: user.id, role: adminRole.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '8h' }
+    );
+
+    res.json({ admin_token: adminToken, role: adminRole.role });
+  } catch (e) { next(e); }
+});
+
+
 // POST /api/auth/refresh
 router.post('/refresh', async (req, res, next) => {
   try {
