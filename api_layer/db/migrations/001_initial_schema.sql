@@ -726,8 +726,9 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
 
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS trg_user_seat_count ON users;
 CREATE TRIGGER trg_user_seat_count
   AFTER INSERT OR UPDATE OF org_id OR DELETE ON users
   FOR EACH ROW EXECUTE FUNCTION update_org_seat_count();
@@ -748,12 +749,14 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
 
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS trg_article_timestamps ON articles;
 CREATE TRIGGER trg_article_timestamps
   BEFORE UPDATE OF pipeline_status ON articles
   FOR EACH ROW EXECUTE FUNCTION set_published_at();
 
+DROP TRIGGER IF EXISTS trg_briefing_timestamps ON briefings;
 CREATE TRIGGER trg_briefing_timestamps
   BEFORE UPDATE OF pipeline_status ON briefings
   FOR EACH ROW EXECUTE FUNCTION set_published_at();
@@ -771,8 +774,9 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
 
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS trg_briefing_mark_items_used ON briefings;
 CREATE TRIGGER trg_briefing_mark_items_used
   BEFORE UPDATE OF pipeline_status ON briefings
   FOR EACH ROW EXECUTE FUNCTION mark_intel_items_used();
