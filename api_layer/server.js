@@ -20,7 +20,7 @@ const {
   adminRouter:    adminRoutes,
 } = require('./routes/all-routes');
 
-const authRoutes       = require('./routes/auth');
+const authRoutes = require('./routes/auth.js');
 const pipelineRoutes   = require('./routes/pipeline');
 const enterpriseRoutes = require('./routes/enterprise');
 
