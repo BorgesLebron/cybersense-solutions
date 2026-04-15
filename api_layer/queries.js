@@ -156,7 +156,7 @@ const getRepositoryQueue = ({ pipeline, limit = 30 } = {}) => {
 
 const createArticle = ({ title, section, body_md, access_tier, source_ids, created_by }) =>
   q1(`INSERT INTO articles (id,title,slug,section,body_md,access_tier,pipeline_status,view_count,read_time_min,created_at)
-      VALUES (gen_random_uuid(),$1,slugify($5),$2,$3,$4,'draft',0,
+      VALUES (gen_random_uuid(),$1,slugify($5::text),$2,$3,$4,'draft',0,
               GREATEST(1, ROUND(array_length(regexp_split_to_array(trim($3),E'\\\\s+'),1)/200.0)),now()) RETURNING *`,
     [title, section, body_md, access_tier, title]);
 
