@@ -10,8 +10,25 @@
 <link rel="icon" type="image/png" href="/assets/csicon.png">
 <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">  
 </head>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+  .edition-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid #0e7490;
+    border-radius: 99px;
+    padding: 4px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #38bdf8
+  }
+</style>  
+  
 <body>
-
 <nav class="nav" role="navigation">
   <a href="index.html" class="nav-wordmark">CyberSense<span>.Solutions</span></a>
   <ul class="nav-links">
@@ -68,25 +85,24 @@
         <div class="card" id="edition-current">
           <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid #f1f5f9;">
             <div>
-              <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--cs-gray-400);margin-bottom:4px;">Current Edition</div>
-              <div style="font-size:20px;font-weight:700;color:var(--cs-navy);">Tuesday, April 15, 2026</div>
+              <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--cs-gray-400);">Current Edition</div>
+              <div class="flex justify-between items-center mt-4 mb-2">
+                <span class="edition-badge">Edition 103</span>
+                <span class="text-gray-700 text-base font-semibold">April 15, 2026</span>
+              </div>              
             </div>
           </div>
  
           <div class="briefing-section">
-            <div class="flex justify-between items-center mt-4 mb-2">
-              <span class="edition-badge">Edition 103</span>
-              <span class="text-gray-700 text-base font-semibold">April 15, 2026</span>
-            </div>
             <h3>The Trusted Tool Is the Attack</h3>
-            <p style="font-size:17px;color:var(--cs-gray-600);line-height:1.7;margin-bottom:16px;">
+            <p style="font-size:17px;color:var(--cs-gray-600);line-height:1.7;margin-bottom:20px;">
               CPUID's website was compromised for less than 24 hours – long enough to serve trojanized versions of CPU-Z and HWMonitor to every user who downloaded during that window. A malicious IDE extension masquerading as a WakaTime productivity tracker deployed the GlassWorm dropper across developer machines. Storm-2755 is rerouting Canadian employee payroll deposits by hijacking accounts through credential theft. APT28 is using steganography and legitimate cloud services to hide command-and-control traffic for a new malware suite targeting Ukraine and NATO allies.
             </p>
-            <p style="font-size:17px;color:var(--cs-gray-600);line-height:1.7;margin-bottom:16px;">
+            <p style="font-size:17px;color:var(--cs-gray-600);line-height:1.7;margin-bottom:10px;">
               The pattern in all four incidents is the same: the attack arrived through something the victim trusted. A hardware utility downloaded from its official vendor. A productivity extension in a legitimate marketplace. A payroll system login. A cloud service used for legitimate file sharing. When attackers operate through trusted channels, the traditional question – "did this come from a known-bad source?" – stops being useful. The better question is: "does this behavior make sense for what this tool should be doing?" That behavioral lens is what this edition is built around.
             </p>
           </div>
-            <div style="margin-top:20px;">
+            <div style="margin-top:10px;">
               <a href="newsletter/2026/Apr/04152026_edition103.html" class="btn btn-primary btn-sm">Read Full Edition →</a>
             </div>  
         </div>
