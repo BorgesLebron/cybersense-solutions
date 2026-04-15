@@ -427,11 +427,11 @@ const getSLABreaches = () =>
      WHERE at.sla_deadline IS NOT NULL AND at.completed_at > at.sla_deadline
      ORDER BY at.completed_at DESC LIMIT 100`);
 
-const createArticle = ({ title, section, body_md, access_tier, source_ids, created_by }) =>
-  q1(`INSERT INTO articles (id,title,slug,section,body_md,access_tier,pipeline_status,view_count,read_time_min,created_at)
-      VALUES (gen_random_uuid(),$1,slugify($5),$2,$3,$4,'draft',0,
-              GREATEST(1, ROUND(array_length(regexp_split_to_array(trim($3),E'\\\\s+'),1)/200.0)),now()) RETURNING *`,
-    [title, section, body_md, access_tier, title]);
+const logHandoffSLA = ({ from_agent, to_agent, content_id, expected_at, actual_at }) => {
+  const delta = `EXTRACT(EPOCH FROM $5::timestamptz - $4::timestamptz)::int`;
+  return q1(`INSERT INTO handoff_sla_log (id,from_agent,to_agent,content_id,expected_at,actual_at,delta_sec,breached)
+             VALUES (gen_random_uuid(),$1,$2,$3,$4,$5,${delta},$5::timestamptz>$4::timestamptz) RETURNING *`,
+    [from_agent, to_agent, content_id, expected_at, actual_at]);
 };
 
 const countAgentRejections24h = (pipeline_agents) =>
