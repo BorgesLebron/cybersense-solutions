@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pricing — CyberSense.Solutions</title>
+<meta name="description" content="Simple, transparent pricing for daily cybersecurity intelligence. Free, Standard, and Premium plans.">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="auth.css">
+<link rel="icon" type="image/png" href="/assets/csicon.png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<style>
+  .pricing-hero { background: var(--cs-navy); padding: 80px 24px 64px; text-align: center; position: relative; overflow: hidden; }
+  .pricing-hero::before { content: ''; position: absolute; top: -80px; left: 50%; transform: translateX(-50%); width: 600px; height: 600px; background: radial-gradient(circle, rgba(0,212,255,0.07) 0%, transparent 70%); pointer-events: none; }
+  .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; max-width: 1000px; margin: 0 auto; align-items: start; }
+  .pricing-card { background: var(--cs-white); border: 1px solid #e2e8f0; border-radius: var(--radius-lg); overflow: hidden; transition: box-shadow var(--transition); }
+  .pricing-card:hover { box-shadow: var(--shadow); }
+  .pricing-card.featured { border: 2px solid var(--cs-cyan); position: relative; transform: translateY(-8px); }
+  .pricing-card.premium-card { border: 2px solid #7c5cfc; }
+  .featured-badge { position: absolute; top: -1px; left: 50%; transform: translateX(-50%); background: var(--cs-cyan); color: var(--cs-navy); font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 4px 16px; border-radius: 0 0 8px 8px; white-space: nowrap; }
+  .card-header { padding: 28px 28px 20px; }
+  .card-header.dark { background: #0a1628; }
+  .card-header.featured-header { background: #0a1628; }
+  .card-header.premium-header { background: #0d1f3a; }
+  .tier-pill { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; padding: 3px 10px; border-radius: 99px; margin-bottom: 12px; }
+  .tier-pill.free { background: rgba(148,163,184,0.15); color: #94a3b8; border: 1px solid rgba(148,163,184,0.25); }
+  .tier-pill.standard { background: rgba(0,212,255,0.15); color: #00d4ff; border: 1px solid rgba(0,212,255,0.3); }
+  .tier-pill.premium { background: rgba(124,92,252,0.2); color: #a78bfa; border: 1px solid rgba(124,92,252,0.4); }
+  .card-name { font-size: 20px; font-weight: 700; color: var(--cs-white); margin-bottom: 6px; }
+  .card-name.light { color: var(--cs-navy); }
+  .card-desc { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.5; }
+  .card-desc.light { color: var(--cs-gray-600); }
+  .card-price-wrap { padding: 16px 28px; border-top: 1px solid rgba(255,255,255,0.06); border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.2); }
+  .card-price-wrap.light { background: #f8fafc; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
+  .price-amount { font-size: 32px; font-weight: 700; color: var(--cs-white); letter-spacing: -1px; }
+  .price-amount.light { color: var(--cs-navy); }
+  .price-period { font-size: 13px; color: rgba(255,255,255,0.4); margin-left: 4px; }
+  .price-period.light { color: var(--cs-gray-400); }
+  .card-features { padding: 20px 28px; display: flex; flex-direction: column; gap: 10px; }
+  .feature { display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px; color: #334155; line-height: 1.4; }
+  .check { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; font-size: 10px; font-weight: 700; }
+  .check.free-check { background: rgba(148,163,184,0.15); color: #64748b; }
+  .check.std-check { background: rgba(0,212,255,0.15); color: #00d4ff; }
+  .check.prem-check { background: rgba(124,92,252,0.15); color: #a78bfa; }
+  .feature-muted { color: #94a3b8; }
+  .card-cta { padding: 0 28px 28px; }
+  .btn-free { display: block; width: 100%; padding: 11px; text-align: center; border-radius: var(--radius); font-size: 14px; font-weight: 600; background: transparent; color: var(--cs-cyan); border: 1.5px solid var(--cs-cyan); cursor: pointer; transition: all var(--transition); text-decoration: none; box-sizing: border-box; }
+  .btn-free:hover { background: rgba(0,212,255,0.1); text-decoration: none; }
+  .btn-std { display: block; width: 100%; padding: 11px; text-align: center; border-radius: var(--radius); font-size: 14px; font-weight: 700; background: #00d4ff; color: #0a1628; border: none; cursor: pointer; transition: all var(--transition); text-decoration: none; box-sizing: border-box; }
+  .btn-std:hover { background: #00bde8; text-decoration: none; transform: translateY(-1px); }
+  .btn-prem { display: block; width: 100%; padding: 11px; text-align: center; border-radius: var(--radius); font-size: 14px; font-weight: 700; background: #7c5cfc; color: #fff; border: none; cursor: pointer; transition: all var(--transition); text-decoration: none; box-sizing: border-box; }
+  .btn-prem:hover { background: #6d4eea; text-decoration: none; transform: translateY(-1px); }
+  .accent-bar { height: 3px; }
+  .accent-bar.free { background: #64748b; }
+  .accent-bar.std { background: #00d4ff; }
+  .accent-bar.prem { background: #7c5cfc; }
+  .divider-row { height: 1px; background: #f1f5f9; margin: 4px 0; }
+  /* FAQ */
+  .faq-item { border-bottom: 1px solid #e2e8f0; padding: 20px 0; }
+  .faq-q { font-size: 15px; font-weight: 600; color: var(--cs-navy); margin-bottom: 8px; }
+  .faq-a { font-size: 14px; color: var(--cs-gray-600); line-height: 1.65; }
+  /* Enterprise strip */
+  .enterprise-strip { background: var(--cs-navy); border: 1px solid rgba(0,212,255,0.15); border-radius: var(--radius-lg); padding: 32px 40px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; max-width: 1000px; margin: 0 auto; }
+  .enterprise-strip h3 { font-size: 20px; font-weight: 700; color: var(--cs-white); margin-bottom: 6px; }
+  .enterprise-strip p { font-size: 14px; color: rgba(255,255,255,0.5); max-width: 480px; line-height: 1.6; }
+  @media(max-width: 768px) {
+    .pricing-grid { grid-template-columns: 1fr; }
+    .pricing-card.featured { transform: none; }
+    .enterprise-strip { flex-direction: column; text-align: center; padding: 24px; }
+  }
+</style>
+</head>
+<body>
+<nav class="nav" role="navigation">
+  <a href="index.html" class="nav-wordmark">CyberSense<span>.Solutions</span></a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="radar.html">Radar</a></li>
+    <li><a href="intelligence.html">Intel</a></li>
+    <li><a href="newsletter.html">Newsletter</a></li>
+    <li><a href="training.html">Training</a></li>
+    <li><a href="growth.html">Proficient</a></li>
+    <li><a href="innovation.html">Innovation</a></li>
+    <li><a href="zerotrust.html">Zero-Trust</a></li>
+  </ul>
+  <button class="nav-login" onclick="CS.Auth.showLoginModal()">Login</button>
+  <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+</nav>
+<div class="nav-drawer" id="nav-drawer">
+  <ul>
+    <li><a href="index.html">Home</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="radar.html">Radar</a></li>
+    <li><a href="intelligence.html">Intel</a></li>
+    <li><a href="newsletter.html">Newsletter</a></li>
+    <li><a href="training.html">Training</a></li>
+    <li><a href="growth.html">Proficient</a></li>
+    <li><a href="innovation.html">Innovation</a></li>
+    <li><a href="zerotrust.html">Zero-Trust</a></li>
+  </ul>
+  <a href="#" class="drawer-login" onclick="CS.Auth.showLoginModal();return false;">Login</a>
+</div>
+
+<!-- Hero -->
+<section class="pricing-hero">
+  <div style="position:relative;z-index:1;">
+    <p class="section-label" style="text-align:center;">Pricing</p>
+    <h1 style="font-size:clamp(28px,5vw,46px);font-weight:700;color:var(--cs-white);letter-spacing:-1px;margin-bottom:12px;">Simple, transparent pricing.</h1>
+    <p style="font-size:17px;color:rgba(255,255,255,0.55);max-width:520px;margin:0 auto;line-height:1.65;">Start free. Upgrade when you're ready. No contracts, no hidden fees, no ads.</p>
+  </div>
+</section>
+
+<!-- Pricing Cards -->
+<section class="section" style="background:var(--cs-gray-100);padding-top:48px;">
+  <div class="container">
+    <div class="pricing-grid">
+
+      <!-- Free -->
+      <div class="pricing-card">
+        <div class="accent-bar free"></div>
+        <div class="card-header" style="background:#1e293b;">
+          <div class="tier-pill free">Free</div>
+          <div class="card-name">Daily Briefing</div>
+          <div class="card-desc">The awareness brief, delivered free every weekday morning.</div>
+        </div>
+        <div class="card-price-wrap" style="background:rgba(0,0,0,0.2);border-top:1px solid rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.06);">
+          <span class="price-amount">$0</span><span class="price-period">/ forever</span>
+        </div>
+        <div class="card-features">
+          <div class="feature"><div class="check free-check">✓</div>Daily Digital Awareness Brief</div>
+          <div class="feature"><div class="check free-check">✓</div>Email delivery by 07:00 CT</div>
+          <div class="feature"><div class="check free-check">✓</div>Platform preview access</div>
+          <div class="divider-row"></div>
+          <div class="feature"><div class="check free-check" style="background:rgba(148,163,184,0.08);color:#cbd5e1;">—</div><span class="feature-muted">Threat Radar (7 items)</span></div>
+          <div class="feature"><div class="check free-check" style="background:rgba(148,163,184,0.08);color:#cbd5e1;">—</div><span class="feature-muted">Intel Briefs</span></div>
+          <div class="feature"><div class="check free-check" style="background:rgba(148,163,184,0.08);color:#cbd5e1;">—</div><span class="feature-muted">Newsletter Archive</span></div>
+        </div>
+        <div class="card-cta">
+          <a href="#" class="btn-free" onclick="CS.Auth.showLoginModal();return false;">Get Started Free</a>
+        </div>
+      </div>
+
+      <!-- Standard (Featured) -->
+      <div class="pricing-card featured">
+        <div class="featured-badge">Most Popular</div>
+        <div class="accent-bar std"></div>
+        <div class="card-header featured-header">
+          <div class="tier-pill standard">Standard</div>
+          <div class="card-name">Daily Intelligence</div>
+          <div class="card-desc">Full Radar access, Intel Briefs, and the complete archive.</div>
+        </div>
+        <div class="card-price-wrap" style="background:rgba(0,0,0,0.2);border-top:1px solid rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.06);">
+          <span class="price-amount">$9</span><span class="price-period">/ month</span>
+        </div>
+        <div class="card-features">
+          <div class="feature"><div class="check std-check">✓</div>Everything in Free</div>
+          <div class="feature"><div class="check std-check">✓</div>Full Threat Radar — all records</div>
+          <div class="feature"><div class="check std-check">✓</div>Intel Briefs — threat & innovation analysis</div>
+          <div class="feature"><div class="check std-check">✓</div>Newsletter archive — 100+ editions</div>
+          <div class="feature"><div class="check std-check">✓</div>No ads. No syndicated content.</div>
+          <div class="divider-row"></div>
+          <div class="feature"><div class="check std-check" style="background:rgba(0,212,255,0.08);color:#38bdf8;">—</div><span class="feature-muted">Training Library</span></div>
+          <div class="feature"><div class="check std-check" style="background:rgba(0,212,255,0.08);color:#38bdf8;">—</div><span class="feature-muted">Professional Growth modules</span></div>
+        </div>
+        <div class="card-cta">
+          <a href="#" class="btn-std" id="btn-standard">Subscribe — $9/mo</a>
+        </div>
+      </div>
+
+      <!-- Premium -->
+      <div class="pricing-card premium-card">
+        <div class="accent-bar prem"></div>
+        <div class="card-header premium-header">
+          <div class="tier-pill premium">Premium</div>
+          <div class="card-name">Full Platform</div>
+          <div class="card-desc">Everything in Standard plus training, growth, and innovation content.</div>
+        </div>
+        <div class="card-price-wrap" style="background:rgba(0,0,0,0.2);border-top:1px solid rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.06);">
+          <span class="price-amount">$14.99</span><span class="price-period">/ month</span>
+        </div>
+        <div class="card-features">
+          <div class="feature"><div class="check prem-check">✓</div>Everything in Standard</div>
+          <div class="feature"><div class="check prem-check">✓</div>Training Library access</div>
+          <div class="feature"><div class="check prem-check">✓</div>Professional Growth modules</div>
+          <div class="feature"><div class="check prem-check">✓</div>Innovation Library</div>
+          <div class="feature"><div class="check prem-check">✓</div>Priority content updates</div>
+          <div class="feature"><div class="check prem-check">✓</div>Full platform access</div>
+        </div>
+        <div class="card-cta">
+          <a href="#" class="btn-prem" id="btn-premium">Subscribe — $14.99/mo</a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Enterprise Strip -->
+    <div style="margin-top:48px;">
+      <div class="enterprise-strip">
+        <div>
+          <h3>Enterprise Zero-Trust Platform</h3>
+          <p>Team training, live adversarial simulations, compliance dashboards, and white-glove onboarding for organizations that need a structured security culture program. Available October 2026.</p>
+        </div>
+        <a href="about.html#contact" class="btn btn-outline-white" style="white-space:nowrap;">Contact Sales</a>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <div style="max-width:680px;margin:64px auto 0;">
+      <h2 class="section-heading text-center" style="margin-bottom:32px;">Common questions</h2>
+      <div class="faq-item">
+        <div class="faq-q">Is the free plan actually free?</div>
+        <div class="faq-a">Yes — no credit card required, no trial period. The Daily Digital Awareness Brief is free forever. Seven items every weekday morning by 07:00 CT.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Can I cancel anytime?</div>
+        <div class="faq-a">Yes. Cancel anytime from your account settings. You'll retain access through the end of your current billing period. No cancellation fees, no questions.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">What's the difference between Standard and Premium?</div>
+        <div class="faq-a">Standard gives you full intelligence access — Radar, Intel Briefs, and the complete newsletter archive. Premium adds the Training Library, Professional Growth modules, and Innovation Library. If you're building technical skills alongside situational awareness, Premium is the right tier.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Is there a student or veteran discount?</div>
+        <div class="faq-a">Reach out at hello@cybersense.solutions. CyberSense is veteran-owned and we work with active duty, veterans, and students on a case-by-case basis.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">When does the Enterprise platform launch?</div>
+        <div class="faq-a">October 2026. It includes team training modules, live phishing and social engineering simulations, a compliance dashboard, and SSO/SAML integration. Contact sales to get on the early access list.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div><div class="footer-logo">CyberSense<span>.Solutions</span></div><p class="footer-mission">Delivering actionable cybersecurity intelligence, daily awareness briefings, and professional training to teams that can't afford to be caught off guard.</p><div class="footer-socials"><a href="#" class="footer-social-icon">in</a><a href="#" class="footer-social-icon">f</a><a href="#" class="footer-social-icon">▶</a><a href="#" class="footer-social-icon">𝕏</a><a href="#" class="footer-social-icon">tt</a></div></div>
+      <div class="footer-col"><h4>Platform</h4><ul><li><a href="index.html">Home</a></li><li><a href="radar.html">Threat Radar</a></li><li><a href="intelligence.html">Intel Briefs</a></li><li><a href="newsletter.html">Newsletter</a></li><li><a href="training.html">Training</a></li><li><a href="zerotrust.html">Zero-Trust</a></li></ul></div>
+      <div class="footer-col"><h4>Legal</h4><ul><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li><li><a href="about.html">Contact Us</a></li></ul></div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 CyberSense.Solutions. All rights reserved.</span>
+      <span>Security awareness starts here.</span>
+    </div>
+  </div>
+</footer>
+
+<script>window.CS_API_BASE = 'https://api.cybersense.solutions';</script>
+<script src="auth.js"></script>
+<script src="main.js"></script>
+<script>
+document.getElementById('btn-standard').addEventListener('click', async function(e) {
+  e.preventDefault();
+  const token = localStorage.getItem('cs_token');
+  if (!token) { CS.Auth.showLoginModal('Subscribe to Standard for full Radar and Intel access.'); return; }
+  try {
+    this.textContent = 'Redirecting...';
+    this.style.opacity = '0.7';
+    const res = await fetch(`${window.CS_API_BASE}/api/revenue/subscribe`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ tier: 'monthly' })
+    });
+    const data = await res.json();
+    if (data.checkout_url) { window.location.href = data.checkout_url; }
+    else throw new Error('No checkout URL returned');
+  } catch(err) {
+    this.textContent = 'Subscribe — $9/mo';
+    this.style.opacity = '1';
+    alert('Something went wrong. Please try again.');
+  }
+});
+
+document.getElementById('btn-premium').addEventListener('click', async function(e) {
+  e.preventDefault();
+  const token = localStorage.getItem('cs_token');
+  if (!token) { CS.Auth.showLoginModal('Subscribe to Premium for full platform access.'); return; }
+  try {
+    this.textContent = 'Redirecting...';
+    this.style.opacity = '0.7';
+    const res = await fetch(`${window.CS_API_BASE}/api/revenue/subscribe`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ tier: 'enterprise' })
+    });
+    const data = await res.json();
+    if (data.checkout_url) { window.location.href = data.checkout_url; }
+    else throw new Error('No checkout URL returned');
+  } catch(err) {
+    this.textContent = 'Subscribe — $14.99/mo';
+    this.style.opacity = '1';
+    alert('Something went wrong. Please try again.');
+  }
+});
+</script>
+</body>
+</html>
