@@ -31,7 +31,7 @@ router.post('/threat-records', requireAgentToken(['Rick', 'Henry']), async (req,
     const task = await db.createTask({
       agent_name: 'Barbara',
       task_type: 'normalize_threat',
-      content_type: 'threat',
+      content_type: 'system',
       content_id: record.id,
       sla_deadline: severity === 'critical' ? new Date(Date.now() + 15 * 60 * 1000) : null,
     });
@@ -64,7 +64,7 @@ router.post('/intel-items', requireAgentToken(['Ivan/Charlie', 'Henry']), async 
     const task = await db.createTask({
       agent_name: 'Barbara',
       task_type: 'normalize_intel',
-      content_type: 'intel',
+      content_type: 'system',
       content_id: item.id,
       sla_deadline: null,
     });
