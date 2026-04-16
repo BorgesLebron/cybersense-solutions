@@ -194,7 +194,12 @@ async function loadArticles() {
   const userTier = user.tier || 'free';
   const tierRank = TIER_RANK[userTier] || 0;
 
-  const headers = token ? { Authorization: `Bearer ${token}` } : {};
+  if (!token) {
+    renderGuestState();
+    return;
+  }
+
+  const headers = { Authorization: `Bearer ${token}` };
 
   try {
     const res = await fetch(`${window.CS_API_BASE}/api/content/articles?limit=20`, { headers });
@@ -202,8 +207,8 @@ async function loadArticles() {
     const data = await res.json();
     const articles = data.data || [];
 
-    const threats    = articles.filter(a => a.section === 'threat');
-    const policies   = articles.filter(a => a.section === 'policy');
+    const threats     = articles.filter(a => a.section === 'threat');
+    const policies    = articles.filter(a => a.section === 'policy');
     const innovations = articles.filter(a => a.section === 'innovation');
 
     renderSection('threat-grid', 'threat-loading', threats, tierRank, 3);
@@ -217,6 +222,28 @@ async function loadArticles() {
       if (el) el.textContent = 'Content temporarily unavailable.';
     });
   }
+}
+
+function renderGuestState() {
+  const guestHTML = `
+    <div class="gate-wrapper" style="border-radius:var(--radius-lg);grid-column:span 3;">
+      <div class="gate-overlay" style="position:relative;inset:auto;">
+        <div class="gate-card" style="max-width:480px;margin:0 auto;">
+          <h3>Free account required</h3>
+          <p>Create a free account to access Intel Briefs. No credit card required.</p>
+          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+            <a href="#" class="btn btn-primary btn-sm" onclick="CS.Auth.showLoginModal();return false;">Sign Up Free</a>
+            <a href="pricing.html" class="btn btn-outline btn-sm">See Plans</a>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('threat-loading').outerHTML = guestHTML;
+
+  const policyGuest = guestHTML.replace('span 3', 'span 2');
+  document.getElementById('policy-loading').outerHTML = policyGuest;
+  document.getElementById('innovation-loading').outerHTML = guestHTML;
 }
 
 function renderSection(gridId, loadingId, articles, tierRank, cols) {
