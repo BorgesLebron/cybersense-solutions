@@ -9,17 +9,16 @@
 <link rel="stylesheet" href="auth.css">
 <link rel="icon" type="image/png" href="/assets/csicon.png">
 <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-
 </head>
 <body>
-  
+
 <nav class="nav" role="navigation">
   <a href="index.html" class="nav-wordmark">CyberSense<span>.Solutions</span></a>
   <ul class="nav-links">
     <li><a href="index.html">Home</a></li>
     <li><a href="about.html">About</a></li>
     <li><a href="radar.html">Radar</a></li>
-    <li><a href="intelligence.html" class="disabled">Intel</a></li>
+    <li><a href="intelligence.html" class="active">Intel</a></li>
     <li><a href="newsletter.html">Newsletter</a></li>
     <li><a href="training.html">Training</a></li>
     <li><a href="growth.html">Proficient</a></li>
@@ -35,7 +34,7 @@
     <li><a href="index.html">Home</a></li>
     <li><a href="about.html">About</a></li>
     <li><a href="radar.html">Radar</a></li>
-    <li><a href="intelligence.html" class="disabled">Intel</a></li>
+    <li><a href="intelligence.html">Intel</a></li>
     <li><a href="newsletter.html">Newsletter</a></li>
     <li><a href="training.html">Training</a></li>
     <li><a href="growth.html">Proficient</a></li>
@@ -57,158 +56,73 @@
 <section class="section" style="background:var(--cs-gray-100);">
   <div class="container">
 
-    <!-- Section 1: Threat Intelligence -->
+    <!-- Section 1: Threat Intelligence — live from API -->
     <div class="category-section">
       <div class="category-label-bar">Threat Intelligence</div>
-      <div class="grid-3" style="align-items:start;">
-
-        <!-- Card 1: Fully visible -->
-        <div class="article-card">
-          <span class="badge badge-critical">Critical</span>
-          <div class="card-headline">Volt Typhoon Exploits Fortinet SSL-VPN Zero-Day to Pre-Position in U.S. Critical Infrastructure</div>
-          <div class="card-teaser">The Chinese state-sponsored threat group Volt Typhoon is actively exploiting CVE-2024-21762 in Fortinet FortiOS to establish persistent footholds inside U.S. energy, water, and transportation sector networks. CISA, the NSA, and Five Eyes partners have issued a joint advisory warning of the campaign's scope and the group's deliberate focus on pre-positioning rather than immediate data exfiltration.</div>
-          <a href="#" class="card-link">Read more →</a>
+      <div class="grid-3" id="threat-grid" style="align-items:start;">
+        <div style="grid-column:span 3;text-align:center;padding:40px;color:var(--cs-gray-400);font-size:14px;" id="threat-loading">
+          Loading threat intelligence...
         </div>
-
-        <!-- Card 2: Half-blurred -->
-        <div class="gate-wrapper" style="border-radius:var(--radius-lg);height:100%;">
-          <div class="article-card blurred" aria-hidden="true">
-            <span class="badge badge-critical">Critical</span>
-            <div class="card-headline">Ivanti Mass Exploitation: LIGHTWIRE Web Shell Deployed Across Federal Networks</div>
-            <div class="card-teaser">Nation-state actors have chained CVE-2024-21887 and CVE-2023-46805 to achieve unauthenticated remote code execution on Ivanti Connect Secure appliances at scale, deploying LIGHTWIRE and WIREFIRE custom web shells that survive factory resets and integrity checks.</div>
-            <a href="#" class="card-link">Read more →</a>
-          </div>
-          <div class="gate-overlay">
-            <div class="gate-card">
-              <h3>Monthly subscribers get full access</h3>
-              <p>Unlock all Intel Briefs for $9/month.</p>
-              <a href="newsletter.html" class="btn btn-primary btn-sm">Subscribe</a>
-            </div>
-          </div>
-        </div>
-
-        <!-- Card 3: Fully blurred -->
-        <div class="gate-wrapper" style="border-radius:var(--radius-lg);height:100%;">
-          <div class="article-card blurred" aria-hidden="true">
-            <span class="badge badge-high">High</span>
-            <div class="card-headline">GitHub Actions Supply Chain Attack: Thousands of Repositories Targeted in CI/CD Credential Harvest</div>
-            <div class="card-teaser">A coordinated supply chain campaign targeting GitHub Actions workflows has exfiltrated CI/CD secrets from over 3,000 open-source and private repositories, including cloud provider IAM credentials and code signing certificates from organizations in the financial and healthcare sectors.</div>
-            <a href="#" class="card-link">Read more →</a>
-          </div>
-          <div class="gate-overlay">
-            <div class="gate-card">
-              <h3>Monthly subscribers get full access</h3>
-              <p>Unlock all Intel Briefs for $9/month.</p>
-              <a href="newsletter.html" class="btn btn-primary btn-sm">Subscribe</a>
-            </div>
-          </div>
-        </div>
-
       </div>
     </div>
 
-    <!-- Section 2: Policy Updates -->
+    <!-- Section 2: Policy Updates — live from API -->
     <div class="category-section">
       <div class="category-label-bar">Policy Updates</div>
-      <div class="grid-2">
-
-        <div class="article-card">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span class="badge badge-medium">NIST</span>
-            <span style="font-size:12px;color:var(--cs-gray-400);">Framework Update</span>
-          </div>
-          <div class="card-headline">NIST Cybersecurity Framework 2.0: What the Govern Function Means for Your Security Program</div>
-          <div class="card-teaser">The February 2024 release of NIST CSF 2.0 introduces the Govern function as a sixth core pillar, elevating organizational context, risk management strategy, and cybersecurity supply chain risk management to first-class program requirements alongside Identify, Protect, Detect, Respond, and Recover.</div>
-          <a href="#" class="card-link">Read more →</a>
+      <div class="grid-2" id="policy-grid">
+        <div style="grid-column:span 2;text-align:center;padding:40px;color:var(--cs-gray-400);font-size:14px;" id="policy-loading">
+          Loading policy updates...
         </div>
-
-        <div class="gate-wrapper" style="border-radius:var(--radius-lg);">
-          <div class="article-card blurred" aria-hidden="true">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span class="badge badge-medium">PCI-DSS</span>
-              <span style="font-size:12px;">v4.0.1 Analysis</span>
-            </div>
-            <div class="card-headline">PCI DSS 4.0.1 Future-Dated Requirements: A Practical Compliance Timeline for Security Teams</div>
-            <div class="card-teaser">The 64 requirements marked as "future-dated" in PCI DSS 4.0 became mandatory March 31, 2025. This analysis breaks down the 12 requirements most likely to require significant technology or process changes and provides an implementer-level compliance roadmap.</div>
-            <a href="#" class="card-link">Read more →</a>
-          </div>
-          <div class="gate-overlay">
-            <div class="gate-card">
-              <h3>Monthly subscribers get full access</h3>
-              <p>Unlock all Intel Briefs for $9/month.</p>
-              <a href="newsletter.html" class="btn btn-primary btn-sm">Subscribe</a>
-            </div>
-          </div>
-        </div>
-
       </div>
     </div>
 
-    <!-- Section 3: Latest Innovations -->
+    <!-- Section 3: Latest Innovations — live from API -->
     <div class="category-section">
       <div class="category-label-bar">Latest Innovations</div>
-      <div class="grid-3">
-        <div class="article-card" style="gap:8px;">
-          <span class="badge badge-medium">AI Security</span>
-          <div class="card-headline"><a href="innovation.html" style="color:var(--cs-navy);">NIST AI RMF: Applying the AI Risk Management Framework to Security Operations Platforms</a></div>
-        </div>
-        <div class="article-card" style="gap:8px;">
-          <span class="badge badge-medium">Cryptography</span>
-          <div class="card-headline"><a href="innovation.html" style="color:var(--cs-navy);">Post-Quantum ML-KEM in Production: Deployment Considerations for Enterprise PKI</a></div>
-        </div>
-        <div class="article-card" style="gap:8px;">
-          <span class="badge badge-medium">Cloud Security</span>
-          <div class="card-headline"><a href="innovation.html" style="color:var(--cs-navy);">Cloud-Native SIEM: How eBPF Kernel-Level Telemetry is Replacing Agent-Based Monitoring</a></div>
+      <div class="grid-3" id="innovation-grid">
+        <div style="grid-column:span 3;text-align:center;padding:40px;color:var(--cs-gray-400);font-size:14px;" id="innovation-loading">
+          Loading innovations...
         </div>
       </div>
     </div>
 
-    <!-- Section 4: Professional Growth -->
+    <!-- Section 4: Professional Growth — static curated -->
     <div class="category-section">
       <div class="category-label-bar">Professional Growth</div>
-      <div class="article-card blurred" aria-hidden="true">
-        <div class="grid-2">
-          <div class="article-card">
-            <div style="font-size:12px;color:var(--cs-gray-400);font-weight:600;">Friday, April 17, 2026 – Webinar</div>
-            <div class="card-headline">ndependence is Fragile: How "Being Helpful" Breaks Audit</div>
-            <p style="font-size:13.5px;color:var(--cs-gray-600);line-height:1.6;">In today’s audit environment, independence must be actively protected. Independence is a foundational principle of internal audit.  But in practice, it is more fragile than most organizations are willing to admit.</p>
-            <p style="font-size:13.5px;color:var(--cs-gray-600);line-height:1.6;">🕛 12pm-1pm Central</p>
-            <p style="font-size:13.5px;color:var(--cs-gray-600);line-height:1.6;">✉️ 1.0 CPE</p>
-            <p style="font-size:13.5px;color:var(--cs-gray-600);line-height:1.6;">💲 FREE</p>
-            <p style="font-size:18px;color:var(--cs-gray-800);line-height:1.6;">Provided by: Verracy</p>
-            <a href="https://us02web.zoom.us/webinar/register/WN_b4KhoS29TPymX4MJhWk9JA#/registration" class="card-link">Register →</a>
-          </div>
-          <div class="article-card">
-            <div style="font-size:12px;color:var(--cs-gray-400);font-weight:600;">Wednesday, May 27, 2026 – Webinar</div>
-            <div class="card-headline">Agentic AI vs. Identity’s Last Mile Problem</div>
-            <p style="font-size:13.5px;color:var(--cs-gray-600);line-height:1.6;">Agentic AI is reshaping identity security by autonomously planning, adapting, and executing controls across the enterprise. But the last mile of identity, tied to disconnected applications and manual processes, remains where attackers gain their biggest advantage.</p>
-            <p style="font-size:13.5px;color:var(--cs-gray-600);line-height:1.6;">Nearly half of enterprise applications still fall outside traditional identity systems, leaving gaps managed through spreadsheets, emails, and help desk workflows.</p>
-            <p style="font-size:13.5px;color:var(--cs-gray-600);line-height:1.6;">Join former Palo Alto Networks CSO, now Cerby’s CSO, Matt Chiodi as he examines real world breach scenarios and explores what Agentic AI can and cannot solve today.</p>
-            <p style="font-size:13.5px;color:var(--cs-gray-600);line-height:1.6;">💲 FREE</p>
-            <p style="font-size:18px;color:var(--cs-gray-800);line-height:1.6;">Provided by: Information Security Media Group</p>
-            <a href="https://www.bankinfosecurity.com/webinars/webinar-agentic-ai-vs-identitys-last-mile-problem-w-6999" class="card-link">View resource →</a>
-          </div>
+      <div class="grid-2">
+        <div class="article-card">
+          <div style="font-size:12px;color:var(--cs-gray-400);font-weight:600;">Friday, April 17, 2026 — Webinar</div>
+          <div class="card-headline">Independence is Fragile: How "Being Helpful" Breaks Audit</div>
+          <p style="font-size:13.5px;color:var(--cs-gray-600);line-height:1.6;">In today's audit environment, independence must be actively protected. A foundational principle of internal audit — but more fragile than most organizations admit.</p>
+          <p style="font-size:13.5px;color:var(--cs-gray-600);line-height:1.6;">🕛 12pm–1pm Central &nbsp;·&nbsp; ✉️ 1.0 CPE &nbsp;·&nbsp; 💲 FREE</p>
+          <p style="font-size:13.5px;color:var(--cs-gray-600);line-height:1.6;">Provided by: Verracy</p>
+          <a href="https://us02web.zoom.us/webinar/register/WN_b4KhoS29TPymX4MJhWk9JA#/registration" class="card-link" target="_blank">Register →</a>
+        </div>
+        <div class="article-card">
+          <div style="font-size:12px;color:var(--cs-gray-400);font-weight:600;">Wednesday, May 27, 2026 — Webinar</div>
+          <div class="card-headline">Agentic AI vs. Identity's Last Mile Problem</div>
+          <p style="font-size:13.5px;color:var(--cs-gray-600);line-height:1.6;">Agentic AI is reshaping identity security — but nearly half of enterprise applications still fall outside traditional identity systems. Matt Chiodi, former Palo Alto Networks CSO, examines what Agentic AI can and cannot solve today.</p>
+          <p style="font-size:13.5px;color:var(--cs-gray-600);line-height:1.6;">💲 FREE &nbsp;·&nbsp; Provided by: Information Security Media Group</p>
+          <a href="https://www.bankinfosecurity.com/webinars/webinar-agentic-ai-vs-identitys-last-mile-problem-w-6999" class="card-link" target="_blank">View resource →</a>
         </div>
       </div>
     </div>
 
-    <!-- Section 5: Training Resources -->
+    <!-- Section 5: Training Resources — static curated -->
     <div class="category-section">
       <div class="category-label-bar">Training Resources</div>
-      <div class="article-card blurred" aria-hidden="true">
-        <div class="grid-2">
-          <div class="article-card">
-            <span class="badge badge-beginner">Beginner</span>
-            <div class="card-headline">Vulnerability Triage Lab: From CVE Publication to Remediation Decision</div>
-            <p style="font-size:13.5px;color:var(--cs-gray-600);line-height:1.6;">A hands-on lab walking through the complete vulnerability triage workflow — from NVD CVE publication through CVSS contextualization, exploitability assessment, and patch prioritization decision-making.</p>
-            <a href="training.html" class="card-link">Start Lab →</a>
-          </div>
-          <div class="article-card">
-            <span class="badge badge-intermediate">Intermediate</span>
-            <div class="card-headline">Phishing Email Analysis: Identifying Sophisticated Spear-Phishing Indicators</div>
-            <p style="font-size:13.5px;color:var(--cs-gray-600);line-height:1.6;">An intermediate-level training module covering email header analysis, domain spoofing detection, HTML anchor tag obfuscation, and the threat actor techniques that bypass traditional email security gateways.</p>
-            <a href="training.html" class="card-link">Start Module →</a>
-          </div>
+      <div class="grid-2">
+        <div class="article-card">
+          <span class="badge badge-beginner">Beginner</span>
+          <div class="card-headline">Vulnerability Triage Lab: From CVE Publication to Remediation Decision</div>
+          <p style="font-size:13.5px;color:var(--cs-gray-600);line-height:1.6;">A hands-on lab walking through the complete vulnerability triage workflow — from NVD CVE publication through CVSS contextualization, exploitability assessment, and patch prioritization decision-making.</p>
+          <a href="training.html" class="card-link">Start Lab →</a>
+        </div>
+        <div class="article-card">
+          <span class="badge badge-intermediate">Intermediate</span>
+          <div class="card-headline">Phishing Email Analysis: Identifying Sophisticated Spear-Phishing Indicators</div>
+          <p style="font-size:13.5px;color:var(--cs-gray-600);line-height:1.6;">An intermediate-level training module covering email header analysis, domain spoofing detection, HTML anchor tag obfuscation, and the threat actor techniques that bypass traditional email security gateways.</p>
+          <a href="training.html" class="card-link">Start Module →</a>
         </div>
       </div>
     </div>
@@ -219,31 +133,9 @@
 <footer>
   <div class="footer-inner">
     <div class="footer-grid">
-      <div>
-        <div class="footer-logo">CyberSense<span>.Solutions</span></div><p class="footer-mission">Delivering actionable cybersecurity intelligence, daily awareness briefings, and professional training to teams that can't afford to be caught off guard.</p><div class="footer-socials"><a href="#" class="footer-social-icon">in</a><a href="#" class="footer-social-icon">f</a><a href="#" class="footer-social-icon">▶</a><a href="#" class="footer-social-icon">𝕏</a><a href="#" class="footer-social-icon">tt</a></div></div>
-      <div class="footer-col">
-        <h4>Platform</h4>
-        <ul>
-          <li><a href="index.html">Home</a></li>
-          <li><a href="about.html">About</a></li>
-          <li><a href="radar.html">Threat Radar</a></li>
-          <li><a href="intelligence.html">Intel Briefs</a></li>
-          <li><a href="newsletter.html">Newsletter</a></li>
-          <li><a href="training.html">Training</a></li>
-          <li><a href="growth.html">Proficient</a></li>
-          <li><a href="innovation.html">Innovation</a></li>
-          <li><a href="zerotrust.html">Zero-Trust</a></li>
-          <li><a href="pricing.html">Pricing</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <h4>Legal</h4>
-        <ul>
-          <li><a href="#">Privacy Policy</a></li>
-          <li><a href="#">Terms of Service</a></li>
-          <li><a href="about.html">Contact Us</a></li>
-        </ul>
-      </div>
+      <div><div class="footer-logo">CyberSense<span>.Solutions</span></div><p class="footer-mission">Delivering actionable cybersecurity intelligence, daily awareness briefings, and professional training to teams that can't afford to be caught off guard.</p><div class="footer-socials"><a href="#" class="footer-social-icon">in</a><a href="#" class="footer-social-icon">f</a><a href="#" class="footer-social-icon">▶</a><a href="#" class="footer-social-icon">𝕏</a><a href="#" class="footer-social-icon">tt</a></div></div>
+      <div class="footer-col"><h4>Platform</h4><ul><li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li><li><a href="radar.html">Threat Radar</a></li><li><a href="intelligence.html">Intel Briefs</a></li><li><a href="newsletter.html">Newsletter</a></li><li><a href="training.html">Training</a></li><li><a href="growth.html">Proficient</a></li><li><a href="innovation.html">Innovation</a></li><li><a href="zerotrust.html">Zero-Trust</a></li><li><a href="pricing.html">Pricing</a></li></ul></div>
+      <div class="footer-col"><h4>Legal</h4><ul><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li><li><a href="about.html">Contact Us</a></li></ul></div>
     </div>
     <div class="footer-bottom">
       <span>&copy; 2026 CyberSense.Solutions. All rights reserved.</span>
@@ -251,8 +143,105 @@
     </div>
   </div>
 </footer>
+
 <script>window.CS_API_BASE = 'https://api.cybersense.solutions';</script>
 <script src="auth.js"></script>
 <script src="main.js"></script>
+<script>
+const TIER_RANK = { free: 0, freemium: 1, monthly: 2, enterprise: 3 };
+
+function getSeverityBadge(section) {
+  const map = { threat: 'badge-critical', policy: 'badge-medium', innovation: 'badge-medium', growth: 'badge-published', training: 'badge-beginner' };
+  return map[section] || 'badge-medium';
+}
+
+function getSectionLabel(section) {
+  const map = { threat: 'Threat', policy: 'Policy', innovation: 'Innovation', growth: 'Growth', training: 'Training' };
+  return map[section] || section;
+}
+
+function articleCard(article, isLocked) {
+  if (isLocked) {
+    return `
+      <div class="gate-wrapper" style="border-radius:var(--radius-lg);height:100%;">
+        <div class="article-card blurred" aria-hidden="true">
+          <span class="badge ${getSeverityBadge(article.section)}">${getSectionLabel(article.section)}</span>
+          <div class="card-headline">${article.title}</div>
+          ${article.teaser ? `<div class="card-teaser">${article.teaser}</div>` : ''}
+          <a href="#" class="card-link">Read more →</a>
+        </div>
+        <div class="gate-overlay">
+          <div class="gate-card">
+            <h3>Standard subscribers get full access</h3>
+            <p>Unlock all Intel Briefs for $9/month.</p>
+            <a href="pricing.html" class="btn btn-primary btn-sm">See Plans</a>
+          </div>
+        </div>
+      </div>`;
+  }
+  return `
+    <div class="article-card">
+      <span class="badge ${getSeverityBadge(article.section)}">${getSectionLabel(article.section)}</span>
+      <div class="card-headline">${article.title}</div>
+      ${article.teaser ? `<div class="card-teaser">${article.teaser}</div>` : ''}
+      <a href="intel/${article.slug}.html" class="card-link">Read more →</a>
+    </div>`;
+}
+
+async function loadArticles() {
+  const token = localStorage.getItem('cs_token');
+  const user = JSON.parse(localStorage.getItem('cs_user') || '{}');
+  const userTier = user.tier || 'free';
+  const tierRank = TIER_RANK[userTier] || 0;
+
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+  try {
+    const res = await fetch(`${window.CS_API_BASE}/api/content/articles?limit=20`, { headers });
+    if (!res.ok) throw new Error('Failed to load articles');
+    const data = await res.json();
+    const articles = data.data || [];
+
+    const threats    = articles.filter(a => a.section === 'threat');
+    const policies   = articles.filter(a => a.section === 'policy');
+    const innovations = articles.filter(a => a.section === 'innovation');
+
+    renderSection('threat-grid', 'threat-loading', threats, tierRank, 3);
+    renderSection('policy-grid', 'policy-loading', policies, tierRank, 2);
+    renderSection('innovation-grid', 'innovation-loading', innovations, tierRank, 3);
+
+  } catch(e) {
+    console.error('Intel load error:', e);
+    ['threat-loading', 'policy-loading', 'innovation-loading'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = 'Content temporarily unavailable.';
+    });
+  }
+}
+
+function renderSection(gridId, loadingId, articles, tierRank, cols) {
+  const grid = document.getElementById(gridId);
+  const loading = document.getElementById(loadingId);
+  if (!grid) return;
+
+  if (articles.length === 0) {
+    if (loading) loading.textContent = 'No articles available yet.';
+    return;
+  }
+
+  if (loading) loading.remove();
+
+  let html = '';
+  articles.slice(0, cols).forEach((article, i) => {
+    const requiredRank = TIER_RANK[article.access_tier] || 0;
+    const isLocked = tierRank < requiredRank;
+    html += articleCard(article, isLocked);
+  });
+
+  grid.innerHTML = html;
+}
+
+document.addEventListener('DOMContentLoaded', loadArticles);
+</script>
 </body>
 </html>
