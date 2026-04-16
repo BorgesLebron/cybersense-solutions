@@ -167,7 +167,6 @@ function articleCard(article, isLocked) {
         <div class="article-card blurred" aria-hidden="true">
           <span class="badge ${getSeverityBadge(article.section)}">${getSectionLabel(article.section)}</span>
           <div class="card-headline">${article.title}</div>
-          ${article.teaser ? `<div class="card-teaser">${article.teaser}</div>` : ''}
           <a href="#" class="card-link">Read more →</a>
         </div>
         <div class="gate-overlay">
@@ -183,28 +182,48 @@ function articleCard(article, isLocked) {
     <div class="article-card">
       <span class="badge ${getSeverityBadge(article.section)}">${getSectionLabel(article.section)}</span>
       <div class="card-headline">${article.title}</div>
-      ${article.teaser ? `<div class="card-teaser">${article.teaser}</div>` : ''}
       <a href="intel/${article.slug}.html" class="card-link">Read more →</a>
     </div>`;
 }
 
-async function loadArticles() {
-  const token = localStorage.getItem('cs_token');
-  const user = JSON.parse(localStorage.getItem('cs_user') || '{}');
-  const userTier = user.tier || 'free';
-  const tierRank = TIER_RANK[userTier] || 0;
+function renderGuestState() {
+  const guestHTML = `
+    <div style="grid-column:span 3;border-radius:var(--radius-lg);">
+      <div class="gate-card" style="max-width:480px;margin:0 auto;">
+        <h3>Free account required</h3>
+        <p>Create a free account to access Intel Briefs. No credit card required.</p>
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:16px;">
+          <a href="#" class="btn btn-primary btn-sm" onclick="CS.Auth.showLoginModal();return false;">Sign Up Free</a>
+          <a href="pricing.html" class="btn btn-outline btn-sm">See Plans</a>
+        </div>
+      </div>
+    </div>`;
+  const policyGuest = guestHTML.replace('span 3', 'span 2');
 
-  if (!token) {
+  document.getElementById('threat-loading').outerHTML  = guestHTML;
+  document.getElementById('policy-loading').outerHTML  = policyGuest;
+  document.getElementById('innovation-loading').outerHTML = guestHTML;
+}
+
+async function loadArticles() {
+  // Wait for auth.js to finish session init
+  await new Promise(resolve => {
+    if (CS.Auth && CS.Auth.isLoggedIn !== undefined) return resolve();
+    document.addEventListener('cs:login', resolve, { once: true });
+    document.addEventListener('cs:guest', resolve, { once: true });
+    setTimeout(resolve, 3000); // fallback
+  });
+
+  if (!CS.Auth.isLoggedIn()) {
     renderGuestState();
     return;
   }
 
-  const headers = { Authorization: `Bearer ${token}` };
+  const user = CS.Auth.getUser();
+  const tierRank = TIER_RANK[user?.tier || 'free'] || 0;
 
   try {
-    const res = await fetch(`${window.CS_API_BASE}/api/content/articles?limit=20`, { headers });
-    if (!res.ok) throw new Error('Failed to load articles');
-    const data = await res.json();
+    const data = await CS.Auth.apiFetch('/api/content/articles?limit=20');
     const articles = data.data || [];
 
     const threats     = articles.filter(a => a.section === 'threat');
@@ -224,28 +243,6 @@ async function loadArticles() {
   }
 }
 
-function renderGuestState() {
-  const guestHTML = `
-    <div class="gate-wrapper" style="border-radius:var(--radius-lg);grid-column:span 3;">
-      <div class="gate-overlay" style="position:relative;inset:auto;">
-        <div class="gate-card" style="max-width:480px;margin:0 auto;">
-          <h3>Free account required</h3>
-          <p>Create a free account to access Intel Briefs. No credit card required.</p>
-          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-            <a href="#" class="btn btn-primary btn-sm" onclick="CS.Auth.showLoginModal();return false;">Sign Up Free</a>
-            <a href="pricing.html" class="btn btn-outline btn-sm">See Plans</a>
-          </div>
-        </div>
-      </div>
-    </div>`;
-
-  document.getElementById('threat-loading').outerHTML = guestHTML;
-
-  const policyGuest = guestHTML.replace('span 3', 'span 2');
-  document.getElementById('policy-loading').outerHTML = policyGuest;
-  document.getElementById('innovation-loading').outerHTML = guestHTML;
-}
-
 function renderSection(gridId, loadingId, articles, tierRank, cols) {
   const grid = document.getElementById(gridId);
   const loading = document.getElementById(loadingId);
@@ -259,7 +256,7 @@ function renderSection(gridId, loadingId, articles, tierRank, cols) {
   if (loading) loading.remove();
 
   let html = '';
-  articles.slice(0, cols).forEach((article, i) => {
+  articles.slice(0, cols).forEach((article) => {
     const requiredRank = TIER_RANK[article.access_tier] || 0;
     const isLocked = tierRank < requiredRank;
     html += articleCard(article, isLocked);
