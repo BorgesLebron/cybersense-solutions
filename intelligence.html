@@ -206,14 +206,6 @@ function renderGuestState() {
 }
 
 async function loadArticles() {
-  // Wait for auth.js to finish session init
-  await new Promise(resolve => {
-    if (CS.Auth && CS.Auth.isLoggedIn !== undefined) return resolve();
-    document.addEventListener('cs:login', resolve, { once: true });
-    document.addEventListener('cs:guest', resolve, { once: true });
-    setTimeout(resolve, 3000); // fallback
-  });
-
   if (!CS.Auth.isLoggedIn()) {
     renderGuestState();
     return;
