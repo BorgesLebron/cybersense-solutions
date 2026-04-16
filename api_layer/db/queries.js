@@ -181,9 +181,9 @@ const listArticles = ({ section, access_tier, status = 'published', page = 1, li
 
 const advanceArticleStatus = (id, to_status) =>
   q1(`UPDATE articles SET pipeline_status=$2,
-        qa_passed_at = CASE WHEN $2='maya' THEN now() ELSE qa_passed_at END,
-        maya_approved_at = CASE WHEN $2='approved' THEN now() ELSE maya_approved_at END,
-        published_at = CASE WHEN $2='published' THEN now() ELSE published_at END
+        qa_passed_at = CASE WHEN $2::text='maya' THEN now() ELSE qa_passed_at END,
+        maya_approved_at = CASE WHEN $2::text='approved' THEN now() ELSE maya_approved_at END,
+        published_at = CASE WHEN $2::text='published' THEN now() ELSE published_at END
       WHERE id=$1 RETURNING *`, [id, to_status]);
 
 const incrementArticleViews = (id) => q('UPDATE articles SET view_count=view_count+1 WHERE id=$1', [id]);
@@ -206,8 +206,8 @@ const listBriefings = ({ page = 1, limit = 20 } = {}) => {
 
 const advanceBriefingStatus = (id, to_status) =>
   q1(`UPDATE briefings SET pipeline_status=$2,
-        draft_completed_at = CASE WHEN $2='dev_edit' AND draft_completed_at IS NULL THEN now() ELSE draft_completed_at END,
-        published_at = CASE WHEN $2='published' THEN now() ELSE published_at END
+        draft_completed_at = CASE WHEN $2::text='dev_edit' AND draft_completed_at IS NULL THEN now() ELSE draft_completed_at END,
+        published_at = CASE WHEN $2::text='published' THEN now() ELSE published_at END
       WHERE id=$1 RETURNING *`, [id, to_status]);
 
 // ── PIPELINE EVENTS ────────────────────────────────────────────────────────────
@@ -277,7 +277,7 @@ const getTrainingModule = (id) => q1('SELECT * FROM training_modules WHERE id=$1
 
 const advanceModuleStatus = (id, to_status) =>
   q1(`UPDATE training_modules SET pipeline_status=$2,
-        published_at = CASE WHEN $2='published' THEN now() ELSE published_at END
+        published_at = CASE WHEN $2::text='published' THEN now() ELSE published_at END
       WHERE id=$1 RETURNING *`, [id, to_status]);
 
 // ── TRAINING COMPLETIONS ───────────────────────────────────────────────────────
