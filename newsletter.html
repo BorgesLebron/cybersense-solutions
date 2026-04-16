@@ -78,68 +78,69 @@
       <a href="#subscribe" class="btn btn-primary btn-sm">Subscribe Free</a>
     </div>
 
-    <div class="grid-2" style="align-items:start;gap:32px;">
-    
-      <!-- LEFT: Main Content -->
-      <div style="grid-column:span 1;">
-          <div class="card" id="edition-current">
-            <div style="border-bottom:1px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 10px;">
-              <div style="font-size:11px; font-weight:700; letter-spacing:1px; margin-bottom:15px; text-transform:uppercase; color:var(--cs-gray-400);">
-                Current Edition
-              </div>
-          
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span class="edition-badge">Edition 104</span>
-                <span style="color: #374151; font-weight: 600; font-size: 1rem;">April 16, 2026</span>
-              </div>
-            
+  <div class="grid-2" style="display: grid; grid-template-columns: 2fr 1fr; align-items: start; gap: 32px;">
+  
+    <div class="main-content">
+      <div class="card" id="edition-current">
+        <div style="border-bottom:1px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 10px;">
+          <div style="font-size:11px; font-weight:700; letter-spacing:1px; margin-bottom:15px; text-transform:uppercase; color:var(--cs-gray-400);">
+            Current Edition
           </div>
-          <div class="briefing-section">
-            <h3>Patch Tuesday, 167 Flaws, and a Library Nobody Checked</h3>
-            <p style="font-size:17px;color:var(--cs-gray-600);line-height:1.7;margin-bottom:20px;">
-              Microsoft's April 2026 Patch Tuesday lands with 167 vulnerabilities patched and two actively exploited zero-days confirmed. It arrives in the same week that North Korea successfully poisoned the Axios npm package – one of the most downloaded JavaScript libraries in existence with over 100 million weekly installs – in a supply chain attack that reached development environments before detection. More than 100 malicious extensions were discovered in the Chrome Web Store stealing OAuth tokens and deploying backdoors. And Booking.com confirmed a data breach affecting customers across multiple countries.
-            </p>
-            <p style="font-size:17px;color:var(--cs-gray-600);line-height:1.7;margin-bottom:10px;">
-              The pattern is consistent with what this brief has been tracking all week: attackers are operating through trusted infrastructure. The Patch Tuesday zero-days were exploited before patches existed. The Axios poisoning reached developers through a package they had used reliably for years. The Chrome extensions passed marketplace review. Each incident exploits the gap between trust established over time and verification applied in the moment. This edition covers all three threat items, plus the device management platform abuse that wiped 80,000 devices in 79 countries with a single stolen credential.
-            </p>
+  
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="edition-badge">Edition 104</span>
+            <span style="color: #374151; font-weight: 600; font-size: 1rem;">April 16, 2026</span>
           </div>
-            <div style="margin-top:10px;">
-              <a href="newsletter/2026/Apr/04152026_edition103.html" class="btn btn-primary btn-sm">Read Full Edition →</a>
-            </div>  
+        </div>
+  
+        <div class="briefing-section">
+          <h3>Patch Tuesday, 167 Flaws, and a Library Nobody Checked</h3>
+          <p style="font-size:17px;color:var(--cs-gray-600);line-height:1.7;margin-bottom:20px;">
+            Microsoft's April 2026 Patch Tuesday lands with 167 vulnerabilities patched and two actively exploited zero-days confirmed...
+          </p>
+          <p style="font-size:17px;color:var(--cs-gray-600);line-height:1.7;margin-bottom:10px;">
+            The pattern is consistent with what this brief has been tracking all week: attackers are operating through trusted infrastructure...
+          </p>
+        </div>
+  
+        <div style="margin-top:10px;">
+          <a href="newsletter/2026/Apr/04152026_edition103.html" class="btn btn-primary btn-sm">Read Full Edition →</a>
         </div>
       </div>
-    </div>
-      <!-- RIGHT: Sidebar -->
-      <div>
-        <div class="card">
-          <h3 style="font-size:14px;font-weight:700;color:var(--cs-navy);margin-bottom:16px;letter-spacing:0.3px;">Previous Editions</h3>
-          <div class="edition-row active">
-            <a href="newsletter/2026/Apr/04152026_edition103.html" style="text-decoration:none;display:block;width:100%;">
-              <div class="edition-date">Tue, Apr 15, 2026</div>
-              <div class="edition-meta">The Trusted Tool Is the Attack</div>
-            </a>
+    </div> <div class="sidebar">
+      <div class="card">
+        <h3 style="font-size:14px;font-weight:700;color:var(--cs-navy);margin-bottom:16px;letter-spacing:0.3px;">Previous Editions</h3>
+        
+        <div class="edition-row active">
+          <a href="newsletter/2026/Apr/04152026_edition103.html" style="text-decoration:none;display:block;width:100%;">
+            <div class="edition-date">Tue, Apr 15, 2026</div>
+            <div class="edition-meta">The Trusted Tool Is the Attack</div>
+          </a>
+        </div>
+  
+        <div class="edition-row">
+          <a href="newsletter/2026/Apr/04142026_edition102.html" style="text-decoration:none;display:block;width:100%;">
+            <div class="edition-date">Mon, Apr 14, 2026</div>
+            <div class="edition-meta">Offense at Machine Speed</div>
+          </a>
+        </div>
+  
+        <div class="gate-wrapper" style="border-radius:var(--radius);margin-top:4px; position: relative;">
+          <div class="blurred" aria-hidden="true" style="pointer-events:none; opacity: 0.5;">
+            <div class="edition-row"><div><div class="edition-date">Wed, Apr 8, 2026</div><div class="edition-meta">7 items</div></div></div>
+            <div class="edition-row"><div><div class="edition-date">Tue, Apr 7, 2026</div><div class="edition-meta">7 items</div></div></div>
           </div>
-          <div class="edition-row">
-            <a href="newsletter/2026/Apr/04142026_edition102.html" style="text-decoration:none;display:block;width:100%;">
-              <div class="edition-date">Mon, Apr 14, 2026</div>
-              <div class="edition-meta">Offense at Machine Speed</div>
-            </a>
-          </div>
-          <div class="gate-wrapper" style="border-radius:var(--radius);margin-top:4px;">
-            <div class="blurred" aria-hidden="true" style="pointer-events:none;">
-              <div class="edition-row"><div><div class="edition-date">Wed, Apr 8, 2026</div><div class="edition-meta">7 items</div></div></div>
-              <div class="edition-row"><div><div class="edition-date">Tue, Apr 7, 2026</div><div class="edition-meta">7 items</div></div></div>
-              <div class="edition-row"><div><div class="edition-date">Mon, Apr 6, 2026</div><div class="edition-meta">7 items</div></div></div>
-            </div>
-            <div class="gate-overlay">
-              <div class="gate-card" style="padding:20px 24px;">
-                <h3 style="font-size:16px;">Full archive</h3>
-                <p style="font-size:12.5px;margin-bottom:14px;">Subscribe free for access to all 100 editions.</p>
-                <a href="#subscribe" class="btn btn-primary btn-sm">Subscribe Free</a>
-              </div>
+          <div class="gate-overlay">
+            <div class="gate-card" style="padding:20px 24px;">
+              <h3 style="font-size:16px;">Full archive</h3>
+              <p style="font-size:12.5px;margin-bottom:14px;">Subscribe free for access to all 100 editions.</p>
+              <a href="#subscribe" class="btn btn-primary btn-sm">Subscribe Free</a>
             </div>
           </div>
         </div>
+      </div>
+    </div> 
+  </div>
     
         <!-- Subscribe CTA -->
         <div id="subscribe" class="card card-dark" style="margin-top:20px;">
