@@ -410,8 +410,8 @@ const createTask = ({ agent_name, task_type, content_type, content_id, sla_deadl
 
 const updateTask = (id, { status, error_message }) =>
   q1(`UPDATE agent_tasks SET status=$2,
-        completed_at = CASE WHEN $2 IN ('complete','failed') THEN now() ELSE completed_at END,
-        latency_sec = CASE WHEN $2='complete' THEN EXTRACT(EPOCH FROM now()-started_at)::int ELSE latency_sec END,
+        completed_at = CASE WHEN $2::text IN ('complete','failed') THEN now() ELSE completed_at END,
+        latency_sec = CASE WHEN $2::text='complete' THEN EXTRACT(EPOCH FROM now()-started_at)::int ELSE latency_sec END,
         error_message = COALESCE($3, error_message)
       WHERE id=$1 RETURNING *`, [id, status, error_message || null]);
 
