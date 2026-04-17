@@ -192,59 +192,47 @@ function renderLatestEdition(briefing) {
   `;
 }
 
-function renderSidebar(briefings, userTier) {
+function renderSidebar(userTier) {
   const sidebar     = document.getElementById('editions-sidebar');
   const archiveGate = document.getElementById('archive-gate');
   const blurred     = document.getElementById('blurred-editions');
   const isFreemium  = userTier && userTier !== 'free';
 
-  if (!briefings || briefings.length === 0) {
-    sidebar.innerHTML = '<div style="color:var(--cs-gray-400);font-size:13px;padding:12px 0;">No editions yet.</div>';
-    return;
-  }
+  const editions = Object.entries(EDITION_MAP)
+    .sort((a, b) => b[0].localeCompare(a[0]));
 
-  // Show top 5 visible, rest blurred for guests
-  const visible  = briefings.slice(0, 5);
-  const archived = briefings.slice(5);
+  const visible  = editions.slice(0, 5);
+  const archived = editions.slice(5);
 
-  sidebar.innerHTML = visible.map((b, i) => {
-    const edInfo = getEditionFile(b.edition_date);
-    const dateStr = formatEditionDate(b.edition_date);
-    const edNum   = edInfo ? `Edition ${edInfo.edition}` : '';
-    const link    = edInfo ? edInfo.file : null;
-
+  sidebar.innerHTML = visible.map(([date, info], i) => {
+    const dateStr = formatEditionDate(date + 'T12:00:00');
     return `
       <div class="edition-row${i === 0 ? ' active' : ''}">
         <div>
           <div class="edition-date">${dateStr}</div>
-          <div class="edition-meta">${edNum ? edNum + ' · ' : ''}7 items</div>
+          <div class="edition-meta">Edition ${info.edition} · 7 items</div>
         </div>
-        ${link ? `<a href="${link}" style="font-size:12px;color:var(--cs-cyan);text-decoration:none;" target="_blank">${i === 0 ? 'Current' : 'Read →'}</a>` : ''}
+        <a href="${info.file}" style="font-size:12px;color:var(--cs-cyan);text-decoration:none;" target="_blank">${i === 0 ? 'Current' : 'Read →'}</a>
       </div>`;
   }).join('');
 
   if (archived.length > 0 && !isFreemium) {
     archiveGate.style.display = 'block';
-    blurred.innerHTML = archived.slice(0, 3).map(b => {
-      const dateStr = formatEditionDate(b.edition_date);
-      const edInfo  = getEditionFile(b.edition_date);
-      const edNum   = edInfo ? `Edition ${edInfo.edition}` : '';
-      return `<div class="edition-row"><div><div class="edition-date">${dateStr}</div><div class="edition-meta">${edNum ? edNum + ' · ' : ''}7 items</div></div></div>`;
+    blurred.innerHTML = archived.slice(0, 3).map(([date, info]) => {
+      const dateStr = formatEditionDate(date + 'T12:00:00');
+      return `<div class="edition-row"><div><div class="edition-date">${dateStr}</div><div class="edition-meta">Edition ${info.edition} · 7 items</div></div></div>`;
     }).join('');
-  } else if (isFreemium && archived.length > 0) {
-    // Show full archive for subscribers
-    sidebar.innerHTML += archived.map(b => {
-      const edInfo = getEditionFile(b.edition_date);
-      const dateStr = formatEditionDate(b.edition_date);
-      const edNum   = edInfo ? `Edition ${edInfo.edition}` : '';
-      const link    = edInfo ? edInfo.file : null;
+  } else if (isFreemium) {
+    archiveGate.style.display = 'none';
+    sidebar.innerHTML += archived.map(([date, info]) => {
+      const dateStr = formatEditionDate(date + 'T12:00:00');
       return `
         <div class="edition-row">
           <div>
             <div class="edition-date">${dateStr}</div>
-            <div class="edition-meta">${edNum ? edNum + ' · ' : ''}7 items</div>
+            <div class="edition-meta">Edition ${info.edition} · 7 items</div>
           </div>
-          ${link ? `<a href="${link}" style="font-size:12px;color:var(--cs-cyan);text-decoration:none;" target="_blank">Read →</a>` : ''}
+          <a href="${info.file}" style="font-size:12px;color:var(--cs-cyan);text-decoration:none;" target="_blank">Read →</a>
         </div>`;
     }).join('');
   }
@@ -259,21 +247,36 @@ async function loadNewsletter(user) {
     return;
   }
 
+  // Sidebar always comes from EDITION_MAP — no API needed
+  renderSidebar(userTier);
+
   try {
-    const data = await CS.Auth.apiFetch('/api/content/briefings?limit=20');
+    const data = await CS.Auth.apiFetch('/api/content/briefings?limit=1');
     const briefings = data.data || [];
 
     if (briefings.length === 0) {
-      document.getElementById('edition-loading').textContent = 'No editions published yet.';
+      // Fall back to latest from EDITION_MAP
+      const latest = Object.entries(EDITION_MAP).sort((a, b) => b[0].localeCompare(a[0]))[0];
+      document.getElementById('edition-preview').innerHTML = `
+        <div style="padding:20px 0;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--cs-gray-400);margin-bottom:4px;">Edition ${latest[1].edition} · Latest</div>
+          <div style="font-size:20px;font-weight:700;color:var(--cs-navy);margin-bottom:20px;">${formatEditionDate(latest[0] + 'T12:00:00')}</div>
+          <a href="${latest[1].file}" class="btn btn-primary" target="_blank">Read Full Edition →</a>
+        </div>`;
       return;
     }
 
     renderLatestEdition(briefings[0]);
-    renderSidebar(briefings, userTier);
 
   } catch(e) {
     console.error('Newsletter load error:', e);
-    document.getElementById('edition-loading').textContent = 'Content temporarily unavailable.';
+    // Fall back to map on error
+    const latest = Object.entries(EDITION_MAP).sort((a, b) => b[0].localeCompare(a[0]))[0];
+    document.getElementById('edition-preview').innerHTML = `
+      <div style="padding:20px 0;">
+        <div style="font-size:20px;font-weight:700;color:var(--cs-navy);margin-bottom:20px;">${formatEditionDate(latest[0] + 'T12:00:00')}</div>
+        <a href="${latest[1].file}" class="btn btn-primary" target="_blank">Read Full Edition →</a>
+      </div>`;
   }
 }
 
