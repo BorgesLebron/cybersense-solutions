@@ -181,10 +181,10 @@ const listArticles = ({ section, access_tier, status = 'published', page = 1, li
 
 const advanceArticleStatus = (id, to_status) =>
   q1(`UPDATE articles SET pipeline_status=$2,
-        qa_passed_at = CASE WHEN $2::text='maya' THEN now() ELSE qa_passed_at END,
-        maya_approved_at = CASE WHEN $2::text='approved' THEN now() ELSE maya_approved_at END,
-        published_at = CASE WHEN $2::text='published' THEN now() ELSE published_at END
-      WHERE id=$1 RETURNING *`, [id, to_status]);
+        qa_passed_at = CASE WHEN $3='maya' THEN now() ELSE qa_passed_at END,
+        maya_approved_at = CASE WHEN $4='approved' THEN now() ELSE maya_approved_at END,
+        published_at = CASE WHEN $5='published' THEN now() ELSE published_at END
+      WHERE id=$1 RETURNING *`, [id, to_status, to_status, to_status, to_status]);
 
 const incrementArticleViews = (id) => q('UPDATE articles SET view_count=view_count+1 WHERE id=$1', [id]);
 
@@ -206,9 +206,9 @@ const listBriefings = ({ page = 1, limit = 20 } = {}) => {
 
 const advanceBriefingStatus = (id, to_status) =>
   q1(`UPDATE briefings SET pipeline_status=$2,
-        draft_completed_at = CASE WHEN $2::text='dev_edit' AND draft_completed_at IS NULL THEN now() ELSE draft_completed_at END,
-        published_at = CASE WHEN $2::text='published' THEN now() ELSE published_at END
-      WHERE id=$1 RETURNING *`, [id, to_status]);
+        draft_completed_at = CASE WHEN $3='dev_edit' AND draft_completed_at IS NULL THEN now() ELSE draft_completed_at END,
+        published_at = CASE WHEN $4='published' THEN now() ELSE published_at END
+      WHERE id=$1 RETURNING *`, [id, to_status, to_status, to_status]);
 
 // ── PIPELINE EVENTS ────────────────────────────────────────────────────────────
 
@@ -277,8 +277,8 @@ const getTrainingModule = (id) => q1('SELECT * FROM training_modules WHERE id=$1
 
 const advanceModuleStatus = (id, to_status) =>
   q1(`UPDATE training_modules SET pipeline_status=$2,
-        published_at = CASE WHEN $2::text='published' THEN now() ELSE published_at END
-      WHERE id=$1 RETURNING *`, [id, to_status]);
+        published_at = CASE WHEN $3='published' THEN now() ELSE published_at END
+      WHERE id=$1 RETURNING *`, [id, to_status, to_status]);
 
 // ── TRAINING COMPLETIONS ───────────────────────────────────────────────────────
 
@@ -410,10 +410,10 @@ const createTask = ({ agent_name, task_type, content_type, content_id, sla_deadl
 
 const updateTask = (id, { status, error_message }) =>
   q1(`UPDATE agent_tasks SET status=$2,
-        completed_at = CASE WHEN $2::text IN ('complete','failed') THEN now() ELSE completed_at END,
-        latency_sec = CASE WHEN $2::text='complete' THEN EXTRACT(EPOCH FROM now()-started_at)::int ELSE latency_sec END,
-        error_message = COALESCE($3, error_message)
-      WHERE id=$1 RETURNING *`, [id, status, error_message || null]);
+        completed_at = CASE WHEN $3 IN ('complete','failed') THEN now() ELSE completed_at END,
+        latency_sec = CASE WHEN $4='complete' THEN EXTRACT(EPOCH FROM now()-started_at)::int ELSE latency_sec END,
+        error_message = COALESCE($5, error_message)
+      WHERE id=$1 RETURNING *`, [id, status, status, status, error_message || null]);
 
 const listTasks = ({ agent_name, status, content_type, date, page = 1, limit = 50 } = {}) => {
   const conds = ['1=1'];
