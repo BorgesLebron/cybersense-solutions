@@ -214,7 +214,7 @@ const advanceBriefingStatus = (id, to_status) =>
 
 const logPipelineEvent = ({ content_type, content_id, from_status, to_status, agent_name, notes }) =>
   q1(`INSERT INTO pipeline_events (id,content_type,content_id,from_status,to_status,agent_name,notes,created_at)
-      VALUES (gen_random_uuid(),$1,$2,$3,$4,$5,$6,now()) RETURNING *`,
+      VALUES (gen_random_uuid(),$1,$2,$3::text,$4::text,$5,$6,now()) RETURNING *`,
     [content_type, content_id, from_status, to_status, agent_name, notes || null]);
 
 const countRejections = (agent_team, hours = 24) =>
