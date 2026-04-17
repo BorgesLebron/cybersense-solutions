@@ -127,7 +127,6 @@
 <script src="main.js"></script>
 <script>
 // Edition date → HTML file path mapping
-// Pattern: newsletter/2026/Apr/MMDDYYYY_editionNNN.html
 const EDITION_MAP = {
   '2026-04-17': { file: 'newsletter/2026/Apr/04172026_edition105.html', edition: 105 },
   '2026-04-16': { file: 'newsletter/2026/Apr/04162026_edition104.html', edition: 104 },
@@ -136,9 +135,12 @@ const EDITION_MAP = {
   '2026-04-13': { file: 'newsletter/2026/Apr/04132026_edition101.html', edition: 101 },
   '2026-04-10': { file: 'newsletter/2026/Apr/04102026_edition100.html', edition: 100 },
   '2026-04-09': { file: 'newsletter/2026/Apr/04092026_edition99.html',  edition: 99  },
-  '2026-04-08': { file: 'newsletter/2026/Apr/04082026.html', edition: 98 },
-  '2026-04-07': { file: 'newsletter/2026/Apr/04072026.html', edition: 97 },
-  '2026-04-06': { file: 'newsletter/2026/Apr/04062026.html', edition: 96 },
+  '2026-04-08': { file: 'newsletter/2026/Apr/04082026.html',            edition: 98  },
+  '2026-04-07': { file: 'newsletter/2026/Apr/04072026.html',            edition: 97  },
+  '2026-04-06': { file: 'newsletter/2026/Apr/04062026.html',            edition: 96  },
+  '2026-04-03': { file: 'newsletter/2026/Apr/04032026.html',            edition: 95  },
+  '2026-04-02': { file: 'newsletter/2026/Apr/04022026.html',            edition: 94  },
+  '2026-04-01': { file: 'newsletter/2026/Apr/04012026.html',            edition: 93  },
 };
 
 function formatEditionDate(dateStr) {
@@ -285,11 +287,17 @@ function renderGuestNewsletter() {
         <a href="https://www.linkedin.com/build-relation/newsletter-follow?entityUrn=7388246712924069888" class="btn btn-outline" target="_blank">Subscribe on LinkedIn</a>
       </div>
     </div>`;
-
-  document.getElementById('editions-sidebar').innerHTML = `
-    <div style="color:var(--cs-gray-400);font-size:13px;padding:8px 0 12px;">Sign in to view the archive.</div>`;
+  document.getElementById('editions-sidebar').innerHTML =
+    '<div style="color:var(--cs-gray-400);font-size:13px;padding:8px 0 12px;">Sign in to view the archive.</div>';
 }
 
+function handleSubscribe() {
+  const email = document.getElementById('subscribe-email').value.trim();
+  if (!email) return;
+  CS.Auth.showLoginModal({ tab: 'register', message: 'Create a free account to receive the daily briefing.' });
+}
+
+// Wire to auth events
 document.addEventListener('cs:login', (e) => loadNewsletter(e.detail));
 document.addEventListener('cs:guest', ()  => loadNewsletter(null));
 </script>
