@@ -9,7 +9,6 @@
 <link rel="stylesheet" href="auth.css">
 <link rel="icon" type="image/png" href="/assets/csicon.png">
 <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-
 </head>
 <body>
 
@@ -18,7 +17,7 @@
   <ul class="nav-links">
     <li><a href="index.html">Home</a></li>
     <li><a href="about.html">About</a></li>
-    <li><a href="radar.html">Radar</a></li>
+    <li><a href="radar.html" class="active">Radar</a></li>
     <li><a href="intelligence.html">Intel</a></li>
     <li><a href="newsletter.html">Newsletter</a></li>
     <li><a href="training.html">Training</a></li>
@@ -53,7 +52,7 @@
       <span class="live-dot"></span>
     </div>
     <h1 class="section-heading section-heading-light" style="font-size:clamp(30px,5vw,48px);">Threat Radar</h1>
-    <p class="section-sub section-sub-light">Tracked vulnerabilities and active threats – updated as our team publishes intelligence.</p>
+    <p class="section-sub section-sub-light">Tracked vulnerabilities and active threats — updated as our team publishes intelligence.</p>
   </div>
 </section>
 
@@ -72,143 +71,45 @@
       <input class="search-input" type="text" id="threat-search" placeholder="Search threats, CVE IDs, vendors..." aria-label="Search threats">
     </div>
 
-    <!-- Full Radar Table + Gate -->
-    <div class="gate-wrapper" style="border-radius:var(--radius-lg);">
-      <div class="table-wrap">
-        <table class="data-table" aria-label="Threat radar">
-          <thead>
-            <tr>
-              <th>Severity</th>
-              <th>Threat Name</th>
-              <th>CVE</th>
-              <th>CVSS</th>
-              <th>Status</th>
-              <th>Intel Article</th>
-            </tr>
-          </thead>
-          <tbody id="threat-table-body">
-            <!-- Rows 1–7 visible -->
-            <tr class="threat-row" data-severity="high">
-              <td><span class="badge badge-high">High</span></td>
-              <td>Microsoft MMC MSC EvilTwin - Local Admin Creation</td>
-              <td class="mono">CVE-2025-26633</td>
-              <td class="mono">7.5</td>
-              <td><span class="badge badge-new">In Progress</span></td>
-              <td style="font-size:13px;color:var(--cs-gray-400);">Article coming soon</td>
-            </tr>
-            <tr class="threat-row" data-severity="high">
-              <td><span class="badge badge-high">High</span></td>
-              <td>SQLite 3.50.1 - Heap Overflow</td>
-              <td class="mono">CVE-2025-6965</td>
-              <td class="mono">7.2</td>
-              <td><span class="badge badge-inprogress">In Progress</span></td>
-              <td style="font-size:13px;color:var(--cs-gray-400);">Article coming soon</td>
-            </tr>
-            <tr class="threat-row" data-severity="high">
-              <td><span class="badge badge-high">High</span></td>
-              <td>xibocms 3.3.4 - RCE</td>
-              <td class="mono">CVE-2023-33177</td>
-              <td class="mono">8.8</td>
-              <td><span class="badge badge-inprogress">In Progress</span></td>
-              <td style="font-size:13px;color:var(--cs-gray-400);">Article coming soon</td>
-            </tr>
-            <tr class="threat-row" data-severity="high">
-              <td><span class="badge badge-high">High</span></td>
-              <td>7-Zip 24.00 - Directory Traversal</td>
-              <td class="mono">CVE-2025-11001</td>
-              <td class="mono">8.8</td>
-              <td><span class="badge badge-published">In Progress</span></td>
-              <td style="font-size:13px;color:var(--cs-gray-400);">Article coming soon</td>
-            </tr>
-            <tr class="threat-row" data-severity="critical">
-              <td><span class="badge badge-critical">Critical</span></td>
-              <td>FortiWeb 8.0.2 - Remote Code Execution</td>
-              <td class="mono">CVE-2025-64446</td>
-              <td class="mono">9.4</td>
-              <td><span class="badge badge-published">In Progress</span></td>
-              <td style="font-size:13px;color:var(--cs-gray-400);">Article coming soon</td>
-            </tr>
-            <tr class="threat-row" data-severity="high">
-              <td><span class="badge badge-high">High</span></td>
-              <td>RomM 4.4.0 - XSS_CSRF Chain</td>
-              <td class="mono">CVE-2025-65027</td>
-              <td class="mono">7.6</td>
-              <td><span class="badge badge-published">In Progress</span></td>
-              <td style="font-size:13px;color:var(--cs-gray-400);">Article coming soon</td>
-            </tr>
-            <tr class="threat-row" data-severity="critical">
-              <td><span class="badge badge-critical">Critical</span></td>
-              <td>Meta React Server Remote Code Execution</td>
-              <td class="mono">CVE-2025-55182</td>
-              <td class="mono">10</td>
-              <td><span class="badge badge-published">Published</span></td>
-              <td style="font-size:13px;color:var(--cs-gray-400);">Article coming soon</td>
-            </tr>    
-            <!-- Rows 8–12: blurred (rendered as separate section below) -->
-          </tbody>
+    <!-- Radar Table -->
+    <div class="table-wrap" id="radar-wrap">
+      <table class="data-table" aria-label="Threat radar">
+        <thead>
+          <tr>
+            <th>Severity</th>
+            <th>Threat Name</th>
+            <th>CVE</th>
+            <th>CVSS</th>
+            <th>Category</th>
+            <th>Intel Article</th>
+          </tr>
+        </thead>
+        <tbody id="radar-body">
+          <tr>
+            <td colspan="6" style="text-align:center;padding:40px;color:var(--cs-gray-400);">Loading threat data...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Gate for non-subscribers — rendered dynamically -->
+    <div class="gate-wrapper" id="radar-gate" style="display:none;border-radius:var(--radius-lg);margin-top:-4px;">
+      <div class="blurred" aria-hidden="true" id="blurred-rows-wrap">
+        <table class="data-table">
+          <tbody id="blurred-rows"></tbody>
         </table>
-
-        <!-- Blurred rows 8–12 -->
-        <div class="gate-wrapper">
-          <div class="blurred" aria-hidden="true">
-            <table class="data-table">
-              <tbody>
-                <tr class="blurred-row">
-                  <td><span class="badge badge-critical">Critical</span></td>
-                  <td>Apache HTTP Server mod_rewrite Path Traversal</td>
-                  <td class="mono">CVE-2024-38475</td>
-                  <td class="mono">9.1</td>
-                  <td><span class="badge badge-published">Published</span></td>
-                  <td>Read Intel Brief →</td>
-                </tr>
-                <tr class="blurred-row">
-                  <td><span class="badge badge-high">High</span></td>
-                  <td>SolarWinds Web Help Desk Hardcoded Credential</td>
-                  <td class="mono">CVE-2024-28986</td>
-                  <td class="mono">9.8</td>
-                  <td><span class="badge badge-published">Published</span></td>
-                  <td>Read Intel Brief →</td>
-                </tr>
-                <tr class="blurred-row">
-                  <td><span class="badge badge-high">High</span></td>
-                  <td>Atlassian Confluence Data Center Server-Side Template Injection</td>
-                  <td class="mono">CVE-2024-21683</td>
-                  <td class="mono">8.8</td>
-                  <td><span class="badge badge-inprogress">In Progress</span></td>
-                  <td>Article coming soon</td>
-                </tr>
-                <tr class="blurred-row">
-                  <td><span class="badge badge-medium">Medium</span></td>
-                  <td>GitLab CE/EE User Impersonation via Slack Integration</td>
-                  <td class="mono">CVE-2024-4835</td>
-                  <td class="mono">6.8</td>
-                  <td><span class="badge badge-new">New</span></td>
-                  <td>—</td>
-                </tr>
-                <tr class="blurred-row">
-                  <td><span class="badge badge-low">Low</span></td>
-                  <td>OpenSSH Remote Code Execution in Portable GLIBC</td>
-                  <td class="mono">CVE-2024-6387</td>
-                  <td class="mono">8.1</td>
-                  <td><span class="badge badge-new">New</span></td>
-                  <td>—</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="gate-overlay">
-            <div class="gate-card">
-              <h3>Subscribe to unlock full radar</h3>
-              <p>5 additional tracked threats plus real-time alerts when new critical CVEs are published. Free to start.</p>
-              <a href="newsletter.html" class="btn btn-primary">Subscribe Free</a>
-            </div>
-          </div>
+      </div>
+      <div class="gate-overlay">
+        <div class="gate-card">
+          <h3>Subscribe to unlock full radar</h3>
+          <p>All tracked threats plus real-time alerts when new critical CVEs are published. Free to start.</p>
+          <a href="pricing.html" class="btn btn-primary">Subscribe Free</a>
         </div>
+      </div>
+    </div>
 
-      </div><!-- /table-wrap -->
-    </div><!-- /gate-wrapper -->
+    <p style="margin-top:20px;font-size:13px;color:var(--cs-gray-400);" id="radar-meta"></p>
 
-    <p style="margin-top:20px;font-size:13px;color:var(--cs-gray-400);">Showing 7 of 12 tracked threats. Severity data sourced from NVD CVSS scores and CyberSense analyst assessment. Last updated: <strong>April 10, 2026 — 07:00 CT</strong>.</p>
   </div>
 </section>
 
@@ -226,72 +127,114 @@
           <a href="#" class="footer-social-icon" aria-label="TikTok">tt</a>
         </div>
       </div>
-      <div class="footer-col">
-        <h4>Platform</h4>
-        <ul>
-          <li><a href="index.html">Home</a></li>
-          <li><a href="about.html">About</a></li>
-          <li><a href="radar.html">Threat Radar</a></li>
-          <li><a href="intelligence.html">Intel Briefs</a></li>
-          <li><a href="newsletter.html">Newsletter</a></li>
-          <li><a href="training.html">Training</a></li>
-          <li><a href="growth.html">Proficient</a></li>
-          <li><a href="innovation.html">Innovation</a></li>
-          <li><a href="zerotrust.html">Zero-Trust</a></li>
-          <li><a href="pricing.html">Pricing</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <h4>Legal</h4>
-        <ul>
-          <li><a href="#">Privacy Policy</a></li>
-          <li><a href="#">Terms of Service</a></li>
-          <li><a href="about.html">Contact Us</a></li></ul>
-      </div>
+      <div class="footer-col"><h4>Platform</h4><ul><li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li><li><a href="radar.html">Threat Radar</a></li><li><a href="intelligence.html">Intel Briefs</a></li><li><a href="newsletter.html">Newsletter</a></li><li><a href="training.html">Training</a></li><li><a href="growth.html">Proficient</a></li><li><a href="innovation.html">Innovation</a></li><li><a href="zerotrust.html">Zero-Trust</a></li><li><a href="pricing.html">Pricing</a></li></ul></div>
+      <div class="footer-col"><h4>Legal</h4><ul><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li><li><a href="about.html">Contact Us</a></li></ul></div>
     </div>
-    <div class="footer-bottom">
-      <span>&copy; 2026 CyberSense.Solutions. All rights reserved.</span>
-      <span>Security awareness starts here.</span> 
+    <div class="footer-bottom"><span>&copy; 2026 CyberSense.Solutions. All rights reserved.</span><span>Security awareness starts here.</span></div>
   </div>
 </footer>
-<script>
-  
-async function loadThreatRadar() {
-    try {
-        const response = await fetch('https://api.cybersense.solutions/api/content/radar');
-        const data = await response.json();
-        const threats = data.data || [];
-        
-        // Only replace static rows if API actually has data
-        if (threats.length === 0) return;
-        
-        const tableBody = document.getElementById('threat-table-body');
-        if (!tableBody) return;
-        tableBody.innerHTML = '';
-        threats.forEach(threat => {
-            const row = `
-                <tr class="threat-row" data-severity="${threat.severity.toLowerCase()}">
-                    <td><span class="badge badge-${threat.severity.toLowerCase()}">${threat.severity}</span></td>
-                    <td>${threat.threat_name}</td>
-                    <td class="mono">${threat.cve_id}</td>
-                    <td class="mono">${threat.cvss_score}</td>
-                    <td><span class="badge badge-published">Live</span></td>
-                    <td style="font-size:13px;color:var(--cs-gray-400);">
-                        ${new Date(threat.ingested_at).toLocaleDateString()}
-                    </td>
-                </tr>`;
-            tableBody.insertAdjacentHTML('beforeend', row);
-        });
-    } catch (error) {
-        // API unavailable — static rows remain visible
-        console.warn('Radar API unavailable, showing static data');
-    }
-}
-  
-document.addEventListener('DOMContentLoaded', loadThreatRadar);
-</script>
+
 <script>window.CS_API_BASE = 'https://api.cybersense.solutions';</script>
 <script src="auth.js"></script>
-<script src="main.js"></script>  
+<script src="main.js"></script>
+<script>
+const FREE_LIMIT = 7;
+let allThreats = [];
+
+function severityBadge(s) {
+  const map = { critical: 'badge-critical', high: 'badge-high', medium: 'badge-medium', low: 'badge-low' };
+  return `<span class="badge ${map[s] || 'badge-low'}">${s.charAt(0).toUpperCase() + s.slice(1)}</span>`;
+}
+
+function threatRow(t) {
+  const article = t.article_link
+    ? `<a href="intel/article.html?slug=${t.article_link.split('/').pop()}" style="font-size:13px;color:var(--cs-cyan);font-weight:500;">Read Intel Brief →</a>`
+    : `<span style="font-size:13px;color:var(--cs-gray-400);">Article coming soon</span>`;
+  return `
+    <tr class="threat-row" data-severity="${t.severity}" data-name="${t.threat_name.toLowerCase()}" data-cve="${t.cve_id.toLowerCase()}">
+      <td>${severityBadge(t.severity)}</td>
+      <td style="font-weight:500;color:var(--cs-navy);">${t.threat_name}</td>
+      <td class="mono">${t.cve_id}</td>
+      <td class="mono">${parseFloat(t.cvss_score).toFixed(1)}</td>
+      <td style="font-size:13px;color:var(--cs-gray-600);">${t.category}</td>
+      <td>${article}</td>
+    </tr>`;
+}
+
+function renderRadar(threats, isSubscriber) {
+  const body       = document.getElementById('radar-body');
+  const gate       = document.getElementById('radar-gate');
+  const blurred    = document.getElementById('blurred-rows');
+  const meta       = document.getElementById('radar-meta');
+
+  if (!threats || threats.length === 0) {
+    body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--cs-gray-400);">No threats tracked yet.</td></tr>';
+    return;
+  }
+
+  const visible  = isSubscriber ? threats : threats.slice(0, FREE_LIMIT);
+  const hidden   = isSubscriber ? [] : threats.slice(FREE_LIMIT);
+
+  body.innerHTML = visible.map(threatRow).join('');
+
+  if (hidden.length > 0) {
+    gate.style.display = 'block';
+    blurred.innerHTML  = hidden.map(threatRow).join('');
+  } else {
+    gate.style.display = 'none';
+  }
+
+  const lastUpdated = threats[0]?.ingested_at
+    ? new Date(threats[0].ingested_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
+    : 'today';
+
+  const showing = isSubscriber ? threats.length : Math.min(FREE_LIMIT, threats.length);
+  meta.innerHTML = `Showing ${showing} of ${threats.length} tracked threats. Severity data sourced from NVD CVSS scores and CyberSense analyst assessment. Last updated: <strong>${lastUpdated}</strong>.`;
+}
+
+function filterRadar() {
+  const severity = document.getElementById('severity-filter').value.toLowerCase();
+  const search   = document.getElementById('threat-search').value.toLowerCase();
+  const rows     = document.querySelectorAll('.threat-row');
+
+  rows.forEach(row => {
+    const matchSev  = !severity || row.dataset.severity === severity;
+    const matchText = !search || row.dataset.name.includes(search) || row.dataset.cve.includes(search);
+    row.style.display = (matchSev && matchText) ? '' : 'none';
+  });
+}
+
+async function loadRadar(user) {
+  const isSubscriber = user && ['monthly', 'enterprise'].includes(user.tier);
+
+  try {
+    const data = await CS.Auth.apiFetch('/api/content/radar?limit=50');
+    allThreats = data.data || [];
+    renderRadar(allThreats, isSubscriber);
+  } catch(e) {
+    console.error('Radar load error:', e);
+    document.getElementById('radar-body').innerHTML =
+      '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--cs-gray-400);">Content temporarily unavailable.</td></tr>';
+  }
+}
+
+function handleGuest() {
+  // Guests still see the radar — requireUserToken('free') means any registered user
+  // Guests get login prompt
+  document.getElementById('radar-body').innerHTML = `
+    <tr>
+      <td colspan="6" style="text-align:center;padding:40px;">
+        <div style="margin-bottom:12px;font-size:14px;color:var(--cs-gray-600);">Sign in to view the live threat radar.</div>
+        <a href="#" class="btn btn-primary btn-sm" onclick="CS.Auth.showLoginModal();return false;">Sign In Free</a>
+      </td>
+    </tr>`;
+}
+
+document.getElementById('severity-filter').addEventListener('change', filterRadar);
+document.getElementById('threat-search').addEventListener('input', filterRadar);
+
+document.addEventListener('cs:login', (e) => loadRadar(e.detail));
+document.addEventListener('cs:guest', () => handleGuest());
+</script>
 </body>
 </html>
