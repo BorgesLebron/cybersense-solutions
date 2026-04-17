@@ -144,12 +144,13 @@ const EDITION_MAP = {
 };
 
 function formatEditionDate(dateStr) {
-  const d = new Date(dateStr + 'T12:00:00');
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 }
 
 function getEditionFile(dateStr) {
-  return EDITION_MAP[dateStr] || null;
+  const dateOnly = dateStr.split('T')[0];
+  return EDITION_MAP[dateOnly] || null;
 }
 
 function renderLatestEdition(briefing) {
