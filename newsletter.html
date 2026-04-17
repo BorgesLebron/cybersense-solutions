@@ -8,27 +8,10 @@
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="auth.css">
 <link rel="icon" type="image/png" href="/assets/csicon.png">
-<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">  
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
 </head>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
-  .edition-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: #0f2347;
-    border: 1px solid #0a1628;
-    border-radius: 99px;
-    padding: 4px 16px;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: #fff
-  }
-</style>  
-  
 <body>
+
 <nav class="nav" role="navigation">
   <a href="index.html" class="nav-wordmark">CyberSense<span>.Solutions</span></a>
   <ul class="nav-links">
@@ -36,7 +19,7 @@
     <li><a href="about.html">About</a></li>
     <li><a href="radar.html">Radar</a></li>
     <li><a href="intelligence.html">Intel</a></li>
-    <li><a href="newsletter.html">Newsletter</a></li>
+    <li><a href="newsletter.html" class="active">Newsletter</a></li>
     <li><a href="training.html">Training</a></li>
     <li><a href="growth.html">Proficient</a></li>
     <li><a href="innovation.html">Innovation</a></li>
@@ -47,7 +30,8 @@
   <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
 </nav>
 <div class="nav-drawer" id="nav-drawer">
-  <ul><li><a href="index.html">Home</a></li>
+  <ul>
+    <li><a href="index.html">Home</a></li>
     <li><a href="about.html">About</a></li>
     <li><a href="radar.html">Radar</a></li>
     <li><a href="intelligence.html">Intel</a></li>
@@ -65,200 +49,241 @@
   <div class="container" style="position:relative;z-index:1;">
     <p class="section-label">Daily Briefing</p>
     <h1 class="section-heading section-heading-light" style="font-size:clamp(28px,5vw,46px);">Daily Digital Awareness Briefing</h1>
-    <p class="section-sub section-sub-light">The Daily Digital Awareness Brief delivers a focused, fast-reading snapshot of the evolving cyber environment. Each edition highlights active threat developments, modernization and artificial intelligence insights, and practical techniques that strengthen disciplined digital behavior across the workforce.</p>
+    <p class="section-sub section-sub-light">Seven items. Every morning by 07:00 CT. Threats, innovations, professional growth, and a training byte — all analyst-written.</p>
   </div>
 </section>
 
 <section class="section" style="background:var(--cs-gray-100);">
   <div class="container">
 
-    <!-- Freemium Banner -->
-    <div class="freemium-banner">
+    <div class="freemium-banner" id="guest-banner" style="display:none;">
       <p><strong>You're reading as a guest.</strong> Subscribe free for full archive access and email delivery every morning.</p>
-      <a href="#subscribe" class="btn btn-primary btn-sm">Subscribe Free</a>
+      <a href="pricing.html" class="btn btn-primary btn-sm">Subscribe Free</a>
     </div>
 
-  <div class="grid-2" style="display: grid; grid-template-columns: 2fr 1fr; align-items: start; gap: 32px;">
-     
-    <div class="main-content">
-      <div class="card" id="edition-current">
-        <div style="border-bottom:1px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 10px;">
-          <div style="font-size:11px; font-weight:700; letter-spacing:1px; margin-bottom:15px; text-transform:uppercase; color:var(--cs-gray-400);">
-            Current Edition
-          </div>
-  
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span class="edition-badge">Edition 105</span>
-            <span style="color: #374151; font-weight: 600; font-size: 1rem;">April 17, 2026</span>
+    <div class="grid-2" style="align-items:start;gap:32px;">
+
+      <!-- Main Content -->
+      <div style="grid-column:span 1;">
+
+        <!-- Latest edition preview card -->
+        <div class="card" id="edition-preview">
+          <div style="text-align:center;padding:40px;color:var(--cs-gray-400);font-size:14px;" id="edition-loading">
+            Loading latest edition...
           </div>
         </div>
-  
-        <div class="briefing-section">
-          <h3>When the Hospital Is the Target</h3>
-          <p style="font-size:17px;color:var(--cs-gray-600);line-height:1.7;margin-bottom:20px;">
-            UAC-0247 has been targeting Ukrainian government agencies and hospital systems – including emergency care facilities – with a campaign that begins with a humanitarian aid lure and ends with credential theft from Chromium-based browsers and WhatsApp. The campaign ran from March through April 2026. Clinics and emergency hospitals are not typical targets for financially motivated threat actors, which makes the targeting deliberate – these institutions hold patient data, operate on minimal security budgets, and cannot afford operational disruptions. Attacking them is a statement as much as it is an operation.
-          </p>
-          <p style="font-size:17px;color:var(--cs-gray-600);line-height:1.7;margin-bottom:10px;">
-            This edition also covers MCPwn – a CVSS 9.8 authentication bypass in nginx-ui that allows unauthenticated remote control of nginx services through an exposed MCP endpoint...
-          </p>
-        </div>
-  
-        <div style="margin-top:10px;">
-          <a href="/newsletter/2026/Apr/04172026_edition105.html" class="btn btn-primary btn-sm">Read Full Edition →</a>
-        </div>
+
       </div>
-    </div> <div class="sidebar">
-      <div class="card"> <!--card-->
-        <h3 style="font-size:14px;font-weight:700;color:var(--cs-navy);margin-bottom:16px;letter-spacing:0.3px;">Previous Editions</h3>
-        
-        <div class="edition-row active">
-          <a href="newsletter/2026/Apr/04152026_edition103.html" style="text-decoration:none;display:block;width:100%;">
-            <div class="edition-date">Tue, Apr 16, 2026</div>
-            <div class="edition-meta">Patch Tuesday, 167 Flaws, and a Library Nobody Checked</div>
-          </a>
-        </div>
-  
-        <div class="edition-row">
-          <a href="newsletter/2026/Apr/04142026_edition102.html" style="text-decoration:none;display:block;width:100%;">
-            <div class="edition-date">Mon, Apr 15, 2026</div>
-            <div class="edition-meta">The Trusted Tool Is the Attack</div>
-          </a>
-        </div>
-  
-        <div class="gate-wrapper" style="border-radius:var(--radius);margin-top:4px; position: relative;">
-          <div class="blurred" aria-hidden="true" style="pointer-events:none; opacity: 0.5;">
-            <div class="edition-row"><div><div class="edition-date">Wed, Apr 8, 2026</div><div class="edition-meta">7 items</div></div></div>
-            <div class="edition-row"><div><div class="edition-date">Tue, Apr 7, 2026</div><div class="edition-meta">7 items</div></div></div>
+
+      <!-- Sidebar -->
+      <div>
+        <div class="card">
+          <h3 style="font-size:14px;font-weight:700;color:var(--cs-navy);margin-bottom:16px;letter-spacing:0.3px;">Previous Editions</h3>
+          <div id="editions-sidebar">
+            <div style="text-align:center;padding:20px;color:var(--cs-gray-400);font-size:13px;">Loading editions...</div>
           </div>
-          <div class="gate-overlay">
-            <div class="gate-card" style="padding:20px 24px;">
-              <h3 style="font-size:16px;">Full archive</h3>
-              <p style="font-size:12.5px;margin-bottom:14px;">Subscribe free for access to 100+ editions.</p>
-              <a href="#subscribe" class="btn btn-primary btn-sm">Subscribe Free</a>
+          <div class="gate-wrapper" id="archive-gate" style="border-radius:var(--radius);margin-top:4px;display:none;">
+            <div class="blurred" aria-hidden="true" style="pointer-events:none;" id="blurred-editions"></div>
+            <div class="gate-overlay">
+              <div class="gate-card" style="padding:20px 24px;">
+                <h3 style="font-size:16px;">Full archive</h3>
+                <p style="font-size:12.5px;margin-bottom:14px;">Subscribe free for access to the complete edition archive.</p>
+                <a href="pricing.html" class="btn btn-primary btn-sm">Subscribe Free</a>
+              </div>
             </div>
           </div>
         </div>
-      </div> <!--card end-->
+
+        <!-- Subscribe CTA -->
         <div id="subscribe" class="card card-dark" style="margin-top:20px;">
           <p class="section-label" style="margin-bottom:8px;">Subscribe</p>
           <h3 style="color:var(--cs-white);font-size:20px;margin-bottom:8px;">Get it in your inbox.</h3>
-          <p style="color:rgba(255,255,255,0.6);font-size:14px;margin-bottom:20px;line-height:1.55;">Free daily briefing every weekday by 7:00 am CT. No ads. No syndicated content. All ours.</p>
+          <p style="color:rgba(255,255,255,0.6);font-size:14px;margin-bottom:20px;line-height:1.55;">Free daily briefing delivered every morning before 07:00 CT. No ads. No syndicated content. All ours.</p>
           <div style="display:flex;flex-direction:column;gap:10px;">
-            <input id="subscribe-email" class="form-input" style="background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.15);color:var(--cs-white);" type="email" placeholder="your@email.com">
-            <input id="subscribe-name" class="form-input" style="background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.15);color:var(--cs-white);" type="text" placeholder="First name (optional)">
-            <button class="btn btn-primary" id="sub-btn" onclick="handleSubscribe()">Subscribe Free</button>
-            <div id="sub-success" style="display:none;color:#10B981;font-size:13px;text-align:center;">✓ You're in. Check your inbox.</div>
-            <div id="sub-error" style="display:none;color:#EF4444;font-size:13px;text-align:center;"></div>
+            <input class="form-input" id="subscribe-email" style="background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.15);color:var(--cs-white);" type="email" placeholder="your@email.com">
+            <button class="btn btn-primary" onclick="handleSubscribe()">Subscribe Free</button>
           </div>
           <p style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:10px;">No spam. Unsubscribe anytime.</p>
-        </div>      
-    </div>    
-  </div>
-    
-    
+        </div>
+      </div>
 
- </div>
-    
-    </div><!-- /grid-2 -->
-  </div> 
+    </div>
+  </div>
 </section>
 
 <footer>
   <div class="footer-inner">
     <div class="footer-grid">
-      <div><div class="footer-logo">CyberSense<span>.Solutions</span></div>
-        <p class="footer-mission">Delivering actionable cybersecurity intelligence, daily awareness briefings, and professional training to teams that can't afford to be caught off guard.</p>
-        <div class="footer-socials">
-          <a href="#" class="footer-social-icon">in</a>
-          <a href="#" class="footer-social-icon">f</a>
-          <a href="#" class="footer-social-icon">▶</a>
-          <a href="#" class="footer-social-icon">𝕏</a>
-          <a href="#" class="footer-social-icon">tt</a>
-        </div>
-      </div>
-      <div class="footer-col"><h4>Platform</h4>
-        <ul>
-          <li><a href="index.html">Home</a></li>
-          <li><a href="about.html">About</a></li>
-          <li><a href="radar.html">Threat Radar</a></li>
-          <li><a href="intelligence.html">Intel Briefs</a></li>
-          <li><a href="newsletter.html">Newsletter</a></li>
-          <li><a href="training.html">Training</a></li>
-          <li><a href="growth.html">Proficient</a></li>
-          <li><a href="innovation.html">Innovation</a></li>
-          <li><a href="zerotrust.html">Zero-Trust</a></li>
-          <li><a href="pricing.html">Pricing</a></li>
-      </div>
-      <div class="footer-col"><h4>Legal</h4>
-        <ul>
-          <li><a href="#">Privacy Policy</a></li>
-          <li><a href="#">Terms of Service</a></li>
-          <li><a href="about.html">Contact Us</a></li>
-        </ul>
-      </div>
+      <div><div class="footer-logo">CyberSense<span>.Solutions</span></div><p class="footer-mission">Delivering actionable cybersecurity intelligence, daily awareness briefings, and professional training to teams that can't afford to be caught off guard.</p><div class="footer-socials"><a href="#" class="footer-social-icon">in</a><a href="#" class="footer-social-icon">f</a><a href="#" class="footer-social-icon">▶</a><a href="#" class="footer-social-icon">𝕏</a><a href="#" class="footer-social-icon">tt</a></div></div>
+      <div class="footer-col"><h4>Platform</h4><ul><li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li><li><a href="radar.html">Threat Radar</a></li><li><a href="intelligence.html">Intel Briefs</a></li><li><a href="newsletter.html">Newsletter</a></li><li><a href="training.html">Training</a></li><li><a href="growth.html">Proficient</a></li><li><a href="innovation.html">Innovation</a></li><li><a href="zerotrust.html">Zero-Trust</a></li><li><a href="pricing.html">Pricing</a></li></ul></div>
+      <div class="footer-col"><h4>Legal</h4><ul><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li><li><a href="about.html">Contact Us</a></li></ul></div>
     </div>
-    <div class="footer-bottom">
-      <span>&copy; 2026 CyberSense.Solutions. All rights reserved.</span>
-      <span>Security awareness starts here.</span>
-    </div>
+    <div class="footer-bottom"><span>&copy; 2026 CyberSense.Solutions. All rights reserved.</span><span>Security awareness starts here.</span></div>
   </div>
 </footer>
-  
+
 <script>window.CS_API_BASE = 'https://api.cybersense.solutions';</script>
 <script src="auth.js"></script>
 <script src="main.js"></script>
-
 <script>
-async function handleSubscribe() {
-  const email   = document.getElementById('subscribe-email').value.trim();
-  const name    = document.getElementById('subscribe-name').value.trim();
-  const btn     = document.getElementById('sub-btn');
-  const success = document.getElementById('sub-success');
-  const error   = document.getElementById('sub-error');
+// Edition date → HTML file path mapping
+// Pattern: newsletter/2026/Apr/MMDDYYYY_editionNNN.html
+const EDITION_MAP = {
+  '2026-04-17': { file: 'newsletter/2026/Apr/04172026_edition105.html', edition: 105 },
+  '2026-04-16': { file: 'newsletter/2026/Apr/04162026_edition104.html', edition: 104 },
+  '2026-04-15': { file: 'newsletter/2026/Apr/04152026_edition103.html', edition: 103 },
+  '2026-04-14': { file: 'newsletter/2026/Apr/04142026_edition102.html', edition: 102 },
+  '2026-04-13': { file: 'newsletter/2026/Apr/04132026_edition101.html', edition: 101 },
+  '2026-04-10': { file: 'newsletter/2026/Apr/04102026_edition100.html', edition: 100 },
+  '2026-04-09': { file: 'newsletter/2026/Apr/04092026_edition99.html',  edition: 99  },
+  '2026-04-08': { file: 'newsletter/2026/Apr/04082026_edition98.html',  edition: 98  },
+  '2026-04-07': { file: 'newsletter/2026/Apr/04072026_edition97.html',  edition: 97  },
+  '2026-04-06': { file: 'newsletter/2026/Apr/04062026_edition96.html',  edition: 96  },
+};
 
-  error.style.display = 'none';
-  success.style.display = 'none';
+function formatEditionDate(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
 
-  if (!email || !email.includes('@')) {
-    error.textContent = 'Please enter a valid email address.';
-    error.style.display = 'block';
+function getEditionFile(dateStr) {
+  return EDITION_MAP[dateStr] || null;
+}
+
+function renderLatestEdition(briefing) {
+  const loading = document.getElementById('edition-loading');
+  const preview = document.getElementById('edition-preview');
+  const edInfo  = getEditionFile(briefing.edition_date);
+
+  const dateFormatted = formatEditionDate(briefing.edition_date);
+  const editionNum    = edInfo ? `Edition ${edInfo.edition}` : '';
+  const fileLink      = edInfo ? edInfo.file : null;
+
+  preview.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid #f1f5f9;">
+      <div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--cs-gray-400);margin-bottom:4px;">${editionNum ? editionNum + ' · ' : ''}Latest Edition</div>
+        <div style="font-size:20px;font-weight:700;color:var(--cs-navy);">${dateFormatted}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <span class="badge badge-critical">3 Threats</span>
+        <span class="badge badge-medium">2 Innovations</span>
+        <span class="badge badge-published">7 Items</span>
+      </div>
+    </div>
+
+    <div class="briefing-section">
+      <div class="briefing-type">📋 Today's Subject</div>
+      <h3 style="font-size:18px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;">${briefing.subject_line}</h3>
+      <p style="font-size:14px;color:var(--cs-gray-600);line-height:1.6;">Seven items curated and written for practitioners who need situational awareness without the noise. Threats, policy, innovation, career development, and a training byte — every weekday morning.</p>
+    </div>
+
+    ${fileLink ? `
+    <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap;">
+      <a href="${fileLink}" class="btn btn-primary" target="_blank">Read Full Edition →</a>
+      <a href="https://www.linkedin.com/build-relation/newsletter-follow?entityUrn=7388246712924069888" class="btn btn-outline" target="_blank">Subscribe on LinkedIn</a>
+    </div>` : `
+    <div style="margin-top:24px;">
+      <a href="https://www.linkedin.com/build-relation/newsletter-follow?entityUrn=7388246712924069888" class="btn btn-primary" target="_blank">Subscribe on LinkedIn</a>
+    </div>`}
+  `;
+}
+
+function renderSidebar(briefings, userTier) {
+  const sidebar     = document.getElementById('editions-sidebar');
+  const archiveGate = document.getElementById('archive-gate');
+  const blurred     = document.getElementById('blurred-editions');
+  const isFreemium  = userTier && userTier !== 'free';
+
+  if (!briefings || briefings.length === 0) {
+    sidebar.innerHTML = '<div style="color:var(--cs-gray-400);font-size:13px;padding:12px 0;">No editions yet.</div>';
     return;
   }
 
-  btn.disabled = true;
-  btn.textContent = 'Subscribing…';
+  // Show top 5 visible, rest blurred for guests
+  const visible  = briefings.slice(0, 5);
+  const archived = briefings.slice(5);
 
-  try {
-    const res = await fetch('https://api.cybersense.solutions/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email,
-        full_name: name || email.split('@')[0],
-        password: crypto.randomUUID()
-      })
-    });
+  sidebar.innerHTML = visible.map((b, i) => {
+    const edInfo = getEditionFile(b.edition_date);
+    const dateStr = formatEditionDate(b.edition_date);
+    const edNum   = edInfo ? `Edition ${edInfo.edition}` : '';
+    const link    = edInfo ? edInfo.file : null;
 
-    if (res.ok) {
-      success.textContent = '✓ You\'re in. Check your inbox for a confirmation email.';
-      success.style.display = 'block';
-      document.getElementById('subscribe-email').value = '';
-      document.getElementById('subscribe-name').value = '';
-    } else if (res.status === 409) {
-      success.textContent = '✓ You\'re already subscribed. Check your inbox.';
-      success.style.display = 'block';
-    } else {
-      throw new Error();
-    }
-  } catch(e) {
-    error.textContent = 'Something went wrong. Try again in a moment.';
-    error.style.display = 'block';
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Subscribe Free';
+    return `
+      <div class="edition-row${i === 0 ? ' active' : ''}">
+        <div>
+          <div class="edition-date">${dateStr}</div>
+          <div class="edition-meta">${edNum ? edNum + ' · ' : ''}7 items</div>
+        </div>
+        ${link ? `<a href="${link}" style="font-size:12px;color:var(--cs-cyan);text-decoration:none;" target="_blank">${i === 0 ? 'Current' : 'Read →'}</a>` : ''}
+      </div>`;
+  }).join('');
+
+  if (archived.length > 0 && !isFreemium) {
+    archiveGate.style.display = 'block';
+    blurred.innerHTML = archived.slice(0, 3).map(b => {
+      const dateStr = formatEditionDate(b.edition_date);
+      const edInfo  = getEditionFile(b.edition_date);
+      const edNum   = edInfo ? `Edition ${edInfo.edition}` : '';
+      return `<div class="edition-row"><div><div class="edition-date">${dateStr}</div><div class="edition-meta">${edNum ? edNum + ' · ' : ''}7 items</div></div></div>`;
+    }).join('');
+  } else if (isFreemium && archived.length > 0) {
+    // Show full archive for subscribers
+    sidebar.innerHTML += archived.map(b => {
+      const edInfo = getEditionFile(b.edition_date);
+      const dateStr = formatEditionDate(b.edition_date);
+      const edNum   = edInfo ? `Edition ${edInfo.edition}` : '';
+      const link    = edInfo ? edInfo.file : null;
+      return `
+        <div class="edition-row">
+          <div>
+            <div class="edition-date">${dateStr}</div>
+            <div class="edition-meta">${edNum ? edNum + ' · ' : ''}7 items</div>
+          </div>
+          ${link ? `<a href="${link}" style="font-size:12px;color:var(--cs-cyan);text-decoration:none;" target="_blank">Read →</a>` : ''}
+        </div>`;
+    }).join('');
   }
 }
-</script>  
-  
+
+async function loadNewsletter(user) {
+  const userTier = user?.tier || 'free';
+
+  // Show guest banner for non-logged-in users
+  if (!user) {
+    document.getElementById('guest-banner').style.display = 'flex';
+  }
+
+  try {
+    // Fetch latest briefing
+    const latest = await fetch(`${window.CS_API_BASE}/api/content/briefings`);
+    const latestData = await latest.json();
+    const briefings = latestData.data || [];
+
+    if (briefings.length === 0) {
+      document.getElementById('edition-loading').textContent = 'No editions published yet.';
+      return;
+    }
+
+    renderLatestEdition(briefings[0]);
+    renderSidebar(briefings, userTier);
+
+  } catch(e) {
+    console.error('Newsletter load error:', e);
+    document.getElementById('edition-loading').textContent = 'Content temporarily unavailable.';
+  }
+}
+
+function handleSubscribe() {
+  const email = document.getElementById('subscribe-email').value.trim();
+  if (!email) return;
+  CS.Auth.showLoginModal({ tab: 'register', message: 'Create a free account to receive the daily briefing.' });
+}
+
+// Wire to auth events
+document.addEventListener('cs:login', (e) => loadNewsletter(e.detail));
+document.addEventListener('cs:guest', ()  => loadNewsletter(null));
+</script>
 </body>
 </html>
