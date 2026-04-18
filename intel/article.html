@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="page-title">Intel Brief — CyberSense.Solutions</title>
+<meta name="description" content="CyberSense.Solutions — analyst-written cybersecurity intelligence.">
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="../auth.css">
+<link rel="icon" type="image/png" href="/assets/csicon.png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<style>
+  .article-body { max-width: 720px; margin: 0 auto; }
+  .article-body h2 { font-size: 22px; font-weight: 700; color: var(--cs-navy); margin: 32px 0 12px; }
+  .article-body h3 { font-size: 18px; font-weight: 700; color: var(--cs-navy); margin: 24px 0 10px; }
+  .article-body p  { font-size: 16px; color: #334155; line-height: 1.8; margin-bottom: 18px; }
+  .article-body ul, .article-body ol { margin: 0 0 18px 24px; }
+  .article-body li { font-size: 16px; color: #334155; line-height: 1.7; margin-bottom: 6px; }
+  .article-body code { font-family: var(--font-mono); font-size: 13px; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: var(--cs-blue-mid); }
+  .article-body pre { background: #0f2347; border-radius: var(--radius); padding: 20px; margin-bottom: 18px; overflow-x: auto; }
+  .article-body pre code { background: none; color: #00d4ff; font-size: 13px; }
+  .article-body blockquote { border-left: 3px solid var(--cs-cyan); padding: 12px 20px; margin: 0 0 18px; background: #f8fafc; border-radius: 0 var(--radius) var(--radius) 0; }
+  .article-body blockquote p { margin: 0; color: #475569; }
+  .article-meta { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #e2e8f0; }
+  .article-section-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--cs-cyan); }
+  .read-time { font-size: 13px; color: var(--cs-gray-400); }
+  .article-date { font-size: 13px; color: var(--cs-gray-400); }
+  .blurred-content { filter: blur(5px); pointer-events: none; user-select: none; }
+</style>
+</head>
+<body>
+
+<nav class="nav" role="navigation">
+  <a href="../index.html" class="nav-wordmark">CyberSense<span>.Solutions</span></a>
+  <ul class="nav-links">
+    <li><a href="../index.html">Home</a></li>
+    <li><a href="../about.html">About</a></li>
+    <li><a href="../radar.html">Radar</a></li>
+    <li><a href="../intelligence.html" class="active">Intel</a></li>
+    <li><a href="../newsletter.html">Newsletter</a></li>
+    <li><a href="../training.html">Training</a></li>
+    <li><a href="../growth.html">Proficient</a></li>
+    <li><a href="../innovation.html">Innovation</a></li>
+    <li><a href="../zerotrust.html">Zero-Trust</a></li>
+    <li><a href="../pricing.html">Pricing</a></li>
+  </ul>
+  <button class="nav-login" onclick="CS.Auth.showLoginModal()">Login</button>
+  <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+</nav>
+<div class="nav-drawer" id="nav-drawer">
+  <ul>
+    <li><a href="../index.html">Home</a></li>
+    <li><a href="../about.html">About</a></li>
+    <li><a href="../radar.html">Radar</a></li>
+    <li><a href="../intelligence.html">Intel</a></li>
+    <li><a href="../newsletter.html">Newsletter</a></li>
+    <li><a href="../training.html">Training</a></li>
+    <li><a href="../growth.html">Proficient</a></li>
+    <li><a href="../innovation.html">Innovation</a></li>
+    <li><a href="../zerotrust.html">Zero-Trust</a></li>
+    <li><a href="../pricing.html">Pricing</a></li>
+  </ul>
+  <a href="#" class="drawer-login" onclick="CS.Auth.showLoginModal();return false;">Login</a>
+</div>
+
+<!-- Article Hero -->
+<section class="hero-dark section" style="padding:48px 24px 40px;">
+  <div class="container">
+    <a href="../intelligence.html" style="font-size:13px;color:rgba(255,255,255,0.4);text-decoration:none;display:inline-flex;align-items:center;gap:6px;margin-bottom:20px;">
+      ← Back to Intel Briefs
+    </a>
+    <div id="article-hero-content">
+      <div style="color:rgba(255,255,255,0.4);font-size:14px;">Loading...</div>
+    </div>
+  </div>
+</section>
+
+<!-- Article Body -->
+<section class="section" style="background:var(--cs-gray-100);padding:56px 24px;">
+  <div class="container">
+    <div class="article-body" id="article-body">
+      <div style="text-align:center;padding:60px;color:var(--cs-gray-400);" id="article-loading">
+        Loading article...
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div><div class="footer-logo">CyberSense<span>.Solutions</span></div><p class="footer-mission">Delivering actionable cybersecurity intelligence, daily awareness briefings, and professional training to teams that can't afford to be caught off guard.</p><div class="footer-socials"><a href="#" class="footer-social-icon">in</a><a href="#" class="footer-social-icon">f</a><a href="#" class="footer-social-icon">▶</a><a href="#" class="footer-social-icon">𝕏</a><a href="#" class="footer-social-icon">tt</a></div></div>
+      <div class="footer-col"><h4>Platform</h4><ul><li><a href="../index.html">Home</a></li><li><a href="../radar.html">Threat Radar</a></li><li><a href="../intelligence.html">Intel Briefs</a></li><li><a href="../newsletter.html">Newsletter</a></li><li><a href="../training.html">Training</a></li><li><a href="../pricing.html">Pricing</a></li></ul></div>
+      <div class="footer-col"><h4>Legal</h4><ul><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li><li><a href="../about.html">Contact Us</a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><span>&copy; 2026 CyberSense.Solutions. All rights reserved.</span><span>Security awareness starts here.</span></div>
+  </div>
+</footer>
+
+<script>window.CS_API_BASE = 'https://api.cybersense.solutions';</script>
+<script src="../auth.js"></script>
+<script src="../main.js"></script>
+<script>
+// Simple markdown to HTML converter
+function mdToHtml(md) {
+  if (!md) return '';
+  return md
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^#### (.+)$/gm, '<h4>$1</h4>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, '<code>$1</code>')
+    .replace(/^> (.+)$/gm, '<blockquote><p>$1</p></blockquote>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>')
+    .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/^(?!<[hul]|<block)(.+)$/gm, '<p>$1</p>')
+    .replace(/<p><\/p>/g, '')
+    .replace(/<p>(<[hul])/g, '$1')
+    .replace(/(<\/[hul][^>]*>)<\/p>/g, '$1');
+}
+
+function sectionLabel(section) {
+  const map = { threat: 'Threat Intelligence', policy: 'Policy Update', innovation: 'Innovation', growth: 'Professional Growth', training: 'Training' };
+  return map[section] || section;
+}
+
+function badgeClass(section) {
+  const map = { threat: 'badge-critical', policy: 'badge-medium', innovation: 'badge-medium', growth: 'badge-published', training: 'badge-beginner' };
+  return map[section] || 'badge-medium';
+}
+
+function formatDate(ts) {
+  return new Date(ts).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+}
+
+async function loadArticle(user) {
+  const params = new URLSearchParams(window.location.search);
+  const slug   = params.get('slug');
+
+  if (!slug) {
+    document.getElementById('article-hero-content').innerHTML = '<div style="color:rgba(255,255,255,0.5);">No article specified.</div>';
+    document.getElementById('article-body').innerHTML = '<div style="text-align:center;padding:60px;color:var(--cs-gray-400);">Invalid article link.</div>';
+    return;
+  }
+
+  if (!user) {
+    document.getElementById('article-hero-content').innerHTML = `
+      <h1 style="font-size:clamp(22px,4vw,38px);font-weight:700;color:var(--cs-white);margin-bottom:16px;">Intel Brief</h1>
+      <p style="color:rgba(255,255,255,0.5);margin-bottom:20px;">Sign in to read this intelligence brief.</p>
+      <a href="#" class="btn btn-primary" onclick="CS.Auth.showLoginModal();return false;">Sign In Free</a>`;
+    document.getElementById('article-loading').remove();
+    return;
+  }
+
+  try {
+    const article = await CS.Auth.apiFetch(`/api/content/articles/${slug}`);
+
+    // Update page title
+    document.getElementById('page-title').textContent = `${article.title} — CyberSense.Solutions`;
+
+    // Hero
+    document.getElementById('article-hero-content').innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+        <span class="badge ${badgeClass(article.section)}">${sectionLabel(article.section)}</span>
+        ${article.read_time_min ? `<span style="font-size:13px;color:rgba(255,255,255,0.4);">${article.read_time_min} min read</span>` : ''}
+        ${article.published_at ? `<span style="font-size:13px;color:rgba(255,255,255,0.4);">· ${formatDate(article.published_at)}</span>` : ''}
+      </div>
+      <h1 style="font-size:clamp(22px,4vw,40px);font-weight:700;color:var(--cs-white);line-height:1.2;max-width:760px;">${article.title}</h1>`;
+
+    // Body
+    const body = document.getElementById('article-body');
+
+    if (article.blurred) {
+      // Gated content — show teaser + upgrade gate
+      body.innerHTML = `
+        <div class="gate-wrapper" style="border-radius:var(--radius-lg);">
+          <div class="blurred-content" aria-hidden="true">
+            <p>${article.teaser || ''}</p>
+          </div>
+          <div class="gate-overlay">
+            <div class="gate-card">
+              <h3>Standard subscribers get full access</h3>
+              <p>Unlock all Intel Briefs for $9/month. No ads. No noise.</p>
+              <a href="../pricing.html" class="btn btn-primary btn-sm">See Plans</a>
+            </div>
+          </div>
+        </div>`;
+    } else {
+      body.innerHTML = mdToHtml(article.body_md);
+    }
+
+  } catch(e) {
+    if (e.status === 404 || e.code === 'NOT_FOUND') {
+      document.getElementById('article-hero-content').innerHTML = '<h1 style="color:var(--cs-white);">Article not found</h1>';
+      document.getElementById('article-body').innerHTML = '<div style="text-align:center;padding:60px;color:var(--cs-gray-400);">This article may have been moved or is no longer available.</div>';
+    } else {
+      document.getElementById('article-body').innerHTML = '<div style="text-align:center;padding:60px;color:var(--cs-gray-400);">Content temporarily unavailable.</div>';
+    }
+  }
+}
+
+document.addEventListener('cs:login', (e) => loadArticle(e.detail));
+document.addEventListener('cs:guest', () => loadArticle(null));
+</script>
+</body>
+</html>
