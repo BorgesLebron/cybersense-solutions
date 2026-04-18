@@ -6,12 +6,9 @@
 <title>CyberSense.Solutions — Cybersecurity Intelligence, Delivered Daily</title>
 <meta name="description" content="Real-time threat intelligence, professional training, and daily awareness briefings for security teams.">
 <link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="auth.css">  
-<link rel="icon" type="image/png" href="/assets/csicon.png">
-<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">  
 </head>
-  
 <body>
+
 <nav class="nav" role="navigation" aria-label="Main navigation">
   <a href="index.html" class="nav-wordmark">CyberSense<span>.Solutions</span></a>
   <ul class="nav-links">
@@ -24,9 +21,8 @@
     <li><a href="growth.html">Proficient</a></li>
     <li><a href="innovation.html">Innovation</a></li>
     <li><a href="zerotrust.html">Zero-Trust</a></li>
-    <li><a href="pricing.html">Pricing</a></li>
   </ul>
-  <button class="nav-login" onclick="CS.Auth.showLoginModal()">Login</button>
+  <button class="nav-login" onclick="window.location='dashboard.html'">Login</button>
   <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
     <span></span><span></span><span></span>
   </button>
@@ -42,9 +38,8 @@
     <li><a href="growth.html">Proficient</a></li>
     <li><a href="innovation.html">Innovation</a></li>
     <li><a href="zerotrust.html">Zero-Trust</a></li>
-    <li><a href="pricing.html">Pricing</a></li>
   </ul>
-  <a href="#" class="drawer-login" onclick="CS.Auth.showLoginModal();return false;">Login</a>
+  <a href="dashboard.html" class="drawer-login">Login</a>
 </div>
 
 <!-- ═══ HERO ═══ -->
@@ -55,11 +50,10 @@
       Cybersecurity Intelligence.<br>Delivered Daily.
     </h1>
     <p style="font-size:clamp(16px,2.5vw,20px);color:rgba(255,255,255,0.65);max-width:600px;line-height:1.65;margin-bottom:40px;">
-      Real-time threat intelligence, professional training, and daily awareness briefings – built for teams that can't afford to be caught off guard.
+      Real-time threat intelligence, professional training, and daily awareness briefings — built for teams that can't afford to be caught off guard.
     </p>
     <div class="flex gap-16 wrap hero-ctas">
       <a href="newsletter.html" class="btn btn-primary btn-lg">Start Free</a>
-      <a href="pricing.html" class="btn btn-primary btn-lg"> Upgrade</a>
       <a href="radar.html" class="btn btn-outline-white btn-lg">See the Radar</a>
     </div>
     <div style="display:flex;gap:32px;margin-top:48px;flex-wrap:wrap;">
@@ -69,7 +63,7 @@
       </div>
       <div style="display:flex;align-items:center;gap:10px;">
         <span style="width:10px;height:10px;border-radius:50%;background:var(--cs-cyan);display:inline-block;"></span>
-        <span style="font-size:13px;color:rgba(255,255,255,0.5);">Daily briefing weekdays by 07:00 CT</span>
+        <span style="font-size:13px;color:rgba(255,255,255,0.5);">Daily briefing by 09:00 CT</span>
       </div>
     </div>
   </div>
@@ -85,70 +79,34 @@
     <h2 class="section-heading" style="margin-bottom:6px;">Active Threats &amp; Vulnerabilities</h2>
     <p class="section-sub" style="margin-bottom:32px;">A rolling feed of tracked CVEs, active exploits, and vendor advisories. Full access for subscribers.</p>
 
-    <div class="gate-wrapper" style="border-radius:var(--radius-lg);overflow:hidden;">
-      <!-- Visible rows -->
-      <div class="table-wrap">
-        <table class="data-table" aria-label="Threat radar preview">
-          <thead>
-            <tr>
-              <th>Severity</th>
-              <th>Threat Name</th>
-              <th>CVSS</th>
-              <th>CVE</th>
-            </tr>
-          </thead>          
-          <tbody>
-          <div class="gate-wrapper"><div class="gate-wrapper"> <!-- Temporary Blurred until Radar is 100% -->
-          <div class="blurred"> 
-            <tr>
-              <td><span class="badge badge-critical">Critical</span></td>
-              <td>Meta React Server Remote Code Execution</td>
-              <td class="mono">10</td>
-              <td class="mono">CVE-2025-55182</td>
-            </tr>
-            <tr>
-              <td><span class="badge badge-high">High</span></td>
-              <td>RomM 4.4.0 - XSS_CSRF Chain</td>
-              <td class="mono">7.6</td>
-              <td class="mono">CVE-2025-65027</td>
-            </tr>
-            <tr style="position:relative;">
-              <td><span class="badge badge-critical">Critical</span></td>
-              <td>FortiWeb 8.0.2 - Remote Code Execution</td>
-              <td class="mono">9.4</td>
-              <td class="mono">CVE-2025-64446</td>
-            </tr>
-          </div>   <!-- Blurred bottom -->
-          </div>   <!-- Blurred bottom -->  
-          </tbody>
-        </table>
-        <!-- Blurred bottom region -->
-        <div class="gate-wrapper">
-          <div class="blurred">
-            <table class="data-table" aria-hidden="true">
-              <tbody>
-                <tr>
-                  <td><span class="badge badge-high">High</span></td>
-                  <td>Microsoft SharePoint Server Elevation of Privilege</td>
-                  <td class="mono">8.8</td>
-                  <td class="mono">CVE-2024-38094</td>
-                </tr>
-                <tr>
-                  <td><span class="badge badge-medium">Medium</span></td>
-                  <td>Cisco IOS XE Web UI Privilege Escalation</td>
-                  <td class="mono">6.5</td>
-                  <td class="mono">CVE-2024-20399</td>
-                </tr>
-              </tbody>              
-            </table>                
-          <div class="gate-overlay">
-            <div class="gate-card">
-              <h3>Subscribe to see the live feed</h3>
-              <p>Full radar access includes 12+ active threats, CVSS scores, status tracking, and linked intelligence articles.</p>
-              <a href="newsletter.html" class="btn btn-primary">Get Access</a>
-            </div>
+    <div class="table-wrap">
+      <table class="data-table" aria-label="Threat radar preview">
+        <thead>
+          <tr>
+            <th>Severity</th>
+            <th>Threat Name</th>
+            <th>CVSS</th>
+            <th>CVE</th>
+          </tr>
+        </thead>
+        <tbody id="radar-preview-body">
+          <tr>
+            <td colspan="4" style="text-align:center;padding:32px;color:var(--cs-gray-400);">Loading threats...</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="gate-wrapper" id="radar-preview-gate" style="display:none;">
+        <div class="blurred" aria-hidden="true">
+          <table class="data-table">
+            <tbody id="radar-preview-blurred"></tbody>
+          </table>
+        </div>
+        <div class="gate-overlay">
+          <div class="gate-card">
+            <h3>Subscribe to see the live feed</h3>
+            <p>Full radar access includes all tracked threats, CVSS scores, and linked intelligence articles.</p>
+            <a href="pricing.html" class="btn btn-primary">Get Access</a>
           </div>
-         </div>   <!-- Blurred bottom -->   
         </div>
       </div>
     </div>
@@ -161,95 +119,39 @@
   <div class="container">
     <p class="section-label">Today's Briefing</p>
     <h2 class="section-heading" style="margin-bottom:6px;">Daily Digital Awareness Briefing</h2>
-    <p class="section-sub" style="margin-bottom:36px;">Your daily dose of threat awareness, delivered weekdays by 7:00 am.</p>
-    
- <div class="blurred">  
-    <div class="card" style="max-width:780px;">
+    <p class="section-sub" style="margin-bottom:36px;">Your daily dose of threat awareness, delivered before 07:00 CT every morning.</p>
+
+    <div class="card" style="max-width:780px;" id="briefing-preview-card">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #f1f5f9;">
         <div>
-          <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--cs-gray-400);margin-bottom:4px;">Edition</div>
-          <div style="font-size:18px;font-weight:700;color:var(--cs-navy);">Friday, April 10, 2026</div>
+          <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--cs-gray-400);margin-bottom:4px;" id="briefing-edition-label">Latest Edition</div>
+          <div style="font-size:18px;font-weight:700;color:var(--cs-navy);" id="briefing-date">Loading...</div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <span class="badge badge-critical" style="gap:5px;"><span class="badge-dot"></span>3 Threats</span>
+          <span class="badge badge-critical">3 Threats</span>
           <span class="badge badge-medium">2 Innovations</span>
-          <span class="badge badge-published">1 Training Byte</span>
+          <span class="badge badge-published">7 Items</span>
         </div>
       </div>
 
-      <div class="newsletter-preview-wrap">
-        <div class="newsletter-preview-body" id="newsletter-preview-body">
-          <div class="briefing-section">
-            <div class="briefing-type">Situational Awareness</div>
-            <h3>CISA Adds Three Actively Exploited Vulnerabilities to KEV Catalog</h3>
-            <p>CISA has added three newly confirmed actively exploited vulnerabilities to the Known Exploited Vulnerabilities catalog, spanning products from a major network device vendor, a widely deployed enterprise application framework, and a cloud management interface. Federal agencies face binding remediation deadlines, but the practical implication extends beyond compliance: KEV additions represent confirmed exploitation in the wild, not theoretical risk. Organizations that use KEV additions as a patch prioritization signal — applying them before the broader patch cycle — consistently reduce exposure windows during the periods when threat actors are most active.</p>
-          </div>
-          <div class="briefing-section">
-            <div class="briefing-type">Situational Awareness</div>
-            <h3>Scattered Spider Resurfaces with Refined Social Engineering Playbook</h3>
-            <p>The threat group tracked as Scattered Spider — responsible for high-profile intrusions at MGM Resorts, Caesars Entertainment, and several cloud service providers — has been observed resuming operations with an updated approach to initial access. Recent activity indicates a shift toward more targeted impersonation of IT vendors and managed service providers, exploiting the trust relationships between organizations and their technology partners rather than targeting employees directly. Help desk and IT operations staff remain the primary target — not because they are unsophisticated, but because their role requires them to be responsive and to resolve access issues quickly. That responsiveness, without verification protocols, is the attack surface.</p>
-          </div>
-          <div class="briefing-section">
-            <div class="briefing-type">Situational Awareness</div>
-            <h3>Supply Chain Risk in Open Source AI Libraries Accelerates</h3>
-            <p>Security researchers have documented an increasing rate of malicious package publications targeting the Python and npm ecosystems, with particular concentration in libraries associated with machine learning frameworks, AI model integrations, and data pipeline tooling. The pattern follows a consistent model: packages are named to exploit typosquatting or dependency confusion, published with minimal version history, and designed to exfiltrate environment variables, API keys, and cloud credentials during installation. For development teams integrating open source AI tooling, the risk is not hypothetical — it is embedded in the dependency resolution process itself. Package provenance verification and supply chain monitoring are no longer optional security controls for organizations operating in AI-adjacent development environments.</p>
-          </div>
-          <div class="briefing-section">
-            <div class="briefing-type">💡 Modernization and AI Insight</div>
-            <h3>NIST Releases Updated AI Risk Management Framework Guidance</h3>
-            <p>NIST has released supplementary guidance to the AI Risk Management Framework addressing deployment in high-stakes environments, including critical infrastructure, healthcare, and financial services. The guidance formalizes expectations around transparency, accountability, and adversarial robustness that were treated as optional in earlier versions, reflecting a broader regulatory shift: AI systems in consequential environments are increasingly being evaluated not only on capability but on the verifiability of their safety properties. For security teams evaluating AI tooling or advising on AI deployment governance, the updated framework provides a standards-aligned foundation for risk assessment already referenced in emerging federal procurement requirements.</p>
-          </div>
-          <div class="briefing-section">
-            <div class="briefing-type">💡 Modernization and AI Insight</div>
-            <h3>Agentic AI Systems and the Emerging Attack Surface</h3>
-            <p>Security researchers at multiple institutions have begun publishing analyses of the attack surface introduced by agentic AI systems — models granted the ability to take actions, execute code, browse the web, and interact with external services autonomously. The risk is structural rather than incidental: when a language model can take actions on behalf of a user, the threat model expands to include prompt injection through external content, credential exposure through tool use, and unintended data exfiltration through agentic workflows. Organizations deploying or evaluating AI agents should treat the agent's permission scope and external interaction surface as a primary security review area, not an operational afterthought. The security discipline required is new, but the underlying principle is not — least privilege applies.</p>
-          </div>
-          <div class="briefing-section">
-            <div class="briefing-type">📈 Professional Growth</div>
-            <h3>CompTIA Releases Updated CySA+ CS0-003 Exam Objectives with AI/ML Focus</h3>
-            <p>The updated Cybersecurity Analyst certification exam now includes 18% coverage of AI-assisted threat detection and response workflows, reflecting the industry shift toward augmented SOC operations. Candidates holding CS0-002 have until March 2025 to complete the transition or face credential recertification under new requirements.</p>
-          </div>
-          <div class="briefing-section">
-            <div class="briefing-type">🎓 Training Byte</div>
-            <h3>How to Detect Credential Stuffing in Authentication Logs</h3>
-            <p>Credential stuffing attacks are characterized by high-volume authentication attempts from rotating IP addresses, geographically distributed login attempts against a single account within short timeframes, and success rates below 0.5%. In your SIEM, build a rule that fires when a single username receives more than 10 failed authentication attempts from more than 5 unique IPs within any 15-minute window. Tag these events for immediate SOC triage — they indicate active credential list testing, not forgotten passwords.</p>
-          </div>
-          <div style="margin-top:24px;padding-top:16px;border-top:1px solid #f1f5f9;">
-            <a href="newsletter.html" style="font-size:14px;font-weight:600;color:var(--cs-cyan);">Read the full briefing →</a>
-          </div>
+      <div id="briefing-preview-body">
+        <div class="briefing-section">
+          <div class="briefing-type">📋 Today's Subject</div>
+          <h3 id="briefing-subject" style="font-size:17px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;">Loading latest edition...</h3>
+          <p style="font-size:14px;color:var(--cs-gray-600);line-height:1.6;">Seven items curated and written for practitioners who need situational awareness without the noise. Threats, policy, innovation, career development, and a training byte — every weekday morning by 07:00 CT.</p>
         </div>
-        <div class="newsletter-fade" id="newsletter-fade"></div>
-      </div>
+        <div style="margin-top:24px;padding-top:16px;border-top:1px solid #f1f5f9;">
+          <a href="newsletter.html" id="briefing-read-link" style="font-size:14px;font-weight:600;color:var(--cs-cyan);">Read the full briefing →</a>
+        </div>
       </div>
 
       <div style="margin-top:16px;text-align:center;">
-        <button id="newsletter-toggle" class="btn btn-outline btn-sm">Show more ↓</button>
+        <a href="newsletter.html" class="btn btn-outline btn-sm">View all editions →</a>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ═══ SOCIAL PROOF ═══ -->
-<!--
-<section class="section-sm" style="background:var(--cs-gray-100);">
-  <div class="container">
-    <div class="grid-3">
-      <div class="card stat-card">
-        <div class="stat-value">4,800+</div>
-        <div class="stat-label">Subscribers &amp; Growing</div>
-      </div>
-      <div class="card stat-card">
-        <div class="stat-value">365</div>
-        <div class="stat-label">Daily Intelligence Briefings Per Year</div>
-      </div>
-      <div class="card stat-card" style="border-left:3px solid var(--cs-cyan);">
-        <div class="stat-value" style="font-size:clamp(18px,3vw,26px);letter-spacing:-0.5px;">100% Original</div>
-        <div class="stat-label">Zero outside links — all our own analysis</div>
-      </div>
-    </div>
-  </div>
-</section>
--->
 <!-- ═══ FEATURE STRIP ═══ -->
 <section class="section" style="background:var(--cs-white);">
   <div class="container">
@@ -259,22 +161,22 @@
       <div class="card" style="border-top:3px solid var(--cs-red);">
         <div style="font-size:28px;margin-bottom:12px;">🛡</div>
         <h3 style="font-size:17px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;">Threat Intelligence</h3>
-        <p style="font-size:14px;color:var(--cs-gray-600);line-height:1.6;">Active CVEs, zero-days, and exploits – tracked, scored, and contextualized for your team before they become incidents.</p>
+        <p style="font-size:14px;color:var(--cs-gray-600);line-height:1.6;">Active CVEs, zero-days, and exploits — tracked, scored, and contextualized for your team before they become incidents.</p>
       </div>
       <div class="card" style="border-top:3px solid var(--cs-cyan);">
         <div style="font-size:28px;margin-bottom:12px;">📡</div>
         <h3 style="font-size:17px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;">Daily Briefings</h3>
-        <p style="font-size:14px;color:var(--cs-gray-600);line-height:1.6;">Seven-item structured awareness briefings delivered weekdays by 7:00 am CT – Situational Awareness, Modernization and AI Insight, Training Byte, and a Career Development every weekday.</p>
+        <p style="font-size:14px;color:var(--cs-gray-600);line-height:1.6;">Seven-item structured awareness briefings delivered before 09:00 CT — threats, innovations, and a training byte, every day.</p>
       </div>
       <div class="card" style="border-top:3px solid var(--cs-green);">
         <div style="font-size:28px;margin-bottom:12px;">🎓</div>
         <h3 style="font-size:17px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;">Professional Training</h3>
-        <p style="font-size:14px;color:var(--cs-gray-600);line-height:1.6;">Labs, video courses, simulation scenarios, and certification guides – built on current threat intelligence, not textbook theory.</p>
+        <p style="font-size:14px;color:var(--cs-gray-600);line-height:1.6;">Labs, video courses, simulation scenarios, and certification guides — built on current threat intelligence, not textbook theory.</p>
       </div>
       <div class="card" style="border-top:3px solid var(--cs-amber);">
         <div style="font-size:28px;margin-bottom:12px;">🔬</div>
         <h3 style="font-size:17px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;">Innovation Tracking</h3>
-        <p style="font-size:14px;color:var(--cs-gray-600);line-height:1.6;">From post-quantum cryptography to AI-driven SOC tooling – we track what's emerging before it's a requirement.</p>
+        <p style="font-size:14px;color:var(--cs-gray-600);line-height:1.6;">From post-quantum cryptography to AI-driven SOC tooling — we track what's emerging before it's a requirement.</p>
       </div>
       <div class="card" style="border-top:3px solid var(--cs-blue-mid);">
         <div style="font-size:28px;margin-bottom:12px;">📈</div>
@@ -330,7 +232,6 @@
           <li><a href="growth.html">Proficient</a></li>
           <li><a href="innovation.html">Innovation</a></li>
           <li><a href="zerotrust.html">Zero-Trust</a></li>
-          <li><a href="pricing.html">Pricing</a></li>
         </ul>
       </div>
       <div class="footer-col">
@@ -350,8 +251,100 @@
     </div>
   </div>
 </footer>
+
 <script>window.CS_API_BASE = 'https://api.cybersense.solutions';</script>
 <script src="auth.js"></script>
 <script src="main.js"></script>
+<script>
+const EDITION_MAP = {
+  '2026-04-17': { file: 'newsletter/2026/Apr/04172026_edition105.html', edition: 105 },
+  '2026-04-16': { file: 'newsletter/2026/Apr/04162026_edition104.html', edition: 104 },
+  '2026-04-15': { file: 'newsletter/2026/Apr/04152026_edition103.html', edition: 103 },
+  '2026-04-14': { file: 'newsletter/2026/Apr/04142026_edition102.html', edition: 102 },
+  '2026-04-13': { file: 'newsletter/2026/Apr/04132026_edition101.html', edition: 101 },
+  '2026-04-10': { file: 'newsletter/2026/Apr/04102026_edition100.html', edition: 100 },
+  '2026-04-09': { file: 'newsletter/2026/Apr/04092026_edition99.html',  edition: 99  },
+};
+
+function severityBadge(s) {
+  const map = { critical: 'badge-critical', high: 'badge-high', medium: 'badge-medium', low: 'badge-low' };
+  return `<span class="badge ${map[s] || 'badge-low'}">${s.charAt(0).toUpperCase() + s.slice(1)}</span>`;
+}
+
+function radarRow(t) {
+  return `<tr>
+    <td>${severityBadge(t.severity)}</td>
+    <td style="font-weight:500;color:var(--cs-navy);">${t.threat_name}</td>
+    <td class="mono">${parseFloat(t.cvss_score).toFixed(1)}</td>
+    <td class="mono">${t.cve_id}</td>
+  </tr>`;
+}
+
+async function loadHomeData(user) {
+  // ── Radar Preview ──────────────────────────────────────────────
+  if (user) {
+    try {
+      const radarData = await CS.Auth.apiFetch('/api/content/radar?limit=10');
+      const threats = radarData.data || [];
+      const visible = threats.slice(0, 3);
+      const hidden  = threats.slice(3);
+
+      document.getElementById('radar-preview-body').innerHTML =
+        visible.length ? visible.map(radarRow).join('') :
+        '<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--cs-gray-400);">No threats tracked yet.</td></tr>';
+
+      if (hidden.length > 0) {
+        document.getElementById('radar-preview-gate').style.display = 'block';
+        document.getElementById('radar-preview-blurred').innerHTML = hidden.slice(0, 2).map(radarRow).join('');
+      }
+    } catch(e) {
+      document.getElementById('radar-preview-body').innerHTML =
+        '<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--cs-gray-400);">Radar temporarily unavailable.</td></tr>';
+    }
+  } else {
+    document.getElementById('radar-preview-body').innerHTML = `
+      <tr><td colspan="4" style="text-align:center;padding:32px;">
+        <a href="#" class="btn btn-primary btn-sm" onclick="CS.Auth.showLoginModal();return false;">Sign In to View Live Radar</a>
+      </td></tr>`;
+  }
+
+  // ── Briefing Preview ───────────────────────────────────────────
+  if (user) {
+    try {
+      const briefingData = await CS.Auth.apiFetch('/api/content/briefings?limit=1');
+      const briefings = briefingData.data || [];
+      if (briefings.length > 0) {
+        const b = briefings[0];
+        const dateOnly = b.edition_date.split('T')[0];
+        const edInfo   = EDITION_MAP[dateOnly];
+        const dateStr  = new Date(b.edition_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+        const edNum    = edInfo ? `Edition ${edInfo.edition}` : 'Latest Edition';
+
+        document.getElementById('briefing-edition-label').textContent = edNum;
+        document.getElementById('briefing-date').textContent = dateStr;
+        document.getElementById('briefing-subject').textContent = b.subject_line;
+
+        if (edInfo) {
+          document.getElementById('briefing-read-link').href = edInfo.file;
+        }
+      }
+    } catch(e) { /* keep defaults */ }
+  } else {
+    const latest = Object.entries(EDITION_MAP).sort((a, b) => b[0].localeCompare(a[0]))[0];
+    if (latest) {
+      const dateStr = new Date(latest[0] + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      document.getElementById('briefing-edition-label').textContent = `Edition ${latest[1].edition}`;
+      document.getElementById('briefing-date').textContent = dateStr;
+      document.getElementById('briefing-subject').textContent = 'Sign in to read today\'s full briefing.';
+      const link = document.getElementById('briefing-read-link');
+      link.href = '#';
+      link.setAttribute('onclick', 'CS.Auth.showLoginModal();return false;');
+    }
+  }
+}
+
+document.addEventListener('cs:login', (e) => loadHomeData(e.detail));
+document.addEventListener('cs:guest', () => loadHomeData(null));
+</script>
 </body>
 </html>
