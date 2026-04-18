@@ -182,7 +182,7 @@ function articleCard(article, isLocked) {
     <div class="article-card">
       <span class="badge ${getSeverityBadge(article.section)}">${getSectionLabel(article.section)}</span>
       <div class="card-headline">${article.title}</div>
-      <a href="intel/${article.slug}.html" class="card-link">Read more →</a>
+      <a href="intel/article.html?slug=${article.slug}" class="card-link">Read more →</a>
     </div>`;
 }
 
