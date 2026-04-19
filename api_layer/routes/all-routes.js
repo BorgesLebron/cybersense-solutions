@@ -483,11 +483,33 @@ socialRouter.post('/posts', requireAgentToken(SOCIAL_AGENTS), async (req, res, n
     const { briefing_id, platform, post_body, phase, scheduled_at, published_at } = req.body;
     const validPlatforms = ['linkedin', 'meta', 'x', 'tiktok', 'youtube'];
     const validPhases = ['0700_main', '0900_byte', '1200_note'];
-    if (!briefing_id || !platform || !post_body || !phase) return res.status(400).json(err('MISSING_FIELDS', 'briefing_id, platform, post_body, phase are required'));
-    if (!validPlatforms.includes(platform)) return res.status(400).json(err('INVALID_PLATFORM', `platform must be one of: ${validPlatforms.join(', ')}`));
-    if (!validPhases.includes(phase)) return res.status(400).json(err('INVALID_PHASE', `phase must be one of: ${validPhases.join(', ')}`));
-    const post = await db.createSocialPost({ briefing_id, platform, agent_name: req.agent.name, post_body, phase, scheduled_at, published_at });
-    res.status(201).json(post);
+    if (!briefing_id || !platform || !post_body || !phase)
+      return res.status(400).json(err('MISSING_FIELDS', 'briefing_id, platform, post_body, phase are required'));
+    if (!validPlatforms.includes(platform))
+      return res.status(400).json(err('INVALID_PLATFORM', `platform must be one of: ${validPlatforms.join(', ')}`));
+    if (!validPhases.includes(phase))
+      return res.status(400).json(err('INVALID_PHASE', `phase must be one of: ${validPhases.join(', ')}`));
+
+    const post = await db.createSocialPost({
+      briefing_id, platform, agent_name: req.agent.name,
+      post_body, phase, scheduled_at,
+      published_at: published_at || new Date().toISOString()
+    });
+
+    // Publish to LinkedIn if platform is linkedin
+    let linkedin_urn = null;
+    if (platform === 'linkedin') {
+      try {
+        const { postToLinkedIn } = require('../services/linkedin');
+        const result = await postToLinkedIn({ post_body, briefing_id });
+        linkedin_urn = result.post_urn;
+        console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'LINKEDIN_POSTED', post_id: post.id, urn: linkedin_urn }));
+      } catch (e) {
+        console.error(JSON.stringify({ ts: new Date().toISOString(), event: 'LINKEDIN_POST_FAILED', post_id: post.id, error: e.message }));
+      }
+    }
+
+    res.status(201).json({ ...post, linkedin_urn });
   } catch (e) { next(e); }
 });
 
