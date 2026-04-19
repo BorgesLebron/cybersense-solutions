@@ -28,7 +28,7 @@ async function postToLinkedIn({ post_body, briefing_id }) {
       'Authorization': `Bearer ${ACCESS_TOKEN}`,
       'Content-Type': 'application/json',
       'X-Restli-Protocol-Version': '2.0.0',
-      'LinkedIn-Version': '202504'
+      'LinkedIn-Version': '202601'
     },
     body: JSON.stringify(payload)
   });
