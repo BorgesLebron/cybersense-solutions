@@ -317,14 +317,7 @@ router.post('/release', requireAgentToken(['Laura', 'Henry']), async (req, res, 
     // ── End email distribution ────────────────────────────────────────────
 
     const distribution_tasks = [];
-    if (content_type === 'briefing') {
-      const agents = ['Oliver', 'Lucy', 'Riley'];
-      for (const agent of agents) {
-        const t = await db.createTask({ agent_name: agent, task_type: 'distribute_briefing', content_type: 'briefing', content_id, sla_deadline: null });
-        distribution_tasks.push({ agent, task_id: t.id });
-      }
-      await notifyAgents(agents, { type: 'RELEASE_SIGNAL', content_type, content_id, maya_approved_at: content.maya_approved_at, phase: '0700_main' });
-    } else if (content_type === 'training' && content?.type === 'video') {
+    if (content_type === 'training' && content?.type === 'video') {
       const t = await db.createTask({ agent_name: 'Ethan', task_type: 'publish_video', content_type: 'training', content_id, sla_deadline: null });
       distribution_tasks.push({ agent: 'Ethan', task_id: t.id });
       await notifyAgents(['Ethan'], { type: 'RELEASE_SIGNAL', content_type, content_id, maya_approved_at: content.maya_approved_at });
