@@ -301,8 +301,8 @@ router.post('/release', requireAgentToken(['Laura', 'Henry']), async (req, res, 
         ).then(r => r.rows.map(u => ({ email: u.email, name: u.full_name || 'Reader' })));
 
         if (subscribers.length > 0) {
+          console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'BRIEFING_EMAIL_ATTEMPT', briefing_id: content_id, subject: content.subject_line, edition_date: content.edition_date, subscribers: subscribers.length }));
           await sendBriefingEmail(subscribers, content);
-          console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'BRIEFING_EMAIL_SENT', briefing_id: content_id, recipients: subscribers.length }));
         } else {
           console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'BRIEFING_EMAIL_SKIPPED', briefing_id: content_id, reason: 'no eligible subscribers' }));
         }
