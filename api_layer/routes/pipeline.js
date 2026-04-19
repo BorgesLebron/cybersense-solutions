@@ -131,7 +131,7 @@ router.post('/articles', requireAgentToken([...INTEL_AGENTS]), async (req, res, 
     const article = await db.createArticle({ title, section, body_md, access_tier, source_ids: source_ids || [], created_by: req.agent.name });
 
     await db.logPipelineEvent({ content_type: 'article', content_id: article.id, from_status: null, to_status: 'draft', agent_name: req.agent.name, notes: 'Article created' });
-
+  
     const task = await db.createTask({ agent_name: 'Jason', task_type: 'dev_edit', content_type: 'article', content_id: article.id, sla_deadline: null });
 
     res.status(201).json({ id: article.id, slug: article.slug, pipeline_status: 'draft', queued_task_id: task.id });
@@ -288,7 +288,8 @@ router.post('/release', requireAgentToken(['Laura', 'Henry']), async (req, res, 
     else if (content_type === 'training') await db.advanceModuleStatus(content_id, 'published');
 
     await db.logPipelineEvent({ content_type, content_id, from_status: 'approved', to_status: 'published', agent_name: 'Laura', notes: 'Released by Laura after Maya approval' });
-
+    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'CONTENT_TYPE_CHECK', content_type: content_type, is_briefing: content_type === 'briefing' }));
+    
     // ── Email distribution ────────────────────────────────────────────────
     if (content_type === 'briefing') {
       try {
