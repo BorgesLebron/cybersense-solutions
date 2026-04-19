@@ -292,6 +292,7 @@ router.post('/release', requireAgentToken(['Laura', 'Henry']), async (req, res, 
     // ── Email distribution ────────────────────────────────────────────────
     if (content_type === 'briefing') {
       try {
+        console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'RELEASE_DEBUG', content_type, content_id }));
         const { sendBriefingEmail } = require('../services/sendgrid');
         const subscribers = await db.pool.query(
           `SELECT email, full_name FROM users
@@ -300,9 +301,11 @@ router.post('/release', requireAgentToken(['Laura', 'Henry']), async (req, res, 
            AND deleted_at IS NULL`
         ).then(r => r.rows.map(u => ({ email: u.email, name: u.full_name || 'Reader' })));
 
+        console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'BRIEFING_EMAIL_ATTEMPT', briefing_id: content_id, subject: content.subject_line, edition_date: content.edition_date, subscribers: subscribers.length }));
+
         if (subscribers.length > 0) {
-          console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'BRIEFING_EMAIL_ATTEMPT', briefing_id: content_id, subject: content.subject_line, edition_date: content.edition_date, subscribers: subscribers.length }));
           await sendBriefingEmail(subscribers, content);
+          console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'BRIEFING_EMAIL_SENT', briefing_id: content_id, recipients: subscribers.length }));
         } else {
           console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'BRIEFING_EMAIL_SKIPPED', briefing_id: content_id, reason: 'no eligible subscribers' }));
         }
