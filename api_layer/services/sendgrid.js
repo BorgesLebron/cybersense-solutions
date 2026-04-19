@@ -44,9 +44,12 @@ async function sendWelcomeEmail(to, name) {
 }
 
 async function sendBriefingEmail(to_list, briefing) {
-  const dateOnly = briefing.edition_date.split('T')[0];
+  const rawDate = briefing.edition_date;
+  const dateOnly = rawDate instanceof Date 
+    ? rawDate.toISOString().split('T')[0]
+    : String(rawDate).split('T')[0];
   const dateFormatted = new Date(dateOnly + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-  
+
   const messages = to_list.map(({ email, name }) => ({
     to: email, from: FROM,
     templateId: process.env.SG_TEMPLATE_BRIEFING,
