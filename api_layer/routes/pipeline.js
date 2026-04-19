@@ -289,6 +289,29 @@ router.post('/release', requireAgentToken(['Laura', 'Henry']), async (req, res, 
 
     await db.logPipelineEvent({ content_type, content_id, from_status: 'approved', to_status: 'published', agent_name: 'Laura', notes: 'Released by Laura after Maya approval' });
 
+    // ── Email distribution ────────────────────────────────────────────────
+    if (content_type === 'briefing') {
+      try {
+        const { sendBriefingEmail } = require('../services/sendgrid');
+        const subscribers = await db.pool.query(
+          `SELECT email, full_name FROM users
+           WHERE email_subscribed = true
+           AND email_verified = true
+           AND deleted_at IS NULL`
+        ).then(r => r.rows.map(u => ({ email: u.email, name: u.full_name || 'Reader' })));
+
+        if (subscribers.length > 0) {
+          await sendBriefingEmail(subscribers, content);
+          console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'BRIEFING_EMAIL_SENT', briefing_id: content_id, recipients: subscribers.length }));
+        } else {
+          console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'BRIEFING_EMAIL_SKIPPED', briefing_id: content_id, reason: 'no eligible subscribers' }));
+        }
+      } catch (e) {
+        console.error(JSON.stringify({ ts: new Date().toISOString(), event: 'BRIEFING_EMAIL_FAILED', briefing_id: content_id, error: e.message }));
+      }
+    }
+    // ── End email distribution ────────────────────────────────────────────
+
     const distribution_tasks = [];
     if (content_type === 'briefing') {
       const agents = ['Oliver', 'Lucy', 'Riley'];

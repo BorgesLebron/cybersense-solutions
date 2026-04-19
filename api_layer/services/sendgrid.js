@@ -44,10 +44,18 @@ async function sendWelcomeEmail(to, name) {
 }
 
 async function sendBriefingEmail(to_list, briefing) {
+  const dateOnly = briefing.edition_date.split('T')[0];
+  const dateFormatted = new Date(dateOnly + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  
   const messages = to_list.map(({ email, name }) => ({
     to: email, from: FROM,
     templateId: process.env.SG_TEMPLATE_BRIEFING,
-    dynamicTemplateData: { name, edition_date: briefing.edition_date, subject: briefing.subject_line, preview_url: `${process.env.APP_URL}/newsletter/${briefing.edition_date}` },
+    dynamicTemplateData: { 
+      name, 
+      edition_date: dateFormatted,
+      subject: briefing.subject_line, 
+      preview_url: `${process.env.APP_URL}/newsletter`
+    },
   }));
   try {
     await sgMail.send(messages);
