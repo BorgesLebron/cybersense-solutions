@@ -156,67 +156,87 @@ function getEditionFile(dateStr) {
 }
 
 function renderLatestEdition(briefing) {
-  const loading = document.getElementById('edition-loading');
   const preview = document.getElementById('edition-preview');
   const edInfo  = getEditionFile(briefing.edition_date);
 
   const dateFormatted = formatEditionDate(briefing.edition_date);
-  const editionNum    = edInfo ? `Edition ${edInfo.edition}` : '';
+  const editionNum    = edInfo ? edInfo.edition : briefing.edition_number || '107';
   const fileLink      = edInfo ? edInfo.file : null;
+  
+  // Use the briefing description/note if it exists, otherwise fallback
+  const editorsNote = briefing.description || briefing.summary || "Seven items curated for practitioners who need situational awareness without the noise. Threats, policy, and career development.";
 
   preview.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid #f1f5f9;">
       <div>
-        <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--cs-gray-400);margin-bottom:4px;">${editionNum ? editionNum + ' · ' : ''}Latest Edition</div>
-        <div style="font-size:20px;font-weight:700;color:var(--cs-navy);">${dateFormatted}</div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--cs-gray-400);margin-bottom:4px;">Latest Edition</div>
+        <div style="font-size:24px;font-weight:700;color:var(--cs-navy);">${dateFormatted}</div>
       </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        <span class="badge badge-critical">3 Threats</span>
-        <span class="badge badge-medium">2 Innovations</span>
-        <span class="badge badge-published">7 Items</span>
+      <div>
+        <span class="badge" style="background:var(--cs-cyan);color:white;padding:6px 12px;border-radius:4px;font-weight:700;">Edition ${editionNum}</span>
       </div>
     </div>
 
     <div class="briefing-section">
-      <div class="briefing-type">📋 Today's Subject</div>
-      <h3 style="font-size:18px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;">${briefing.subject_line}</h3>
-      <p style="font-size:14px;color:var(--cs-gray-600);line-height:1.6;">Seven items curated and written for practitioners who need situational awareness without the noise. Threats, policy, innovation, career development, and a training byte – every weekday morning.</p>
+      <div class="briefing-type" style="color:var(--cs-cyan); font-weight:700; font-size:12px; margin-bottom:8px;">📋 TODAY'S SUBJECT</div>
+      <h3 style="font-size:22px;font-weight:700;color:var(--cs-navy);margin-bottom:12px;">${briefing.subject_line}</h3>
+      <p style="font-size:15px;color:var(--cs-gray-600);line-height:1.7; font-style:italic;">"${editorsNote}"</p>
     </div>
 
-    ${fileLink ? `
     <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap;">
-      <a href="${fileLink}" class="btn btn-primary" target="_blank">Read Full Edition →</a>
-      <a href="https://www.linkedin.com/build-relation/newsletter-follow?entityUrn=7388246712924069888" class="btn btn-outline" target="_blank">Subscribe on LinkedIn</a>
-    </div>` : `
-    <div style="margin-top:24px;">
-      <a href="https://www.linkedin.com/build-relation/newsletter-follow?entityUrn=7388246712924069888" class="btn btn-primary" target="_blank">Subscribe on LinkedIn</a>
-    </div>`}
+      <a href="${fileLink}" class="btn btn-primary">Read Full Edition →</a>
+      <a href="https://linkedin.com/..." class="btn btn-outline" target="_blank">LinkedIn</a>
+    </div>
   `;
 }
 
 function renderSidebar(userTier) {
-  const sidebar     = document.getElementById('editions-sidebar');
-  const archiveGate = document.getElementById('archive-gate');
-  const blurred     = document.getElementById('blurred-editions');
-  const isFreemium  = userTier && userTier !== 'free';
+  const sidebar = document.getElementById('editions-sidebar');
+  const editions = Object.entries(EDITION_MAP).sort((a, b) => b[0].localeCompare(a[0]));
 
-  const editions = Object.entries(EDITION_MAP)
-    .sort((a, b) => b[0].localeCompare(a[0]));
+  // Split into "Initial 5" and "The Rest"
+  const initial = editions.slice(0, 5);
+  const remainder = editions.slice(5);
 
-  const visible  = editions.slice(0, 5);
-  const archived = editions.slice(5);
+  let html = initial.map(([date, info], i) => createEditionRow(date, info, i === 0)).join('');
 
-  sidebar.innerHTML = visible.map(([date, info], i) => {
-    const dateStr = formatEditionDate(date + 'T12:00:00');
-    return `
-      <div class="edition-row${i === 0 ? ' active' : ''}">
-        <div>
-          <div class="edition-date">${dateStr}</div>
-          <div class="edition-meta">Edition ${info.edition} · 7 items</div>
-        </div>
-        <a href="${info.file}" style="font-size:12px;color:var(--cs-cyan);text-decoration:none;" target="_blank">${i === 0 ? 'Current' : 'Read →'}</a>
-      </div>`;
-  }).join('');
+  if (remainder.length > 0) {
+    html += `
+      <div id="extra-editions" style="display:none;">
+        ${remainder.map(([date, info]) => createEditionRow(date, info, false)).join('')}
+      </div>
+      <button id="view-more-btn" onclick="toggleArchive()" style="width:100%; padding:12px; background:none; border:1px dashed var(--cs-gray-300); color:var(--cs-cyan); cursor:pointer; margin-top:10px; font-weight:700; font-size:12px;">
+        VIEW MORE EDITIONS +
+      </button>
+    `;
+  }
+
+  sidebar.innerHTML = html;
+}
+
+function createEditionRow(date, info, isActive) {
+  const dateStr = formatEditionDate(date + 'T12:00:00');
+  return `
+    <div class="edition-row${isActive ? ' active' : ''}" style="padding:12px 0; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <div class="edition-date" style="font-weight:700; color:var(--cs-navy); font-size:14px;">${dateStr}</div>
+        <div class="edition-meta" style="font-size:12px; color:var(--cs-gray-400);">Edition ${info.edition}</div>
+      </div>
+      <a href="${info.file}" style="font-size:12px;color:var(--cs-cyan);text-decoration:none;" target="_blank">Read →</a>
+    </div>`;
+}
+
+function toggleArchive() {
+  const extra = document.getElementById('extra-editions');
+  const btn = document.getElementById('view-more-btn');
+  if (extra.style.display === 'none') {
+    extra.style.display = 'block';
+    btn.innerText = 'SHOW LESS -';
+  } else {
+    extra.style.display = 'none';
+    btn.innerText = 'VIEW MORE EDITIONS +';
+  }
+}
 
   if (archived.length > 0 && !isFreemium) {
     archiveGate.style.display = 'block';
