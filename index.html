@@ -79,6 +79,7 @@
     <h2 class="section-heading" style="margin-bottom:6px;">Active Threats &amp; Vulnerabilities</h2>
     <p class="section-sub" style="margin-bottom:32px;">A rolling feed of tracked CVEs, active exploits, and vendor advisories. Full access for subscribers.</p>
 
+<<<<<<< Updated upstream
     <div class="table-wrap">
       <table class="data-table" aria-label="Threat radar preview">
         <thead>
@@ -106,6 +107,70 @@
             <h3>Subscribe to see the live feed</h3>
             <p>Full radar access includes all tracked threats, CVSS scores, and linked intelligence articles.</p>
             <a href="pricing.html" class="btn btn-primary">Get Access</a>
+=======
+    <div class="gate-wrapper" style="border-radius:var(--radius-lg);overflow:hidden;">
+      <!-- Visible rows -->
+      <div class="table-wrap">
+        <table class="data-table" aria-label="Threat radar preview">
+          <thead>
+            <tr>
+              <th>Severity</th>
+              <th>Threat Name</th>
+              <th>CVSS</th>
+              <th>CVE</th>
+            </tr>
+          </thead>          
+          <tbody>
+          <div class="gate-wrapper"><div class="gate-wrapper"> <!-- Temporary Blurred until Radar is 100% -->
+          <div class="blurred"> 
+            <tr>
+              <td><span class="badge badge-critical">Critical</span></td>
+              <td>Meta React Server Remote Code Execution</td>
+              <td class="mono">10</td>
+              <td class="mono">CVE-2025-55182</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-high">High</span></td>
+              <td>RomM 4.4.0 - XSS_CSRF Chain</td>
+              <td class="mono">7.6</td>
+              <td class="mono">CVE-2025-65027</td>
+            </tr>
+            <tr style="position:relative;">
+              <td><span class="badge badge-critical">Critical</span></td>
+              <td>FortiWeb 8.0.2 - Remote Code Execution</td>
+              <td class="mono">9.4</td>
+              <td class="mono">CVE-2025-64446</td>
+            </tr>
+          </div>   <!-- Blurred bottom -->
+          </div>   <!-- Blurred bottom -->  
+          </tbody>
+        </table>
+        <!-- Blurred bottom region -->
+        <div class="gate-wrapper">
+          <div class="blurred">
+            <table class="data-table" aria-hidden="true">
+              <tbody>
+                <tr>
+                  <td><span class="badge badge-high">High</span></td>
+                  <td>Microsoft SharePoint Server Elevation of Privilege</td>
+                  <td class="mono">8.8</td>
+                  <td class="mono">CVE-2024-38094</td>
+                </tr>
+                <tr>
+                  <td><span class="badge badge-medium">Medium</span></td>
+                  <td>Cisco IOS XE Web UI Privilege Escalation</td>
+                  <td class="mono">6.5</td>
+                  <td class="mono">CVE-2024-20399</td>
+                </tr>
+              </tbody>              
+            </table>                
+          <div class="gate-overlay">
+            <div class="gate-card">
+              <h3>Subscribe to see the live feed</h3>
+              <p>Full radar access includes 12+ active threats, CVSS scores, status tracking, and linked intelligence articles.</p>
+              
+            </div>
+>>>>>>> Stashed changes
           </div>
         </div>
       </div>
