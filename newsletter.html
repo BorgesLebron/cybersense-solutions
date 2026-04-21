@@ -160,11 +160,10 @@ function renderLatestEdition(briefing) {
   const edInfo  = getEditionFile(briefing.edition_date);
 
   const dateFormatted = formatEditionDate(briefing.edition_date);
-  const editionNum    = edInfo ? edInfo.edition : briefing.edition_number || '107';
+  const editionNum    = edInfo ? edInfo.edition : (briefing.edition_number || '107');
   const fileLink      = edInfo ? edInfo.file : null;
   
-  // Use the briefing description/note if it exists, otherwise fallback
-  const editorsNote = briefing.description || briefing.summary || "Seven items curated for practitioners who need situational awareness without the noise. Threats, policy, and career development.";
+  const editorsNote = briefing.description || briefing.summary || "Seven items curated for practitioners who need situational awareness without the noise.";
 
   preview.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid #f1f5f9;">
@@ -185,7 +184,7 @@ function renderLatestEdition(briefing) {
 
     <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap;">
       <a href="${fileLink}" class="btn btn-primary">Read Full Edition →</a>
-      <a href="https://linkedin.com/..." class="btn btn-outline" target="_blank">LinkedIn</a>
+      <a href="https://www.linkedin.com/..." class="btn btn-outline" target="_blank">LinkedIn</a>
     </div>
   `;
 }
@@ -194,7 +193,6 @@ function renderSidebar(userTier) {
   const sidebar = document.getElementById('editions-sidebar');
   const editions = Object.entries(EDITION_MAP).sort((a, b) => b[0].localeCompare(a[0]));
 
-  // Split into "Initial 5" and "The Rest"
   const initial = editions.slice(0, 5);
   const remainder = editions.slice(5);
 
@@ -210,7 +208,6 @@ function renderSidebar(userTier) {
       </button>
     `;
   }
-
   sidebar.innerHTML = html;
 }
 
@@ -238,66 +235,36 @@ function toggleArchive() {
   }
 }
 
-  if (archived.length > 0 && !isFreemium) {
-    archiveGate.style.display = 'block';
-    blurred.innerHTML = archived.slice(0, 3).map(([date, info]) => {
-      const dateStr = formatEditionDate(date + 'T12:00:00');
-      return `<div class="edition-row"><div><div class="edition-date">${dateStr}</div><div class="edition-meta">Edition ${info.edition} · 7 items</div></div></div>`;
-    }).join('');
-  } else if (isFreemium) {
-    archiveGate.style.display = 'none';
-    sidebar.innerHTML += archived.map(([date, info]) => {
-      const dateStr = formatEditionDate(date + 'T12:00:00');
-      return `
-        <div class="edition-row">
-          <div>
-            <div class="edition-date">${dateStr}</div>
-            <div class="edition-meta">Edition ${info.edition} · 7 items</div>
-          </div>
-          <a href="${info.file}" style="font-size:12px;color:var(--cs-cyan);text-decoration:none;" target="_blank">Read →</a>
-        </div>`;
-    }).join('');
-  }
-
 async function loadNewsletter(user) {
   const userTier = user?.tier || 'free';
-
   if (!user) {
     document.getElementById('guest-banner').style.display = 'flex';
     renderGuestNewsletter();
     return;
   }
-
-  // Sidebar always comes from EDITION_MAP – no API needed
   renderSidebar(userTier);
 
   try {
     const data = await CS.Auth.apiFetch('/api/content/briefings?limit=1');
     const briefings = data.data || [];
-
     if (briefings.length === 0) {
-      // Fall back to latest from EDITION_MAP
       const latest = Object.entries(EDITION_MAP).sort((a, b) => b[0].localeCompare(a[0]))[0];
-      document.getElementById('edition-preview').innerHTML = `
-        <div style="padding:20px 0;">
-          <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--cs-gray-400);margin-bottom:4px;">Edition ${latest[1].edition} · Latest</div>
-          <div style="font-size:20px;font-weight:700;color:var(--cs-navy);margin-bottom:20px;">${formatEditionDate(latest[0] + 'T12:00:00')}</div>
-          <a href="${latest[1].file}" class="btn btn-primary" target="_blank">Read Full Edition →</a>
-        </div>`;
+      renderLatestEdition({
+          edition_date: latest[0],
+          subject_line: "Latest Briefing",
+          description: "Click below to read the latest situational awareness update."
+      });
       return;
     }
-
     renderLatestEdition(briefings[0]);
-
   } catch(e) {
     console.error('Newsletter load error:', e);
-    // Fall back to map on error
     const latest = Object.entries(EDITION_MAP).sort((a, b) => b[0].localeCompare(a[0]))[0];
-    document.getElementById('edition-preview').innerHTML = `
-      <div style="padding:20px 0;">
-        <div style="font-size:20px;font-weight:700;color:var(--cs-navy);margin-bottom:20px;">${formatEditionDate(latest[0] + 'T12:00:00')}</div>
-        <a href="${latest[1].file}" class="btn btn-primary" target="_blank">Read Full Edition →</a>
-      </div>`;
+    renderLatestEdition({
+          edition_date: latest[0],
+          subject_line: "CyberSense Briefing",
+          description: " situational awareness without the noise."
+      });
   }
 }
 
@@ -306,14 +273,12 @@ function renderGuestNewsletter() {
     <div style="text-align:center;padding:40px 24px;">
       <div style="font-size:32px;margin-bottom:16px;">📋</div>
       <h3 style="font-size:18px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;">Daily Digital Awareness Brief</h3>
-      <p style="font-size:14px;color:var(--cs-gray-600);margin-bottom:24px;line-height:1.6;">Create a free account to read the latest edition and access the archive. Seven items, every weekday morning by 07:00 CT.</p>
+      <p style="font-size:14px;color:var(--cs-gray-600);margin-bottom:24px;line-height:1.6;">Create a free account to read the latest edition. Seven items, every weekday morning.</p>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
         <a href="#" class="btn btn-primary" onclick="CS.Auth.showLoginModal();return false;">Sign Up Free</a>
-        <a href="https://www.linkedin.com/build-relation/newsletter-follow?entityUrn=7388246712924069888" class="btn btn-outline" target="_blank">Subscribe on LinkedIn</a>
       </div>
     </div>`;
-  document.getElementById('editions-sidebar').innerHTML =
-    '<div style="color:var(--cs-gray-400);font-size:13px;padding:8px 0 12px;">Sign in to view the archive.</div>';
+  document.getElementById('editions-sidebar').innerHTML = '<div style="color:var(--cs-gray-400);font-size:13px;padding:8px 0 12px;">Sign in to view the archive.</div>';
 }
 
 function handleSubscribe() {
@@ -322,7 +287,6 @@ function handleSubscribe() {
   CS.Auth.showLoginModal({ tab: 'register', message: 'Create a free account to receive the daily briefing.' });
 }
 
-// Wire to auth events
 document.addEventListener('cs:login', (e) => loadNewsletter(e.detail));
 document.addEventListener('cs:guest', ()  => loadNewsletter(null));
 </script>
