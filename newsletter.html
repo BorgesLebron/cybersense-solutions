@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Daily Digital Awareness Briefing — CyberSense.Solutions</title>
+<title>Daily Digital Awareness Briefing – CyberSense.Solutions</title>
 <meta name="description" content="Your daily cybersecurity briefing: threats, innovations, professional growth, and a training byte.">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="auth.css">
@@ -49,7 +49,7 @@
   <div class="container" style="position:relative;z-index:1;">
     <p class="section-label">Daily Briefing</p>
     <h1 class="section-heading section-heading-light" style="font-size:clamp(28px,5vw,46px);">Daily Digital Awareness Briefing</h1>
-    <p class="section-sub section-sub-light">Seven items. Every morning by 07:00 CT. Threats, innovations, professional growth, and a training byte — all analyst-written.</p>
+    <p class="section-sub section-sub-light">Seven items. Every morning by 07:00 CT. Threats, innovations, professional growth, and a training byte – all analyst-written.</p>
   </div>
 </section>
 
@@ -128,6 +128,8 @@
 <script>
 // Edition date → HTML file path mapping
 const EDITION_MAP = {
+  '2026-04-21': { file: 'newsletter/2026/Apr/04212026_edition107.html', edition: 107 },
+  '2026-04-20': { file: 'newsletter/2026/Apr/04202026_edition106.html', edition: 106 },
   '2026-04-17': { file: 'newsletter/2026/Apr/04172026_edition105.html', edition: 105 },
   '2026-04-16': { file: 'newsletter/2026/Apr/04162026_edition104.html', edition: 104 },
   '2026-04-15': { file: 'newsletter/2026/Apr/04152026_edition103.html', edition: 103 },
@@ -178,7 +180,7 @@ function renderLatestEdition(briefing) {
     <div class="briefing-section">
       <div class="briefing-type">📋 Today's Subject</div>
       <h3 style="font-size:18px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;">${briefing.subject_line}</h3>
-      <p style="font-size:14px;color:var(--cs-gray-600);line-height:1.6;">Seven items curated and written for practitioners who need situational awareness without the noise. Threats, policy, innovation, career development, and a training byte — every weekday morning.</p>
+      <p style="font-size:14px;color:var(--cs-gray-600);line-height:1.6;">Seven items curated and written for practitioners who need situational awareness without the noise. Threats, policy, innovation, career development, and a training byte – every weekday morning.</p>
     </div>
 
     ${fileLink ? `
@@ -247,7 +249,7 @@ async function loadNewsletter(user) {
     return;
   }
 
-  // Sidebar always comes from EDITION_MAP — no API needed
+  // Sidebar always comes from EDITION_MAP – no API needed
   renderSidebar(userTier);
 
   try {
