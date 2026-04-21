@@ -172,19 +172,25 @@ function renderLatestEdition(briefing) {
         <div style="font-size:24px;font-weight:700;color:var(--cs-navy);">${dateFormatted}</div>
       </div>
       <div>
-        <span class="badge" style="background:var(--cs-cyan);color:white;padding:6px 12px;border-radius:4px;font-weight:700;">Edition ${editionNum}</span>
+        <div style="display:inline-block; border: 1.5px solid var(--cs-cyan); border-radius: 50px; padding: 6px 20px; background: rgba(0, 212, 255, 0.05);">
+            <span style="color:var(--cs-cyan); font-weight:800; font-size:13px; letter-spacing:1.2px; text-transform:uppercase;">
+                EDITION ${editionNum}
+            </span>
+        </div>
       </div>
     </div>
 
     <div class="briefing-section">
-      <div class="briefing-type" style="color:var(--cs-cyan); font-weight:700; font-size:12px; margin-bottom:8px;">📋 TODAY'S SUBJECT</div>
-      <h3 style="font-size:22px;font-weight:700;color:var(--cs-navy);margin-bottom:12px;">${briefing.subject_line}</h3>
-      <p style="font-size:15px;color:var(--cs-gray-600);line-height:1.7; font-style:italic;">"${editorsNote}"</p>
+      <div class="briefing-type" style="color:var(--cs-cyan); font-weight:700; font-size:11px; letter-spacing:0.5px; margin-bottom:8px; text-transform:uppercase;">📋 Today's Subject</div>
+      <h3 style="font-size:22px;font-weight:700;color:var(--cs-navy);margin-bottom:12px; line-height:1.3;">${briefing.subject_line}</h3>
+      <p style="font-size:15px;color:var(--cs-gray-600);line-height:1.7; font-style:italic; border-left: 3px solid var(--cs-gray-200); padding-left: 15px;">
+        "${editorsNote}"
+      </p>
     </div>
 
-    <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap;">
-      <a href="${fileLink}" class="btn btn-primary">Read Full Edition →</a>
-      <a href="https://www.linkedin.com/..." class="btn btn-outline" target="_blank">LinkedIn</a>
+    <div style="margin-top:28px;display:flex;gap:12px;flex-wrap:wrap;">
+      <a href="${fileLink}" class="btn btn-primary" style="padding: 10px 24px;">Read Full Edition →</a>
+      <a href="https://linkedin.com/..." class="btn btn-outline" target="_blank" style="padding: 10px 24px;">LinkedIn Brief</a>
     </div>
   `;
 }
@@ -247,24 +253,38 @@ async function loadNewsletter(user) {
   try {
     const data = await CS.Auth.apiFetch('/api/content/briefings?limit=1');
     const briefings = data.data || [];
-    if (briefings.length === 0) {
-      const latest = Object.entries(EDITION_MAP).sort((a, b) => b[0].localeCompare(a[0]))[0];
-      renderLatestEdition({
-          edition_date: latest[0],
-          subject_line: "Latest Briefing",
-          description: "Click below to read the latest situational awareness update."
-      });
+
+    // If API returns data, use it
+    if (briefings.length > 0) {
+      renderLatestEdition(briefings[0]);
       return;
     }
-    renderLatestEdition(briefings[0]);
+
+    // FALLBACK: If API is empty, get the newest from EDITION_MAP
+    // We sort by date string descending to ensure the newest is always index [0]
+    const latestDate = Object.keys(EDITION_MAP).sort().reverse()[0];
+    const latestInfo = EDITION_MAP[latestDate];
+
+    renderLatestEdition({
+      edition_date: latestDate,
+      subject_line: "Latest Intelligence Briefing", // You can customize this fallback title
+      description: "Situational awareness for the modern cybersecurity professional. Click below for the full edition.",
+      edition_number: latestInfo.edition
+    });
+
   } catch(e) {
     console.error('Newsletter load error:', e);
-    const latest = Object.entries(EDITION_MAP).sort((a, b) => b[0].localeCompare(a[0]))[0];
+    
+    // ERROR FALLBACK: Same logic as above
+    const latestDate = Object.keys(EDITION_MAP).sort().reverse()[0];
+    const latestInfo = EDITION_MAP[latestDate];
+
     renderLatestEdition({
-          edition_date: latest[0],
-          subject_line: "CyberSense Briefing",
-          description: " situational awareness without the noise."
-      });
+      edition_date: latestDate,
+      subject_line: "Daily Awareness Brief",
+      description: "The latest situational awareness update from the CyberSense team.",
+      edition_number: latestInfo.edition
+    });
   }
 }
 
