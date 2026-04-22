@@ -142,7 +142,12 @@
       </div>
 
       <!-- Standard (Featured) -->
-      <div class="pricing-card featured">
+      <div class="pricing-card featured" style="position:relative;">
+        <div style="position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,22,40,0.82);backdrop-filter:blur(4px);border-radius:var(--radius-lg);padding:24px;text-align:center;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--cs-cyan);margin-bottom:8px;">Coming Soon</div>
+          <div style="font-size:22px;font-weight:700;color:var(--cs-white);margin-bottom:6px;">May 1, 2026</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.5;">Standard subscriptions open on launch day. Subscribe free now to be first in line.</div>
+        </div>
         <div class="featured-badge">Most Popular</div>
         <div class="accent-bar std"></div>
         <div class="card-header featured-header">
@@ -169,7 +174,12 @@
       </div>
 
       <!-- Premium -->
-      <div class="pricing-card premium-card">
+      <div class="pricing-card premium-card" style="position:relative;">
+        <div style="position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,22,40,0.82);backdrop-filter:blur(4px);border-radius:var(--radius-lg);padding:24px;text-align:center;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#a78bfa;margin-bottom:8px;">Coming Soon</div>
+          <div style="font-size:22px;font-weight:700;color:var(--cs-white);margin-bottom:6px;">August 29, 2026</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.5;">Full platform access launching with Phase 3. Get on the list now.</div>
+        </div>
         <div class="accent-bar prem"></div>
         <div class="card-header premium-header">
           <div class="tier-pill premium">Premium</div>
@@ -235,7 +245,7 @@
 <footer>
   <div class="footer-inner">
     <div class="footer-grid">
-      <div><div class="footer-logo">CyberSense<span>.Solutions</span></div><p class="footer-mission">Delivering actionable cybersecurity intelligence, daily awareness briefings, and professional training to teams that can't afford to be caught off guard.</p><div class="footer-socials"><a href="#" class="footer-social-icon">in</a><a href="#" class="footer-social-icon">f</a><a href="#" class="footer-social-icon">▶</a><a href="#" class="footer-social-icon">𝕏</a><a href="#" class="footer-social-icon">tt</a></div></div>
+      <div><div class="footer-logo">CyberSense<span>.Solutions</span></div><p class="footer-mission">Delivering actionable cybersecurity intelligence, daily awareness briefings, and professional training to teams that can't afford to be caught off guard.</p><div class="footer-socials"><a href="https://www.linkedin.com/company/cybersense-solutions/" target="_blank" class="footer-social-icon">in</a><a href="https://www.facebook.com/profile.php?id=61570667370162" target="_blank" class="footer-social-icon">f</a><a href="https://x.com/cybersensesec" target="_blank" class="footer-social-icon">𝕏</a><a href="https://www.instagram.com/cybersense.solutions/" target="_blank" class="footer-social-icon">ig</a><a href="https://www.threads.com/@cybersense.solutions" target="_blank" class="footer-social-icon">tt</a></div></div>
       <div class="footer-col"><h4>Platform</h4><ul><li><a href="index.html">Home</a></li><li><a href="radar.html">Threat Radar</a></li><li><a href="intelligence.html">Intel Briefs</a></li><li><a href="newsletter.html">Newsletter</a></li><li><a href="training.html">Training</a></li><li><a href="zerotrust.html">Zero-Trust</a></li></ul></div>
       <div class="footer-col"><h4>Legal</h4><ul><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li><li><a href="about.html">Contact Us</a></li></ul></div>
     </div>
@@ -252,7 +262,7 @@
 <script>
 document.getElementById('btn-standard').addEventListener('click', async function(e) {
   e.preventDefault();
-  const token = localStorage.getItem('cs_token');
+  const token = CS.Auth.isLoggedIn();
   if (!token) { CS.Auth.showLoginModal('Subscribe to Standard for full Radar and Intel access.'); return; }
   try {
     this.textContent = 'Redirecting...';
@@ -274,7 +284,7 @@ document.getElementById('btn-standard').addEventListener('click', async function
 
 document.getElementById('btn-premium').addEventListener('click', async function(e) {
   e.preventDefault();
-  const token = localStorage.getItem('cs_token');
+  const token = CS.Auth.isLoggedIn();
   if (!token) { CS.Auth.showLoginModal('Subscribe to Premium for full platform access.'); return; }
   try {
     this.textContent = 'Redirecting...';

@@ -304,8 +304,7 @@
   }
 
   function isAdminUser(user) {
-    // Minimal client-side check — real enforcement is server-side
-    return user?.is_admin === true;
+    return !!(user?.admin_role?.role);
   }
 
   function getInitials(name) {

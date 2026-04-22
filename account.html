@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png">
+<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png">
+<title>My Account — CyberSense.Solutions</title>
+<meta name="description" content="Manage your CyberSense.Solutions account, subscription, and preferences.">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="auth.css">
+<style>
+  .account-hero {
+    background: var(--cs-navy);
+    padding: 56px 24px 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .account-hero::before {
+    content: '';
+    position: absolute;
+    top: -80px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(0,212,255,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .account-hero h1 {
+    font-size: clamp(24px, 4vw, 36px);
+    font-weight: 800;
+    color: var(--cs-white);
+    margin-bottom: 8px;
+  }
+  .account-hero p {
+    font-size: 15px;
+    color: rgba(255,255,255,0.5);
+  }
+  .account-body {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+  .account-gate {
+    text-align: center;
+    padding: 80px 24px;
+    color: var(--cs-gray-600);
+  }
+  .account-gate h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--cs-navy);
+    margin-bottom: 12px;
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav" role="navigation">
+  <a href="index.html" class="nav-wordmark">CyberSense<span>.Solutions</span></a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="radar.html">Radar</a></li>
+    <li><a href="intelligence.html">Intel</a></li>
+    <li><a href="newsletter.html">Newsletter</a></li>
+    <li><a href="training.html">Training</a></li>
+    <li><a href="growth.html">Proficient</a></li>
+    <li><a href="innovation.html">Innovation</a></li>
+    <li><a href="zerotrust.html">Zero-Trust</a></li>
+  </ul>
+  <button class="nav-login" onclick="CS.Auth.showLoginModal()">Login</button>
+  <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+</nav>
+<div class="nav-drawer" id="nav-drawer">
+  <ul>
+    <li><a href="index.html">Home</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="radar.html">Radar</a></li>
+    <li><a href="intelligence.html">Intel</a></li>
+    <li><a href="newsletter.html">Newsletter</a></li>
+    <li><a href="training.html">Training</a></li>
+    <li><a href="growth.html">Proficient</a></li>
+    <li><a href="innovation.html">Innovation</a></li>
+    <li><a href="zerotrust.html">Zero-Trust</a></li>
+    <li><a href="pricing.html">Pricing</a></li>
+  </ul>
+</div>
+
+<section class="account-hero">
+  <h1>My Account</h1>
+  <p>Manage your profile, subscription, and preferences.</p>
+</section>
+
+<main class="account-body">
+  <!-- auth.js renders into this div when the user is logged in -->
+  <div id="account-panel">
+    <!-- Gate: shown until auth.js replaces content -->
+    <div class="account-gate">
+      <h2>Sign in to view your account</h2>
+      <p style="margin-bottom:24px;">Access your subscription, briefing history, and preferences.</p>
+      <button class="btn btn-primary" onclick="CS.Auth.showLoginModal()">Sign In</button>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-logo">CyberSense<span>.Solutions</span></div>
+        <p class="footer-mission">Delivering actionable cybersecurity intelligence, daily awareness briefings, and professional training to teams that can't afford to be caught off guard.</p>
+        <div class="footer-socials">
+          <a href="https://www.linkedin.com/company/cybersense-solutions/" target="_blank" class="footer-social-icon">in</a>
+          <a href="https://www.facebook.com/profile.php?id=61570667370162" target="_blank" class="footer-social-icon">f</a>
+          <a href="https://x.com/cybersensesec" target="_blank" class="footer-social-icon">𝕏</a>
+          <a href="https://www.instagram.com/cybersense.solutions/" target="_blank" class="footer-social-icon">ig</a>
+          <a href="https://www.threads.com/@cybersense.solutions" target="_blank" class="footer-social-icon">tt</a>
+        </div>
+      </div>
+      <div class="footer-col"><h4>Platform</h4>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="radar.html">Threat Radar</a></li>
+          <li><a href="intelligence.html">Intel Briefs</a></li>
+          <li><a href="newsletter.html">Newsletter</a></li>
+          <li><a href="training.html">Training</a></li>
+          <li><a href="zerotrust.html">Zero-Trust</a></li>
+        </ul>
+      </div>
+      <div class="footer-col"><h4>Legal</h4>
+        <ul>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+          <li><a href="about.html">Contact Us</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 CyberSense.Solutions. All rights reserved.</span>
+      <span>Security awareness starts here.</span>
+    </div>
+  </div>
+</footer>
+
+<script>window.CS_API_BASE = 'https://api.cybersense.solutions';</script>
+<script src="auth.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
