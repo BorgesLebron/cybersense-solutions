@@ -381,7 +381,7 @@
     const dashShell = document.getElementById('dashboard-shell');
     const loginGate = document.getElementById('login-gate');
     if (dashShell && loginGate) {
-      if (user.is_admin) {
+      if (isAdminUser(user)) {
         loginGate.style.display = 'none';
         dashShell.style.display = 'grid';
         loadDashboardData();
@@ -979,7 +979,7 @@
       try {
         const user = await login({ email, password });
 
-        if (!user.is_admin) {
+        if (!isAdminUser(user)) {
           await logout();
           showError(errorEl, 'Access denied. Administrator credentials required.');
           return;

@@ -251,40 +251,46 @@ async function loadNewsletter(user) {
   }
   renderSidebar(userTier);
 
+  // EDITION_MAP is the authoritative source for what HTML editions exist.
+  // Always use the newest EDITION_MAP key as the display edition; pull description from API if the dates match.
+  const latestMapDate = Object.keys(EDITION_MAP).sort().reverse()[0];
+  const latestMapInfo = EDITION_MAP[latestMapDate];
+
   try {
     const data = await CS.Auth.apiFetch('/api/content/briefings?limit=1');
     const briefings = data.data || [];
 
-    // If API returns data, use it
     if (briefings.length > 0) {
-      renderLatestEdition(briefings[0]);
+      const apiDate = briefings[0].edition_date.split('T')[0];
+      if (latestMapDate >= apiDate) {
+        // EDITION_MAP is newer or equal — use it for file/edition, API for description
+        renderLatestEdition({
+          edition_date: latestMapDate,
+          subject_line: apiDate === latestMapDate ? briefings[0].subject_line : 'Daily Intelligence Briefing',
+          description: apiDate === latestMapDate ? (briefings[0].description || briefings[0].summary) : null,
+          edition_number: latestMapInfo.edition
+        });
+      } else {
+        renderLatestEdition(briefings[0]);
+      }
       return;
     }
 
-    // FALLBACK: If API is empty, get the newest from EDITION_MAP
-    // We sort by date string descending to ensure the newest is always index [0]
-    const latestDate = Object.keys(EDITION_MAP).sort().reverse()[0];
-    const latestInfo = EDITION_MAP[latestDate];
-
+    // API empty — use EDITION_MAP
     renderLatestEdition({
-      edition_date: latestDate,
-      subject_line: "Latest Intelligence Briefing", // You can customize this fallback title
-      description: "Situational awareness for the modern cybersecurity professional. Click below for the full edition.",
-      edition_number: latestInfo.edition
+      edition_date: latestMapDate,
+      subject_line: 'Latest Intelligence Briefing',
+      description: 'Situational awareness for the modern cybersecurity professional. Click below for the full edition.',
+      edition_number: latestMapInfo.edition
     });
 
   } catch(e) {
     console.error('Newsletter load error:', e);
-    
-    // ERROR FALLBACK: Same logic as above
-    const latestDate = Object.keys(EDITION_MAP).sort().reverse()[0];
-    const latestInfo = EDITION_MAP[latestDate];
-
     renderLatestEdition({
-      edition_date: latestDate,
-      subject_line: "Daily Awareness Brief",
-      description: "The latest situational awareness update from the CyberSense team.",
-      edition_number: latestInfo.edition
+      edition_date: latestMapDate,
+      subject_line: 'Daily Awareness Brief',
+      description: 'The latest situational awareness update from the CyberSense team.',
+      edition_number: latestMapInfo.edition
     });
   }
 }
