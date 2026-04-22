@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png">
+<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png">
 <title>CyberSense.Solutions — Cybersecurity Intelligence, Delivered Daily</title>
 <meta name="description" content="Real-time threat intelligence, professional training, and daily awareness briefings for security teams.">
 <link rel="stylesheet" href="styles.css">
@@ -79,7 +81,6 @@
     <h2 class="section-heading" style="margin-bottom:6px;">Active Threats &amp; Vulnerabilities</h2>
     <p class="section-sub" style="margin-bottom:32px;">A rolling feed of tracked CVEs, active exploits, and vendor advisories. Full access for subscribers.</p>
 
-<<<<<<< Updated upstream
     <div class="table-wrap">
       <table class="data-table" aria-label="Threat radar preview">
         <thead>
@@ -107,74 +108,6 @@
             <h3>Subscribe to see the live feed</h3>
             <p>Full radar access includes all tracked threats, CVSS scores, and linked intelligence articles.</p>
             <a href="pricing.html" class="btn btn-primary">Get Access</a>
-=======
-    <div class="gate-wrapper" style="border-radius:var(--radius-lg);overflow:hidden;">
-      <!-- Visible rows -->
-      <div class="table-wrap">
-        <table class="data-table" aria-label="Threat radar preview">
-          <thead>
-            <tr>
-              <th>Severity</th>
-              <th>Threat Name</th>
-              <th>CVSS</th>
-              <th>CVE</th>
-            </tr>
-          </thead>          
-          <tbody>
-          <div class="gate-wrapper"><div class="gate-wrapper"> <!-- Temporary Blurred until Radar is 100% -->
-          <div class="blurred"> 
-            <tr>
-              <td><span class="badge badge-critical">Critical</span></td>
-              <td>Meta React Server Remote Code Execution</td>
-              <td class="mono">10</td>
-              <td class="mono">CVE-2025-55182</td>
-            </tr>
-            <tr>
-              <td><span class="badge badge-high">High</span></td>
-              <td>RomM 4.4.0 - XSS_CSRF Chain</td>
-              <td class="mono">7.6</td>
-              <td class="mono">CVE-2025-65027</td>
-            </tr>
-            <tr style="position:relative;">
-              <td><span class="badge badge-critical">Critical</span></td>
-              <td>FortiWeb 8.0.2 - Remote Code Execution</td>
-              <td class="mono">9.4</td>
-              <td class="mono">CVE-2025-64446</td>
-            </tr>
-          </div>   <!-- Blurred bottom -->
-          </div>   <!-- Blurred bottom -->  
-          </tbody>
-        </table>
-        <!-- Blurred bottom region -->
-        <div class="gate-wrapper">
-          <div class="blurred">
-            <table class="data-table" aria-hidden="true">
-              <tbody>
-                <tr>
-                  <td><span class="badge badge-high">High</span></td>
-                  <td>Microsoft SharePoint Server Elevation of Privilege</td>
-                  <td class="mono">8.8</td>
-                  <td class="mono">CVE-2024-38094</td>
-                </tr>
-                <tr>
-                  <td><span class="badge badge-medium">Medium</span></td>
-                  <td>Cisco IOS XE Web UI Privilege Escalation</td>
-                  <td class="mono">6.5</td>
-                  <td class="mono">CVE-2024-20399</td>
-                </tr>
-              </tbody>              
-            </table>                
-          <div class="gate-overlay">
-            <div class="gate-card">
-              <h3>Subscribe to see the live feed</h3>
-              <p>Full radar access includes 12+ active threats, CVSS scores, status tracking, and linked intelligence articles.</p>
-              
-            </div>
->>>>>>> Stashed changes
-          </div>
-        </div>
-      </div>
-    </div>
     <p style="margin-top:16px;font-size:13px;color:var(--cs-gray-400);text-align:right;"><a href="radar.html">View full radar →</a></p>
   </div>
 </section>
@@ -189,13 +122,11 @@
     <div class="card" style="max-width:780px;" id="briefing-preview-card">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #f1f5f9;">
         <div>
-          <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--cs-gray-400);margin-bottom:4px;" id="briefing-edition-label">Latest Edition</div>
+          <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--cs-gray-400);margin-bottom:4px;">Latest Edition</div>
           <div style="font-size:18px;font-weight:700;color:var(--cs-navy);" id="briefing-date">Loading...</div>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <span class="badge badge-critical">3 Threats</span>
-          <span class="badge badge-medium">2 Innovations</span>
-          <span class="badge badge-published">7 Items</span>
+        <div style="display:inline-block;border:1.5px solid var(--cs-cyan);border-radius:50px;padding:6px 20px;background:rgba(0,212,255,0.05);">
+          <span id="briefing-edition-label" style="color:var(--cs-cyan);font-weight:800;font-size:13px;letter-spacing:1.2px;text-transform:uppercase;">EDITION —</span>
         </div>
       </div>
 
@@ -203,15 +134,12 @@
         <div class="briefing-section">
           <div class="briefing-type">📋 Today's Subject</div>
           <h3 id="briefing-subject" style="font-size:17px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;">Loading latest edition...</h3>
-          <p style="font-size:14px;color:var(--cs-gray-600);line-height:1.6;">Seven items curated and written for practitioners who need situational awareness without the noise. Threats, policy, innovation, career development, and a training byte — every weekday morning by 07:00 CT.</p>
+          <p id="briefing-editors-note" style="font-size:14px;color:var(--cs-gray-600);line-height:1.6;font-style:italic;border-left:3px solid var(--cs-gray-200);padding-left:15px;">Seven items curated and written for practitioners who need situational awareness without the noise.</p>
         </div>
-        <div style="margin-top:24px;padding-top:16px;border-top:1px solid #f1f5f9;">
-          <a href="newsletter.html" id="briefing-read-link" style="font-size:14px;font-weight:600;color:var(--cs-cyan);">Read the full briefing →</a>
+        <div style="margin-top:24px;padding-top:16px;border-top:1px solid #f1f5f9;display:flex;gap:12px;flex-wrap:wrap;">
+          <a href="newsletter.html" id="briefing-read-link" class="btn btn-primary" style="padding:10px 24px;">Read Full Edition →</a>
+          <a href="newsletter.html#subscribe" class="btn btn-outline" style="padding:10px 24px;">Subscribe Now</a>
         </div>
-      </div>
-
-      <div style="margin-top:16px;text-align:center;">
-        <a href="newsletter.html" class="btn btn-outline btn-sm">View all editions →</a>
       </div>
     </div>
   </div>
@@ -322,6 +250,9 @@
 <script src="main.js"></script>
 <script>
 const EDITION_MAP = {
+  '2026-04-22': { file: 'newsletter/2026/Apr/04222026_edition108.html', edition: 108 },
+  '2026-04-21': { file: 'newsletter/2026/Apr/04212026_edition107.html', edition: 107 },
+  '2026-04-20': { file: 'newsletter/2026/Apr/04202026_edition106.html', edition: 106 },
   '2026-04-17': { file: 'newsletter/2026/Apr/04172026_edition105.html', edition: 105 },
   '2026-04-16': { file: 'newsletter/2026/Apr/04162026_edition104.html', edition: 104 },
   '2026-04-15': { file: 'newsletter/2026/Apr/04152026_edition103.html', edition: 103 },
@@ -388,6 +319,9 @@ async function loadHomeData(user) {
         document.getElementById('briefing-edition-label').textContent = edNum;
         document.getElementById('briefing-date').textContent = dateStr;
         document.getElementById('briefing-subject').textContent = b.subject_line;
+
+        const teaser = b.body_md ? b.body_md.replace(/^#+\s*/gm, '').trim().split('\n').find(l => l.trim().length > 20) || '' : '';
+        if (teaser) document.getElementById('briefing-editors-note').textContent = teaser.slice(0, 220);
 
         if (edInfo) {
           document.getElementById('briefing-read-link').href = edInfo.file;

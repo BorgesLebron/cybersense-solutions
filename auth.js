@@ -187,6 +187,10 @@
       return;
     }
 
+    // Render cached profile immediately to eliminate the sign-in flash
+    const cached = getUser();
+    if (cached) updateNavForUser(cached);
+
     const refreshed = await silentRefresh();
     if (refreshed) {
       try {
@@ -199,6 +203,7 @@
         onGuest();
       }
     } else {
+      setUser(null);
       onGuest();
     }
   }

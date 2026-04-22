@@ -76,6 +76,13 @@ const listOrgs = ({ page = 1, limit = 50 } = {}) => {
 // ── ADMIN ROLES ────────────────────────────────────────────────────────────────
 
 const getAdminRole = (user_id) => q1('SELECT * FROM admin_roles WHERE user_id=$1', [user_id]);
+const grantAdminRole = (user_id, role, granted_by) =>
+  q1(`INSERT INTO admin_roles (id,user_id,role,dashboard_sections,granted_by,granted_at)
+      VALUES (gen_random_uuid(),$1,$2,'[]',$3,now())
+      ON CONFLICT (user_id) DO UPDATE SET role=$2, granted_by=$3, granted_at=now()
+      RETURNING *`,
+    [user_id, role, granted_by]);
+const deleteBriefingById = (id) => q('DELETE FROM briefings WHERE id=$1', [id]);
 
 // ── SESSIONS ───────────────────────────────────────────────────────────────────
 
@@ -534,7 +541,7 @@ module.exports = {
   getUserById, getUserByEmail, createUser, updateUser, softDeleteUser,
   setEmailVerified, updateLastLogin, updateUserTier, listUsers, countUsers,
   getOrgById, createOrg, updateOrg, listOrgs,
-  getAdminRole,
+  getAdminRole, grantAdminRole, deleteBriefingById,
   createSession, deleteSession, deleteSessionByToken,
   getAgentToken, rotateAgentToken,
   createThreatRecord, getThreatRecords, getThreatById, linkThreatToArticle,

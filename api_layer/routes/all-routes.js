@@ -571,6 +571,36 @@ adminRouter.post('/agents/:name/token', requireAdminToken(['gm']), async (req, r
   } catch (e) { next(e); }
 });
 
+adminRouter.post('/users/:id/role', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.body;
+    const validRoles = ['gm', 'editor', 'analyst', 'sales', 'training'];
+    if (!role || !validRoles.includes(role)) return res.status(400).json(err('INVALID_ROLE', `role must be one of: ${validRoles.join(', ')}`));
+    const user = await db.getUserById(id);
+    if (!user) return res.status(404).json(err('NOT_FOUND', 'User not found'));
+    const adminRole = await db.grantAdminRole(id, role, req.user.id);
+    await db.logAuditEvent({ actor: req.user.id, action: 'admin_role_granted', target_agent: user.email, reason: `Role ${role} granted`, affected_content_id: null });
+    res.json({ user_id: id, email: user.email, role: adminRole.role, granted_at: adminRole.granted_at });
+  } catch (e) { next(e); }
+});
+
+adminRouter.delete('/briefings/:id', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    await db.deleteBriefingById(req.params.id);
+    res.json({ deleted: true, id: req.params.id });
+  } catch (e) { next(e); }
+});
+
+adminRouter.delete('/users/:id', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    const user = await db.getUserById(req.params.id);
+    if (!user) return res.status(404).json(err('NOT_FOUND', 'User not found'));
+    await db.softDeleteUser(req.params.id);
+    res.json({ deleted: true, id: req.params.id, email: user.email });
+  } catch (e) { next(e); }
+});
+
 adminRouter.get('/audit', requireAdminToken(['gm']), async (req, res, next) => {
   try {
     const { agent, action_type, from_date, page = 1, limit = 50 } = req.query;

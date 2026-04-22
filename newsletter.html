@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png">
+<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png">
 <title>Daily Digital Awareness Briefing – CyberSense.Solutions</title>
 <meta name="description" content="Your daily cybersecurity briefing: threats, innovations, professional growth, and a training byte.">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="auth.css">
-<link rel="icon" type="image/png" href="/assets/csicon.png">
-<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
 </head>
 <body>
 
@@ -128,6 +128,7 @@
 <script>
 // Edition date → HTML file path mapping
 const EDITION_MAP = {
+  '2026-04-22': { file: 'newsletter/2026/Apr/04222026_edition108.html', edition: 108 },
   '2026-04-21': { file: 'newsletter/2026/Apr/04212026_edition107.html', edition: 107 },
   '2026-04-20': { file: 'newsletter/2026/Apr/04202026_edition106.html', edition: 106 },
   '2026-04-17': { file: 'newsletter/2026/Apr/04172026_edition105.html', edition: 105 },
@@ -190,7 +191,7 @@ function renderLatestEdition(briefing) {
 
     <div style="margin-top:28px;display:flex;gap:12px;flex-wrap:wrap;">
       <a href="${fileLink}" class="btn btn-primary" style="padding: 10px 24px;">Read Full Edition →</a>
-      <a href="https://linkedin.com/..." class="btn btn-outline" target="_blank" style="padding: 10px 24px;">LinkedIn Brief</a>
+      <a href="#subscribe" class="btn btn-outline" style="padding: 10px 24px;">Subscribe Now</a>
     </div>
   `;
 }
