@@ -241,7 +241,7 @@ function renderSection(gridId, loadingId, articles, tierRank, cols) {
   if (!grid) return;
 
   if (articles.length === 0) {
-    if (loading) loading.textContent = 'No articles available yet.';
+    if (loading) loading.innerHTML = '<span style="color:var(--cs-gray-400);font-size:14px;">New articles coming soon — check back daily.</span>';
     return;
   }
 

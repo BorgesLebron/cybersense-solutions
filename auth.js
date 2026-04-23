@@ -40,7 +40,8 @@
   function clearToken()    { _accessToken = null; }
 
   function isLoggedIn()    { return !!_accessToken && !!getUser(); }
-  function getTier()       { return getUser()?.tier || 'free'; }
+  function getTierOverride() { return sessionStorage.getItem('cs_tier_override') || null; }
+  function getTier()       { return getTierOverride() || getUser()?.tier || 'free'; }
   function hasMinTier(t)   { return TIER_RANK[getTier()] >= TIER_RANK[t]; }
 
   /* ─────────────────────────────────────────────────────────────────
@@ -272,6 +273,16 @@
           <a href="account.html" class="nav-dropdown-item" role="menuitem">My Account</a>
           ${user.org_id ? '<a href="enterprise-dashboard.html" class="nav-dropdown-item" role="menuitem">Team Dashboard</a>' : ''}
           ${isAdminUser(user) ? '<a href="dashboard.html" class="nav-dropdown-item" role="menuitem">Admin Dashboard</a>' : ''}
+          ${isAdminUser(user) ? `
+          <div class="nav-dropdown-divider"></div>
+          <div style="padding:6px 16px 2px;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--cs-gray-400);">Test Tier</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;padding:4px 12px 10px;" id="tier-test-panel">
+            ${['free','freemium','monthly','enterprise'].map(t => {
+              const active = getTierOverride() === t;
+              const labels = {free:'Free',freemium:'Freemium',monthly:'Monthly',enterprise:'Enterprise'};
+              return `<button class="tier-test-btn" data-tier="${t}" style="font-size:11px;padding:3px 10px;border-radius:4px;border:1px solid ${active?'var(--cs-cyan)':'#e2e8f0'};background:${active?'var(--cs-cyan)':'#f8fafc'};color:${active?'#fff':'#475569'};cursor:pointer;font-weight:${active?700:400};">${labels[t]}</button>`;
+            }).join('')}
+          </div>` : ''}
           <div class="nav-dropdown-divider"></div>
           <button class="nav-dropdown-item nav-dropdown-signout" id="nav-signout" role="menuitem">Sign Out</button>
         </div>
@@ -294,6 +305,20 @@
 
     const signoutBtn = document.getElementById('nav-signout');
     if (signoutBtn) signoutBtn.addEventListener('click', logout);
+
+    document.querySelectorAll('.tier-test-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const t = btn.dataset.tier;
+        if (getTierOverride() === t) {
+          sessionStorage.removeItem('cs_tier_override');
+        } else {
+          sessionStorage.setItem('cs_tier_override', t);
+        }
+        applyTierGates(getTier());
+        updateNavForUser(getUser());
+      });
+    });
   }
 
   function updateNavForGuest() {

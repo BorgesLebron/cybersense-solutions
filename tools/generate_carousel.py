@@ -15,37 +15,38 @@ import math, os, io, requests
 # CONTENT – Edit this section for each new carousel
 # ══════════════════════════════════════════════════════════════════════════════
 
-EDITION_NUMBER   = "108"
-CARD2_TAG        = "Why it matters now?"
-CARD2_LINE1      = "SD-WAN Flaws"
-CARD2_LINE2      = "Expose the Entire"
-CARD2_LINE3      = "Management Plane"
-CARD2_BODY1      = "This vulnerability does not require authentication. An attacker who can reach the Cisco SD-WAN Manager interface over the network can read credentials, private keys, and configuration files without presenting a single valid credential."
-CARD2_BODY2      = "The vulnerability exists because the API does not validate user privileges before granting access to certain file paths – a failure of access control at the API layer, not at the network perimeter."
-CARD2_STAT       = "6.5"
-CARD2_STAT_LINE1 = "CVSS score – Medium"
-CARD2_STAT_LINE2 = "CVE-2026-20133"
+EDITION_NUMBER   = "109"
+CARD2_TAG        = "Why it matters now"
+CARD2_LINE1      = "npm Flaws"
+CARD2_LINE2      = "Expose"
+CARD2_LINE3      = "Supply Chain Credentials"
+CARD2_BODY1      = "The CanisterSprawl worm doesn't use a complex exploit. It relies on two common dev conditions: postinstall hooks that run code automatically, and plaintext credentials stored in .npmrc files."
+CARD2_BODY2      = "The worm finds these files, steals the tokens, and self-propagates across the registry before an alert even triggers. This turns a standard build process into a delivery vehicle for malware."
+CARD2_STAT       = "Critical"
+CARD2_STAT_LINE1 = "Supply Chain Risk"
+CARD2_STAT_LINE2 = "CanisterSprawl Worm"
 
 CARD3_TAG    = "What to check"
 CARD3_LINE1  = "4 Steps"
-CARD3_LINE2  = "To Check Your Exposure"
-CARD3_LINE3  = "In Your Environment"
+CARD3_LINE2  = "To Secure"
+CARD3_LINE3  = "Your npm Pipeline"
 CARD3_STEPS  = [
-    ("①", "Identify",   "IInventory all Management Interfaces (SD-WAN, Firewalls, APIs). Ensure zero visibility from untrusted networks."),
-    ("②", "Verify",     "Confirm all access is restricted to dedicated out-of-band networks or MFA-secured jump hosts."),
-    ("③", "Update",     "Audit SD-WAN versions immediately. Apply fixes to 20.9, 20.12, 20.15, or 20.18 branches today."),
-    ("④", "Reasssess",  "RAudit firewall rules. Internet-reachable management planes are misconfigurations, not patching issues – correct them now.")
+    ("①", "Scope & Expire",   "Use registry-scoped tokens with hard expiration dates."),
+    ("②", "Disable Scripts",     "Use --ignore-scripts in CI/CD pipelines to block malicious hooks."),
+    ("③", "Use a Vault",     "Move credentials from .npmrc files to a secrets manager (e.g., AWS, HashiCorp)."),
+    ("④", "Audit Registrys",  "Look for unexpected package versions or new dependencies."),
+    ("⑤", "Rotate Now",   "If infected packages were installed, treat all local credentials as compromised.")
 ]
-CARD3_CLOSE  = "Management plane exposure turns a patch into an incident. Verify network access controls today."
+CARD3_CLOSE  = "The pipeline is infrastructure. Credential hygiene at the build layer is as critical as the perimeter."
 
 CARD4_HEADLINE = f"Edition {EDITION_NUMBER}"
 CARD4_SUBHEAD  = "is live."
 CARD4_BULLETS  = [
-    "Cisco Catalyst SD-WAN Manager – Three Vulnerabilities on CISA KEV, Federal Deadline April 23",
-    "Everest Ransomware Claims Citizens Bank Breach – 3.4 Million Banking Records and 250,000+ SSNs at Risk",
-    "Pierce County Library Breach – Patron Data Including SSNs, Passport Numbers, and Health Information Exposed April 15–21",
-    "Microsoft: Threat Actors Are Running AI-Assisted Attack Workflows 47 Times Faster Than Human Operators",
-    "IBM Launches Agentic Attack Readiness Assessment – Evaluating Enterprise Exposure to AI-Enabled Threats"
+    "CanisterSprawl — Self-Propagating npm Supply Chain Worm Harvests Developer Credentials Through Postinstall Hooks",
+    "Checkmarx KICS Docker Hub Compromise — Security Scanner Images Replaced With Data-Exfiltration Builds Distributed Under Official Vendor Account",
+    "Microsoft CVE-2026-40372 — Emergency Out-of-Band Patch for ASP.NET Core Privilege Escalation to SYSTEM (CVSS 9.1)",
+    "Kyber Ransomware — First Confirmed Ransomware Deployment of NIST Post-Quantum Lattice Cryptography",
+    "Apache ActiveMQ CVE-2026-34197 — 6,400 Exposed Servers, CISA KEV Deadline April 30"
 ]
 CARD4_URL = "cybersense.solutions/newsletter"
 
@@ -277,7 +278,7 @@ def make_card2(fonts):
     draw.text((stat_x, y + 25), CARD2_STAT, font=fonts['h2'], fill=CYAN)
     
     # The description - pushed right more to separate from the %
-    desc_x = stat_x + 135
+    desc_x = stat_x + 200
     draw.text((desc_x, y + 32), CARD2_STAT_LINE1, font=fonts['body'], fill=GRAY_MID)
     
     # The date range - aligned under the description
@@ -332,7 +333,7 @@ def make_card3(fonts):
         # Description with more leading
         draw_wrapped(draw, desc, fonts['body'], text_x, y + 40, W-180, color=GRAY_MID, line_height=25) # Decrease line height for longer descriptions
         
-        y += 100  # Increased spacing between steps (from 100 to 125)
+        y += 80  # Increased spacing between steps (from 100 to 125)
     
     # 5. Footer Line and Closing Text
     draw.rectangle([60, y + 10, W-60, y + 12], fill=CYAN_DIM)

@@ -140,6 +140,7 @@
 <script>
 const FREE_LIMIT = 7;
 let allThreats = [];
+let currentUser = null;
 
 function severityBadge(s) {
   const map = { critical: 'badge-critical', high: 'badge-high', medium: 'badge-medium', low: 'badge-low' };
@@ -184,12 +185,9 @@ function renderRadar(threats, isSubscriber) {
     gate.style.display = 'none';
   }
 
-  const lastUpdated = threats[0]?.ingested_at
-    ? new Date(threats[0].ingested_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
-    : 'today';
-
+  const now = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const showing = isSubscriber ? threats.length : Math.min(FREE_LIMIT, threats.length);
-  meta.innerHTML = `Showing ${showing} of ${threats.length} tracked threats. Severity data sourced from NVD CVSS scores and CyberSense analyst assessment. Last updated: <strong>${lastUpdated}</strong>.`;
+  meta.innerHTML = `Showing ${showing} of ${threats.length} tracked threats. Severity data sourced from NVD CVSS scores and CyberSense analyst assessment. Last updated: <strong>${now}</strong>.`;
 }
 
 function filterRadar() {
@@ -205,6 +203,7 @@ function filterRadar() {
 }
 
 async function loadRadar(user) {
+  currentUser = user;
   const isSubscriber = user && ['monthly', 'enterprise'].includes(user.tier);
 
   try {
@@ -235,6 +234,9 @@ document.getElementById('threat-search').addEventListener('input', filterRadar);
 
 document.addEventListener('cs:login', (e) => loadRadar(e.detail));
 document.addEventListener('cs:guest', () => handleGuest());
+
+// Auto-refresh every 15 minutes for logged-in users
+setInterval(() => { if (currentUser) loadRadar(currentUser); }, 15 * 60 * 1000);
 </script>
 </body>
 </html>
