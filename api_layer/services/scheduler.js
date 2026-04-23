@@ -7,6 +7,10 @@
 
 const db = require('../db/queries');
 const { checkAwarenessPipelineHealth, notifyAgents } = require('./agents');
+const sgMail = require('@sendgrid/mail');
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+const OPS_ALERT_EMAIL = 'hjborges@gmail.com';
 
 // ── Nightly dashboard snapshot (runs at 00:05 CT) ─────────────────────────────
 async function runNightlySnapshot() {
@@ -88,7 +92,7 @@ async function runSLABreachSweep() {
     const breaches = await db.pool.query(`
       SELECT * FROM agent_tasks
       WHERE sla_deadline IS NOT NULL
-        AND sla_deadline < now()
+        AND sla_deadline < now() - INTERVAL '5 minutes'
         AND status NOT IN ('complete','failed','escalated')
         AND completed_at IS NULL`).then(r => r.rows);
 
@@ -145,6 +149,85 @@ async function runSessionCleanup() {
   }
 }
 
+// ── Red Team: 4-hour batch cycle trigger (R6 + IC4) ──────────────────────────
+// Fires every 4 hours. Tells Rick to submit his queued threat records and
+// Ivan/Charlie to deliver their Innovation + Growth batch to Barbara.
+async function runRedTeamBatchCycle() {
+  try {
+    await notifyAgents(['Rick'], {
+      type: 'BATCH_CYCLE_TRIGGER',
+      pipeline: 'threat_acquisition',
+      message: 'Submit queued threat records to Barbara (R6 — 4-hour batch cycle).',
+    });
+    await notifyAgents(['Ivan/Charlie'], {
+      type: 'BATCH_CYCLE_TRIGGER',
+      pipeline: 'intel_acquisition',
+      message: 'Submit queued Innovation and Growth records to Barbara (IC4 — 4-hour batch cycle).',
+    });
+    console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'red_team_batch_cycle', status: 'triggered' }));
+  } catch (e) {
+    console.error(JSON.stringify({ ts: new Date().toISOString(), job: 'red_team_batch_cycle', error: e.message }));
+  }
+}
+
+// ── Ivan/Charlie → Ruth delivery reminder (IC3 — fires at 05:45 CT) ──────────
+// Gives Ivan/Charlie 15 minutes to deliver their minimum daily package
+// (2 Innovation + 1 Growth) directly to Ruth before her 0615 CT assembly deadline.
+async function runIvanCharlieRuthReminder() {
+  try {
+    await notifyAgents(['Ivan/Charlie'], {
+      type: 'RUTH_DELIVERY_REMINDER',
+      deadline: '06:00 CT',
+      minimum: '2 Innovation records + 1 Growth record',
+      message: 'Deliver minimum daily Intelligence package to Ruth by 0600 CT (IC3).',
+    });
+    console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'ivan_charlie_ruth_reminder', status: 'sent' }));
+  } catch (e) {
+    console.error(JSON.stringify({ ts: new Date().toISOString(), job: 'ivan_charlie_ruth_reminder', error: e.message }));
+  }
+}
+
+// ── Ivan/Charlie Ruth delivery check (IC6 — fires at 06:05 CT) ───────────────
+// Detects missed 0600 CT delivery to Ruth and escalates to Barret immediately.
+// Checks for any intel items submitted by Ivan/Charlie since midnight CT.
+async function runAcquisitionDeliveryCheck() {
+  try {
+    const result = await db.pool.query(`
+      SELECT COUNT(*) AS delivered
+      FROM intel_items
+      WHERE ingested_by = 'Ivan/Charlie'
+        AND created_at >= (CURRENT_DATE::TIMESTAMPTZ AT TIME ZONE 'America/Chicago')
+    `).then(r => parseInt(r.rows[0].delivered));
+
+    if (result === 0) {
+      const ts = new Date().toISOString();
+      console.warn(JSON.stringify({ ts, job: 'acquisition_delivery_check', status: 'MISSED', agent: 'Ivan/Charlie' }));
+      await notifyAgents(['Barret'], {
+        type: 'INTEL_DELIVERY_MISSED',
+        agent: 'Ivan/Charlie',
+        deadline: '06:00 CT',
+        message: 'Ivan/Charlie has not delivered any intel items today. Ruth\'s 0615 CT assembly deadline is at risk. (IC6)',
+      });
+      await notifyAgents(['Henry'], {
+        type: 'INTEL_DELIVERY_MISSED',
+        agent: 'Ivan/Charlie',
+        deadline: '06:00 CT',
+        message: 'Ivan/Charlie delivery to Ruth missed 0600 CT deadline. Barret notified. (IC6)',
+      });
+      await sgMail.send({
+        to: OPS_ALERT_EMAIL,
+        from: { email: process.env.FROM_EMAIL || 'noreply@cybersense.solutions', name: 'CyberSense.Solutions' },
+        subject: '[OPS ALERT] Ivan/Charlie missed 06:00 CT delivery to Ruth',
+        text: `Acquisition delivery check fired at ${ts}.\n\nIvan/Charlie have not submitted any intel items today. Ruth's 0615 CT briefing assembly deadline is at risk.\n\nBarret and Henry have been notified via the agent fleet.\n\n— CyberSense Scheduler`,
+      }).catch(e => console.error(JSON.stringify({ ts, job: 'acquisition_delivery_check', event: 'EMAIL_FAILED', error: e.message })));
+    } else {
+      console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'acquisition_delivery_check', status: 'ok', items_today: result }));
+    }
+  } catch (e) {
+    console.error(JSON.stringify({ ts: new Date().toISOString(), job: 'acquisition_delivery_check', error: e.message }));
+  }
+}
+
 // ── Daily financial summary trigger (runs at 07:00 CT) ────────────────────────
 async function triggerDailyFinancialSummary() {
   try {
@@ -171,16 +254,207 @@ async function triggerDailyFinancialSummary() {
   }
 }
 
+// ── Task retry sweep (runs every 5 min alongside SLA sweep) ──────────────────
+// Picks up queued notification tasks whose webhook delivery failed on first
+// attempt. Retries with exponential backoff: 5m → 10m → 20m (max 3 attempts).
+const MAX_RETRIES = 3;
+
+async function runTaskRetryQueue() {
+  try {
+    const tasks = await db.pool.query(`
+      SELECT * FROM agent_tasks
+      WHERE status = 'queued'
+        AND retry_count > 0
+        AND retry_count < $1
+        AND retry_after IS NOT NULL
+        AND retry_after < now()
+    `, [MAX_RETRIES]).then(r => r.rows);
+
+    for (const task of tasks) {
+      try {
+        const url = `${process.env.AGENT_WEBHOOK_BASE || 'http://localhost:4000/agents'}/${task.agent_name.toLowerCase()}/notify`;
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CS-Internal': process.env.INTERNAL_SECRET },
+          body: JSON.stringify({ type: 'PENDING_TASK', task_id: task.id, task_type: task.task_type, content_type: task.content_type, content_id: task.content_id, ts: new Date().toISOString() }),
+          signal: AbortSignal.timeout(5000),
+        });
+        if (res.ok) {
+          await db.updateTask(task.id, { status: 'complete' });
+        } else {
+          throw new Error(`HTTP ${res.status}`);
+        }
+      } catch (e) {
+        if (task.retry_count + 1 >= MAX_RETRIES) {
+          await db.updateTask(task.id, { status: 'failed', error_message: `Max retries reached: ${e.message}` });
+          console.error(JSON.stringify({ ts: new Date().toISOString(), job: 'task_retry_queue', task_id: task.id, agent: task.agent_name, status: 'EXHAUSTED' }));
+        } else {
+          await db.bumpTaskRetry(task.id, task.retry_count);
+        }
+      }
+    }
+
+    if (tasks.length > 0) {
+      console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'task_retry_queue', retried: tasks.length }));
+    }
+  } catch (e) {
+    console.error(JSON.stringify({ ts: new Date().toISOString(), job: 'task_retry_queue', error: e.message }));
+  }
+}
+
+// ── Sales: lead qualification scan (S1 — runs daily at 09:00 CT) ─────────────
+// Surfaces active free/freemium users who have been on the platform long enough
+// to qualify for outreach. Mary receives a batched signal rather than one-per-user
+// to avoid notification flood.
+async function runLeadQualificationCheck() {
+  try {
+    const candidates = await db.pool.query(`
+      SELECT id, email, full_name, tier, last_login_at, created_at
+      FROM users
+      WHERE tier IN ('free', 'freemium')
+        AND email_verified = true
+        AND deleted_at IS NULL
+        AND last_login_at > now() - INTERVAL '7 days'
+        AND created_at < now() - INTERVAL '14 days'
+      ORDER BY last_login_at DESC
+      LIMIT 50
+    `).then(r => r.rows);
+
+    if (candidates.length === 0) return;
+
+    await notifyAgents(['Mary'], {
+      type: 'ENGAGEMENT_SIGNAL',
+      candidate_count: candidates.length,
+      candidates: candidates.map(u => ({ id: u.id, email: u.email, full_name: u.full_name, tier: u.tier, last_login_at: u.last_login_at })),
+      message: `${candidates.length} active free/freemium users meet qualification threshold. Review for outreach. (S1)`,
+    });
+
+    console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'lead_qualification_check', candidates: candidates.length }));
+  } catch (e) {
+    console.error(JSON.stringify({ ts: new Date().toISOString(), job: 'lead_qualification_check', error: e.message }));
+  }
+}
+
+// ── Training: Kirby daily cycle initiation (T1 — fires at 05:00 CT) ──────────
+async function runKirbyDailyCycle() {
+  try {
+    await notifyAgents(['Kirby'], {
+      type: 'DAILY_CYCLE_TRIGGER',
+      pipeline: 'training',
+      deadline: '05:30 CT',
+      message: 'Begin training byte production. Deliver to Ruth and Mario by 0530 CT (T1).',
+    });
+    console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'kirby_daily_cycle', status: 'triggered' }));
+  } catch (e) {
+    console.error(JSON.stringify({ ts: new Date().toISOString(), job: 'kirby_daily_cycle', error: e.message }));
+  }
+}
+
+// ── Sales: renewal outreach (S7 — runs daily at 08:00 CT) ────────────────────
+// Detects accounts with renewal_date landing in exactly 90, 60, or 30 days
+// and notifies Joe to begin proactive outreach for each window.
+async function runRenewalOutreach() {
+  try {
+    const accounts = await db.pool.query(`
+      SELECT id, name, domain, health_score, renewal_date, seat_count, account_manager_id
+      FROM organizations
+      WHERE renewal_date IS NOT NULL
+        AND renewal_date IN (
+          CURRENT_DATE + INTERVAL '90 days',
+          CURRENT_DATE + INTERVAL '60 days',
+          CURRENT_DATE + INTERVAL '30 days'
+        )
+      ORDER BY renewal_date ASC
+    `).then(r => r.rows);
+
+    for (const account of accounts) {
+      const days_until_renewal = Math.round((new Date(account.renewal_date) - new Date()) / 86400000);
+      await notifyAgents(['Joe'], {
+        type: 'RENEWAL_OUTREACH_TRIGGER',
+        org_id: account.id,
+        org_name: account.name,
+        renewal_date: account.renewal_date,
+        days_until_renewal,
+        health_score: account.health_score,
+        seat_count: account.seat_count,
+        message: `${account.name} renewal is in ${days_until_renewal} days (${account.renewal_date}). Health score: ${account.health_score}. Begin outreach. (S7)`,
+      });
+    }
+
+    if (accounts.length > 0) {
+      console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'renewal_outreach', accounts_flagged: accounts.length }));
+    }
+  } catch (e) {
+    console.error(JSON.stringify({ ts: new Date().toISOString(), job: 'renewal_outreach', error: e.message }));
+  }
+}
+
+// ── Sales: account health score monitoring (S6 — runs daily at 08:30 CT) ─────
+// Flags orgs below health threshold. Joe handles retention; Victor is looped in
+// if score is critical (< 40) indicating potential churn or operational risk.
+const HEALTH_WARN_THRESHOLD    = 70;
+const HEALTH_CRITICAL_THRESHOLD = 40;
+
+async function runAccountHealthCheck() {
+  try {
+    const accounts = await db.pool.query(`
+      SELECT id, name, domain, health_score, renewal_date, seat_count, account_manager_id
+      FROM organizations
+      WHERE health_score < $1
+      ORDER BY health_score ASC
+    `, [HEALTH_WARN_THRESHOLD]).then(r => r.rows);
+
+    for (const account of accounts) {
+      const critical = account.health_score < HEALTH_CRITICAL_THRESHOLD;
+      await notifyAgents(['Joe'], {
+        type: 'ACCOUNT_HEALTH_ALERT',
+        org_id: account.id,
+        org_name: account.name,
+        health_score: account.health_score,
+        renewal_date: account.renewal_date,
+        critical,
+        message: `${account.name} health score is ${account.health_score}. ${critical ? 'CRITICAL — ' : ''}Proactive retention action required. (S6)`,
+      });
+
+      if (critical) {
+        await notifyAgents(['Victor'], {
+          type: 'ACCOUNT_HEALTH_CRITICAL',
+          org_id: account.id,
+          org_name: account.name,
+          health_score: account.health_score,
+          message: `${account.name} health score is ${account.health_score} — below critical threshold. Risk escalation may be needed. (S6)`,
+        });
+      }
+    }
+
+    if (accounts.length > 0) {
+      console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'account_health_check', accounts_flagged: accounts.length }));
+    }
+  } catch (e) {
+    console.error(JSON.stringify({ ts: new Date().toISOString(), job: 'account_health_check', error: e.message }));
+  }
+}
+
 // ── Scheduler bootstrap (node-cron) ──────────────────────────────────────────
 function startScheduler() {
   try {
     const cron = require('node-cron');
-    cron.schedule('5 0 * * *',   runNightlySnapshot,          { timezone: 'America/Chicago' });
-    cron.schedule('1 0 * * *',   runSessionCleanup,           { timezone: 'America/Chicago' });
-    cron.schedule('*/15 5-9 * * *', runAwarenessPipelineCheck,{ timezone: 'America/Chicago' });
-    cron.schedule('*/5 * * * *', runSLABreachSweep);
-    cron.schedule('0 7 * * *',   triggerDailyFinancialSummary,{ timezone: 'America/Chicago' });
-    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SCHEDULER_STARTED', jobs: 5 }));
+    cron.schedule('5 0 * * *',      runNightlySnapshot,            { timezone: 'America/Chicago' });
+    cron.schedule('1 0 * * *',      runSessionCleanup,             { timezone: 'America/Chicago' });
+    cron.schedule('*/15 5-9 * * *', runAwarenessPipelineCheck,     { timezone: 'America/Chicago' });
+    cron.schedule('*/5 * * * *',    runSLABreachSweep);
+    cron.schedule('*/5 * * * *',    runTaskRetryQueue);
+    cron.schedule('0 7 * * *',      triggerDailyFinancialSummary,  { timezone: 'America/Chicago' });
+    // Red Team acquisition cycle
+    cron.schedule('0 */4 * * *',    runRedTeamBatchCycle,          { timezone: 'America/Chicago' });
+    cron.schedule('45 5 * * *',     runIvanCharlieRuthReminder,    { timezone: 'America/Chicago' });
+    cron.schedule('5 6 * * *',      runAcquisitionDeliveryCheck,   { timezone: 'America/Chicago' });
+    // Training + Sales
+    cron.schedule('0 5 * * *',      runKirbyDailyCycle,            { timezone: 'America/Chicago' });
+    cron.schedule('0 8 * * *',      runRenewalOutreach,            { timezone: 'America/Chicago' });
+    cron.schedule('30 8 * * *',     runAccountHealthCheck,         { timezone: 'America/Chicago' });
+    cron.schedule('0 9 * * *',      runLeadQualificationCheck,     { timezone: 'America/Chicago' });
+    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SCHEDULER_STARTED', jobs: 13 }));
   } catch (e) {
     console.warn('node-cron not installed — scheduler disabled. Install with: npm install node-cron');
   }
@@ -193,4 +467,12 @@ module.exports = {
   runSLABreachSweep,
   runSessionCleanup,
   triggerDailyFinancialSummary,
+  runRedTeamBatchCycle,
+  runIvanCharlieRuthReminder,
+  runAcquisitionDeliveryCheck,
+  runKirbyDailyCycle,
+  runRenewalOutreach,
+  runAccountHealthCheck,
+  runTaskRetryQueue,
+  runLeadQualificationCheck,
 };

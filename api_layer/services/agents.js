@@ -26,8 +26,9 @@ async function notifyAgents(agentNames, payload) {
       if (!res.ok) throw new Error(`Agent ${name} webhook returned ${res.status}`);
     } catch (e) {
       console.error(JSON.stringify({ ts: new Date().toISOString(), event: 'AGENT_NOTIFY_FAILED', agent: name, error: e.message }));
-      // Fallback: create a DB task record so the agent can poll
-      await db.createTask({ agent_name: name, task_type: 'notification', content_type: payload.type || 'system', content_id: payload.record_id || payload.content_id || '00000000-0000-0000-0000-000000000000', sla_deadline: null }).catch(() => {});
+      // Fallback: create a DB task so the agent can poll; seed retry_after for the retry sweep
+      const retry_after = new Date(Date.now() + 5 * 60 * 1000);
+      await db.createTask({ agent_name: name, task_type: 'notification', content_type: payload.type || 'system', content_id: payload.record_id || payload.content_id || '00000000-0000-0000-0000-000000000000', sla_deadline: null, retry_after }).catch(() => {});
     }
   });
   await Promise.allSettled(notifications);

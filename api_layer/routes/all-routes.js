@@ -292,7 +292,23 @@ revenueRouter.post('/webhooks/stripe', express.raw({ type: 'application/json' })
 
     if (event.type === 'invoice.paid') {
       const sub = await db.getSubscriptionByStripeId(data.subscription);
-      if (sub) await db.updateSubscription(data.subscription, { status: 'active', current_period_start: new Date(data.period_start * 1000), current_period_end: new Date(data.period_end * 1000) });
+      if (sub) {
+        await db.updateSubscription(data.subscription, { status: 'active', current_period_start: new Date(data.period_start * 1000), current_period_end: new Date(data.period_end * 1000) });
+        // S3: notify Mary on new paid activation (first invoice = upgrade event)
+        if (data.billing_reason === 'subscription_create') {
+          const user = sub.user_id ? await db.getUserById(sub.user_id) : null;
+          await notifyAgents(['Mary'], {
+            type: 'UPGRADE_EVENT',
+            user_id: sub.user_id,
+            org_id: sub.org_id,
+            email: user?.email,
+            full_name: user?.full_name,
+            tier: sub.tier,
+            mrr_cents: sub.mrr_cents,
+            message: `New paid activation: ${user?.email || sub.org_id} upgraded to ${sub.tier}. Qualify for account handoff to William. (S3)`,
+          });
+        }
+      }
     } else if (event.type === 'customer.subscription.deleted') {
       const sub = await db.getSubscriptionByStripeId(data.id);
       if (sub) {

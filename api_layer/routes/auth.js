@@ -89,7 +89,7 @@ router.post('/login', async (req, res, next) => {
       maxAge: REFRESH_DAYS * 24 * 60 * 60 * 1000,
     });
 
-    res.json({ access_token, user: { id: user.id, email: user.email, tier: user.tier, org_id: user.org_id } });
+    res.json({ access_token, user: { id: user.id, email: user.email, full_name: user.full_name, tier: user.tier, org_id: user.org_id } });
   } catch (e) { next(e); }
 });
 

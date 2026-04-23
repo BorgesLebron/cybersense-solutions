@@ -261,7 +261,7 @@
       <div class="nav-user-menu" id="nav-user-menu">
         <button class="nav-user-btn" id="nav-user-btn" aria-expanded="false" aria-haspopup="true">
           <span class="nav-user-avatar">${getInitials(user.full_name)}</span>
-          <span class="nav-user-name">${user.full_name.split(' ')[0]}</span>
+          <span class="nav-user-name">${(user.full_name || '').split(' ')[0]}</span>
           <span class="nav-tier-badge nav-tier-${user.tier}">${tierLabel[user.tier]}</span>
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="opacity:.5"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         </button>

@@ -213,9 +213,11 @@ const listBriefings = ({ page = 1, limit = 20 } = {}) => {
 
 const advanceBriefingStatus = (id, to_status) =>
   q1(`UPDATE briefings SET pipeline_status=$2,
-        draft_completed_at = CASE WHEN $3='dev_edit' AND draft_completed_at IS NULL THEN now() ELSE draft_completed_at END,
-        published_at = CASE WHEN $4='published' THEN now() ELSE published_at END
-      WHERE id=$1 RETURNING *`, [id, to_status, to_status, to_status]);
+        draft_completed_at   = CASE WHEN $3='dev_edit'  AND draft_completed_at  IS NULL THEN now() ELSE draft_completed_at  END,
+        qa_passed_at         = CASE WHEN $3='qa'        AND qa_passed_at        IS NULL THEN now() ELSE qa_passed_at        END,
+        maya_approved_at     = CASE WHEN $3='maya'      AND maya_approved_at    IS NULL THEN now() ELSE maya_approved_at    END,
+        published_at         = CASE WHEN $3='published' AND published_at        IS NULL THEN now() ELSE published_at        END
+      WHERE id=$1 RETURNING *`, [id, to_status, to_status]);
 
 // ── PIPELINE EVENTS ────────────────────────────────────────────────────────────
 
@@ -284,7 +286,9 @@ const getTrainingModule = (id) => q1('SELECT * FROM training_modules WHERE id=$1
 
 const advanceModuleStatus = (id, to_status) =>
   q1(`UPDATE training_modules SET pipeline_status=$2,
-        published_at = CASE WHEN $3='published' THEN now() ELSE published_at END
+        qa_passed_at     = CASE WHEN $3='qa'        AND qa_passed_at     IS NULL THEN now() ELSE qa_passed_at     END,
+        maya_approved_at = CASE WHEN $3='maya'      AND maya_approved_at IS NULL THEN now() ELSE maya_approved_at END,
+        published_at     = CASE WHEN $3='published' AND published_at     IS NULL THEN now() ELSE published_at     END
       WHERE id=$1 RETURNING *`, [id, to_status, to_status]);
 
 // ── TRAINING COMPLETIONS ───────────────────────────────────────────────────────
@@ -410,10 +414,10 @@ const listPartners = () => q('SELECT * FROM partners ORDER BY monthly_value_cent
 
 // ── AGENT TASKS ────────────────────────────────────────────────────────────────
 
-const createTask = ({ agent_name, task_type, content_type, content_id, sla_deadline }) =>
-  q1(`INSERT INTO agent_tasks (id,agent_name,task_type,content_type,content_id,status,sla_deadline,started_at)
-      VALUES (gen_random_uuid(),$1,$2,$3,$4,'queued',$5,now()) RETURNING *`,
-    [agent_name, task_type, content_type, content_id, sla_deadline || null]);
+const createTask = ({ agent_name, task_type, content_type, content_id, sla_deadline, retry_after }) =>
+  q1(`INSERT INTO agent_tasks (id,agent_name,task_type,content_type,content_id,status,sla_deadline,retry_after,started_at)
+      VALUES (gen_random_uuid(),$1,$2,$3,$4,'queued',$5,$6,now()) RETURNING *`,
+    [agent_name, task_type, content_type, content_id, sla_deadline || null, retry_after || null]);
 
 const updateTask = (id, { status, error_message }) =>
   q1(`UPDATE agent_tasks SET status=$2,
@@ -421,6 +425,14 @@ const updateTask = (id, { status, error_message }) =>
         latency_sec = CASE WHEN $4='complete' THEN EXTRACT(EPOCH FROM now()-started_at)::int ELSE latency_sec END,
         error_message = COALESCE($5, error_message)
       WHERE id=$1 RETURNING *`, [id, status, status, status, error_message || null]);
+
+const bumpTaskRetry = (id, retry_count) => {
+  const delay_min = 5 * Math.pow(2, retry_count); // 5m → 10m → 20m
+  return q1(
+    `UPDATE agent_tasks SET retry_count=$2, retry_after=now()+($3 || ' minutes')::interval WHERE id=$1 RETURNING *`,
+    [id, retry_count + 1, delay_min]
+  );
+};
 
 const listTasks = ({ agent_name, status, content_type, date, page = 1, limit = 50 } = {}) => {
   const conds = ['1=1'];
@@ -558,7 +570,7 @@ module.exports = {
   listSubscriptions, getMRRSummary, logStripeEvent,
   createLead, updateLead, listLeads,
   createPartner, listPartners,
-  createTask, updateTask, listTasks, getSLABreaches, logHandoffSLA,
+  createTask, updateTask, bumpTaskRetry, listTasks, getSLABreaches, logHandoffSLA,
   createRisk, updateRisk, listRisks,
   getLatestSnapshot, getLiveMetricsDelta, getPipelineStatus, getActivityFeed,
   getAgentHealthSummary, logAuditEvent, getAuditLog,
