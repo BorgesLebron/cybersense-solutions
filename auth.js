@@ -230,7 +230,7 @@
     applyTierGates('free');
     document.dispatchEvent(new CustomEvent('cs:logout'));
     // Redirect if on a protected page
-    const protectedPages = ['dashboard.html'];
+    const protectedPages = ['dashboard.html', 'cybersense_admin_dashboard.html'];
     const currentPage = window.location.pathname.split('/').pop();
     if (protectedPages.includes(currentPage)) {
       window.location.href = 'index.html';

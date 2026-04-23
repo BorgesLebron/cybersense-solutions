@@ -248,18 +248,6 @@
 <script src="auth.js"></script>
 <script src="main.js"></script>
 <script>
-const EDITION_MAP = {
-  '2026-04-22': { file: 'newsletter/2026/Apr/04222026_edition108.html', edition: 108 },
-  '2026-04-21': { file: 'newsletter/2026/Apr/04212026_edition107.html', edition: 107 },
-  '2026-04-20': { file: 'newsletter/2026/Apr/04202026_edition106.html', edition: 106 },
-  '2026-04-17': { file: 'newsletter/2026/Apr/04172026_edition105.html', edition: 105 },
-  '2026-04-16': { file: 'newsletter/2026/Apr/04162026_edition104.html', edition: 104 },
-  '2026-04-15': { file: 'newsletter/2026/Apr/04152026_edition103.html', edition: 103 },
-  '2026-04-14': { file: 'newsletter/2026/Apr/04142026_edition102.html', edition: 102 },
-  '2026-04-13': { file: 'newsletter/2026/Apr/04132026_edition101.html', edition: 101 },
-  '2026-04-10': { file: 'newsletter/2026/Apr/04102026_edition100.html', edition: 100 },
-  '2026-04-09': { file: 'newsletter/2026/Apr/04092026_edition99.html',  edition: 99  },
-};
 
 function severityBadge(s) {
   const map = { critical: 'badge-critical', high: 'badge-high', medium: 'badge-medium', low: 'badge-low' };
@@ -304,66 +292,27 @@ async function loadHomeData(user) {
   }
 
   // ── Briefing Preview ───────────────────────────────────────────
-  // EDITION_MAP is the authoritative record of available HTML editions.
-  // Use the newer of (EDITION_MAP latest) vs (API latest) so newly added
-  // editions show immediately without waiting for a backend publish.
-  const latestMapEntry = Object.entries(EDITION_MAP).sort((a, b) => b[0].localeCompare(a[0]))[0];
-  const latestMapDate  = latestMapEntry ? latestMapEntry[0] : null;
-  const latestMapInfo  = latestMapEntry ? latestMapEntry[1] : null;
-
   if (user) {
     try {
       const briefingData = await CS.Auth.apiFetch('/api/content/briefings?limit=1');
-      const briefings = briefingData.data || [];
-      let b = briefings[0] || null;
-      let useMapDate = latestMapDate;
+      const b = (briefingData.data || [])[0] || null;
 
       if (b) {
-        const apiDate = b.edition_date.split('T')[0];
-        if (latestMapDate && latestMapDate > apiDate) {
-          // EDITION_MAP has a newer edition — show it
-          useMapDate = latestMapDate;
-          b = null; // drop API data, use map
-        }
-      }
-
-      const edInfo  = EDITION_MAP[useMapDate] || latestMapInfo;
-      const edDate  = b ? b.edition_date : (useMapDate + 'T12:00:00Z');
-      const dateStr = new Date(edDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
-      const edNum   = edInfo ? `Edition ${edInfo.edition}` : 'Latest Edition';
-
-      document.getElementById('briefing-edition-label').textContent = edNum;
-      document.getElementById('briefing-date').textContent = dateStr;
-      document.getElementById('briefing-subject').textContent = b ? b.subject_line : 'Daily Intelligence Briefing';
-
-      if (b) {
-        const teaser = b.body_md ? b.body_md.replace(/^#+\s*/gm, '').trim().split('\n').find(l => l.trim().length > 20) || '' : '';
-        if (teaser) document.getElementById('briefing-editors-note').textContent = teaser.slice(0, 220);
-      }
-
-      if (edInfo) {
-        document.getElementById('briefing-read-link').href = edInfo.file;
+        const dateStr = new Date(b.edition_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+        document.getElementById('briefing-edition-label').textContent = b.edition_number ? `Edition ${b.edition_number}` : 'Latest Edition';
+        document.getElementById('briefing-date').textContent = dateStr;
+        document.getElementById('briefing-subject').textContent = b.subject_line || 'Daily Intelligence Briefing';
+        if (b.description) document.getElementById('briefing-editors-note').textContent = b.description.slice(0, 220);
+        if (b.file_path) document.getElementById('briefing-read-link').href = b.file_path;
       }
     } catch(e) {
-      // Fallback to EDITION_MAP on error
-      if (latestMapInfo) {
-        const dateStr = new Date(latestMapDate + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
-        document.getElementById('briefing-edition-label').textContent = `Edition ${latestMapInfo.edition}`;
-        document.getElementById('briefing-date').textContent = dateStr;
-        document.getElementById('briefing-read-link').href = latestMapInfo.file;
-      }
+      console.error('Briefing preview error:', e);
     }
   } else {
-    const latest = Object.entries(EDITION_MAP).sort((a, b) => b[0].localeCompare(a[0]))[0];
-    if (latest) {
-      const dateStr = new Date(latest[0] + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-      document.getElementById('briefing-edition-label').textContent = `Edition ${latest[1].edition}`;
-      document.getElementById('briefing-date').textContent = dateStr;
-      document.getElementById('briefing-subject').textContent = 'Sign in to read today\'s full briefing.';
-      const link = document.getElementById('briefing-read-link');
-      link.href = '#';
-      link.setAttribute('onclick', 'CS.Auth.showLoginModal();return false;');
-    }
+    document.getElementById('briefing-subject').textContent = 'Sign in to read today\'s full briefing.';
+    const link = document.getElementById('briefing-read-link');
+    link.href = '#';
+    link.setAttribute('onclick', 'CS.Auth.showLoginModal();return false;');
   }
 }
 

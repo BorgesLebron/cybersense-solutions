@@ -126,45 +126,17 @@
 <script src="auth.js"></script>
 <script src="main.js"></script>
 <script>
-// Edition date → HTML file path mapping
-const EDITION_MAP = {
-  '2026-04-22': { file: 'newsletter/2026/Apr/04222026_edition108.html', edition: 108 },
-  '2026-04-21': { file: 'newsletter/2026/Apr/04212026_edition107.html', edition: 107 },
-  '2026-04-20': { file: 'newsletter/2026/Apr/04202026_edition106.html', edition: 106 },
-  '2026-04-17': { file: 'newsletter/2026/Apr/04172026_edition105.html', edition: 105 },
-  '2026-04-16': { file: 'newsletter/2026/Apr/04162026_edition104.html', edition: 104 },
-  '2026-04-15': { file: 'newsletter/2026/Apr/04152026_edition103.html', edition: 103 },
-  '2026-04-14': { file: 'newsletter/2026/Apr/04142026_edition102.html', edition: 102 },
-  '2026-04-13': { file: 'newsletter/2026/Apr/04132026_edition101.html', edition: 101 },
-  '2026-04-10': { file: 'newsletter/2026/Apr/04102026_edition100.html', edition: 100 },
-  '2026-04-09': { file: 'newsletter/2026/Apr/04092026_edition99.html',  edition: 99  },
-  '2026-04-08': { file: 'newsletter/2026/Apr/04082026.html',            edition: 98  },
-  '2026-04-07': { file: 'newsletter/2026/Apr/04072026.html',            edition: 97  },
-  '2026-04-06': { file: 'newsletter/2026/Apr/04062026.html',            edition: 96  },
-  '2026-04-03': { file: 'newsletter/2026/Apr/04032026.html',            edition: 95  },
-  '2026-04-02': { file: 'newsletter/2026/Apr/04022026.html',            edition: 94  },
-  '2026-04-01': { file: 'newsletter/2026/Apr/04012026.html',            edition: 93  },
-};
-
 function formatEditionDate(dateStr) {
   const d = new Date(dateStr);
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 }
 
-function getEditionFile(dateStr) {
-  const dateOnly = dateStr.split('T')[0];
-  return EDITION_MAP[dateOnly] || null;
-}
-
 function renderLatestEdition(briefing) {
   const preview = document.getElementById('edition-preview');
-  const edInfo  = getEditionFile(briefing.edition_date);
-
   const dateFormatted = formatEditionDate(briefing.edition_date);
-  const editionNum    = edInfo ? edInfo.edition : (briefing.edition_number || '107');
-  const fileLink      = edInfo ? edInfo.file : null;
-  
-  const editorsNote = briefing.description || briefing.summary || "Seven items curated for practitioners who need situational awareness without the noise.";
+  const editionNum    = briefing.edition_number || '';
+  const fileLink      = briefing.file_path || null;
+  const editorsNote   = briefing.description || "Seven items curated for practitioners who need situational awareness without the noise.";
 
   preview.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid #f1f5f9;">
@@ -190,25 +162,23 @@ function renderLatestEdition(briefing) {
     </div>
 
     <div style="margin-top:28px;display:flex;gap:12px;flex-wrap:wrap;">
-      <a href="${fileLink}" class="btn btn-primary" style="padding: 10px 24px;">Read Full Edition →</a>
+      ${fileLink ? `<a href="${fileLink}" class="btn btn-primary" style="padding: 10px 24px;">Read Full Edition →</a>` : ''}
       <a href="#subscribe" class="btn btn-outline" style="padding: 10px 24px;">Subscribe Now</a>
     </div>
   `;
 }
 
-function renderSidebar(userTier) {
+function renderSidebar(briefings) {
   const sidebar = document.getElementById('editions-sidebar');
-  const editions = Object.entries(EDITION_MAP).sort((a, b) => b[0].localeCompare(a[0]));
+  const initial   = briefings.slice(0, 5);
+  const remainder = briefings.slice(5);
 
-  const initial = editions.slice(0, 5);
-  const remainder = editions.slice(5);
-
-  let html = initial.map(([date, info], i) => createEditionRow(date, info, i === 0)).join('');
+  let html = initial.map((b, i) => createEditionRow(b, i === 0)).join('');
 
   if (remainder.length > 0) {
     html += `
       <div id="extra-editions" style="display:none;">
-        ${remainder.map(([date, info]) => createEditionRow(date, info, false)).join('')}
+        ${remainder.map(b => createEditionRow(b, false)).join('')}
       </div>
       <button id="view-more-btn" onclick="toggleArchive()" style="width:100%; padding:12px; background:none; border:1px dashed var(--cs-gray-300); color:var(--cs-cyan); cursor:pointer; margin-top:10px; font-weight:700; font-size:12px;">
         VIEW MORE EDITIONS +
@@ -218,15 +188,16 @@ function renderSidebar(userTier) {
   sidebar.innerHTML = html;
 }
 
-function createEditionRow(date, info, isActive) {
-  const dateStr = formatEditionDate(date + 'T12:00:00');
+function createEditionRow(briefing, isActive) {
+  const dateStr = formatEditionDate(briefing.edition_date);
+  const link    = briefing.file_path || '#';
   return `
     <div class="edition-row${isActive ? ' active' : ''}" style="padding:12px 0; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center;">
       <div>
         <div class="edition-date" style="font-weight:700; color:var(--cs-navy); font-size:14px;">${dateStr}</div>
-        <div class="edition-meta" style="font-size:12px; color:var(--cs-gray-400);">Edition ${info.edition}</div>
+        <div class="edition-meta" style="font-size:12px; color:var(--cs-gray-400);">Edition ${briefing.edition_number || ''}</div>
       </div>
-      <a href="${info.file}" style="font-size:12px;color:var(--cs-cyan);text-decoration:none;" target="_blank">Read →</a>
+      <a href="${link}" style="font-size:12px;color:var(--cs-cyan);text-decoration:none;" target="_blank">Read →</a>
     </div>`;
 }
 
@@ -243,55 +214,25 @@ function toggleArchive() {
 }
 
 async function loadNewsletter(user) {
-  const userTier = user?.tier || 'free';
   if (!user) {
     document.getElementById('guest-banner').style.display = 'flex';
     renderGuestNewsletter();
     return;
   }
-  renderSidebar(userTier);
-
-  // EDITION_MAP is the authoritative source for what HTML editions exist.
-  // Always use the newest EDITION_MAP key as the display edition; pull description from API if the dates match.
-  const latestMapDate = Object.keys(EDITION_MAP).sort().reverse()[0];
-  const latestMapInfo = EDITION_MAP[latestMapDate];
 
   try {
-    const data = await CS.Auth.apiFetch('/api/content/briefings?limit=1');
+    const data = await CS.Auth.apiFetch('/api/content/briefings?limit=200');
     const briefings = data.data || [];
 
     if (briefings.length > 0) {
-      const apiDate = briefings[0].edition_date.split('T')[0];
-      if (latestMapDate >= apiDate) {
-        // EDITION_MAP is newer or equal — use it for file/edition, API for description
-        renderLatestEdition({
-          edition_date: latestMapDate,
-          subject_line: apiDate === latestMapDate ? briefings[0].subject_line : 'Daily Intelligence Briefing',
-          description: apiDate === latestMapDate ? (briefings[0].description || briefings[0].summary) : null,
-          edition_number: latestMapInfo.edition
-        });
-      } else {
-        renderLatestEdition(briefings[0]);
-      }
-      return;
+      renderSidebar(briefings);
+      renderLatestEdition(briefings[0]);
+    } else {
+      document.getElementById('edition-preview').innerHTML = '<p style="color:var(--cs-gray-400);padding:24px 0;">No editions available yet.</p>';
     }
-
-    // API empty — use EDITION_MAP
-    renderLatestEdition({
-      edition_date: latestMapDate,
-      subject_line: 'Latest Intelligence Briefing',
-      description: 'Situational awareness for the modern cybersecurity professional. Click below for the full edition.',
-      edition_number: latestMapInfo.edition
-    });
-
   } catch(e) {
     console.error('Newsletter load error:', e);
-    renderLatestEdition({
-      edition_date: latestMapDate,
-      subject_line: 'Daily Awareness Brief',
-      description: 'The latest situational awareness update from the CyberSense team.',
-      edition_number: latestMapInfo.edition
-    });
+    document.getElementById('edition-preview').innerHTML = '<p style="color:var(--cs-gray-400);padding:24px 0;">Unable to load edition. Please try again.</p>';
   }
 }
 

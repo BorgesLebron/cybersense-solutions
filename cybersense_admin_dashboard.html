@@ -1,3 +1,29 @@
+<script>window.CS_API_BASE = 'https://api.cybersense.solutions';</script>
+<script src="auth.js"></script>
+
+<!-- LOGIN GATE — hidden once admin session is established -->
+<div id="login-gate" style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f8fafc;">
+  <div style="width:340px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:32px;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="width:40px;height:40px;background:#185FA5;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:#fff;margin-bottom:12px;">CS</div>
+      <div style="font-size:16px;font-weight:600;color:#1e293b;">CyberSense Admin</div>
+      <div style="font-size:13px;color:#94a3b8;margin-top:4px;">Restricted access</div>
+    </div>
+    <form id="login-form">
+      <div style="margin-bottom:14px;">
+        <label style="font-size:12px;font-weight:500;color:#475569;display:block;margin-bottom:6px;">Email</label>
+        <input id="login-email" type="email" required autocomplete="email" placeholder="admin@cybersense.solutions"
+          style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;font-family:inherit;">
+      </div>
+      <div style="margin-bottom:20px;">
+        <label style="font-size:12px;font-weight:500;color:#475569;display:block;margin-bottom:6px;">Password</label>
+        <input id="login-password" type="password" required autocomplete="current-password"
+          style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;font-family:inherit;">
+      </div>
+      <button type="submit" style="width:100%;padding:10px;background:#185FA5;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;">Sign In</button>
+    </form>
+  </div>
+</div>
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -75,7 +101,7 @@
 .risk-level{font-size:11px;font-weight:500}
 </style>
 
-<div class="db">
+<div class="db" id="dashboard-shell" style="display:none">
 <div class="topbar">
   <div class="topbar-left">
     <div class="logo-mark">CS</div>
@@ -86,7 +112,8 @@
   </div>
   <div style="display:flex;align-items:center;gap:16px">
     <span style="font-size:12px;color:var(--color-text-secondary)"><span class="status-dot"></span>All systems operational</span>
-    <span style="font-size:12px;color:var(--color-text-tertiary)">Henry — GM</span>
+    <span id="nav-user-label" style="font-size:12px;color:var(--color-text-tertiary)"></span>
+    <button id="nav-logout" onclick="CS.Auth.logout()" style="display:none;font-size:12px;color:var(--color-text-secondary);background:none;border:0.5px solid var(--color-border-secondary);border-radius:6px;padding:4px 10px;cursor:pointer;">Sign out</button>
   </div>
 </div>
 
@@ -149,29 +176,27 @@
       <div class="panel-sub">Live operational snapshot — Henry, Valerie, Victor</div>
 
       <div class="metric-row r5">
-        <div class="met"><div class="met-lbl">Total subscribers</div><div class="met-val">4,812</div><div class="met-delta up">+214 this week</div></div>
-        <div class="met"><div class="met-lbl">Paid accounts</div><div class="met-val">1,047</div><div class="met-delta up">+38 MTD</div></div>
-        <div class="met"><div class="met-lbl">Enterprise accounts</div><div class="met-val">12</div><div class="met-delta up">+2 pipeline</div></div>
-        <div class="met"><div class="met-lbl">MRR</div><div class="met-val">$18,340</div><div class="met-delta up">+6.2%</div></div>
-        <div class="met"><div class="met-lbl">Open risk items</div><div class="met-val">3</div><div class="met-delta dn">1 high severity</div></div>
+        <div class="met"><div class="met-lbl">Total subscribers</div><div class="met-val" id="metric-subscribers">—</div><div class="met-delta nt" id="metric-subscribers-delta"></div></div>
+        <div class="met"><div class="met-lbl">Paid accounts</div><div class="met-val" id="metric-paid">—</div><div class="met-delta nt" id="metric-paid-delta"></div></div>
+        <div class="met"><div class="met-lbl">Enterprise accounts</div><div class="met-val" id="metric-enterprise">—</div><div class="met-delta nt"></div></div>
+        <div class="met"><div class="met-lbl">MRR</div><div class="met-val" id="metric-mrr">—</div><div class="met-delta nt" id="metric-mrr-delta"></div></div>
+        <div class="met"><div class="met-lbl">Open risk items</div><div class="met-val" id="metric-risks">—</div><div class="met-delta nt"></div></div>
       </div>
 
       <div class="grid2">
         <div class="card">
-          <div class="card-hd">Pipeline status <span class="badge b-green">All nominal</span></div>
-          <div class="progress-row"><span class="progress-lbl">Acquisition</span><div class="progress-bar"><div class="bar-fill" style="width:92%;background:#1D9E75"></div></div><span class="progress-val">92%</span></div>
-          <div class="progress-row"><span class="progress-lbl">Intel brief</span><div class="progress-bar"><div class="bar-fill" style="width:78%;background:#378ADD"></div></div><span class="progress-val">78%</span></div>
-          <div class="progress-row"><span class="progress-lbl">Awareness</span><div class="progress-bar"><div class="bar-fill" style="width:100%;background:#1D9E75"></div></div><span class="progress-val">100%</span></div>
-          <div class="progress-row"><span class="progress-lbl">Training</span><div class="progress-bar"><div class="bar-fill" style="width:65%;background:#BA7517"></div></div><span class="progress-val">65%</span></div>
-          <div class="progress-row"><span class="progress-lbl">Distribution</span><div class="progress-bar"><div class="bar-fill" style="width:88%;background:#378ADD"></div></div><span class="progress-val">88%</span></div>
+          <div class="card-hd">Pipeline status</div>
+          <div id="pipeline-status-bars">
+            <div class="progress-row"><span class="progress-lbl">Intel pipeline</span><div class="progress-bar"><div class="bar-fill" style="width:0%;background:#378ADD"></div></div><span class="progress-val">—</span></div>
+            <div class="progress-row"><span class="progress-lbl">Awareness</span><div class="progress-bar"><div class="bar-fill" style="width:0%;background:#1D9E75"></div></div><span class="progress-val">—</span></div>
+            <div class="progress-row"><span class="progress-lbl">Training</span><div class="progress-bar"><div class="bar-fill" style="width:0%;background:#BA7517"></div></div><span class="progress-val">—</span></div>
+          </div>
         </div>
         <div class="card">
           <div class="card-hd">Activity feed</div>
-          <div class="feed-item"><div class="feed-dot" style="background:#1D9E75"></div><div><div class="feed-txt">Ed approved Daily Briefing — published to Oliver</div><div class="feed-time">08:47 CT</div></div></div>
-          <div class="feed-item"><div class="feed-dot" style="background:#378ADD"></div><div><div class="feed-txt">Rob approved Intel Brief: CVE-2025-3841 analysis</div><div class="feed-time">08:12 CT</div></div></div>
-          <div class="feed-item"><div class="feed-dot" style="background:#BA7517"></div><div><div class="feed-txt">Jeff returned Training Byte — needs revision</div><div class="feed-time">07:55 CT</div></div></div>
-          <div class="feed-item"><div class="feed-dot" style="background:#1D9E75"></div><div><div class="feed-txt">Rick flagged 2 new critical CVEs — Barbara queued</div><div class="feed-time">07:30 CT</div></div></div>
-          <div class="feed-item"><div class="feed-dot" style="background:#E24B4A"></div><div><div class="feed-txt">Victor raised risk flag: vendor dependency</div><div class="feed-time">06:55 CT</div></div></div>
+          <div id="activity-feed">
+            <div class="feed-item"><div class="feed-dot" style="background:#94a3b8"></div><div><div class="feed-txt" style="color:var(--color-text-tertiary)">Loading…</div></div></div>
+          </div>
         </div>
       </div>
 
@@ -189,10 +214,11 @@
           <div style="display:flex;justify-content:space-between;padding:5px 0"><span style="font-size:12px;color:var(--color-text-secondary)">Churn rate</span><span style="font-size:12px;font-weight:500;color:var(--color-text-danger)">2.4%</span></div>
         </div>
         <div class="card"><div class="card-hd">Agent health</div>
-          <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary)"><span style="font-size:12px;color:var(--color-text-secondary)">Active agents</span><span class="badge b-green">24/25</span></div>
-          <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary)"><span style="font-size:12px;color:var(--color-text-secondary)">Tasks completed</span><span style="font-size:12px;font-weight:500;color:var(--color-text-primary)">137 today</span></div>
-          <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary)"><span style="font-size:12px;color:var(--color-text-secondary)">Avg latency</span><span style="font-size:12px;font-weight:500;color:var(--color-text-primary)">1.4 min</span></div>
-          <div style="display:flex;justify-content:space-between;padding:5px 0"><span style="font-size:12px;color:var(--color-text-secondary)">Blocked items</span><span class="badge b-red">1</span></div>
+          <div id="agent-health-summary">
+            <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary)"><span style="font-size:12px;color:var(--color-text-secondary)">Active agents</span><span class="badge b-gray">—</span></div>
+            <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary)"><span style="font-size:12px;color:var(--color-text-secondary)">Avg latency</span><span style="font-size:12px;font-weight:500;color:var(--color-text-primary)">—</span></div>
+            <div style="display:flex;justify-content:space-between;padding:5px 0"><span style="font-size:12px;color:var(--color-text-secondary)">With errors</span><span class="badge b-gray">—</span></div>
+          </div>
         </div>
       </div>
       <button class="ask-btn" onclick="sendPrompt('What KPIs should Henry review daily in the CyberSense command center dashboard?')">Define daily KPI protocol ↗</button>
@@ -472,4 +498,13 @@ function showPanel(id, el) {
   document.getElementById('p-' + id).classList.add('active');
   el.classList.add('active');
 }
+
+// Update topbar user label once auth resolves
+document.addEventListener('cs:login', (e) => {
+  const u = e.detail;
+  const label = document.getElementById('nav-user-label');
+  if (label && u) label.textContent = (u.full_name || u.email || '') + (u.admin_role?.role ? ' — ' + u.admin_role.role.toUpperCase() : '');
+  const btn = document.getElementById('nav-logout');
+  if (btn) btn.style.display = 'inline-block';
+});
 </script>

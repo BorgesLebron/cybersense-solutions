@@ -1,5 +1,5 @@
 """
-CyberSense.Solutions — Training Byte Carousel Generator
+CyberSense.Solutions – Training Byte Carousel Generator
 ========================================================
 Usage: Edit the CONTENT section below, then run:
     python3 generate_carousel.py
@@ -12,45 +12,47 @@ from PIL import Image, ImageDraw, ImageFont
 import math, os, io, requests
 
 # ══════════════════════════════════════════════════════════════════════════════
-# CONTENT — Edit this section for each new carousel
+# CONTENT – Edit this section for each new carousel
 # ══════════════════════════════════════════════════════════════════════════════
 
-EDITION_NUMBER   = "106"
-CARD2_TAG        = "WHAT CHANGED"
-CARD2_LINE1      = "NIST Stopped"
-CARD2_LINE2      = "Enriching"
-CARD2_LINE3      = "Most CVEs."
-CARD2_BODY1      = "Effective April 15, 2026, the National Vulnerability Database no longer automatically assigns CVSS scores, CWE classifications, or CPE data to most new CVEs."
-CARD2_BODY2      = "Only CVEs on the CISA KEV catalog or tied to federal government software get full enrichment."
-CARD2_STAT       = "263%"
-CARD2_STAT_LINE1 = "increase in CVE submissions"
-CARD2_STAT_LINE2 = "2020 → 2025"
+EDITION_NUMBER   = "108"
+CARD2_TAG        = "Why it matters now?"
+CARD2_LINE1      = "SD-WAN Flaws"
+CARD2_LINE2      = "Expose the Entire"
+CARD2_LINE3      = "Management Plane"
+CARD2_BODY1      = "This vulnerability does not require authentication. An attacker who can reach the Cisco SD-WAN Manager interface over the network can read credentials, private keys, and configuration files without presenting a single valid credential."
+CARD2_BODY2      = "The vulnerability exists because the API does not validate user privileges before granting access to certain file paths – a failure of access control at the API layer, not at the network perimeter."
+CARD2_STAT       = "6.5"
+CARD2_STAT_LINE1 = "CVSS score – Medium"
+CARD2_STAT_LINE2 = "CVE-2026-20133"
 
-CARD3_TAG    = "WHAT TO DO NOW"
-CARD3_LINE1  = "3 Responses"
-CARD3_LINE2  = "for Your Vulnerability"
-CARD3_LINE3  = "Program"
+CARD3_TAG    = "What to check"
+CARD3_LINE1  = "4 Steps"
+CARD3_LINE2  = "To Check Your Exposure"
+CARD3_LINE3  = "In Your Environment"
 CARD3_STEPS  = [
-    ("①", "Use vendor CVSS scores",   "Don't wait for NVD. Check the vendor advisory directly."),
-    ("②", "Diversify intel sources",  "CISA KEV, GitHub Advisory DB, commercial feeds."),
-    ("③", "Make CISA KEV your queue", "Confirmed active exploitation. Patch those first."),
+    ("①", "Identify",   "IInventory all Management Interfaces (SD-WAN, Firewalls, APIs). Ensure zero visibility from untrusted networks."),
+    ("②", "Verify",     "Confirm all access is restricted to dedicated out-of-band networks or MFA-secured jump hosts."),
+    ("③", "Update",     "Audit SD-WAN versions immediately. Apply fixes to 20.9, 20.12, 20.15, or 20.18 branches today."),
+    ("④", "Reasssess",  "RAudit firewall rules. Internet-reachable management planes are misconfigurations, not patching issues – correct them now.")
 ]
-CARD3_CLOSE  = "The database changed. Your workflow should too."
+CARD3_CLOSE  = "Management plane exposure turns a patch into an incident. Verify network access controls today."
 
 CARD4_HEADLINE = f"Edition {EDITION_NUMBER}"
 CARD4_SUBHEAD  = "is live."
 CARD4_BULLETS  = [
-    "Apache ActiveMQ CVE-2026-34197 — actively exploited",
-    "NIST NVD enrichment changes affecting your workflow",
-    "Windows Active Directory critical RCE",
-    "BitLocker recovery loop from April Patch Tuesday",
+    "Cisco Catalyst SD-WAN Manager – Three Vulnerabilities on CISA KEV, Federal Deadline April 23",
+    "Everest Ransomware Claims Citizens Bank Breach – 3.4 Million Banking Records and 250,000+ SSNs at Risk",
+    "Pierce County Library Breach – Patron Data Including SSNs, Passport Numbers, and Health Information Exposed April 15–21",
+    "Microsoft: Threat Actors Are Running AI-Assisted Attack Workflows 47 Times Faster Than Human Operators",
+    "IBM Launches Agentic Attack Readiness Assessment – Evaluating Enterprise Exposure to AI-Enabled Threats"
 ]
 CARD4_URL = "cybersense.solutions/newsletter"
 
 OUTPUT_DIR = "."  # Change to your output folder if needed
 
 # ══════════════════════════════════════════════════════════════════════════════
-# Local FONTS — DownloaLoading from /fonts folder
+# Local FONTS – DownloaLoading from /fonts folder
 # ══════════════════════════════════════════════════════════════════════════════
 
 def get_font(name, size):
@@ -83,7 +85,7 @@ def load_fonts():
     }
 
 # ══════════════════════════════════════════════════════════════════════════════
-# DESIGN SYSTEM — Do not edit unless changing brand
+# DESIGN SYSTEM – Do not edit unless changing brand
 # ══════════════════════════════════════════════════════════════════════════════
 
 NAVY       = (10, 22, 40)
@@ -179,7 +181,7 @@ def make_card1(fonts):
                 draw.point((px,py), fill=(0,fade+20,fade+100))
     draw.ellipse([cx-6,cy-6,cx+6,cy+6], fill=CYAN)
 # --- Centered Tag Logic ---
-    tag = "EDITION 106"
+    tag = f"EDITION {EDITION_NUMBER}"
     font_tag = fonts['label']
     
     # 1. Calculate text width to determine the box size
@@ -328,9 +330,9 @@ def make_card3(fonts):
         draw.text((text_x, y + 2), title, font=fonts['h3'], fill=WHITE) # Switched to h3 for size
         
         # Description with more leading
-        draw_wrapped(draw, desc, fonts['body'], text_x, y + 40, W-180, color=GRAY_MID, line_height=30)
+        draw_wrapped(draw, desc, fonts['body'], text_x, y + 40, W-180, color=GRAY_MID, line_height=25) # Decrease line height for longer descriptions
         
-        y += 125  # Increased spacing between steps (from 100 to 125)
+        y += 100  # Increased spacing between steps (from 100 to 125)
     
     # 5. Footer Line and Closing Text
     draw.rectangle([60, y + 10, W-60, y + 12], fill=CYAN_DIM)
@@ -380,7 +382,7 @@ def make_card4(fonts):
         
         # 3. Item text with more room
         draw_wrapped(draw, item, fonts['body'], 105, y, W-160, color=GRAY_LIGHT, line_height=34)
-        y += 65 # Increased space between bullet points
+        y += 100 # Increased space between bullet points
     
     # 4. Clean URL (Centered, no button box)
     url_y = H - 220
@@ -411,7 +413,7 @@ def make_card4(fonts):
 
 # ── MAIN ──────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    print(f"\nCyberSense Carousel Generator — Edition {EDITION_NUMBER}")
+    print(f"\nCyberSense Carousel Generator – Edition {EDITION_NUMBER}")
     print("=" * 50)
     fonts = load_fonts()
     print("Rendering cards...")
@@ -425,5 +427,5 @@ if __name__ == "__main__":
         path = os.path.join(OUTPUT_DIR, name)
         img.save(path, "PNG")
         print(f"  ✓ {name}")
-    print(f"\nDone — 4 cards saved to: {os.path.abspath(OUTPUT_DIR)}")
+    print(f"\nDone – 4 cards saved to: {os.path.abspath(OUTPUT_DIR)}")
     print("Fonts cached in: .font_cache/")
