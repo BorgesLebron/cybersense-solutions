@@ -208,7 +208,7 @@ const getBriefingById = (id) => q1('SELECT * FROM briefings WHERE id=$1', [id]);
 const listBriefings = ({ page = 1, limit = 20 } = {}) => {
   const offset = (page - 1) * limit;
   return q(`SELECT id,edition_date,edition_number,subject_line,description,file_path,pipeline_status,published_at,open_count,click_count
-            FROM briefings WHERE pipeline_status='published' ORDER BY edition_date DESC LIMIT $1 OFFSET $2`, [limit, offset]);
+            FROM briefings WHERE pipeline_status='published' AND edition_date <= CURRENT_DATE ORDER BY edition_date DESC LIMIT $1 OFFSET $2`, [limit, offset]);
 };
 
 const advanceBriefingStatus = (id, to_status) =>

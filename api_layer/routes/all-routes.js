@@ -29,7 +29,7 @@ contentRouter.get('/briefings', requireUserToken('free'), async (req, res, next)
   try {
     const { page = 1, limit = 20 } = req.query;
     if (TIER_RANK[req.user.tier] < TIER_RANK['freemium']) {
-      const current = await db.pool.query("SELECT id,edition_date,subject_line FROM briefings WHERE pipeline_status='published' ORDER BY edition_date DESC LIMIT 1").then(r => r.rows[0]);
+      const current = await db.pool.query("SELECT id,edition_date,subject_line FROM briefings WHERE pipeline_status='published' AND edition_date <= CURRENT_DATE ORDER BY edition_date DESC LIMIT 1").then(r => r.rows[0]);
       return res.json({ data: [{ ...current, blurred: true, teaser: 'Subscribe free to read the Daily Digital Awareness Briefing.' }], meta: { page: 1, limit: 1, total: 1, pages: 1 } });
     }
     const briefings = await db.listBriefings({ page: +page, limit: +limit });
