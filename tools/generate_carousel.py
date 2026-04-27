@@ -327,7 +327,7 @@ def make_card3(fonts):
         draw.line([80, y+30, 92, y+14], fill=check_color, width=4)
         
         # 4. Step Text - Larger title and more horizontal padding
-        text_x = 130 
+        text_x = 120 
         draw.text((text_x, y + 2), title, font=fonts['h3'], fill=WHITE) # Switched to h3 for size
         
         # Description with more leading
