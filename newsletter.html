@@ -213,6 +213,30 @@ function toggleArchive() {
   }
 }
 
+// Static edition records for editions not yet registered in the pipeline DB.
+// Prepended to API results and deduped by edition_date.
+// Update this list each time a new edition is published.
+const STATIC_EDITIONS = [
+  {
+    edition_date: '2026-04-28', edition_number: 112,
+    subject_line: 'Management Plane Under Siege: Fortinet, Samsung, and AI-MFA Bypass',
+    description: 'FortiClient EMS (CVSS 9.1) enables unauthenticated command execution on the endpoint management console. Samsung MagicINFO is under active Mirai botnet exploitation with a CISA KEV May 8 federal deadline. Storm-1747\'s Tycoon2FA has crossed 100,000 compromised organizations by defeating MFA via real-time session token interception.',
+    file_path: '/newsletter/2026/Apr/04282026_edition112.html', pipeline_status: 'published'
+  },
+  {
+    edition_date: '2026-04-27', edition_number: 111,
+    subject_line: 'The Security Stack Under Attack – When Windows Defender, SD-WAN Controllers, and Enterprise Middleware Become the Entry Points',
+    description: 'Three CISA-designated exploits share a structural reality: the enterprise tools organizations deploy to defend and control their environments — Windows Defender, Cisco SD-WAN, and Apache ActiveMQ — are themselves under active exploitation.',
+    file_path: '/newsletter/2026/Apr/04272026_edition111.html', pipeline_status: 'published'
+  },
+  {
+    edition_date: '2026-04-24', edition_number: 110,
+    subject_line: 'The Identity Perimeter – When Credentials Are the Keys and Attackers Already Have Them',
+    description: 'Three credential-based incidents: MFA fatigue bypassing enterprise Okta, a CVSS 9.8 PAN-OS authentication bypass requiring no credentials, and active VMware vCenter exploitation in ransomware pre-positioning operations.',
+    file_path: '/newsletter/2026/Apr/04242026_edition110.html', pipeline_status: 'published'
+  }
+];
+
 async function loadNewsletter(user) {
   if (!user) {
     document.getElementById('guest-banner').style.display = 'flex';
@@ -222,7 +246,11 @@ async function loadNewsletter(user) {
 
   try {
     const data = await CS.Auth.apiFetch('/api/content/briefings?limit=200');
-    const briefings = data.data || [];
+    const apiDates = new Set((data.data || []).map(b => b.edition_date));
+    const briefings = [
+      ...STATIC_EDITIONS.filter(e => !apiDates.has(e.edition_date)),
+      ...(data.data || [])
+    ].sort((a, b) => new Date(b.edition_date) - new Date(a.edition_date));
 
     if (briefings.length > 0) {
       renderSidebar(briefings);

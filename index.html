@@ -294,8 +294,17 @@ async function loadHomeData(user) {
   // ── Briefing Preview ───────────────────────────────────────────
   if (user) {
     try {
+      const LATEST_STATIC = {
+        edition_date: '2026-04-28', edition_number: 112,
+        subject_line: 'Management Plane Under Siege: Fortinet, Samsung, and AI-MFA Bypass',
+        description: 'FortiClient EMS (CVSS 9.1) enables unauthenticated command execution on the endpoint management console. Samsung MagicINFO under active Mirai botnet exploitation with a CISA KEV May 8 deadline. Storm-1747 Tycoon2FA has crossed 100,000 compromised organizations by defeating MFA via real-time session token interception.',
+        file_path: '/newsletter/2026/Apr/04282026_edition112.html'
+      };
+
       const briefingData = await CS.Auth.apiFetch('/api/content/briefings?limit=1');
-      const b = (briefingData.data || [])[0] || null;
+      const apiLatest = (briefingData.data || [])[0] || null;
+      const b = (!apiLatest || new Date(LATEST_STATIC.edition_date) >= new Date(apiLatest.edition_date))
+        ? LATEST_STATIC : apiLatest;
 
       if (b) {
         const dateStr = new Date(b.edition_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
