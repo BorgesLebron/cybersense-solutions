@@ -295,10 +295,10 @@ async function loadHomeData(user) {
   if (user) {
     try {
       const LATEST_STATIC = {
-        edition_date: '2026-04-30', edition_number: 114,
-        subject_line: 'Stack Under Siege: GitHub RCE, cPanel Bypass, and ASP.NET Forgery',
-        description: `CVE-2026-3854 disclosed April 28 by Wiz Research landed on GitHubs foundational git push pipeline — any authenticated user with push access to any repository could achieve full remote code execution on GitHub's backend infrastructure via a single crafted git command, with 88% of internet-exposed GitHub Enterprise Server instances remaining unpatched at the time of public disclosure. Simultaneously, cPanel disclosed CVE-2026-41940, a critical authentication bypass affecting all supported versions of cPanel and WHM...`,
-        file_path: '/newsletter/2026/Apr/04302026_edition114.html'
+        edition_date: '2026-05-01', edition_number: 115,
+        subject_line: 'Backup Blind Spot: Veeam RCE, Ivanti MDM, and VMware vCenter',
+        description: `CVE-2026-27082 (CVSS 9.8) in Veeam Backup & Replication was actively exploited by ransomware operators to destroy backup repositories before deploying primary payloads — eliminating recovery before the ransom demand arrives. Ivanti EPMM disclosed twin pre-auth RCEs (CVE-2026-1281 and CVE-2026-1340, both CVSS 9.8) enabling backdoor and web shell deployment across government and healthcare sectors in four countries. VMware vCenter Server VMSA-2026-0019 documents a heap overflow granting any authenticated user SYSTEM-level hypervisor control.`,
+        file_path: '/newsletter/2026/May/05012026_edition115.html'
       };
 
       const briefingData = await CS.Auth.apiFetch('/api/content/briefings?limit=1');
