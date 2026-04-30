@@ -295,10 +295,10 @@ async function loadHomeData(user) {
   if (user) {
     try {
       const LATEST_STATIC = {
-        edition_date: '2026-04-28', edition_number: 112,
-        subject_line: "Stack Under Siege: GitHub RCE, cPanel Bypass, and ASP.NET Forgery"
-        description: "CVE-2026-3854 disclosed April 28 by Wiz Research landed on GitHub's foundational git push pipeline — any authenticated user with push access to any repository could achieve full remote code execution on GitHub's backend infrastructure via a single crafted git command, with 88% of internet-exposed GitHub Enterprise Server instances remaining unpatched at the time of public disclosure. Simultaneously, cPanel disclosed CVE-2026-41940, a critical authentication bypass affecting all supported versions of cPanel and WHM..."
-        file_path: "/newsletter/2026/Apr/04302026_edition114.html"
+        edition_date: '2026-04-30', edition_number: 114,
+        subject_line: 'Stack Under Siege: GitHub RCE, cPanel Bypass, and ASP.NET Forgery'
+        description: 'CVE-2026-3854 disclosed April 28 by Wiz Research landed on GitHubs foundational git push pipeline — any authenticated user with push access to any repository could achieve full remote code execution on GitHub's backend infrastructure via a single crafted git command, with 88% of internet-exposed GitHub Enterprise Server instances remaining unpatched at the time of public disclosure. Simultaneously, cPanel disclosed CVE-2026-41940, a critical authentication bypass affecting all supported versions of cPanel and WHM...'
+        file_path: '/newsletter/2026/Apr/04302026_edition114.html'
       };
 
       const briefingData = await CS.Auth.apiFetch('/api/content/briefings?limit=1');
