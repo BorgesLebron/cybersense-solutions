@@ -217,6 +217,18 @@ function toggleArchive() {
 // Prepended to API results and deduped by edition_date.
 // Update this list each time a new edition is published.
 const STATIC_EDITIONS = [
+{
+    edition_date: '2026-04-30', edition_number: 114,
+    subject_line: 'Stack Under Siege: GitHub RCE, cPanel Bypass, and ASP.NET Forgery',
+    description: `CVE-2026-3854 disclosed April 28 by Wiz Research landed on GitHub's foundational git push pipeline — any authenticated user with push access to any repository could achieve full remote code execution on GitHub's backend infrastructure via a single crafted git command, with 88% of internet-exposed GitHub Enterprise Server instances remaining unpatched at the time of public disclosure. Simultaneously, cPanel disclosed CVE-2026-41940, a critical authentication bypass affecting all supported versions of cPanel and WHM...`,
+    file_path: '/newsletter/2026/Apr/04302026_edition114.html', pipeline_status: 'published'
+  },  
+  {
+    edition_date: '2026-04-29', edition_number: 113,
+    subject_line: `Log In, Don't Break In: Windows Credential Theft, ScreenConnect's Return, and the New Math of Attacker Economics`,
+    description: 'FortiClient EMS (CVSS 9.1) enables unauthenticated command execution on the endpoint management console. Samsung MagicINFO is under active Mirai botnet exploitation with a CISA KEV May 8 federal deadline. Storm-1747\'s Tycoon2FA has crossed 100,000 compromised organizations by defeating MFA via real-time session token interception.',
+    file_path: '/newsletter/2026/Apr/04292026_edition113.html', pipeline_status: 'published'
+  },  
   {
     edition_date: '2026-04-28', edition_number: 112,
     subject_line: 'Management Plane Under Siege: Fortinet, Samsung, and AI-MFA Bypass',
