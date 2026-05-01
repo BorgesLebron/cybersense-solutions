@@ -197,7 +197,7 @@ trainingRouter.get('/modules/:id', requireUserToken('free'), async (req, res, ne
   } catch (e) { next(e); }
 });
 
-trainingRouter.post('/completions', requireUserToken('enterprise'), async (req, res, next) => {
+trainingRouter.post('/completions', requireUserToken('monthly'), async (req, res, next) => {
   try {
     const { module_id, score, time_spent_min } = req.body;
     if (!module_id || score == null || !time_spent_min) return res.status(400).json(err('MISSING_FIELDS', 'module_id, score, time_spent_min are required'));
@@ -214,12 +214,9 @@ trainingRouter.get('/completions/me', requireUserToken(), async (req, res, next)
   } catch (e) { next(e); }
 });
 
-trainingRouter.get('/completions/org/:org_id', async (req, res, next) => {
+trainingRouter.get('/completions/org/:org_id', requireAdminToken(['gm', 'training', 'analyst']), async (req, res, next) => {
   try {
     const { org_id } = req.params;
-    const isAdminWithAccess = req.adminRole && ['gm', 'training', 'analyst'].includes(req.adminRole.role);
-    const isOrgAdmin = req.user?.org_id === org_id && req.user?.is_org_admin;
-    if (!isAdminWithAccess && !isOrgAdmin) return res.status(403).json(err('FORBIDDEN', 'Access denied'));
     const { department } = req.query;
     const [details, summary] = await Promise.all([db.getOrgCompletions(org_id, { department }), db.getOrgCompletionSummary(org_id)]);
     res.json({ org_id, summary, details });
@@ -237,7 +234,7 @@ trainingRouter.post('/simulations', requireAgentToken(['Kirby', 'Henry']), async
   } catch (e) { next(e); }
 });
 
-trainingRouter.post('/simulations/:id/results', async (req, res, next) => {
+trainingRouter.post('/simulations/:id/results', requireAgentToken(['Kirby', 'Henry']), async (req, res, next) => {
   try {
     const { simulation_id, user_id, outcome, response_time_sec, department } = req.body;
     const validOutcomes = ['reported', 'clicked', 'ignored'];
@@ -248,7 +245,7 @@ trainingRouter.post('/simulations/:id/results', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-trainingRouter.get('/simulations/org/:org_id', async (req, res, next) => {
+trainingRouter.get('/simulations/org/:org_id', requireAdminToken(['gm', 'training', 'analyst']), async (req, res, next) => {
   try {
     const { org_id } = req.params;
     const sims = await db.getOrgSimulations(org_id);
@@ -388,7 +385,7 @@ salesRouter.get('/accounts', requireAdminToken(['gm', 'sales']), async (req, res
   } catch (e) { next(e); }
 });
 
-salesRouter.patch('/accounts/:id', async (req, res, next) => {
+salesRouter.patch('/accounts/:id', requireAgentToken(SALES_AGENTS), async (req, res, next) => {
   try {
     const allowed = ['health_score', 'renewal_date', 'account_manager_id', 'seat_count'];
     const updates = Object.fromEntries(Object.entries(req.body).filter(([k]) => allowed.includes(k)));
@@ -439,7 +436,7 @@ opsRouter.get('/activity-feed', requireAdminToken(), async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-opsRouter.post('/risk', async (req, res, next) => {
+opsRouter.post('/risk', requireAgentToken([]), async (req, res, next) => {
   try {
     const { domain, title, description, severity, score, owner_agent, due_date } = req.body;
     const validDomains = ['operational', 'intelligence', 'reputational', 'financial', 'compliance'];
@@ -454,7 +451,7 @@ opsRouter.post('/risk', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-opsRouter.patch('/risk/:id', async (req, res, next) => {
+opsRouter.patch('/risk/:id', requireAgentToken([]), async (req, res, next) => {
   try {
     const allowed = ['status', 'score', 'description', 'owner_agent', 'due_date', 'resolved_at'];
     const updates = Object.fromEntries(Object.entries(req.body).filter(([k]) => allowed.includes(k)));
