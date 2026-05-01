@@ -485,6 +485,10 @@ async function runMidnightContentUpdate() {
 // Quinn notified on success (credential audit trail).
 // Cy + Quinn notified on failure — expired token blocks Oliver's 0700 CT post.
 async function runLinkedInTokenRefresh() {
+  if (!process.env.LINKEDIN_REFRESH_TOKEN) {
+    console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'linkedin_token_refresh', status: 'skipped', reason: 'LINKEDIN_REFRESH_TOKEN not provisioned' }));
+    return;
+  }
   try {
     const { refreshLinkedInToken } = require('./linkedin');
     const result = await refreshLinkedInToken();
