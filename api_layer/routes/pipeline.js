@@ -10,6 +10,14 @@ const INTEL_AGENTS = ['James', 'Jason', 'Rob', 'Jeff', 'Maya', 'Henry', 'Laura']
 const AWARENESS_AGENTS = ['Ruth', 'Peter', 'Ed', 'Jeff', 'Maya', 'Henry', 'Laura'];
 const TRAINING_AGENTS = ['Kirby', 'Mario', 'Matt', 'Jeff', 'Maya', 'Henry', 'Laura', 'Alex'];
 
+// Next-stage task and notification targets for each awareness pipeline transition.
+// Keyed on to_status. maya → approved is handled by AUTO-003 (Preview Briefing gate).
+const AWARENESS_DISPATCH = {
+  eic_review: { agent: 'Ed',   task_type: 'eic_review_briefing', sla_h: 6, sla_m: 45 },
+  qa:         { agent: 'Jeff', task_type: 'qa_briefing',         sla_h: 6, sla_m: 55 },
+  maya:       { agent: 'Maya', task_type: 'approve_briefing',    sla_h: 7, sla_m: 0  },
+};
+
 // POST /api/pipeline/threat-records  (Rick only)
 router.post('/threat-records', requireAgentToken(['Rick', 'Henry']), async (req, res, next) => {
   try {
@@ -190,6 +198,15 @@ router.post('/briefings', requireAgentToken(['Ruth', 'Henry']), async (req, res,
     sla.setHours(6, 15, 0, 0);
     const task = await db.createTask({ agent_name: 'Peter', task_type: 'dev_edit_briefing', content_type: 'briefing', content_id: briefing.id, sla_deadline: sla });
 
+    await notifyAgents(['Peter'], {
+      type: 'BRIEFING_READY_FOR_DEV_EDIT',
+      briefing_id: briefing.id,
+      edition_date,
+      task_id: task.id,
+      sla_deadline: sla.toISOString(),
+      message: `Briefing for ${edition_date} is ready for developmental editing. SLA: 06:30 CT.`,
+    });
+
     res.status(201).json({ id: briefing.id, edition_date, pipeline_status: 'draft', draft_completed_at: briefing.draft_completed_at, queued_task_id: task.id });
   } catch (e) { next(e); }
 });
@@ -218,6 +235,36 @@ router.patch('/briefings/:id/status', requireAgentToken([...AWARENESS_AGENTS]), 
       const [h, m] = SLA_TIMES[to_status].split(':').map(Number);
       const sla = new Date(); sla.setHours(h, m, 0, 0);
       await db.logHandoffSLA({ from_agent: agent_name, to_agent: 'next', content_id: id, expected_at: sla, actual_at: new Date() });
+    }
+
+    // Forward handoff — create next-stage task and notify next agent
+    const dispatch = AWARENESS_DISPATCH[to_status];
+    if (dispatch) {
+      const sla = new Date(); sla.setHours(dispatch.sla_h, dispatch.sla_m, 0, 0);
+      const nextTask = await db.createTask({ agent_name: dispatch.agent, task_type: dispatch.task_type, content_type: 'briefing', content_id: id, sla_deadline: sla });
+      await notifyAgents([dispatch.agent], {
+        type: 'BRIEFING_HANDOFF',
+        briefing_id: id,
+        edition_date: briefing.edition_date,
+        from_agent: agent_name,
+        stage: to_status,
+        task_id: nextTask.id,
+        sla_deadline: sla.toISOString(),
+        message: `Briefing for ${briefing.edition_date} handed off to ${dispatch.agent} by ${agent_name}. SLA: ${dispatch.sla_h}:${String(dispatch.sla_m).padStart(2, '0')} CT.`,
+      });
+    }
+
+    // Rejection — notify Ruth so she can revise and resubmit
+    if (to_status === 'draft' && briefing.pipeline_status !== 'draft') {
+      await notifyAgents(['Ruth'], {
+        type: 'BRIEFING_REJECTED',
+        briefing_id: id,
+        edition_date: briefing.edition_date,
+        rejected_by: agent_name,
+        from_stage: briefing.pipeline_status,
+        notes,
+        message: `Briefing for ${briefing.edition_date} rejected at ${briefing.pipeline_status} by ${agent_name} and returned to draft.${notes ? ` Notes: ${notes}` : ''}`,
+      });
     }
 
     res.json({ id, from_status: briefing.pipeline_status, to_status });
