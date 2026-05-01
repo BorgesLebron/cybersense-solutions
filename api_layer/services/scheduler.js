@@ -435,6 +435,84 @@ async function runAccountHealthCheck() {
   }
 }
 
+// ── Midnight content update (00:00 CT, Mon–Fri = Sun–Thu nights) ─────────────
+// Confirms the current published edition before the 0430 CT Ruth kickoff.
+// Failure escalates to Barret + Cy immediately with ops email — no 0700 CT
+// delivery can happen without a confirmed current edition pointer.
+async function runMidnightContentUpdate() {
+  try {
+    const edition = await db.pool.query(`
+      SELECT id, edition_number, file_path, subject_line, edition_date, published_at
+      FROM briefings
+      WHERE pipeline_status = 'published'
+      ORDER BY edition_date DESC
+      LIMIT 1
+    `).then(r => r.rows[0]);
+
+    if (!edition) throw new Error('No published edition found in briefings table');
+
+    await notifyAgents(['Nora'], {
+      type: 'CURRENT_EDITION_CONFIRMED',
+      edition_number: edition.edition_number,
+      file_path: edition.file_path,
+      subject_line: edition.subject_line,
+      edition_date: edition.edition_date,
+      published_at: edition.published_at,
+      message: `Current edition confirmed: Edition ${edition.edition_number} — "${edition.subject_line}". File: ${edition.file_path}. Ready for 0700 CT delivery window.`,
+    });
+
+    console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'midnight_content_update', status: 'complete', edition_number: edition.edition_number }));
+  } catch (e) {
+    const ts = new Date().toISOString();
+    console.error(JSON.stringify({ ts, job: 'midnight_content_update', status: 'error', error: e.message }));
+    await notifyAgents(['Barret', 'Cy'], {
+      type: 'MIDNIGHT_UPDATE_FAILED',
+      error: e.message,
+      message: `Midnight content update failed. Current edition pointer not confirmed. Manual intervention required before 0430 CT.`,
+    });
+    await sgMail.send({
+      to: OPS_ALERT_EMAIL,
+      from: { email: process.env.FROM_EMAIL || 'noreply@cybersense.solutions', name: 'CyberSense.Solutions' },
+      subject: '[OPS ALERT] Midnight content update job failed',
+      text: `Midnight content update failed at ${ts}.\n\nError: ${e.message}\n\nBarret and Cy have been notified. Manual intervention required before 0430 CT.\n\n— CyberSense Scheduler`,
+    }).catch(emailErr => console.error(JSON.stringify({ ts, job: 'midnight_content_update', event: 'EMAIL_FAILED', error: emailErr.message })));
+  }
+}
+
+// ── LinkedIn token refresh (Sun 23:00 CT weekly) ──────────────────────────────
+// Weekly proactive refresh keeps the token well within LinkedIn's 60-day
+// expiry window. Runs Sunday night before the production week starts.
+// Quinn notified on success (credential audit trail).
+// Cy + Quinn notified on failure — expired token blocks Oliver's 0700 CT post.
+async function runLinkedInTokenRefresh() {
+  try {
+    const { refreshLinkedInToken } = require('./linkedin');
+    const result = await refreshLinkedInToken();
+    await notifyAgents(['Quinn'], {
+      type: 'CREDENTIAL_REFRESHED',
+      service: 'linkedin',
+      expires_in: result.expires_in,
+      message: `LinkedIn access token refreshed. Expires in ${result.expires_in}s. Update LINKEDIN_ACCESS_TOKEN in Railway env if persistent storage is required.`,
+    });
+    console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'linkedin_token_refresh', status: 'complete', expires_in: result.expires_in }));
+  } catch (e) {
+    const ts = new Date().toISOString();
+    console.error(JSON.stringify({ ts, job: 'linkedin_token_refresh', status: 'error', error: e.message }));
+    await notifyAgents(['Cy', 'Quinn'], {
+      type: 'CREDENTIAL_REFRESH_FAILED',
+      service: 'linkedin',
+      error: e.message,
+      message: `LinkedIn token refresh failed. Oliver's 0700 CT post may fail if current token has expired. Immediate credential check required.`,
+    });
+    await sgMail.send({
+      to: OPS_ALERT_EMAIL,
+      from: { email: process.env.FROM_EMAIL || 'noreply@cybersense.solutions', name: 'CyberSense.Solutions' },
+      subject: '[OPS ALERT] LinkedIn token refresh failed',
+      text: `LinkedIn token refresh failed at ${ts}.\n\nError: ${e.message}\n\nCy and Quinn have been notified. Oliver's next post may fail if the current token has expired.\n\n— CyberSense Scheduler`,
+    }).catch(emailErr => console.error(JSON.stringify({ ts, job: 'linkedin_token_refresh', event: 'EMAIL_FAILED', error: emailErr.message })));
+  }
+}
+
 // ── Scheduler bootstrap (node-cron) ──────────────────────────────────────────
 function startScheduler() {
   try {
@@ -454,7 +532,10 @@ function startScheduler() {
     cron.schedule('0 8 * * *',      runRenewalOutreach,            { timezone: 'America/Chicago' });
     cron.schedule('30 8 * * *',     runAccountHealthCheck,         { timezone: 'America/Chicago' });
     cron.schedule('0 9 * * *',      runLeadQualificationCheck,     { timezone: 'America/Chicago' });
-    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SCHEDULER_STARTED', jobs: 13 }));
+    // Content + credentials
+    cron.schedule('0 0 * * 1-5',    runMidnightContentUpdate,      { timezone: 'America/Chicago' });
+    cron.schedule('0 23 * * 0',     runLinkedInTokenRefresh,       { timezone: 'America/Chicago' });
+    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SCHEDULER_STARTED', jobs: 15 }));
   } catch (e) {
     console.warn('node-cron not installed — scheduler disabled. Install with: npm install node-cron');
   }
@@ -475,4 +556,6 @@ module.exports = {
   runAccountHealthCheck,
   runTaskRetryQueue,
   runLeadQualificationCheck,
+  runMidnightContentUpdate,
+  runLinkedInTokenRefresh,
 };
