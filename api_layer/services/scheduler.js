@@ -435,6 +435,61 @@ async function runAccountHealthCheck() {
   }
 }
 
+// ── Ruth daily cycle trigger (04:30 CT, Mon–Fri = Sun–Thu production nights) ──
+// Kicks off the awareness pipeline. Creates a typed daily_cycle task with
+// 06:00 CT SLA, then delivers a live notification. Idempotent — skips if a
+// briefing record for today already exists. Failure escalates immediately
+// because Ruth missing her start blocks the entire 0700 CT delivery chain.
+async function runRuthDailyCycle() {
+  const editionDate = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Chicago' });
+  try {
+    const existing = await db.getBriefingByDate(editionDate);
+    if (existing) {
+      console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'ruth_daily_cycle', status: 'skipped', reason: 'briefing_exists', edition_date: editionDate }));
+      return;
+    }
+
+    const sla = new Date();
+    sla.setHours(6, 0, 0, 0);
+
+    await db.createTask({
+      agent_name: 'Ruth',
+      task_type: 'daily_cycle',
+      content_type: 'briefing',
+      content_id: '00000000-0000-0000-0000-000000000000',
+      sla_deadline: sla,
+    });
+
+    await notifyAgents(['Ruth'], {
+      type: 'DAILY_CYCLE_START',
+      edition_date: editionDate,
+      sla_deadline: sla.toISOString(),
+      composition_required: { threat: 3, innovation: 2, growth: 1, training_byte: 1 },
+      kirby_deadline: '05:00 CT',
+      ivan_charlie_deadline: '05:30 CT',
+      message: `Begin daily cycle for ${editionDate}. Source, select, and structure 7 items per SOP OA-AWR-001. Deliver package to Peter by 06:00 CT.`,
+    });
+
+    console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'ruth_daily_cycle', status: 'triggered', edition_date: editionDate }));
+  } catch (e) {
+    const ts = new Date().toISOString();
+    console.error(JSON.stringify({ ts, job: 'ruth_daily_cycle', status: 'error', error: e.message }));
+    await notifyAgents(['Barret', 'Henry'], {
+      type: 'PIPELINE_START_FAILED',
+      job: 'ruth_daily_cycle',
+      edition_date: editionDate,
+      error: e.message,
+      message: `Ruth's 0430 CT daily cycle trigger failed. Awareness pipeline for ${editionDate} has not started. 0700 CT delivery is at risk.`,
+    });
+    await sgMail.send({
+      to: OPS_ALERT_EMAIL,
+      from: { email: process.env.FROM_EMAIL || 'noreply@cybersense.solutions', name: 'CyberSense.Solutions' },
+      subject: `[OPS ALERT] Ruth daily cycle trigger failed — ${editionDate}`,
+      text: `Ruth's 0430 CT daily cycle trigger failed at ${ts}.\n\nError: ${e.message}\n\nEdition: ${editionDate}. Barret and Henry notified. 0700 CT delivery is at risk.\n\n— CyberSense Scheduler`,
+    }).catch(emailErr => console.error(JSON.stringify({ ts, job: 'ruth_daily_cycle', event: 'EMAIL_FAILED', error: emailErr.message })));
+  }
+}
+
 // ── Midnight content update (00:00 CT, Mon–Fri = Sun–Thu nights) ─────────────
 // Confirms the current published edition before the 0430 CT Ruth kickoff.
 // Failure escalates to Barret + Cy immediately with ops email — no 0700 CT
@@ -539,7 +594,9 @@ function startScheduler() {
     // Content + credentials
     cron.schedule('0 0 * * 1-5',    runMidnightContentUpdate,      { timezone: 'America/Chicago' });
     cron.schedule('0 23 * * 0',     runLinkedInTokenRefresh,       { timezone: 'America/Chicago' });
-    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SCHEDULER_STARTED', jobs: 15 }));
+    // Awareness pipeline kickoff
+    cron.schedule('30 4 * * 1-5',   runRuthDailyCycle,             { timezone: 'America/Chicago' });
+    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SCHEDULER_STARTED', jobs: 16 }));
   } catch (e) {
     console.warn('node-cron not installed — scheduler disabled. Install with: npm install node-cron');
   }
@@ -562,4 +619,5 @@ module.exports = {
   runLeadQualificationCheck,
   runMidnightContentUpdate,
   runLinkedInTokenRefresh,
+  runRuthDailyCycle,
 };
