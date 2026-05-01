@@ -18,6 +18,7 @@ const {
   opsRouter:      opsRoutes,
   socialRouter:   socialRoutes,
   adminRouter:    adminRoutes,
+  agentsRouter:   agentWebhookRoutes,
 } = require('./routes/all-routes');
 
 const authRoutes = require('./routes/auth.js');
@@ -73,6 +74,7 @@ app.use('/api/ops',        userLimit, agentLimit, opsRoutes);
 app.use('/api/social',     agentLimit, socialRoutes);
 app.use('/api/admin',      userLimit, adminRoutes);
 app.use('/api/enterprise', userLimit, agentLimit, enterpriseRoutes);
+app.use('/agents',        agentWebhookRoutes);
 
 app.get('/health', (req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }));
 

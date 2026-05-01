@@ -4,7 +4,7 @@
 const express = require('express');
 const contentRouter = express.Router();
 const db = require('../db/queries');
-const { requireUserToken, requireAdminToken, gateContent, TIER_RANK, err } = require('../middleware/auth');
+const { requireUserToken, requireAdminToken, gateContent, TIER_RANK, AGENT_PERMISSIONS, err } = require('../middleware/auth');
 
 contentRouter.get('/articles', requireUserToken('free'), async (req, res, next) => {
   try {
@@ -622,4 +622,50 @@ adminRouter.get('/audit', requireAdminToken(['gm']), async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-module.exports = { contentRouter, usersRouter, tasksRouter, trainingRouter, revenueRouter, salesRouter, opsRouter, socialRouter, adminRouter };
+// ── agents (webhook receiver) ─────────────────────────────────────────────────
+// Inbound notification endpoint for the internal agent communication bus.
+// Called exclusively by notifyAgents() in services/agents.js via X-CS-Internal.
+// Creates a DB task record on every received notification so agents can poll
+// if they miss the live signal. Mounting: /agents (no /api prefix).
+const agentsRouter = express.Router();
+
+function requireInternal(req, res, next) {
+  const secret = process.env.INTERNAL_SECRET;
+  if (!secret) return res.status(503).json(err('NOT_CONFIGURED', 'Internal notification endpoint not configured'));
+  if (req.headers['x-cs-internal'] !== secret) return res.status(401).json(err('UNAUTHORIZED', 'Internal authentication required'));
+  next();
+}
+
+agentsRouter.post('/:name/notify', requireInternal, async (req, res, next) => {
+  try {
+    const agentName = Object.keys(AGENT_PERMISSIONS).find(k => k.toLowerCase() === req.params.name.toLowerCase());
+    if (!agentName) return res.status(404).json(err('UNKNOWN_AGENT', `Agent ${req.params.name} not found in fleet`));
+
+    const { type, content_id, record_id, task_id } = req.body;
+    if (!type) return res.status(400).json(err('MISSING_TYPE', 'Notification type is required'));
+
+    const resolvedContentId = content_id || record_id || task_id || '00000000-0000-0000-0000-000000000000';
+
+    await db.createTask({
+      agent_name: agentName,
+      task_type: 'notification',
+      content_type: type,
+      content_id: resolvedContentId,
+      sla_deadline: null,
+    });
+
+    await db.logAuditEvent({
+      actor: 'system',
+      action: 'agent_notification',
+      target_agent: agentName,
+      reason: type,
+      affected_content_id: resolvedContentId !== '00000000-0000-0000-0000-000000000000' ? resolvedContentId : null,
+    });
+
+    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'AGENT_NOTIFIED', agent: agentName, type }));
+
+    res.json({ received: true, agent: agentName, type });
+  } catch (e) { next(e); }
+});
+
+module.exports = { contentRouter, usersRouter, tasksRouter, trainingRouter, revenueRouter, salesRouter, opsRouter, socialRouter, adminRouter, agentsRouter };
