@@ -62,7 +62,9 @@ async function sendBriefingEmail(to_list, briefing) {
       name,
       edition_date: dateFormatted,
       subject: briefing.subject_line,
-      preview_url: `${process.env.APP_URL}/newsletter`
+      preview_url: briefing.file_path
+        ? `${process.env.APP_URL}${briefing.file_path}`
+        : `${process.env.APP_URL}/newsletter`
     },
   }));
   try {
