@@ -5,80 +5,197 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png">
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png">
-<title>Admin Dashboard — CyberSense.Solutions</title>
-<meta name="description" content="CyberSense.Solutions administration dashboard.">
+<title>Admin Console — CyberSense.Solutions</title>
+<meta name="description" content="CyberSense.Solutions administration console.">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="auth.css">
-  
+
 <style>
-  /* Override body padding for full-height gate */
   body { background: var(--cs-navy); }
 
-  /* Login gate: full-page overlay */
+  /* ── Login gate ── */
   #login-gate {
     min-height: calc(100vh - var(--nav-h));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    background: var(--cs-navy);
-    position: relative;
-    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px; background: var(--cs-navy); position: relative; overflow: hidden;
   }
   #login-gate::before {
-    content: '';
-    position: absolute;
-    top: -100px; left: 50%;
-    transform: translateX(-50%);
+    content: ''; position: absolute; top: -100px; left: 50%; transform: translateX(-50%);
     width: 600px; height: 600px;
     background: radial-gradient(circle, rgba(0,212,255,0.06) 0%, transparent 70%);
     pointer-events: none;
   }
   .login-card {
-    background: var(--cs-blue-dark);
-    border: 1px solid rgba(0,212,255,0.2);
-    border-radius: var(--radius-lg);
-    padding: 48px 44px;
-    width: 100%;
-    max-width: 420px;
-    position: relative;
-    z-index: 1;
+    background: var(--cs-blue-dark); border: 1px solid rgba(0,212,255,0.2);
+    border-radius: var(--radius-lg); padding: 48px 44px;
+    width: 100%; max-width: 420px; position: relative; z-index: 1;
   }
 
-  /* Dashboard shell: hidden initially */
-  #dashboard-shell {
-    display: none;
-    background: var(--cs-gray-100);
-  }
+  /* ── Dashboard shell ── */
+  #dashboard-shell { display: none; background: var(--cs-gray-100); }
 
-  .dash-main { padding: 32px; overflow-y: auto; }
+  /* ── Tab content ── */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ── Main area ── */
+  .dash-main { padding: 28px 32px; overflow-y: auto; }
+
+  /* ── Dash header ── */
+  .dash-header {
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 12px; margin-bottom: 24px;
+  }
+  .dash-header h1 { font-size: 22px; font-weight: 700; color: var(--cs-navy); margin-bottom: 2px; }
+  .dash-header p { font-size: 13px; color: var(--cs-gray-400); }
+  .dash-header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+  /* ── Preview dropdown ── */
+  .preview-wrap { position: relative; }
+  .preview-menu {
+    display: none; position: absolute; right: 0; top: calc(100% + 6px);
+    background: var(--cs-white); border: 1px solid #e2e8f0;
+    border-radius: var(--radius); box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    min-width: 210px; z-index: 200; overflow: visible;
+  }
+  .preview-menu.open { display: block; }
+  .preview-menu a, .preview-menu-label {
+    display: block; padding: 9px 16px; font-size: 13px; color: #334155;
+    text-decoration: none; transition: background 0.15s; white-space: nowrap;
+    cursor: pointer;
+  }
+  .preview-menu a:hover, .preview-menu-label:hover { background: #f8fafc; color: var(--cs-navy); }
+  .preview-menu-divider { height: 1px; background: #e2e8f0; margin: 4px 0; }
+  .preview-sub-wrap { position: relative; }
+  .preview-submenu {
+    display: none; position: absolute; left: 100%; top: 0;
+    background: var(--cs-white); border: 1px solid #e2e8f0;
+    border-radius: var(--radius); box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    min-width: 200px; z-index: 201;
+  }
+  .preview-sub-wrap:hover .preview-submenu { display: block; }
+
+  /* ── Activity feed ── */
   .activity-feed { display: flex; flex-direction: column; gap: 0; }
-  .activity-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 14px;
-    padding: 14px 0;
-    border-bottom: 1px solid #f1f5f9;
-  }
+  .activity-item { display: flex; align-items: flex-start; gap: 14px; padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
   .activity-item:last-child { border-bottom: none; }
-  .activity-icon {
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    font-size: 14px;
-  }
-  .activity-icon-cyan { background: rgba(0,212,255,0.1); }
+  .activity-icon { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 13px; }
+  .activity-icon-cyan  { background: rgba(0,212,255,0.1); }
   .activity-icon-green { background: rgba(16,185,129,0.1); }
   .activity-icon-amber { background: rgba(245,158,11,0.1); }
-  .activity-icon-red { background: rgba(239,68,68,0.1); }
+  .activity-icon-red   { background: rgba(239,68,68,0.1); }
   .activity-text { flex: 1; }
-  .activity-text p { font-size: 14px; color: #334155; line-height: 1.4; margin-bottom: 3px; }
-  .activity-text span { font-size: 12px; color: var(--cs-gray-400); }
+  .activity-text p { font-size: 13.5px; color: #334155; line-height: 1.4; margin-bottom: 2px; }
+  .activity-text span { font-size: 11.5px; color: var(--cs-gray-400); }
 
+  /* ── Agent fleet ── */
+  .dept-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+  .dept-card { background: var(--cs-white); border: 1px solid #e2e8f0; border-radius: var(--radius-lg); padding: 20px; }
+  .dept-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--cs-cyan); margin-bottom: 14px; }
+  .agent-list { display: flex; flex-direction: column; gap: 6px; }
+  .agent-tile {
+    display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+    border-radius: var(--radius); transition: background 0.15s; cursor: default;
+  }
+  .agent-tile:hover { background: #f8fafc; }
+  .health-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; background: #cbd5e1; transition: background 0.3s; }
+  .agent-info { flex: 1; min-width: 0; }
+  .agent-name { font-size: 13px; font-weight: 600; color: var(--cs-navy); }
+  .agent-title-text { font-size: 11.5px; color: var(--cs-gray-400); }
+  .dual-badge {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.3px; text-transform: uppercase;
+    background: rgba(0,212,255,0.1); color: var(--cs-cyan);
+    border: 1px solid rgba(0,212,255,0.25); border-radius: 100px; padding: 2px 7px;
+    white-space: nowrap;
+  }
+  .chat-btn {
+    font-size: 11px; font-weight: 600; color: var(--cs-cyan);
+    background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.2);
+    border-radius: var(--radius); padding: 3px 9px; cursor: pointer;
+    transition: all 0.15s; white-space: nowrap;
+  }
+  .chat-btn:hover { background: rgba(0,212,255,0.15); }
+
+  /* ── Pipeline stage rows ── */
+  .stage-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+  .stage-row:last-child { border-bottom: none; }
+  .stage-label { font-weight: 600; color: #334155; flex: 1; }
+  .stage-count { font-size: 20px; font-weight: 700; color: var(--cs-navy); min-width: 32px; text-align: right; }
+
+  /* ── HitL gate panel ── */
+  .hitl-panel {
+    background: rgba(0,212,255,0.04); border: 1px solid rgba(0,212,255,0.2);
+    border-radius: var(--radius-lg); padding: 20px; margin-bottom: 24px;
+  }
+  .hitl-panel h3 { font-size: 14px; font-weight: 700; color: var(--cs-navy); margin-bottom: 12px; }
+  .hitl-item {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    flex-wrap: wrap; padding: 12px 0; border-bottom: 1px solid rgba(0,212,255,0.1);
+  }
+  .hitl-item:last-child { border-bottom: none; }
+  .hitl-info { flex: 1; min-width: 200px; }
+  .hitl-edition { font-size: 13px; font-weight: 600; color: var(--cs-navy); }
+  .hitl-subject { font-size: 12px; color: var(--cs-gray-400); margin-top: 2px; }
+  .hitl-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+  /* ── Conference form ── */
+  .conf-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+  .convener-display {
+    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius);
+    padding: 10px 14px; font-size: 13px; font-weight: 600; color: var(--cs-navy);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .meeting-row {
+    display: flex; align-items: center; gap: 12px; padding: 10px 0;
+    border-bottom: 1px solid #f1f5f9; font-size: 13px;
+  }
+  .meeting-row:last-child { border-bottom: none; }
+  .meeting-type-badge {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 100px;
+  }
+  .meeting-type-operational { background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.25); }
+  .meeting-type-security { background: rgba(239,68,68,0.1); color: #dc2626; border: 1px solid rgba(239,68,68,0.25); }
+  .meeting-type-editorial { background: rgba(99,102,241,0.1); color: #6366f1; border: 1px solid rgba(99,102,241,0.25); }
+  .meeting-type-training { background: rgba(245,158,11,0.1); color: #d97706; border: 1px solid rgba(245,158,11,0.25); }
+
+  /* ── Production columns ── */
+  .prod-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .prod-col { background: var(--cs-white); border: 1px solid #e2e8f0; border-radius: var(--radius-lg); padding: 20px; }
+  .prod-col-header { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--cs-gray-400); margin-bottom: 14px; }
+
+  /* ── Chat modal ── */
+  .modal-backdrop {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+    z-index: 500; align-items: center; justify-content: center;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal-box {
+    background: var(--cs-white); border-radius: var(--radius-lg);
+    width: 100%; max-width: 480px; padding: 28px; position: relative;
+  }
+  .modal-close {
+    position: absolute; top: 14px; right: 16px; background: none; border: none;
+    font-size: 18px; color: var(--cs-gray-400); cursor: pointer;
+  }
+
+  /* ── Notices ── */
+  .notice-jim {
+    background: rgba(245,158,11,0.07); border: 1px solid rgba(245,158,11,0.2);
+    border-radius: var(--radius); padding: 8px 12px; font-size: 12px; color: #92400e;
+    display: flex; align-items: center; gap: 6px; margin-top: 6px;
+  }
+
+  @media(max-width:1200px){ .prod-grid { grid-template-columns: repeat(2,1fr); } }
+  @media(max-width:900px){
+    .conf-form-grid { grid-template-columns: 1fr; }
+    .prod-grid { grid-template-columns: 1fr; }
+    .dept-grid { grid-template-columns: 1fr; }
+  }
   @media(max-width:768px){
     .login-card { padding: 32px 24px; }
     .dash-main { padding: 20px 16px; }
+    .dash-header { gap: 8px; }
   }
 </style>
 </head>
@@ -120,27 +237,27 @@
   </div>
 </div>
 
-<!-- ═══ DASHBOARD SHELL (revealed on login) ═══ -->
-<div id="dashboard-shell" class="dashboard-layout" aria-label="Admin dashboard">
+<!-- ═══ DASHBOARD SHELL ═══ -->
+<div id="dashboard-shell" class="dashboard-layout" aria-label="Admin console">
 
   <!-- Sidebar -->
-  <aside class="sidebar" role="navigation" aria-label="Dashboard navigation">
+  <aside class="sidebar" role="navigation" aria-label="Console navigation">
     <div style="padding:16px 16px 12px;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:8px;">
       <div style="font-size:13px;font-weight:700;color:var(--cs-white);">Admin Console</div>
       <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:2px;">CyberSense.Solutions</div>
     </div>
 
-    <span class="sidebar-section-label">Overview</span>
-    <a href="#" class="sidebar-link active"><span class="sidebar-icon">📊</span> Command Center</a>
-    <a href="#" class="sidebar-link"><span class="sidebar-icon">📡</span> Live Radar</a>
-    <a href="#" class="sidebar-link"><span class="sidebar-icon">🔔</span> Alerts</a>
+    <span class="sidebar-section-label">Dashboard</span>
+    <a href="#" class="sidebar-link active" data-tab="command"><span class="sidebar-icon">📊</span> Command Center</a>
+    <a href="#" class="sidebar-link" data-tab="agents"><span class="sidebar-icon">🤖</span> Agent Status</a>
+    <a href="#" class="sidebar-link" data-tab="conference"><span class="sidebar-icon">🗣</span> Conference</a>
+    <a href="#" class="sidebar-link" data-tab="production"><span class="sidebar-icon">⚙</span> Production</a>
 
     <span class="sidebar-section-label" style="margin-top:12px;">Content</span>
     <a href="#" class="sidebar-link"><span class="sidebar-icon">📝</span> Briefings</a>
     <a href="#" class="sidebar-link"><span class="sidebar-icon">🛡</span> Threat Records</a>
     <a href="#" class="sidebar-link"><span class="sidebar-icon">💡</span> Intel Briefs</a>
     <a href="#" class="sidebar-link"><span class="sidebar-icon">🎓</span> Training Modules</a>
-    <a href="#" class="sidebar-link"><span class="sidebar-icon">🔬</span> Innovation Articles</a>
 
     <span class="sidebar-section-label" style="margin-top:12px;">Subscribers</span>
     <a href="#" class="sidebar-link"><span class="sidebar-icon">👤</span> Subscriber List</a>
@@ -150,262 +267,437 @@
     <span class="sidebar-section-label" style="margin-top:12px;">Enterprise</span>
     <a href="#" class="sidebar-link"><span class="sidebar-icon">🏢</span> Organizations</a>
     <a href="#" class="sidebar-link"><span class="sidebar-icon">⚡</span> Simulations</a>
-    <a href="#" class="sidebar-link"><span class="sidebar-icon">📋</span> Compliance Reports</a>
 
     <span class="sidebar-section-label" style="margin-top:12px;">System</span>
     <a href="#" class="sidebar-link"><span class="sidebar-icon">⚙</span> Settings</a>
     <a href="#" class="sidebar-link"><span class="sidebar-icon">🔑</span> API Keys</a>
-    <a href="#" class="sidebar-link" onclick="localStorage.removeItem('cs_token');localStorage.removeItem('cs_user');location.reload();return false;"><span class="sidebar-icon"></span> Sign Out</a>
+    <a href="#" class="sidebar-link" onclick="localStorage.removeItem('cs_token');localStorage.removeItem('cs_user');location.reload();return false;"><span class="sidebar-icon">🚪</span> Sign Out</a>
   </aside>
 
-  <!-- Main Content -->
+  <!-- Main content -->
   <main class="dash-main">
 
-    <!-- Header -->
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:28px;">
+    <!-- Persistent header -->
+    <div class="dash-header">
       <div>
-        <h1 style="font-size:24px;font-weight:700;color:var(--cs-navy);">Command Center</h1>
-        <p style="font-size:14px;color:var(--cs-gray-400);"></p>
+        <h1 id="tab-title-text">Command Center</h1>
+        <p id="dash-date"></p>
       </div>
-      <div style="display:flex;align-items:center;gap:10px;">
+      <div class="dash-header-right">
         <span class="live-dot"></span>
-        <span style="font-size:13px;color:var(--cs-gray-400);">Live data</span>
-        <a href="newsletter.html" class="btn btn-outline btn-sm">Preview Briefing</a>
-      </div>
-    </div>
+        <span style="font-size:13px;color:var(--cs-gray-400);">Live</span>
 
-    <!-- Integration notice -->
-    <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:var(--radius);padding:12px 16px;margin-bottom:24px;font-size:13px;color:#92400e;display:flex;align-items:center;gap:8px;">
-      <span>⚠</span>
-      <span><strong>Note:</strong> Full dashboard requires backend integration. Metric data shown below is illustrative. Contact the engineering team for API configuration.</span>
-    </div>
-
-    <!-- Metric Cards -->
-    <div class="grid-4" style="margin-bottom:28px;">
-      <div class="metric-card">
-        <div class="metric-label">Total Subscribers</div>
-        <div class="metric-value">4,847</div>
-        <div class="metric-change metric-up">↑ +134 this week</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">Paid Accounts</div>
-        <div class="metric-value">1,203</div>
-        <div class="metric-change metric-up">↑ +28 this week</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">MRR</div>
-        <div class="metric-value" style="font-size:26px;">$10,827</div>
-        <div class="metric-change metric-up">↑ +$252 vs last month</div>
-      </div>
-      <div class="metric-card" style="border-left:3px solid var(--cs-red);">
-        <div class="metric-label">Open Risks</div>
-        <div class="metric-value" style="color:var(--cs-red);">7</div>
-        <div class="metric-change metric-down">↑ +2 since yesterday</div>
-      </div>
-    </div>
-
-    <!-- Grid: Activity Feed + Quick Stats -->
-    <div class="grid-2" style="align-items:start;">
-
-      <!-- Activity Feed -->
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-          <h2 style="font-size:16px;font-weight:700;color:var(--cs-navy);">Recent Activity</h2>
-          <span style="font-size:12px;color:var(--cs-gray-400);">Last 24 hours</span>
-        </div>
-        <div class="activity-feed">
-          <div class="activity-item">
-            <div class="activity-icon activity-icon-cyan">📡</div>
-            <div class="activity-text">
-              <p><strong>New Threat Record Published</strong> — CVE-2024-21762 (Fortinet FortiOS) added to radar with Critical severity.</p>
-              <span>07:02 CT — Threat Intelligence Team</span>
-            </div>
-          </div>
-          <div class="activity-item">
-            <div class="activity-icon activity-icon-green">✉</div>
-            <div class="activity-text">
-              <p><strong>Daily Briefing Sent</strong> — Monday Jan 13 edition delivered to 4,847 subscribers. Open rate tracking active.</p>
-              <span>07:00 CT — Newsletter Pipeline</span>
-            </div>
-          </div>
-          <div class="activity-item">
-            <div class="activity-icon activity-icon-green">👤</div>
-            <div class="activity-text">
-              <p><strong>28 New Subscriber Signups</strong> — Organic growth from Radar page and LinkedIn post referrals.</p>
-              <span>06:55 CT — Growth</span>
-            </div>
-          </div>
-          <div class="activity-item">
-            <div class="activity-icon activity-icon-amber">⚡</div>
-            <div class="activity-text">
-              <p><strong>Simulation Scheduled</strong> — Acme Corp phishing simulation approved for Jan 15. 247 participants enrolled.</p>
-              <span>Yesterday 4:12 PM — Enterprise Team</span>
-            </div>
-          </div>
-          <div class="activity-item">
-            <div class="activity-icon activity-icon-red">🚨</div>
-            <div class="activity-text">
-              <p><strong>New Critical CVE Tracked</strong> — CVE-2024-3400 (Palo Alto PAN-OS) escalated to radar. Intel article in progress.</p>
-              <span>Yesterday 2:44 PM — Threat Intelligence Team</span>
-            </div>
-          </div>
-          <div class="activity-item">
-            <div class="activity-icon activity-icon-green">💳</div>
-            <div class="activity-text">
-              <p><strong>Enterprise Renewal</strong> — Meridian Health Group ($1,200/mo) renewed for 12 months.</p>
-              <span>Yesterday 11:08 AM — Sales</span>
-            </div>
-          </div>
-          <div class="activity-item">
-            <div class="activity-icon activity-icon-cyan">📝</div>
-            <div class="activity-text">
-              <p><strong>Intel Brief Published</strong> — "NIST CSF 2.0: Govern Function Implementation Guide" live on intelligence.html.</p>
-              <span>Yesterday 10:30 AM — Editorial</span>
+        <!-- Preview dropdown -->
+        <div class="preview-wrap">
+          <button class="btn btn-outline btn-sm" id="preview-toggle" onclick="togglePreview()">Preview ▼</button>
+          <div class="preview-menu" id="preview-menu">
+            <a href="#" onclick="switchTab('production');closePreview();return false;">Preview Briefing</a>
+            <a href="newsletter.html" target="_blank" onclick="closePreview()">Preview Carousel</a>
+            <div class="preview-menu-divider"></div>
+            <div class="preview-sub-wrap">
+              <span class="preview-menu-label">Preview Articles ▶</span>
+              <div class="preview-submenu">
+                <a href="intelligence.html" target="_blank">Threat Intelligence</a>
+                <a href="intelligence.html" target="_blank">Policy Updates</a>
+                <a href="innovation.html" target="_blank">Latest Innovations</a>
+                <a href="growth.html" target="_blank">Professional Growth</a>
+                <a href="training.html" target="_blank">Training Resources</a>
+              </div>
             </div>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Quick Stats Column -->
-      <div style="display:flex;flex-direction:column;gap:20px;">
-        <!-- Content Pipeline -->
+    <!-- ══ TAB: COMMAND CENTER ══ -->
+    <div id="tab-command" class="tab-content active">
+
+      <!-- Metric cards -->
+      <div class="grid-4" style="margin-bottom:24px;" id="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-label">Total Subscribers</div>
+          <div class="metric-value" id="m-subscribers">—</div>
+          <div class="metric-change" id="m-subscribers-sub" style="color:var(--cs-gray-400);font-size:12px;">Loading…</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Paid Accounts</div>
+          <div class="metric-value" id="m-paid">—</div>
+          <div class="metric-change" id="m-paid-sub" style="color:var(--cs-gray-400);font-size:12px;">Loading…</div>
+        </div>
+        <div class="metric-card" id="mrr-card">
+          <div class="metric-label">MRR</div>
+          <div class="metric-value" id="m-mrr" style="font-size:26px;">—</div>
+          <div class="notice-jim" id="jim-notice"><span>⚠</span> Pending Jim validation</div>
+        </div>
+        <div class="metric-card" style="border-left:3px solid var(--cs-red);">
+          <div class="metric-label">Open Risks</div>
+          <div class="metric-value" id="m-risks" style="color:var(--cs-red);">—</div>
+          <div class="metric-change" id="m-risks-sub" style="color:var(--cs-gray-400);font-size:12px;">Loading…</div>
+        </div>
+      </div>
+
+      <!-- Second row: Radar counter + Pipeline status -->
+      <div class="grid-2" style="margin-bottom:24px;">
         <div class="card">
-          <h3 style="font-size:15px;font-weight:700;color:var(--cs-navy);margin-bottom:16px;">Content Pipeline Status</h3>
-          <div style="display:flex;flex-direction:column;gap:10px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;">
-              <span style="color:#334155;">Today's Briefing</span>
-              <span class="badge badge-published">Sent</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;">
-              <span style="color:#334155;">Radar (12 threats)</span>
-              <span class="badge badge-published">Live</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;">
-              <span style="color:#334155;">Intel Brief — Ivanti Analysis</span>
-              <span class="badge badge-inprogress">In Progress</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;">
-              <span style="color:#334155;">Training Module — AD Attack Paths</span>
-              <span class="badge badge-inprogress">In Progress</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;">
-              <span style="color:#334155;">Feb 18 Webinar Setup</span>
-              <span class="badge badge-new">Pending</span>
-            </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <h3 style="font-size:14px;font-weight:700;color:var(--cs-navy);">Radar Threat Counter</h3>
+            <span class="live-dot" style="width:7px;height:7px;"></span>
           </div>
+          <div style="font-size:42px;font-weight:700;color:var(--cs-cyan);letter-spacing:-1px;" id="m-threats">—</div>
+          <div style="font-size:12px;color:var(--cs-gray-400);">Active threats in Barbara's repository</div>
         </div>
-
-        <!-- Top Pages -->
         <div class="card">
-          <h3 style="font-size:15px;font-weight:700;color:var(--cs-navy);margin-bottom:16px;">Top Pages — Last 7 Days</h3>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <div style="display:flex;justify-content:space-between;font-size:13px;">
-              <span style="color:#334155;">radar.html</span>
-              <span style="font-weight:600;color:var(--cs-navy);">12,441</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;font-size:13px;">
-              <span style="color:#334155;">newsletter.html</span>
-              <span style="font-weight:600;color:var(--cs-navy);">9,876</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;font-size:13px;">
-              <span style="color:#334155;">index.html</span>
-              <span style="font-weight:600;color:var(--cs-navy);">7,234</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;font-size:13px;">
-              <span style="color:#334155;">intelligence.html</span>
-              <span style="font-weight:600;color:var(--cs-navy);">5,102</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;font-size:13px;">
-              <span style="color:#334155;">training.html</span>
-              <span style="font-weight:600;color:var(--cs-navy);">3,887</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Open Risk Items -->
-        <div class="card" style="border-left:3px solid var(--cs-red);">
-          <h3 style="font-size:15px;font-weight:700;color:var(--cs-navy);margin-bottom:16px;">⚠ Open Risk Items</h3>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <div style="font-size:13px;padding:8px 12px;background:#fef2f2;border-radius:var(--radius);color:#991b1b;">CVE-2024-3400 — Intel article pending QA review</div>
-            <div style="font-size:13px;padding:8px 12px;background:#fffbeb;border-radius:var(--radius);color:#92400e;">3 enterprise trial accounts expiring in 48 hours</div>
-            <div style="font-size:13px;padding:8px 12px;background:#fffbeb;border-radius:var(--radius);color:#92400e;">Webinar registration page not linked from growth.html</div>
+          <h3 style="font-size:14px;font-weight:700;color:var(--cs-navy);margin-bottom:14px;">Content Pipeline Status</h3>
+          <div id="pipeline-status-list">
+            <div style="font-size:13px;color:var(--cs-gray-400);">Loading…</div>
           </div>
         </div>
       </div>
 
-    </div>
+      <!-- Activity feed + Quick stats -->
+      <div class="grid-2" style="align-items:start;">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+            <h2 style="font-size:15px;font-weight:700;color:var(--cs-navy);">Recent Activity</h2>
+            <span style="font-size:12px;color:var(--cs-gray-400);">Last 10 events</span>
+          </div>
+          <div class="activity-feed" id="activity-feed">
+            <div style="font-size:13px;color:var(--cs-gray-400);padding:12px 0;">Loading activity…</div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:20px;">
+          <!-- Agent task queue summary -->
+          <div class="card">
+            <h3 style="font-size:14px;font-weight:700;color:var(--cs-navy);margin-bottom:14px;">Pipeline Agent Queue</h3>
+            <div id="agent-queue-summary">
+              <div style="font-size:13px;color:var(--cs-gray-400);">Loading…</div>
+            </div>
+          </div>
+          <!-- Tier breakdown -->
+          <div class="card">
+            <h3 style="font-size:14px;font-weight:700;color:var(--cs-navy);margin-bottom:14px;">Account Tier Breakdown</h3>
+            <div id="tier-breakdown">
+              <div style="font-size:13px;color:var(--cs-gray-400);">Loading…</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-command -->
+
+    <!-- ══ TAB: AGENT STATUS ══ -->
+    <div id="tab-agents" class="tab-content">
+
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap;">
+        <div style="font-size:13px;color:var(--cs-gray-400);">Fleet health refreshes every 60s.</div>
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+          <span style="font-size:12px;color:#334155;display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:50%;background:#10b981;display:inline-block;"></span> Active</span>
+          <span style="font-size:12px;color:#334155;display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:50%;background:#f59e0b;display:inline-block;"></span> Degraded</span>
+          <span style="font-size:12px;color:#334155;display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:50%;background:#ef4444;display:inline-block;"></span> Error</span>
+          <span style="font-size:12px;color:#334155;display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:50%;background:#cbd5e1;display:inline-block;"></span> Idle</span>
+        </div>
+      </div>
+
+      <div class="dept-grid" id="agent-fleet-grid">
+        <!-- Populated by JS -->
+      </div>
+
+    </div><!-- /tab-agents -->
+
+    <!-- ══ TAB: CONFERENCE ══ -->
+    <div id="tab-conference" class="tab-content">
+
+      <div class="conf-form-grid">
+
+        <!-- Initiate meeting form -->
+        <div class="card">
+          <h2 style="font-size:15px;font-weight:700;color:var(--cs-navy);margin-bottom:18px;">Initiate Meeting</h2>
+          <form id="meeting-form" style="display:flex;flex-direction:column;gap:14px;">
+            <div class="form-group">
+              <label class="form-label">Meeting Title</label>
+              <input class="form-input" type="text" id="mtg-title" placeholder="e.g. Q2 Threat Review" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Meeting Type</label>
+              <select class="form-input" id="mtg-type" onchange="updateConvener()">
+                <option value="operational">Operational</option>
+                <option value="security">Security</option>
+                <option value="editorial">Editorial</option>
+                <option value="training">Training</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Convener <span style="font-size:11px;color:var(--cs-gray-400);">(auto-assigned)</span></label>
+              <div class="convener-display" id="convener-display">
+                <span>🤖</span> <span id="convener-name">Henry</span>
+                <span style="font-size:11px;color:var(--cs-gray-400);margin-left:4px;">— Operational lead</span>
+              </div>
+              <div style="font-size:11.5px;color:var(--cs-gray-400);margin-top:5px;" id="convener-note">
+                Operational meetings route through Henry per chain-of-command policy.
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Agenda <span style="font-size:11px;color:var(--cs-gray-400);">(optional)</span></label>
+              <textarea class="form-input" id="mtg-agenda" rows="3" placeholder="Meeting agenda or context…" style="resize:vertical;"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="justify-content:center;">Initiate Meeting</button>
+            <div id="mtg-feedback" style="display:none;"></div>
+          </form>
+        </div>
+
+        <!-- Recent meetings -->
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h2 style="font-size:15px;font-weight:700;color:var(--cs-navy);">Recent Meetings</h2>
+            <button class="btn btn-outline btn-sm" onclick="loadMeetings()">Refresh</button>
+          </div>
+          <div id="meetings-list">
+            <div style="font-size:13px;color:var(--cs-gray-400);">Loading…</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Action items -->
+      <div class="card" style="margin-top:20px;">
+        <h2 style="font-size:15px;font-weight:700;color:var(--cs-navy);margin-bottom:4px;">Open Action Items</h2>
+        <p style="font-size:12.5px;color:var(--cs-gray-400);margin-bottom:16px;">Wired to Agent Status tab. Resolved items close the Open Ticket.</p>
+        <div id="action-items-list">
+          <div style="font-size:13px;color:var(--cs-gray-400);">Select a meeting above to view its action items.</div>
+        </div>
+      </div>
+
+    </div><!-- /tab-conference -->
+
+    <!-- ══ TAB: PRODUCTION ══ -->
+    <div id="tab-production" class="tab-content">
+
+      <!-- Preview Briefing HitL gate -->
+      <div class="hitl-panel" id="hitl-panel">
+        <h3>🔐 Preview Briefing — Human Gate</h3>
+        <p style="font-size:12.5px;color:var(--cs-gray-400);margin-bottom:12px;">Maya-approved editions awaiting executive confirmation before distribution. Distribution is blocked until you confirm.</p>
+        <div id="hitl-list">
+          <div style="font-size:13px;color:var(--cs-gray-400);">Loading…</div>
+        </div>
+      </div>
+
+      <!-- Pipeline columns -->
+      <div class="prod-grid">
+
+        <!-- Newsletter -->
+        <div class="prod-col">
+          <div class="prod-col-header">Newsletter</div>
+          <div style="font-size:11px;color:var(--cs-gray-400);margin-bottom:12px;">Daily Briefing pipeline</div>
+          <div id="prod-briefing">
+            <div class="stage-row"><span class="stage-label">R&amp;D / Draft</span><span class="stage-count" id="prod-briefing-draft">—</span></div>
+            <div class="stage-row"><span class="stage-label">Dev Edit</span><span class="stage-count" id="prod-briefing-edit">—</span></div>
+            <div class="stage-row"><span class="stage-label">EIC Review</span><span class="stage-count" id="prod-briefing-eic">—</span></div>
+            <div class="stage-row"><span class="stage-label">QA</span><span class="stage-count" id="prod-briefing-qa">—</span></div>
+            <div class="stage-row"><span class="stage-label">HitL / Approved</span><span class="stage-count" id="prod-briefing-hitl">—</span></div>
+            <div class="stage-row" style="border-bottom:none;"><span class="stage-label">Published</span><span class="stage-count" id="prod-briefing-pub" style="color:#10b981;">—</span></div>
+          </div>
+        </div>
+
+        <!-- Training -->
+        <div class="prod-col">
+          <div class="prod-col-header">Training</div>
+          <div style="font-size:11px;color:var(--cs-gray-400);margin-bottom:12px;">Kirby → Mario → Matt</div>
+          <div id="prod-training">
+            <div class="stage-row"><span class="stage-label">Design</span><span class="stage-count" id="prod-training-design">—</span></div>
+            <div class="stage-row"><span class="stage-label">Staging</span><span class="stage-count" id="prod-training-staging">—</span></div>
+            <div class="stage-row"><span class="stage-label">QA</span><span class="stage-count" id="prod-training-qa">—</span></div>
+            <div class="stage-row"><span class="stage-label">HitL / Approved</span><span class="stage-count" id="prod-training-hitl">—</span></div>
+            <div class="stage-row" style="border-bottom:none;"><span class="stage-label">Published</span><span class="stage-count" id="prod-training-pub" style="color:#10b981;">—</span></div>
+          </div>
+        </div>
+
+        <!-- Radar -->
+        <div class="prod-col">
+          <div class="prod-col-header">Radar</div>
+          <div style="font-size:11px;color:var(--cs-gray-400);margin-bottom:12px;">Barbara's repository</div>
+          <div id="prod-radar">
+            <div class="stage-row"><span class="stage-label">Ingested</span><span class="stage-count" id="prod-radar-ingested">—</span></div>
+            <div class="stage-row"><span class="stage-label">Normalized</span><span class="stage-count" id="prod-radar-normalized">—</span></div>
+            <div class="stage-row"><span class="stage-label">Under Review</span><span class="stage-count" id="prod-radar-review">—</span></div>
+            <div class="stage-row" style="border-bottom:none;"><span class="stage-label">Published</span><span class="stage-count" id="prod-radar-pub" style="color:#10b981;">—</span></div>
+          </div>
+        </div>
+
+        <!-- Articles -->
+        <div class="prod-col">
+          <div class="prod-col-header">Intel Articles</div>
+          <div style="font-size:11px;color:var(--cs-gray-400);margin-bottom:12px;">James → Jason → Rob → Jeff → Maya</div>
+          <div id="prod-articles">
+            <div class="stage-row"><span class="stage-label">Draft</span><span class="stage-count" id="prod-article-draft">—</span></div>
+            <div class="stage-row"><span class="stage-label">Dev Edit</span><span class="stage-count" id="prod-article-edit">—</span></div>
+            <div class="stage-row"><span class="stage-label">EIC Review</span><span class="stage-count" id="prod-article-eic">—</span></div>
+            <div class="stage-row"><span class="stage-label">QA</span><span class="stage-count" id="prod-article-qa">—</span></div>
+            <div class="stage-row"><span class="stage-label">HitL / Approved</span><span class="stage-count" id="prod-article-hitl">—</span></div>
+            <div class="stage-row" style="border-bottom:none;"><span class="stage-label">Published</span><span class="stage-count" id="prod-article-pub" style="color:#10b981;">—</span></div>
+          </div>
+        </div>
+
+      </div><!-- /prod-grid -->
+
+    </div><!-- /tab-production -->
+
   </main>
-
 </div><!-- /dashboard-shell -->
+
+<!-- Chat modal -->
+<div class="modal-backdrop" id="chat-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeChat()">✕</button>
+    <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--cs-cyan);margin-bottom:8px;">Agent Chat</div>
+    <h3 style="font-size:17px;font-weight:700;color:var(--cs-navy);margin-bottom:4px;" id="chat-agent-name">—</h3>
+    <p style="font-size:13px;color:var(--cs-gray-400);margin-bottom:20px;" id="chat-agent-scope">—</p>
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:var(--radius);padding:14px;font-size:13px;color:#64748b;text-align:center;">
+      Chat interface — coming in Build Session 2.<br>
+      <span style="font-size:12px;">Agent task queue and webhook dispatch are live. Direct chat UI requires WebSocket infrastructure.</span>
+    </div>
+  </div>
+</div>
+
 <script>window.CS_API_BASE = 'https://api.cybersense.solutions';</script>
 <script src="auth.js"></script>
 <script src="main.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Check if already logged in with admin role
+// ── Fleet definition ───────────────────────────────────────────────────────────
+const AGENT_FLEET = [
+  {
+    dept: 'Management',
+    agents: [
+      { name: 'Henry',   title: 'General Manager',   chat: true,  scope: 'Fleet directives, executive summaries, operational overrides' },
+      { name: 'Valerie', title: 'Strategy',           chat: true,  scope: 'Strategic planning, financial signals, roadmap decisions' },
+      { name: 'Victor',  title: 'Risk Management',    chat: true,  scope: 'Risk posture, escalations, open risk register' },
+      { name: 'Barret',  title: 'Coordination',       chat: true,  scope: 'Pipeline handoff, SLA status, agent coordination' },
+      { name: 'Alex',    title: 'Training Manager',   chat: false },
+      { name: 'Maya',    title: 'Managing Editor',    chat: true,  scope: 'Editorial direction, approval status, content decisions' },
+    ],
+  },
+  {
+    dept: 'IT / Security',
+    agents: [
+      { name: 'Cy',    title: 'CISO',                   chat: true, scope: 'Security status, incidents, vulnerabilities, brand integrity' },
+      { name: 'Nora',  title: 'System Health',          chat: false },
+      { name: 'Owen',  title: 'Vulnerability & Patch',  chat: false },
+      { name: 'Paige', title: 'Incident Response',      chat: false },
+      { name: 'Quinn', title: 'Access & Credentials',   chat: false },
+    ],
+  },
+  {
+    dept: 'Operations',
+    agents: [
+      { name: 'Rick',         title: 'Threat Intel Acquisition', chat: false },
+      { name: 'Ivan/Charlie', title: 'Intel Scout',              chat: false },
+      { name: 'Barbara',      title: 'Data Analyst',             chat: false },
+      { name: 'Laura',        title: 'Operations Analyst',       chat: false },
+      { name: 'Jim',          title: 'Financial Analyst',        chat: false },
+      { name: 'Jeff',         title: 'QA Analyst',               chat: false },
+      { name: 'Ruth',         title: 'Awareness Acquisition',    chat: false, badge: 'Ops + Editorial' },
+    ],
+  },
+  {
+    dept: 'Editorial — Intel',
+    agents: [
+      { name: 'James', title: 'Intel Acquisition',   chat: false },
+      { name: 'Jason', title: 'Dev Editor Intel',    chat: false },
+      { name: 'Rob',   title: 'EIC Intel',           chat: false },
+    ],
+  },
+  {
+    dept: 'Editorial — Awareness',
+    agents: [
+      { name: 'Ruth',  title: 'Awareness Acquisition', chat: false, badge: 'Ops + Editorial' },
+      { name: 'Peter', title: 'Dev Editor Awareness',  chat: false },
+      { name: 'Ed',    title: 'EIC Awareness',         chat: false },
+    ],
+  },
+  {
+    dept: 'Training / Production',
+    agents: [
+      { name: 'Kirby', title: 'Instructional Designer',  chat: false },
+      { name: 'Mario', title: 'Training Coordinator',    chat: false },
+      { name: 'Matt',  title: 'Trainer & Facilitator',   chat: false },
+    ],
+  },
+  {
+    dept: 'Sales',
+    agents: [
+      { name: 'Mary',    title: 'SDR',              chat: false },
+      { name: 'William', title: 'Account Executive', chat: false },
+      { name: 'Joe',     title: 'Account Manager',  chat: false },
+    ],
+  },
+  {
+    dept: 'Distribution',
+    agents: [
+      { name: 'Oliver', title: 'LinkedIn',    chat: false },
+      { name: 'Lucy',   title: 'Meta',        chat: false },
+      { name: 'Riley',  title: 'TikTok / X',  chat: false },
+      { name: 'Ethan',  title: 'YouTube',     chat: false },
+    ],
+  },
+];
+
+// ── Auth & boot ───────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function () {
   const token = localStorage.getItem('cs_token');
-  const user = JSON.parse(localStorage.getItem('cs_user') || '{}');
-  
+  const user  = JSON.parse(localStorage.getItem('cs_user') || '{}');
+
   if (token && user.id) {
-    // Verify admin role via API
-    fetch(`${window.CS_API_BASE}/api/users/me`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-    .then(r => r.json())
-    .then(data => {
-      if (data.admin_role) {
-        showDashboard(data);
-      } else {
-        showGate('Access denied — admin privileges required.');
-      }
-    })
-    .catch(() => showGate());
+    fetch(`${window.CS_API_BASE}/api/users/me`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(data => { if (data.admin_role) showDashboard(data); else showGate('Access denied — admin privileges required.'); })
+      .catch(() => showGate());
   }
 
-  // Wire login form   
-  document.getElementById('login-form').addEventListener('submit', async function(e) {
+  document.getElementById('login-form').addEventListener('submit', async function (e) {
     e.preventDefault();
     const email    = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
     const btn      = this.querySelector('button[type="submit"]');
     const errEl    = document.getElementById('login-error');
 
-    btn.disabled = true;
+    btn.disabled    = true;
     btn.textContent = 'Signing in…';
     if (errEl) errEl.style.display = 'none';
 
     try {
-      const res = await fetch(`${window.CS_API_BASE}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+      const res  = await fetch(`${window.CS_API_BASE}/api/auth/login`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.error?.message || 'Login failed');
 
       localStorage.setItem('cs_token', data.access_token);
       localStorage.setItem('cs_user', JSON.stringify(data.user));
 
-      // Check admin role
-      const meRes = await fetch(`${window.CS_API_BASE}/api/users/me`, {
-        headers: { Authorization: `Bearer ${data.access_token}` }
-      });
-      const me = await meRes.json();
+      const meRes = await fetch(`${window.CS_API_BASE}/api/users/me`, { headers: { Authorization: `Bearer ${data.access_token}` } });
+      const me    = await meRes.json();
 
-      if (me.admin_role) {
-        showDashboard(me);
-      } else {
-        throw new Error('Admin privileges required.');
-      }
-    } catch(e) {
-      if (errEl) {
-        errEl.textContent = e.message;
-        errEl.style.display = 'block';
-      }
-      btn.disabled = false;
+      if (me.admin_role) showDashboard(me);
+      else throw new Error('Admin privileges required.');
+    } catch (e) {
+      if (errEl) { errEl.textContent = e.message; errEl.style.display = 'block'; }
+      btn.disabled    = false;
       btn.textContent = 'Sign In';
     }
+  });
+
+  // Sidebar tab links
+  document.querySelectorAll('[data-tab]').forEach(link => {
+    link.addEventListener('click', function (e) {
+      e.preventDefault();
+      switchTab(this.dataset.tab);
+    });
+  });
+
+  // Close preview on outside click
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('.preview-wrap')) closePreview();
   });
 });
 
@@ -413,15 +705,426 @@ function showDashboard(user) {
   document.getElementById('login-gate').style.display = 'none';
   document.getElementById('dashboard-shell').style.display = 'grid';
   document.getElementById('nav-logout').style.display = 'block';
-  // Update date
-  const dateEl = document.querySelector('#dashboard-shell p');
-  if (dateEl) dateEl.textContent = new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' }) + ' — 07:00 CT';
+  document.getElementById('dash-date').textContent =
+    new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+  buildAgentFleet();
+  loadMetrics();
+  loadHitlQueue();
+  loadMeetings();
+  loadAgentHealth();
+
+  setInterval(loadMetrics, 60000);
+  setInterval(loadAgentHealth, 60000);
 }
 
 function showGate(msg) {
-  document.getElementById('login-gate').style.display = 'flex';
+  document.getElementById('login-gate').style.display  = 'flex';
   document.getElementById('dashboard-shell').style.display = 'none';
 }
+
+// ── Tab switching ──────────────────────────────────────────────────────────────
+const TAB_TITLES = {
+  command:    'Command Center',
+  agents:     'Agent Status',
+  conference: 'Conference',
+  production: 'Production',
+};
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('[data-tab]').forEach(el => el.classList.remove('active'));
+
+  const target = document.getElementById('tab-' + tab);
+  const link   = document.querySelector(`[data-tab="${tab}"]`);
+  if (target) target.classList.add('active');
+  if (link)   link.classList.add('active');
+
+  document.getElementById('tab-title-text').textContent = TAB_TITLES[tab] || tab;
+
+  if (tab === 'production') loadHitlQueue();
+  if (tab === 'conference') loadMeetings();
+}
+
+// ── Preview dropdown ──────────────────────────────────────────────────────────
+function togglePreview() {
+  document.getElementById('preview-menu').classList.toggle('open');
+}
+function closePreview() {
+  document.getElementById('preview-menu').classList.remove('open');
+}
+
+// ── Convener routing (Conference tab) ─────────────────────────────────────────
+function updateConvener() {
+  const type = document.getElementById('mtg-type').value;
+  const isSecurity = type === 'security';
+  document.getElementById('convener-name').textContent = isSecurity ? 'Cy' : 'Henry';
+  document.getElementById('convener-note').textContent = isSecurity
+    ? 'Security meetings route through Cy (CISO) per chain-of-command policy.'
+    : 'Operational, editorial, and training meetings route through Henry (GM) per chain-of-command policy.';
+  const roleSpan = document.querySelector('#convener-display span:last-child');
+  if (roleSpan) roleSpan.textContent = isSecurity ? '— CISO, Security lead' : '— GM, Operational lead';
+}
+
+// ── API helpers ────────────────────────────────────────────────────────────────
+function apiToken() { return localStorage.getItem('cs_token'); }
+
+async function apiFetch(path, opts = {}) {
+  const res = await fetch(`${window.CS_API_BASE}${path}`, {
+    ...opts,
+    headers: { Authorization: `Bearer ${apiToken()}`, 'Content-Type': 'application/json', ...opts.headers },
+  });
+  if (!res.ok) throw new Error(`API error ${res.status}`);
+  return res.json();
+}
+
+// ── Command Center data ────────────────────────────────────────────────────────
+async function loadMetrics() {
+  try {
+    const data = await apiFetch('/api/admin/metrics');
+    const l    = data.live || {};
+
+    // Subscriber card
+    document.getElementById('m-subscribers').textContent = (+l.total_subscribers || 0).toLocaleString();
+    document.getElementById('m-subscribers-sub').textContent = `${(+l.paid_accounts || 0).toLocaleString()} paid · ${(+l.enterprise_accounts || 0)} enterprise`;
+
+    // Paid accounts card
+    document.getElementById('m-paid').textContent = (+l.paid_accounts || 0).toLocaleString();
+    document.getElementById('m-paid-sub').textContent = `${(+l.enterprise_accounts || 0)} enterprise · ${(+l.agent_tasks_today || 0)} agent tasks today`;
+
+    // MRR card
+    const mrr = +l.mrr_cents || 0;
+    document.getElementById('m-mrr').textContent = '$' + (mrr / 100).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    document.getElementById('jim-notice').style.display = data.jim_validated ? 'none' : 'flex';
+
+    // Open risks card
+    document.getElementById('m-risks').textContent = +l.open_risk_count || 0;
+    document.getElementById('m-risks-sub').textContent = 'Victor + Cy risk register';
+
+    // Radar threat counter
+    document.getElementById('m-threats').textContent = data.radar_threats ?? '—';
+
+    // Pipeline status
+    renderPipelineStatus(data.pipeline || []);
+
+    // Activity feed
+    renderActivityFeed(data.activity || []);
+
+    // Agent queue summary (reuse pipeline data)
+    renderAgentQueueSummary(l);
+
+    // Tier breakdown
+    renderTierBreakdown(l);
+
+    // Production tab counts
+    renderProductionCounts(data.pipeline || []);
+
+  } catch (e) {
+    console.error('Metrics load failed:', e);
+  }
+}
+
+function renderPipelineStatus(pipeline) {
+  const el = document.getElementById('pipeline-status-list');
+  if (!pipeline.length) { el.innerHTML = '<div style="font-size:13px;color:var(--cs-gray-400);">No active pipeline items.</div>'; return; }
+
+  const grouped = {};
+  pipeline.forEach(r => {
+    if (!grouped[r.content_type]) grouped[r.content_type] = {};
+    grouped[r.content_type][r.pipeline_status] = +r.count;
+  });
+
+  const typeLabel = { briefing: 'Briefing', article: 'Article', training: 'Training' };
+  const stageLabel = {
+    draft: 'Draft', dev_edit_in_progress: 'Dev Edit', dev_edit_complete: 'Dev Edit ✓',
+    eic_review_in_progress: 'EIC Review', eic_review_complete: 'EIC Review ✓',
+    qa_in_progress: 'QA', qa_complete: 'QA ✓', approved: 'Approved ⏳', in_progress: 'In Progress',
+  };
+
+  let html = '';
+  for (const [type, stages] of Object.entries(grouped)) {
+    for (const [stage, count] of Object.entries(stages)) {
+      html += `<div class="stage-row">
+        <span class="stage-label">${typeLabel[type] || type} — ${stageLabel[stage] || stage}</span>
+        <span class="badge ${stage === 'approved' ? 'badge-inprogress' : 'badge-medium'}" style="font-size:11px;">${count}</span>
+      </div>`;
+    }
+  }
+  el.innerHTML = html || '<div style="font-size:13px;color:var(--cs-gray-400);">No active pipeline items.</div>';
+}
+
+function renderActivityFeed(events) {
+  const el = document.getElementById('activity-feed');
+  if (!events.length) { el.innerHTML = '<div style="font-size:13px;color:var(--cs-gray-400);padding:12px 0;">No recent activity.</div>'; return; }
+
+  const iconMap = {
+    'article': { icon: '📝', cls: 'activity-icon-cyan' },
+    'briefing': { icon: '✉', cls: 'activity-icon-green' },
+    'training': { icon: '🎓', cls: 'activity-icon-amber' },
+  };
+
+  el.innerHTML = events.map(ev => {
+    const meta = iconMap[ev.content_type] || { icon: '⚡', cls: 'activity-icon-amber' };
+    const title = ev.content_title || 'System event';
+    const when  = ev.created_at ? new Date(ev.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+    const stage = ev.to_status ? ` → ${ev.to_status.replace(/_/g, ' ')}` : '';
+    return `<div class="activity-item">
+      <div class="activity-icon ${meta.cls}">${meta.icon}</div>
+      <div class="activity-text">
+        <p><strong>${ev.agent_name || 'System'}</strong>${stage} — ${title}</p>
+        <span>${when} CT</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderAgentQueueSummary(live) {
+  const el = document.getElementById('agent-queue-summary');
+  const tasks = +live.agent_tasks_today || 0;
+  const rejections = +live.rejections_today || 0;
+  el.innerHTML = `
+    <div class="stage-row"><span class="stage-label">Tasks today</span><span class="stage-count">${tasks}</span></div>
+    <div class="stage-row" style="border-bottom:none;"><span class="stage-label">Rejections today</span><span class="stage-count" style="color:${rejections > 0 ? '#ef4444' : 'inherit'}">${rejections}</span></div>
+  `;
+}
+
+function renderTierBreakdown(live) {
+  const el = document.getElementById('tier-breakdown');
+  const paid = +live.paid_accounts || 0;
+  const ent  = +live.enterprise_accounts || 0;
+  const std  = Math.max(0, paid - ent);
+  const total = +live.total_subscribers || 0;
+  const free = Math.max(0, total - paid);
+  el.innerHTML = `
+    <div class="stage-row"><span class="stage-label">Free / Freemium</span><span class="stage-count">${free.toLocaleString()}</span></div>
+    <div class="stage-row"><span class="stage-label">Standard (paid)</span><span class="stage-count">${std.toLocaleString()}</span></div>
+    <div class="stage-row" style="border-bottom:none;"><span class="stage-label">Enterprise</span><span class="stage-count" style="color:var(--cs-cyan);">${ent.toLocaleString()}</span></div>
+  `;
+}
+
+function renderProductionCounts(pipeline) {
+  const counts = {};
+  pipeline.forEach(r => {
+    counts[`${r.content_type}::${r.pipeline_status}`] = +r.count;
+  });
+
+  const get = (type, status) => counts[`${type}::${status}`] ?? 0;
+
+  // Briefing column
+  document.getElementById('prod-briefing-draft').textContent = get('briefing','draft');
+  document.getElementById('prod-briefing-edit').textContent  = get('briefing','dev_edit_in_progress') + get('briefing','dev_edit_complete');
+  document.getElementById('prod-briefing-eic').textContent   = get('briefing','eic_review_in_progress') + get('briefing','eic_review_complete');
+  document.getElementById('prod-briefing-qa').textContent    = get('briefing','qa_in_progress') + get('briefing','qa_complete');
+  document.getElementById('prod-briefing-hitl').textContent  = get('briefing','approved');
+  document.getElementById('prod-briefing-pub').textContent   = '↑ archive';
+
+  // Training column
+  document.getElementById('prod-training-design').textContent  = get('training','draft') + get('training','in_progress');
+  document.getElementById('prod-training-staging').textContent = get('training','dev_edit_in_progress') + get('training','dev_edit_complete');
+  document.getElementById('prod-training-qa').textContent      = get('training','qa_in_progress') + get('training','qa_complete');
+  document.getElementById('prod-training-hitl').textContent    = get('training','approved');
+  document.getElementById('prod-training-pub').textContent     = '↑ archive';
+
+  // Article column
+  document.getElementById('prod-article-draft').textContent = get('article','draft');
+  document.getElementById('prod-article-edit').textContent  = get('article','dev_edit_in_progress') + get('article','dev_edit_complete');
+  document.getElementById('prod-article-eic').textContent   = get('article','eic_review_in_progress') + get('article','eic_review_complete');
+  document.getElementById('prod-article-qa').textContent    = get('article','qa_in_progress') + get('article','qa_complete');
+  document.getElementById('prod-article-hitl').textContent  = get('article','approved');
+  document.getElementById('prod-article-pub').textContent   = '↑ archive';
+
+  // Radar — uses threat_records, not in pipeline query — leave as live from metrics
+}
+
+// ── HitL queue (Production tab) ───────────────────────────────────────────────
+async function loadHitlQueue() {
+  try {
+    const data = await apiFetch('/api/admin/briefings/preview');
+    const list  = document.getElementById('hitl-list');
+    const panel = document.getElementById('hitl-panel');
+
+    if (!data.data?.length) {
+      list.innerHTML = '<div style="font-size:13px;color:var(--cs-gray-400);">No briefings awaiting confirmation.</div>';
+      panel.style.borderColor = 'rgba(0,212,255,0.15)';
+      return;
+    }
+
+    panel.style.borderColor = 'rgba(245,158,11,0.35)';
+    panel.style.background  = 'rgba(245,158,11,0.04)';
+
+    list.innerHTML = data.data.map(b => {
+      const dt = b.edition_date ? new Date(b.edition_date).toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' }) : '—';
+      return `<div class="hitl-item">
+        <div class="hitl-info">
+          <div class="hitl-edition">Edition ${b.edition_number} — ${dt}</div>
+          <div class="hitl-subject">${b.subject_line || 'No subject'}</div>
+        </div>
+        <div class="hitl-actions">
+          ${b.file_path ? `<a href="${b.file_path}" target="_blank" class="btn btn-outline btn-sm">View</a>` : ''}
+          <button class="btn btn-primary btn-sm" onclick="confirmDistribution('${b.id}', ${b.edition_number})">Confirm Distribution</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    document.getElementById('hitl-list').innerHTML = '<div style="font-size:13px;color:var(--cs-gray-400);">Error loading queue.</div>';
+  }
+}
+
+async function confirmDistribution(id, edition) {
+  if (!confirm(`Confirm distribution for Edition ${edition}?\n\nThis schedules Laura's release and Oliver's LinkedIn post for 0700 CT tomorrow. This action cannot be undone.`)) return;
+  try {
+    const data = await apiFetch(`/api/admin/briefings/${id}/confirm-distribution`, { method: 'POST' });
+    alert(`Edition ${edition} confirmed. Oliver's post scheduled for ${new Date(data.scheduled_post_at).toLocaleString('en-US', { weekday:'short', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' })} CT.`);
+    loadHitlQueue();
+  } catch (e) {
+    alert('Confirmation failed — check console.');
+  }
+}
+
+// ── Agent fleet (Agent Status tab) ────────────────────────────────────────────
+function buildAgentFleet() {
+  const grid = document.getElementById('agent-fleet-grid');
+  grid.innerHTML = AGENT_FLEET.map(dept => `
+    <div class="dept-card">
+      <div class="dept-label">${dept.dept}</div>
+      <div class="agent-list">
+        ${dept.agents.map(a => `
+          <div class="agent-tile">
+            <span class="health-dot" id="dot-${a.name.replace(/\//g, '-').replace(/\s/g, '-')}"></span>
+            <div class="agent-info">
+              <div class="agent-name">${a.name}</div>
+              <div class="agent-title-text">${a.title}</div>
+            </div>
+            ${a.badge ? `<span class="dual-badge">${a.badge}</span>` : ''}
+            ${a.chat ? `<button class="chat-btn" onclick="openChat('${a.name}', '${(a.scope || '').replace(/'/g, "\\'")}')">Chat</button>` : ''}
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+async function loadAgentHealth() {
+  try {
+    const data = await apiFetch('/api/admin/agents');
+    const health = {};
+    (data.data || []).forEach(h => { health[h.agent_name.toLowerCase()] = h; });
+
+    document.querySelectorAll('.health-dot').forEach(dot => {
+      const raw  = dot.id.replace('dot-', '').replace(/-/g, ' ').toLowerCase();
+      const key  = raw.replace(' ', '/').toLowerCase();
+      const h    = health[raw] || health[key] || null;
+      dot.style.background = agentHealthColor(h);
+      dot.title = h ? `Tasks today: ${h.tasks_today} | Completed: ${h.completed_today} | Failed: ${h.failed_today}` : 'No activity today';
+    });
+  } catch (e) {
+    // Silently fail — dots stay grey
+  }
+}
+
+function agentHealthColor(h) {
+  if (!h) return '#cbd5e1';
+  if (+h.failed_today > 0 && +h.completed_today === 0) return '#ef4444';
+  if (+h.failed_today > 0) return '#f59e0b';
+  if (+h.tasks_today > 0 || +h.active_queue > 0) return '#10b981';
+  return '#cbd5e1';
+}
+
+// ── Conference / Meetings ──────────────────────────────────────────────────────
+async function loadMeetings() {
+  const el = document.getElementById('meetings-list');
+  try {
+    const data = await apiFetch('/api/admin/meetings');
+    if (!data.data?.length) {
+      el.innerHTML = '<div style="font-size:13px;color:var(--cs-gray-400);">No meetings on record.</div>';
+      return;
+    }
+    el.innerHTML = data.data.map(m => {
+      const when = m.created_at ? new Date(m.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : '';
+      return `<div class="meeting-row" onclick="loadActionItems('${m.id}')" style="cursor:pointer;">
+        <span class="meeting-type-badge meeting-type-${m.type}">${m.type}</span>
+        <span style="flex:1;font-weight:500;color:var(--cs-navy);">${m.title}</span>
+        <span style="color:var(--cs-gray-400);font-size:12px;">${m.convener}</span>
+        <span style="color:var(--cs-gray-400);font-size:12px;">${when}</span>
+        <span class="badge ${m.status === 'closed' ? 'badge-published' : 'badge-inprogress'}" style="font-size:10px;">${m.status}</span>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--cs-gray-400);">Error loading meetings.</div>';
+  }
+}
+
+async function loadActionItems(meetingId) {
+  const el = document.getElementById('action-items-list');
+  el.innerHTML = '<div style="font-size:13px;color:var(--cs-gray-400);">Loading…</div>';
+  try {
+    const data = await apiFetch(`/api/admin/meetings/${meetingId}/action-items`);
+    if (!data.data?.length) {
+      el.innerHTML = '<div style="font-size:13px;color:var(--cs-gray-400);">No action items for this meeting.</div>';
+      return;
+    }
+    el.innerHTML = `<div style="font-size:12px;color:var(--cs-gray-400);margin-bottom:10px;">Click a row to toggle status.</div>` +
+      data.data.map(item => `
+        <div class="stage-row" style="cursor:pointer;" onclick="toggleActionItem('${meetingId}','${item.id}','${item.status}')">
+          <span class="stage-label" style="${item.status === 'resolved' ? 'text-decoration:line-through;color:#94a3b8;' : ''}">${item.title}</span>
+          ${item.owner_agent ? `<span style="font-size:12px;color:var(--cs-gray-400);">${item.owner_agent}</span>` : ''}
+          <span class="badge ${item.status === 'resolved' ? 'badge-published' : 'badge-new'}" style="font-size:10px;margin-left:8px;">${item.status}</span>
+        </div>`).join('');
+  } catch (e) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--cs-gray-400);">Error loading action items.</div>';
+  }
+}
+
+async function toggleActionItem(meetingId, itemId, currentStatus) {
+  const newStatus = currentStatus === 'resolved' ? 'open' : 'resolved';
+  try {
+    await apiFetch(`/api/admin/meetings/${meetingId}/action-items/${itemId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: newStatus }),
+    });
+    loadActionItems(meetingId);
+  } catch (e) {
+    alert('Failed to update action item.');
+  }
+}
+
+document.getElementById('meeting-form').addEventListener('submit', async function (e) {
+  e.preventDefault();
+  const title   = document.getElementById('mtg-title').value.trim();
+  const type    = document.getElementById('mtg-type').value;
+  const agenda  = document.getElementById('mtg-agenda').value.trim();
+  const fb      = document.getElementById('mtg-feedback');
+  const btn     = this.querySelector('button[type="submit"]');
+
+  if (!title) return;
+  btn.disabled = true; btn.textContent = 'Initiating…';
+  fb.style.display = 'none';
+
+  try {
+    await apiFetch('/api/admin/meetings', { method: 'POST', body: JSON.stringify({ title, type, agenda }) });
+    document.getElementById('mtg-title').value  = '';
+    document.getElementById('mtg-agenda').value = '';
+    fb.style.cssText = 'display:block;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:9px 12px;font-size:13px;color:#166534;';
+    fb.textContent = `Meeting "${title}" initiated. ${type === 'security' ? 'Cy' : 'Henry'} has been notified.`;
+    loadMeetings();
+  } catch (err) {
+    fb.style.cssText = 'display:block;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:9px 12px;font-size:13px;color:#dc2626;';
+    fb.textContent = 'Failed to initiate meeting. Check console.';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Initiate Meeting';
+  }
+});
+
+// ── Chat modal ─────────────────────────────────────────────────────────────────
+function openChat(name, scope) {
+  document.getElementById('chat-agent-name').textContent  = name;
+  document.getElementById('chat-agent-scope').textContent = scope || 'Management-layer agent';
+  document.getElementById('chat-modal').classList.add('open');
+}
+function closeChat() {
+  document.getElementById('chat-modal').classList.remove('open');
+}
+document.getElementById('chat-modal').addEventListener('click', function (e) {
+  if (e.target === this) closeChat();
+});
 </script>
 </body>
 </html>

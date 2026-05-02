@@ -548,6 +548,43 @@ const createEscalation = ({ from_agent, to_agent, reason, content_id, severity }
       VALUES (gen_random_uuid(),$1,$2,$3,$4,$5,'open',now()) RETURNING *`,
     [from_agent, to_agent, reason, content_id, severity]);
 
+// ── MEETINGS ──────────────────────────────────────────────────────────────────
+
+const countActiveThreats = () =>
+  q1("SELECT COUNT(*) AS count FROM threat_records WHERE status != 'archived'");
+
+const createMeeting = ({ title, type, convener, initiated_by, agenda }) =>
+  q1(`INSERT INTO meetings (id,title,type,convener,initiated_by,agenda)
+      VALUES (gen_random_uuid(),$1,$2,$3,$4,$5) RETURNING *`,
+    [title, type, convener, initiated_by, agenda || null]);
+
+const listMeetings = ({ status, limit = 20 } = {}) => {
+  const conds = ['1=1'];
+  const params = [];
+  if (status) { params.push(status); conds.push(`status=$${params.length}`); }
+  params.push(limit);
+  return q(`SELECT * FROM meetings WHERE ${conds.join(' AND ')} ORDER BY created_at DESC LIMIT $${params.length}`, params);
+};
+
+const getMeetingById = (id) =>
+  q1('SELECT * FROM meetings WHERE id=$1', [id]);
+
+const createActionItem = ({ meeting_id, title, owner_agent }) =>
+  q1(`INSERT INTO meeting_action_items (id,meeting_id,title,owner_agent)
+      VALUES (gen_random_uuid(),$1,$2,$3) RETURNING *`,
+    [meeting_id, title, owner_agent || null]);
+
+const listActionItems = (meeting_id) =>
+  q('SELECT * FROM meeting_action_items WHERE meeting_id=$1 ORDER BY created_at ASC', [meeting_id]);
+
+const patchActionItem = (id, fields) => {
+  const allowed = ['status', 'owner_agent', 'resolved_at'];
+  const safe = Object.fromEntries(Object.entries(fields).filter(([k]) => allowed.includes(k)));
+  if (safe.status === 'resolved' && !safe.resolved_at) safe.resolved_at = new Date().toISOString();
+  const sets = Object.keys(safe).map((k, i) => `${k}=$${i + 2}`).join(',');
+  return q1(`UPDATE meeting_action_items SET ${sets} WHERE id=$1 RETURNING *`, [id, ...Object.values(safe)]);
+};
+
 module.exports = {
   pool,
   getUserById, getUserByEmail, createUser, updateUser, softDeleteUser,
@@ -575,4 +612,7 @@ module.exports = {
   getLatestSnapshot, getLiveMetricsDelta, getPipelineStatus, getActivityFeed,
   getAgentHealthSummary, logAuditEvent, getAuditLog,
   createEscalation,
+  countActiveThreats,
+  createMeeting, listMeetings, getMeetingById,
+  createActionItem, listActionItems, patchActionItem,
 };

@@ -555,6 +555,25 @@ socialRouter.get('/performance', requireAdminToken(), async (req, res, next) => 
 // ── admin.js ──────────────────────────────────────────────────────────────────
 const adminRouter = express.Router();
 
+// Aggregated Command Center metrics — single call for the full dashboard header row.
+adminRouter.get('/metrics', requireAdminToken(), async (req, res, next) => {
+  try {
+    const [live, pipeline, activity, threatCount] = await Promise.all([
+      db.getLiveMetricsDelta(),
+      db.getPipelineStatus(),
+      db.getActivityFeed(10),
+      db.countActiveThreats(),
+    ]);
+    res.json({
+      live,
+      pipeline,
+      activity,
+      radar_threats: +(threatCount?.count ?? 0),
+      jim_validated: false,
+    });
+  } catch (e) { next(e); }
+});
+
 adminRouter.get('/me', requireAdminToken(), async (req, res, next) => {
   try {
     const { password_hash, ...safe } = req.user;
@@ -706,6 +725,77 @@ adminRouter.post('/briefings/:id/confirm-distribution', requireAdminToken(['gm']
       laura_task_id: lauraTask.id,
       oliver_task_id: oliverTask.id,
     });
+  } catch (e) { next(e); }
+});
+
+// ── Meetings (Conference tab) ─────────────────────────────────────────────────
+// Convener routing is enforced server-side: operational/editorial/training → Henry, security → Cy.
+
+adminRouter.get('/meetings', requireAdminToken(), async (req, res, next) => {
+  try {
+    const { status } = req.query;
+    const meetings = await db.listMeetings({ status });
+    res.json({ data: meetings });
+  } catch (e) { next(e); }
+});
+
+adminRouter.post('/meetings', requireAdminToken(), async (req, res, next) => {
+  try {
+    const { title, type, agenda } = req.body;
+    const validTypes = ['operational', 'security', 'editorial', 'training'];
+    if (!title || !type) return res.status(400).json(err('MISSING_FIELDS', 'title and type are required'));
+    if (!validTypes.includes(type)) return res.status(400).json(err('INVALID_TYPE', `type must be one of: ${validTypes.join(', ')}`));
+
+    const convener = type === 'security' ? 'Cy' : 'Henry';
+
+    const meeting = await db.createMeeting({ title, type, convener, initiated_by: req.user.id, agenda });
+
+    await db.logAuditEvent({
+      actor: req.user.id,
+      action: 'meeting_created',
+      target_agent: convener,
+      reason: `${type} meeting initiated: ${title}`,
+      affected_content_id: meeting.id,
+    });
+
+    await notifyAgents([convener], {
+      type: 'MEETING_INITIATED',
+      meeting_id: meeting.id,
+      meeting_type: type,
+      title,
+      agenda: agenda || null,
+      message: `New ${type} meeting initiated: "${title}". You are the convener.`,
+    });
+
+    res.status(201).json(meeting);
+  } catch (e) { next(e); }
+});
+
+adminRouter.get('/meetings/:id/action-items', requireAdminToken(), async (req, res, next) => {
+  try {
+    const items = await db.listActionItems(req.params.id);
+    res.json({ data: items });
+  } catch (e) { next(e); }
+});
+
+adminRouter.post('/meetings/:id/action-items', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    const { title, owner_agent } = req.body;
+    if (!title) return res.status(400).json(err('MISSING_FIELDS', 'title is required'));
+    const meeting = await db.getMeetingById(req.params.id);
+    if (!meeting) return res.status(404).json(err('NOT_FOUND', 'Meeting not found'));
+    const item = await db.createActionItem({ meeting_id: req.params.id, title, owner_agent });
+    res.status(201).json(item);
+  } catch (e) { next(e); }
+});
+
+adminRouter.patch('/meetings/:id/action-items/:aid', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    const allowed = ['status', 'owner_agent'];
+    const updates = Object.fromEntries(Object.entries(req.body).filter(([k]) => allowed.includes(k)));
+    const item = await db.patchActionItem(req.params.aid, updates);
+    if (!item) return res.status(404).json(err('NOT_FOUND', 'Action item not found'));
+    res.json(item);
   } catch (e) { next(e); }
 });
 
