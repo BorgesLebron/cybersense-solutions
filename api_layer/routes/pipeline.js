@@ -44,9 +44,15 @@ router.post('/threat-records', requireAgentToken(['Rick', 'Henry']), async (req,
       sla_deadline: severity === 'critical' ? new Date(Date.now() + 15 * 60 * 1000) : null,
     });
 
-    if (severity === 'critical' || priority === 'immediate') {
-      await notifyAgents(['Barbara'], { type: 'CRITICAL_THREAT', record_id: record.id, cve_id, severity });
-    }
+    await notifyAgents(['Barbara'], {
+      type: severity === 'critical' || priority === 'immediate' ? 'CRITICAL_THREAT' : 'THREAT_RECORD_SUBMITTED',
+      record_id: record.id,
+      cve_id,
+      severity,
+      priority,
+      task_id: task.id,
+      message: `Threat record submitted by Rick. ${severity.toUpperCase()} — ${threat_name}${cve_id ? ` (${cve_id})` : ''}.`,
+    });
 
     res.status(201).json({ id: record.id, queued_task_id: task.id });
   } catch (e) {
@@ -107,6 +113,15 @@ router.post('/repository/process', requireAgentToken(['Barbara', 'Henry']), asyn
       ready_for_intel: record.ready_for_intel,
       ready_for_awareness: record.ready_for_awareness,
     });
+
+    if (source_type === 'threat') {
+      await notifyAgents(['Owen'], {
+        type: 'BRAND_INTEGRITY_CHECK',
+        record_id: record.id,
+        threat_record_id: source_id,
+        message: `Threat record ${source_id} normalized by Barbara. Check platform stack for CVE intersection. If found: elevate patch SLA to Critical and escalate to Cy immediately.`,
+      });
+    }
 
     res.json(record);
   } catch (e) { next(e); }
