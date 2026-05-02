@@ -435,6 +435,48 @@ async function runAccountHealthCheck() {
   }
 }
 
+// ── Oliver daily post trigger (07:00 CT, Mon–Fri) ────────────────────────────
+// Fires any queued post_scheduled task for Oliver. Quiet pass if none pending.
+// Oliver prepares post content on receipt of POST_SCHEDULED; this trigger
+// tells him the window is open and to execute now.
+async function runOliverDailyPost() {
+  try {
+    const tasks = await db.pool.query(`
+      SELECT id, content_id FROM agent_tasks
+      WHERE agent_name = 'Oliver'
+        AND task_type = 'post_scheduled'
+        AND status = 'queued'
+        AND created_at > now() - INTERVAL '2 days'
+      ORDER BY created_at DESC
+      LIMIT 1
+    `).then(r => r.rows);
+
+    if (tasks.length === 0) {
+      console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'oliver_daily_post', status: 'no_pending_tasks' }));
+      return;
+    }
+
+    for (const task of tasks) {
+      await notifyAgents(['Oliver'], {
+        type: 'POST_EXECUTE',
+        task_id: task.id,
+        briefing_id: task.content_id,
+        message: '0700 CT window is open. Execute scheduled LinkedIn post now.',
+      });
+    }
+
+    console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'oliver_daily_post', status: 'triggered', tasks: tasks.length }));
+  } catch (e) {
+    const ts = new Date().toISOString();
+    console.error(JSON.stringify({ ts, job: 'oliver_daily_post', status: 'error', error: e.message }));
+    await notifyAgents(['Barret', 'Cy'], {
+      type: 'OLIVER_POST_TRIGGER_FAILED',
+      error: e.message,
+      message: 'Oliver 0700 CT post trigger failed. LinkedIn post may not fire. Manual intervention required.',
+    });
+  }
+}
+
 // ── Ruth daily cycle trigger (04:30 CT, Mon–Fri = Sun–Thu production nights) ──
 // Kicks off the awareness pipeline. Creates a typed daily_cycle task with
 // 06:00 CT SLA, then delivers a live notification. Idempotent — skips if a
@@ -596,7 +638,8 @@ function startScheduler() {
     cron.schedule('0 23 * * 0',     runLinkedInTokenRefresh,       { timezone: 'America/Chicago' });
     // Awareness pipeline kickoff
     cron.schedule('30 4 * * 1-5',   runRuthDailyCycle,             { timezone: 'America/Chicago' });
-    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SCHEDULER_STARTED', jobs: 16 }));
+    cron.schedule('0 7 * * 1-5',    runOliverDailyPost,            { timezone: 'America/Chicago' });
+    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SCHEDULER_STARTED', jobs: 17 }));
   } catch (e) {
     console.warn('node-cron not installed — scheduler disabled. Install with: npm install node-cron');
   }
@@ -620,4 +663,5 @@ module.exports = {
   runMidnightContentUpdate,
   runLinkedInTokenRefresh,
   runRuthDailyCycle,
+  runOliverDailyPost,
 };

@@ -622,6 +622,93 @@ adminRouter.get('/audit', requireAdminToken(['gm']), async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+// Returns briefings with pipeline_status='approved' — the Preview Briefing queue
+adminRouter.get('/briefings/preview', requireAdminToken(), async (req, res, next) => {
+  try {
+    const briefings = await db.pool.query(`
+      SELECT id, edition_number, edition_date, subject_line, file_path, maya_approved_at, pipeline_status
+      FROM briefings
+      WHERE pipeline_status = 'approved'
+      ORDER BY edition_date DESC
+    `).then(r => r.rows);
+    res.json({ data: briefings });
+  } catch (e) { next(e); }
+});
+
+// Human-in-the-loop gate. Confirms distribution, creates Laura's release task,
+// and schedules Oliver's LinkedIn post for next 0700 CT.
+// Distribution is blocked until this endpoint is called — no exceptions.
+adminRouter.post('/briefings/:id/confirm-distribution', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    const briefing = await db.getBriefingById(req.params.id);
+    if (!briefing) return res.status(404).json(err('NOT_FOUND', 'Briefing not found'));
+    if (briefing.pipeline_status !== 'approved')
+      return res.status(422).json(err('NOT_APPROVED', 'Briefing must be in approved status before distribution can be confirmed'));
+
+    // Next 0700 CT (server local time — same timezone convention as rest of codebase)
+    const scheduledAt = new Date();
+    scheduledAt.setDate(scheduledAt.getDate() + 1);
+    scheduledAt.setHours(7, 0, 0, 0);
+
+    const lauraTask = await db.createTask({
+      agent_name: 'Laura',
+      task_type: 'release_briefing',
+      content_type: 'briefing',
+      content_id: briefing.id,
+      sla_deadline: new Date(scheduledAt.getTime() - 5 * 60 * 1000),
+    });
+
+    const oliverTask = await db.createTask({
+      agent_name: 'Oliver',
+      task_type: 'post_scheduled',
+      content_type: 'briefing',
+      content_id: briefing.id,
+      sla_deadline: scheduledAt,
+    });
+
+    await db.logAuditEvent({
+      actor: req.user.id,
+      action: 'hitl_distribution_confirmed',
+      target_agent: 'Laura',
+      reason: `Distribution confirmed — Edition ${briefing.edition_number} (${briefing.edition_date})`,
+      affected_content_id: briefing.id,
+    });
+
+    await notifyAgents(['Laura'], {
+      type: 'DISTRIBUTION_CONFIRMED',
+      briefing_id: briefing.id,
+      edition_number: briefing.edition_number,
+      edition_date: briefing.edition_date,
+      subject_line: briefing.subject_line,
+      task_id: lauraTask.id,
+      scheduled_post_at: scheduledAt.toISOString(),
+      message: `Human executive confirmed distribution for Edition ${briefing.edition_number}. Release briefing and trigger email distribution. Oliver's LinkedIn post is scheduled for ${scheduledAt.toISOString()}.`,
+    });
+
+    await notifyAgents(['Oliver'], {
+      type: 'POST_SCHEDULED',
+      briefing_id: briefing.id,
+      edition_number: briefing.edition_number,
+      edition_date: briefing.edition_date,
+      subject_line: briefing.subject_line,
+      task_id: oliverTask.id,
+      scheduled_at: scheduledAt.toISOString(),
+      platform: 'linkedin',
+      message: `LinkedIn post for Edition ${briefing.edition_number} scheduled for ${scheduledAt.toISOString()}. Prepare post content. Scheduler triggers execution at 0700 CT.`,
+    });
+
+    res.json({
+      confirmed: true,
+      briefing_id: briefing.id,
+      edition_number: briefing.edition_number,
+      edition_date: briefing.edition_date,
+      scheduled_post_at: scheduledAt.toISOString(),
+      laura_task_id: lauraTask.id,
+      oliver_task_id: oliverTask.id,
+    });
+  } catch (e) { next(e); }
+});
+
 // ── agents (webhook receiver) ─────────────────────────────────────────────────
 // Inbound notification endpoint for the internal agent communication bus.
 // Called exclusively by notifyAgents() in services/agents.js via X-CS-Internal.
