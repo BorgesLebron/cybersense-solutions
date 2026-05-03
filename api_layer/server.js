@@ -32,7 +32,17 @@ const app = express();
 
 app.set('trust proxy', 1);
 
-app.use(helmet());
+app.use(helmet(ADMIN_ONLY ? {
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc:  ["'self'"],
+      scriptSrc:   ["'self'", "'unsafe-inline'"],
+      styleSrc:    ["'self'", "'unsafe-inline'"],
+      connectSrc:  ["'self'"],
+      imgSrc:      ["'self'", "data:"],
+    },
+  },
+} : {}));
 app.use(cors({
   origin: process.env.ALLOWED_ORIGINS?.split(',') || ['https://cybersense.solutions'],
   credentials: true,
