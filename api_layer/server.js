@@ -43,6 +43,9 @@ app.use(requestLogger);
 
 if (ADMIN_ONLY) {
   app.use(express.static(path.join(__dirname, 'public')));
+  app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+  });
 }
 
 const unauthLimit = rateLimit({
