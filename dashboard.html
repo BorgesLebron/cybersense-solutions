@@ -206,7 +206,7 @@
   <ul class="nav-links">
     <li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li><li><a href="radar.html">Radar</a></li><li><a href="intelligence.html">Intel</a></li><li><a href="newsletter.html">Newsletter</a></li><li><a href="training.html">Training</a></li><li><a href="growth.html">Proficient</a></li><li><a href="innovation.html">Innovation</a></li><li><a href="zerotrust.html">Zero-Trust</a></li>
   </ul>
-  <button class="nav-login" id="nav-logout" style="display:none;" onclick="localStorage.removeItem('cs_token');localStorage.removeItem('cs_user');location.reload();">Sign Out</button>
+  <button class="nav-login" id="nav-logout" style="display:none;" onclick="CS.Auth.logout()">Sign Out</button>
   <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
 </nav>
 <div class="nav-drawer" id="nav-drawer">
@@ -271,7 +271,7 @@
     <span class="sidebar-section-label" style="margin-top:12px;">System</span>
     <a href="#" class="sidebar-link"><span class="sidebar-icon">⚙</span> Settings</a>
     <a href="#" class="sidebar-link"><span class="sidebar-icon">🔑</span> API Keys</a>
-    <a href="#" class="sidebar-link" onclick="localStorage.removeItem('cs_token');localStorage.removeItem('cs_user');location.reload();return false;"><span class="sidebar-icon">🚪</span> Sign Out</a>
+    <a href="#" class="sidebar-link" onclick="CS.Auth.logout();return false;"><span class="sidebar-icon">🚪</span> Sign Out</a>
   </aside>
 
   <!-- Main content -->
@@ -641,52 +641,17 @@ const AGENT_FLEET = [
   },
 ];
 
-// ── Auth & boot ───────────────────────────────────────────────────────────────
+// ── Auth wiring ──────────────────────────────────────────────────────────────
+// auth.js owns the #login-form handler and session restoration via initAdminDashboardPage()
+// and initSession(). We wire to cs:login for initialization.
+
+let _dashInitialized = false;
+
+document.addEventListener('cs:login', function (e) {
+  showDashboard(e.detail);
+});
+
 document.addEventListener('DOMContentLoaded', function () {
-  const token = localStorage.getItem('cs_token');
-  const user  = JSON.parse(localStorage.getItem('cs_user') || '{}');
-
-  if (token && user.id) {
-    fetch(`${window.CS_API_BASE}/api/users/me`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
-      .then(data => { if (data.admin_role) showDashboard(data); else showGate('Access denied — admin privileges required.'); })
-      .catch(() => showGate());
-  }
-
-  document.getElementById('login-form').addEventListener('submit', async function (e) {
-    e.preventDefault();
-    const email    = document.getElementById('login-email').value.trim();
-    const password = document.getElementById('login-password').value;
-    const btn      = this.querySelector('button[type="submit"]');
-    const errEl    = document.getElementById('login-error');
-
-    btn.disabled    = true;
-    btn.textContent = 'Signing in…';
-    if (errEl) errEl.style.display = 'none';
-
-    try {
-      const res  = await fetch(`${window.CS_API_BASE}/api/auth/login`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error?.message || 'Login failed');
-
-      localStorage.setItem('cs_token', data.access_token);
-      localStorage.setItem('cs_user', JSON.stringify(data.user));
-
-      const meRes = await fetch(`${window.CS_API_BASE}/api/users/me`, { headers: { Authorization: `Bearer ${data.access_token}` } });
-      const me    = await meRes.json();
-
-      if (me.admin_role) showDashboard(me);
-      else throw new Error('Admin privileges required.');
-    } catch (e) {
-      if (errEl) { errEl.textContent = e.message; errEl.style.display = 'block'; }
-      btn.disabled    = false;
-      btn.textContent = 'Sign In';
-    }
-  });
-
   // Sidebar tab links
   document.querySelectorAll('[data-tab]').forEach(link => {
     link.addEventListener('click', function (e) {
@@ -702,11 +667,13 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 function showDashboard(user) {
-  document.getElementById('login-gate').style.display = 'none';
+  // auth.js sets display:block via applyPageGates; override to grid for sidebar layout
   document.getElementById('dashboard-shell').style.display = 'grid';
-  document.getElementById('nav-logout').style.display = 'block';
   document.getElementById('dash-date').textContent =
     new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+  if (_dashInitialized) return;
+  _dashInitialized = true;
 
   buildAgentFleet();
   loadMetrics();
@@ -716,11 +683,6 @@ function showDashboard(user) {
 
   setInterval(loadMetrics, 60000);
   setInterval(loadAgentHealth, 60000);
-}
-
-function showGate(msg) {
-  document.getElementById('login-gate').style.display  = 'flex';
-  document.getElementById('dashboard-shell').style.display = 'none';
 }
 
 // ── Tab switching ──────────────────────────────────────────────────────────────
@@ -767,16 +729,7 @@ function updateConvener() {
 }
 
 // ── API helpers ────────────────────────────────────────────────────────────────
-function apiToken() { return localStorage.getItem('cs_token'); }
-
-async function apiFetch(path, opts = {}) {
-  const res = await fetch(`${window.CS_API_BASE}${path}`, {
-    ...opts,
-    headers: { Authorization: `Bearer ${apiToken()}`, 'Content-Type': 'application/json', ...opts.headers },
-  });
-  if (!res.ok) throw new Error(`API error ${res.status}`);
-  return res.json();
-}
+function apiFetch(path, opts) { return CS.Auth.apiFetch(path, opts); }
 
 // ── Command Center data ────────────────────────────────────────────────────────
 async function loadMetrics() {
