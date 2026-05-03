@@ -2,7 +2,7 @@
 
 // db/migrate.js — Run all pending migrations in order
 // Usage: node db/migrate.js
-
+require('dotenv').config();
 const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');

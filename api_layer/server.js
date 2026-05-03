@@ -1,5 +1,6 @@
 'use strict';
 // build: 2026-04-13 18:00
+const path         = require('path');
 const express      = require('express');
 const cors         = require('cors');
 const helmet       = require('helmet');
@@ -25,6 +26,8 @@ const authRoutes = require('./routes/auth.js');
 const pipelineRoutes   = require('./routes/pipeline');
 const enterpriseRoutes = require('./routes/enterprise');
 
+const ADMIN_ONLY = process.env.ADMIN_ONLY === 'true';
+
 const app = express();
 
 app.set('trust proxy', 1);
@@ -37,6 +40,10 @@ app.use(cors({
 app.use(express.json({ limit: '2mb' }));
 app.use(cookieParser());
 app.use(requestLogger);
+
+if (ADMIN_ONLY) {
+  app.use(express.static(path.join(__dirname, 'public')));
+}
 
 const unauthLimit = rateLimit({
   windowMs: 60 * 1000,
@@ -64,7 +71,9 @@ const agentLimit = rateLimit({
 
 app.use('/api/auth',       unauthLimit, authRoutes);
 app.use('/api/users',      userLimit, agentLimit, userRoutes);
-app.use('/api/content',    userLimit, agentLimit, contentRoutes);
+if (!ADMIN_ONLY) {
+  app.use('/api/content',  userLimit, agentLimit, contentRoutes);
+}
 app.use('/api/pipeline',   agentLimit, pipelineRoutes);
 app.use('/api/tasks',      userLimit, agentLimit, taskRoutes);
 app.use('/api/training',   userLimit, agentLimit, trainingRoutes);
