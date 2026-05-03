@@ -371,14 +371,7 @@ let distributionState = {};
 
 async function loadBriefings() {
   try {
-    const res = await fetch(window.CS_API_BASE + '/api/ops/briefings/preview', {
-      headers: { Authorization: 'Bearer ' + (CS.Auth.getTokens().access || '') }
-    });
-    if (res.ok) {
-      briefings = await res.json();
-    } else {
-      briefings = SAMPLE_BRIEFINGS;
-    }
+    briefings = await CS.Auth.apiFetch('/api/ops/briefings/preview');
   } catch {
     briefings = SAMPLE_BRIEFINGS;
   }
@@ -512,14 +505,7 @@ async function approveBriefing(id) {
   const b = briefings.find(b => b.id === id);
   if (!b) return;
   try {
-    const res = await fetch(window.CS_API_BASE + '/api/ops/briefings/' + id + '/approve', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + (CS.Auth.getTokens().access || '')
-      }
-    });
-    if (!res.ok && res.status !== 404) throw new Error('API error');
+    await CS.Auth.apiFetch('/api/ops/briefings/' + id + '/approve', { method: 'POST', body: '{}' });
   } catch {}
   // update local state
   const execItem = b.checklist.find(c => c.id === 'exec');
@@ -539,14 +525,7 @@ async function rejectBriefing(id) {
   const reason = prompt('Reason for requesting revision (will be sent to Maya):');
   if (!reason) return;
   try {
-    await fetch(window.CS_API_BASE + '/api/ops/briefings/' + id + '/reject', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + (CS.Auth.getTokens().access || '')
-      },
-      body: JSON.stringify({ reason })
-    });
+    await CS.Auth.apiFetch('/api/ops/briefings/' + id + '/reject', { method: 'POST', body: JSON.stringify({ reason }) });
   } catch {}
   showToast('Revision request sent to Maya', '');
 }
@@ -573,14 +552,7 @@ let carouselApproved = {};
 
 async function loadCarousels() {
   try {
-    const res = await fetch(window.CS_API_BASE + '/api/ops/carousels/preview', {
-      headers: { Authorization: 'Bearer ' + (CS.Auth.getTokens().access || '') }
-    });
-    if (res.ok) {
-      carousels = await res.json();
-    } else {
-      carousels = SAMPLE_CAROUSELS;
-    }
+    carousels = await CS.Auth.apiFetch('/api/ops/carousels/preview');
   } catch {
     carousels = SAMPLE_CAROUSELS;
   }
@@ -651,12 +623,7 @@ let articleApproved = {};
 
 async function loadArticles() {
   try {
-    const res = await fetch(window.CS_API_BASE + '/api/ops/articles/preview', {
-      headers: { Authorization: 'Bearer ' + (CS.Auth.getTokens().access || '') }
-    });
-    if (res.ok) {
-      articles = await res.json();
-    }
+    articles = await CS.Auth.apiFetch('/api/ops/articles/preview');
   } catch {}
   renderArticles();
 }
@@ -720,46 +687,6 @@ document.addEventListener('cs:login', e => {
   loadArticles();
 });
 
-document.addEventListener('DOMContentLoaded', () => {
-  const loginForm = document.getElementById('login-form');
-  const loginGate = document.getElementById('login-gate');
-  const dashShell = document.getElementById('dashboard-shell');
-
-  loginForm.addEventListener('submit', async e => {
-    e.preventDefault();
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-    const btn = loginForm.querySelector('button[type=submit]');
-    btn.disabled = true;
-    btn.textContent = 'Signing in…';
-    try {
-      const result = await CS.Auth.login(email, password);
-      if (result && result.user) {
-        loginGate.style.display = 'none';
-        dashShell.style.display = 'block';
-        document.dispatchEvent(new CustomEvent('cs:login', { detail: result.user }));
-      } else {
-        throw new Error('Login failed');
-      }
-    } catch {
-      btn.disabled = false;
-      btn.textContent = 'Sign In';
-      btn.style.background = '#dc2626';
-      setTimeout(() => { btn.style.background = '#185FA5'; }, 1200);
-    }
-  });
-
-  // check existing session
-  if (typeof CS !== 'undefined' && CS.Auth) {
-    CS.Auth.initSession().then(user => {
-      if (user) {
-        loginGate.style.display = 'none';
-        dashShell.style.display = 'block';
-        document.dispatchEvent(new CustomEvent('cs:login', { detail: user }));
-      }
-    }).catch(() => {});
-  }
-});
 </script>
 </body>
 </html>
