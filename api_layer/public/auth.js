@@ -408,7 +408,7 @@
     if (dashShell && loginGate) {
       if (isAdminUser(user)) {
         loginGate.style.display = 'none';
-        dashShell.style.display = 'grid';
+        dashShell.style.display = 'block';
         loadDashboardData();
       }
       // If not admin, keep login gate visible
@@ -1015,7 +1015,8 @@
 
         // Reveal dashboard
         document.getElementById('login-gate').style.display = 'none';
-        document.getElementById('dashboard-shell').style.display = 'grid';
+        document.getElementById('dashboard-shell').style.display = 'block';
+        document.dispatchEvent(new CustomEvent('cs:login', { detail: user }));
         loadDashboardData();
       } catch (err) {
         showError(errorEl, friendlyError(err));

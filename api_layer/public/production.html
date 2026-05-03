@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://api.cybersense.solutions; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
+<title>CyberSense Admin — Preview &amp; Production</title>
+<script>window.CS_API_BASE = 'https://ops.cybersense.solutions';</script>
+<script src="auth.js"></script>
+<style>
+:root {
+  --color-background-primary: #ffffff;
+  --color-background-secondary: #f8fafc;
+  --color-background-tertiary: #f1f5f9;
+  --color-background-info: #eff6ff;
+  --color-text-primary: #1e293b;
+  --color-text-secondary: #475569;
+  --color-text-tertiary: #94a3b8;
+  --color-text-info: #185FA5;
+  --color-text-success: #16a34a;
+  --color-text-danger: #dc2626;
+  --color-border-tertiary: #e2e8f0;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background-primary: #1e293b;
+    --color-background-secondary: #0f172a;
+    --color-background-tertiary: #0d1117;
+    --color-background-info: #1e3a5f;
+    --color-text-primary: #f1f5f9;
+    --color-text-secondary: #cbd5e1;
+    --color-text-tertiary: #64748b;
+    --color-text-info: #60a5fa;
+    --color-text-success: #4ade80;
+    --color-text-danger: #f87171;
+    --color-border-tertiary: #334155;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-sans);font-size:13px;background:var(--color-background-tertiary);color:var(--color-text-primary);}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);}
+.topbar-left{display:flex;align-items:center;gap:10px;}
+.logo-mark{width:28px;height:28px;background:#185FA5;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;flex-shrink:0;}
+.topbar-title{font-size:13px;font-weight:600;color:var(--color-text-primary);}
+.topbar-sub{font-size:11px;color:var(--color-text-tertiary);}
+.status-dot{width:7px;height:7px;border-radius:50%;background:#1D9E75;display:inline-block;margin-right:4px;}
+.page-nav{display:flex;align-items:center;padding:0 16px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);}
+.pn-item{display:inline-flex;align-items:center;padding:9px 14px;font-size:12px;font-weight:500;color:var(--color-text-secondary);text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-0.5px;transition:color .12s,border-color .12s;white-space:nowrap;}
+.pn-item:hover{color:var(--color-text-primary);}
+.pn-item.active{color:#185FA5;border-bottom-color:#185FA5;}
+
+/* tab bar */
+.prod-tabs{display:flex;gap:0;padding:0 20px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);}
+.prod-tab{padding:10px 16px;font-size:12px;font-weight:500;color:var(--color-text-secondary);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-0.5px;transition:color .12s,border-color .12s;white-space:nowrap;display:flex;align-items:center;gap:6px;}
+.prod-tab:hover{color:var(--color-text-primary);}
+.prod-tab.active{color:#185FA5;border-bottom-color:#185FA5;}
+.tab-dot{width:7px;height:7px;border-radius:50%;display:inline-block;}
+
+/* main content area */
+.prod-body{padding:24px 20px;min-height:calc(100vh - 112px);overflow-y:auto;}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* gate banner */
+.gate-banner{display:flex;align-items:flex-start;gap:14px;padding:14px 18px;background:var(--color-background-info);border:0.5px solid #C3D8F2;border-radius:var(--border-radius-lg);margin-bottom:20px;}
+.gate-banner.warn{background:#FFFBEB;border-color:#FDE68A;}
+.gate-banner.danger{background:#FEF2F2;border-color:#FECACA;}
+@media(prefers-color-scheme:dark){
+  .gate-banner{background:var(--color-background-info);border-color:#2563aa;}
+  .gate-banner.warn{background:#422006;border-color:#92400e;}
+  .gate-banner.danger{background:#450a0a;border-color:#991b1b;}
+}
+.gate-icon{font-size:18px;flex-shrink:0;margin-top:1px;}
+.gate-text-title{font-size:13px;font-weight:600;color:var(--color-text-primary);margin-bottom:3px;}
+.gate-text-body{font-size:12px;color:var(--color-text-secondary);line-height:1.5;}
+
+/* briefing preview card */
+.briefing-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;margin-bottom:20px;}
+.bc-header{padding:14px 18px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:flex-start;justify-content:space-between;gap:16px;}
+.bc-title-block{}
+.bc-edition{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:4px;}
+.bc-headline{font-size:15px;font-weight:600;color:var(--color-text-primary);line-height:1.4;max-width:580px;}
+.bc-meta{font-size:12px;color:var(--color-text-secondary);margin-top:6px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.bc-meta-item{display:flex;align-items:center;gap:5px;}
+.bc-actions{display:flex;gap:8px;flex-shrink:0;align-items:flex-start;}
+.action-btn{padding:7px 16px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;border:0.5px solid;transition:all .12s;white-space:nowrap;}
+.action-btn.primary{background:#185FA5;color:#fff;border-color:#185FA5;}
+.action-btn.primary:hover{background:#1450A0;border-color:#1450A0;}
+.action-btn.secondary{background:var(--color-background-secondary);color:var(--color-text-secondary);border-color:var(--color-border-tertiary);}
+.action-btn.secondary:hover{background:var(--color-background-primary);color:var(--color-text-primary);}
+.action-btn.danger{background:#FEF2F2;color:#dc2626;border-color:#FECACA;}
+.action-btn.danger:hover{background:#fee2e2;}
+@media(prefers-color-scheme:dark){.action-btn.danger{background:#450a0a;border-color:#991b1b;}}
+.action-btn:disabled{opacity:.5;cursor:default;}
+
+/* briefing body — scrollable preview */
+.bc-preview{max-height:420px;overflow-y:auto;padding:18px;border-bottom:0.5px solid var(--color-border-tertiary);}
+.preview-section-title{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:10px;margin-top:18px;}
+.preview-section-title:first-child{margin-top:0;}
+.preview-item{padding:12px 14px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);margin-bottom:8px;}
+.pi-label{font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:5px;}
+.pi-label.threat{color:#dc2626;}
+.pi-label.innovation{color:#7F77DD;}
+.pi-label.growth{color:#1D9E75;}
+.pi-label.training{color:#185FA5;}
+.pi-title{font-size:13px;font-weight:600;color:var(--color-text-primary);margin-bottom:3px;line-height:1.4;}
+.pi-source{font-size:11px;color:var(--color-text-tertiary);}
+
+/* checklist */
+.approval-checklist{padding:14px 18px;}
+.cl-title{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:12px;}
+.cl-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary);}
+.cl-item:last-child{border-bottom:none;}
+.cl-check{width:18px;height:18px;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700;}
+.cl-check.done{background:#EAF3DE;color:#3B6D11;}
+.cl-check.pending{background:var(--color-background-tertiary);color:var(--color-text-tertiary);border:1.5px solid var(--color-border-tertiary);}
+@media(prefers-color-scheme:dark){.cl-check.done{background:#27500A;color:#C0DD97;}}
+.cl-label{font-size:12px;color:var(--color-text-primary);flex:1;}
+.cl-agent{font-size:11px;color:var(--color-text-tertiary);}
+
+/* approve strip */
+.approve-strip{padding:14px 18px;background:var(--color-background-secondary);display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.approve-strip.ready{background:#EAF3DE;}
+@media(prefers-color-scheme:dark){.approve-strip.ready{background:#0A2D0A;}}
+.as-label{font-size:12px;font-weight:500;color:var(--color-text-secondary);}
+.as-label.ready{color:#3B6D11;}
+@media(prefers-color-scheme:dark){.as-label.ready{color:#C0DD97;}}
+
+/* empty state */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:60px 20px;color:var(--color-text-tertiary);}
+.empty-state svg{opacity:.25;}
+.empty-state p{font-size:13px;}
+
+/* carousel grid */
+.carousel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px;}
+.carousel-frame{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);overflow:hidden;}
+.carousel-slide{aspect-ratio:1/1;background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;gap:8px;}
+.cs-slide-num{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#60a5fa;opacity:.7;}
+.cs-slide-text{font-size:12px;font-weight:600;color:#f1f5f9;text-align:center;line-height:1.4;}
+.cs-slide-brand{font-size:9px;color:#64748b;margin-top:auto;}
+.carousel-meta{padding:8px 10px;border-top:0.5px solid var(--color-border-tertiary);}
+.cm-title{font-size:11px;font-weight:600;color:var(--color-text-primary);margin-bottom:2px;}
+.cm-sub{font-size:10px;color:var(--color-text-tertiary);}
+
+/* articles list */
+.article-cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.art-cat{padding:5px 12px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);color:var(--color-text-secondary);transition:all .12s;}
+.art-cat.active{background:#185FA5;color:#fff;border-color:#185FA5;}
+.article-list{display:flex;flex-direction:column;gap:10px;}
+.article-row{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:14px 16px;display:flex;align-items:flex-start;gap:14px;}
+.ar-badge{flex-shrink:0;padding:3px 8px;border-radius:5px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;}
+.ar-badge.threat{background:#FEF2F2;color:#dc2626;}
+.ar-badge.policy{background:#EFF6FF;color:#185FA5;}
+.ar-badge.innovation{background:#F3F0FF;color:#7F77DD;}
+.ar-badge.growth{background:#ECFDF5;color:#1D9E75;}
+.ar-badge.training{background:#EFF6FF;color:#185FA5;}
+@media(prefers-color-scheme:dark){
+  .ar-badge.threat{background:#450a0a;color:#f87171;}
+  .ar-badge.policy{background:#0C447C;color:#B5D4F4;}
+  .ar-badge.innovation{background:#2e2760;color:#c4b5fd;}
+  .ar-badge.growth{background:#063a25;color:#6ee7b7;}
+  .ar-badge.training{background:#0C447C;color:#B5D4F4;}
+}
+.ar-body{flex:1;}
+.ar-title{font-size:13px;font-weight:600;color:var(--color-text-primary);margin-bottom:3px;line-height:1.4;}
+.ar-meta{font-size:11px;color:var(--color-text-tertiary);display:flex;gap:10px;flex-wrap:wrap;}
+.ar-status{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+
+/* badges */
+.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500;}
+.b-green{background:#EAF3DE;color:#3B6D11;} .b-amber{background:#FAEEDA;color:#854F0B;}
+.b-blue{background:#E6F1FB;color:#185FA5;} .b-gray{background:#F1EFE8;color:#5F5E5A;}
+.b-red{background:#FEE2E2;color:#B91C1C;}
+@media(prefers-color-scheme:dark){
+  .b-green{background:#27500A;color:#C0DD97;} .b-amber{background:#633806;color:#FAC775;}
+  .b-blue{background:#0C447C;color:#B5D4F4;} .b-gray{background:#444441;color:#D3D1C7;}
+  .b-red{background:#450a0a;color:#fca5a5;}
+}
+
+/* section header */
+.section-hd{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:10px;margin-top:0;}
+.panel-title{font-size:15px;font-weight:600;color:var(--color-text-primary);margin-bottom:4px;}
+.panel-sub{font-size:12px;color:var(--color-text-secondary);margin-bottom:20px;line-height:1.5;}
+
+/* toast */
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 18px;background:#1e293b;color:#f1f5f9;border-radius:10px;font-size:13px;font-weight:500;box-shadow:0 4px 24px rgba(0,0,0,0.18);transform:translateY(8px);opacity:0;transition:all .2s;z-index:999;pointer-events:none;}
+.toast.visible{transform:translateY(0);opacity:1;}
+.toast.success{background:#166534;color:#dcfce7;}
+.toast.error{background:#991b1b;color:#fee2e2;}
+
+/* distribution confirmed state */
+.dist-confirmed{display:flex;flex-direction:column;align-items:center;gap:14px;padding:40px 20px;text-align:center;}
+.dc-icon{width:52px;height:52px;border-radius:50%;background:#EAF3DE;display:flex;align-items:center;justify-content:center;font-size:22px;}
+@media(prefers-color-scheme:dark){.dc-icon{background:#27500A;}}
+.dc-title{font-size:16px;font-weight:600;color:var(--color-text-primary);}
+.dc-sub{font-size:13px;color:var(--color-text-secondary);max-width:440px;line-height:1.6;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN GATE -->
+<div id="login-gate" style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--color-background-secondary);">
+  <div style="width:340px;background:var(--color-background-primary);border:1px solid var(--color-border-tertiary);border-radius:12px;padding:32px;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="width:40px;height:40px;background:#185FA5;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:#fff;margin-bottom:12px;">CS</div>
+      <div style="font-size:16px;font-weight:600;color:var(--color-text-primary);">CyberSense Admin</div>
+      <div style="font-size:13px;color:var(--color-text-tertiary);margin-top:4px;">Restricted access</div>
+    </div>
+    <form id="login-form">
+      <div style="margin-bottom:14px;">
+        <label style="font-size:12px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:6px;">Email</label>
+        <input id="login-email" type="email" required autocomplete="email" placeholder="admin@cybersense.solutions"
+          style="width:100%;padding:9px 12px;border:1px solid var(--color-border-tertiary);border-radius:8px;font-size:13px;outline:none;font-family:inherit;background:var(--color-background-primary);color:var(--color-text-primary);">
+      </div>
+      <div style="margin-bottom:20px;">
+        <label style="font-size:12px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:6px;">Password</label>
+        <input id="login-password" type="password" required autocomplete="current-password"
+          style="width:100%;padding:9px 12px;border:1px solid var(--color-border-tertiary);border-radius:8px;font-size:13px;outline:none;font-family:inherit;background:var(--color-background-primary);color:var(--color-text-primary);">
+      </div>
+      <button type="submit" style="width:100%;padding:10px;background:#185FA5;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;">Sign In</button>
+    </form>
+  </div>
+</div>
+
+<!-- DASHBOARD SHELL -->
+<div id="dashboard-shell" style="display:none;">
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="logo-mark">CS</div>
+      <div>
+        <div class="topbar-title">CyberSense Admin</div>
+        <div class="topbar-sub">CyberSense.Solutions — restricted access</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <span style="font-size:12px;color:var(--color-text-secondary);"><span class="status-dot"></span>All systems operational</span>
+      <span id="nav-user-label" style="font-size:12px;color:var(--color-text-tertiary);"></span>
+      <button id="nav-logout" onclick="CS.Auth.logout()" style="display:none;font-size:12px;color:var(--color-text-secondary);background:none;border:0.5px solid var(--color-border-tertiary);border-radius:6px;padding:4px 10px;cursor:pointer;font-family:inherit;">Sign out</button>
+    </div>
+  </div>
+
+  <div class="page-nav">
+    <a href="admin.html" class="pn-item">Command Center</a>
+    <a href="agents.html" class="pn-item">Agent Status</a>
+    <a href="conference.html" class="pn-item">Meeting Room</a>
+    <a href="production.html" class="pn-item active">Preview &amp; Production</a>
+  </div>
+
+  <!-- TAB BAR -->
+  <div class="prod-tabs">
+    <div class="prod-tab active" onclick="switchTab('briefing')" id="tab-briefing">
+      <span class="tab-dot" id="dot-briefing" style="background:#F59E0B;"></span>
+      Preview Briefing
+    </div>
+    <div class="prod-tab" onclick="switchTab('carousel')" id="tab-carousel">
+      <span class="tab-dot" id="dot-carousel" style="background:#94a3b8;"></span>
+      Preview Carousel
+    </div>
+    <div class="prod-tab" onclick="switchTab('articles')" id="tab-articles">
+      <span class="tab-dot" id="dot-articles" style="background:#94a3b8;"></span>
+      Preview Articles
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="prod-body">
+
+    <!-- ── TAB: PREVIEW BRIEFING ── -->
+    <div class="tab-panel active" id="panel-briefing">
+
+      <div class="panel-title">Preview Briefing</div>
+      <div class="panel-sub">Maya-approved editions await human executive confirmation before distribution is authorized. No edition reaches subscribers without your explicit approval here.</div>
+
+      <div id="briefing-content">
+        <div style="padding:40px 0;text-align:center;color:var(--color-text-tertiary);font-size:12px;">Loading pending briefings…</div>
+      </div>
+
+    </div>
+
+    <!-- ── TAB: PREVIEW CAROUSEL ── -->
+    <div class="tab-panel" id="panel-carousel">
+
+      <div class="panel-title">Preview Carousel</div>
+      <div class="panel-sub">Review social media carousel frames before Oliver publishes to LinkedIn and Lucy posts to Meta channels.</div>
+
+      <div id="carousel-content">
+        <div style="padding:40px 0;text-align:center;color:var(--color-text-tertiary);font-size:12px;">Loading carousel queue…</div>
+      </div>
+
+    </div>
+
+    <!-- ── TAB: PREVIEW ARTICLES ── -->
+    <div class="tab-panel" id="panel-articles">
+
+      <div class="panel-title">Preview Articles</div>
+      <div class="panel-sub">Articles cleared by Maya pending final review before publication to the subscriber platform.</div>
+
+      <div class="article-cats">
+        <div class="art-cat active" onclick="filterArticles('all')" id="acat-all">All</div>
+        <div class="art-cat" onclick="filterArticles('threat')" id="acat-threat">Threat Intelligence</div>
+        <div class="art-cat" onclick="filterArticles('policy')" id="acat-policy">Policy Updates</div>
+        <div class="art-cat" onclick="filterArticles('innovation')" id="acat-innovation">Latest Innovations</div>
+        <div class="art-cat" onclick="filterArticles('growth')" id="acat-growth">Professional Growth</div>
+        <div class="art-cat" onclick="filterArticles('training')" id="acat-training">Training Resources</div>
+      </div>
+
+      <div id="articles-content">
+        <div style="padding:40px 0;text-align:center;color:var(--color-text-tertiary);font-size:12px;">Loading articles…</div>
+      </div>
+
+    </div>
+
+  </div><!-- /.prod-body -->
+</div><!-- /#dashboard-shell -->
+
+<div id="toast" class="toast"></div>
+
+<script>
+/* ── helpers ── */
+function switchTab(name) {
+  ['briefing','carousel','articles'].forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('active', t === name);
+    document.getElementById('panel-' + t).classList.toggle('active', t === name);
+  });
+}
+
+function showToast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast visible' + (type ? ' ' + type : '');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.className = 'toast'; }, 3200);
+}
+
+/* ── BRIEFING ── */
+const SAMPLE_BRIEFINGS = [
+  {
+    id: 'brfg-116',
+    edition: 'Edition 116',
+    date: 'May 4, 2026',
+    headline: 'Sixty-Day Blind Spot: cPanel Zero-Day, Windows TCP/IP RCE, and APT28 LNK Credential Theft',
+    maya_approved_at: '2026-05-04T06:55:00Z',
+    maya_note: 'All 7 items verified. Training byte confirmed from Kirby. Innovation items validated from Ivan/Charlie. QA passed by Jeff.',
+    status: 'awaiting_approval',
+    checklist: [
+      { id:'jeff',  label:'QA pass — Jeff (Quality Assurance)',      done: true,  agent:'Jeff' },
+      { id:'maya',  label:'Editorial approval — Maya (Managing Editor)', done: true, agent:'Maya' },
+      { id:'exec',  label:'Executive review — Human in the Loop',    done: false, agent:'You' },
+      { id:'laura', label:'Distribution trigger — Laura (Operations)', done: false, agent:'Laura' },
+      { id:'oliver',label:'LinkedIn post — Oliver (0700 CT)',         done: false, agent:'Oliver' },
+    ],
+    items: [
+      { type:'threat', label:'Threat Item 1 / 3', title:'Critical cPanel Auth Bypass (CVE-2026-41940) — CISA KEV, CVSS 9.8', source:'CISA KEV + cPanel Advisory' },
+      { type:'threat', label:'Threat Item 2 / 3', title:'Windows TCP/IP RCE Race Condition (CVE-2026-33827) — IPv6, CVSS 8.1', source:'MSRC' },
+      { type:'threat', label:'Threat Item 3 / 3', title:'APT28 LNK Zero-Click NTLM Credential Theft (CVE-2026-32202) — CVSS 4.3', source:'Unit 42 + MSRC' },
+      { type:'innovation', label:'Innovation Item 1 / 2', title:'Anthropic Project Glasswing — AI-Assisted Vulnerability Discovery Initiative', source:'Anthropic Security Research' },
+      { type:'innovation', label:'Innovation Item 2 / 2', title:'CrowdStrike GTR 2026: 89% of Orgs Report AI Ops Increase, 27-Second Adversary Breakout', source:'CrowdStrike GTR 2026' },
+      { type:'growth', label:'Growth Item 1 / 1', title:'Detection Engineering in the AI-Compressed Attack Cycle Era', source:'Internal Editorial' },
+      { type:'training', label:'Training Byte', title:'The Pre-Disclosure Window: Six Practices That Matter Before the Advisory Arrives', source:'Kirby — Instructional Designer' },
+    ]
+  }
+];
+
+let briefings = [];
+let distributionState = {};
+
+async function loadBriefings() {
+  try {
+    const res = await fetch(window.CS_API_BASE + '/api/ops/briefings/preview', {
+      headers: { Authorization: 'Bearer ' + (CS.Auth.getTokens().access || '') }
+    });
+    if (res.ok) {
+      briefings = await res.json();
+    } else {
+      briefings = SAMPLE_BRIEFINGS;
+    }
+  } catch {
+    briefings = SAMPLE_BRIEFINGS;
+  }
+  renderBriefings();
+}
+
+function renderBriefings() {
+  const el = document.getElementById('briefing-content');
+  if (!briefings.length) {
+    el.innerHTML = `<div class="empty-state">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="16" stroke="currentColor" stroke-width="2"/><path d="M20 13v8M20 25v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <p>No briefings pending review.</p>
+      <p style="font-size:11px;">Maya's approved editions will appear here when ready.</p>
+    </div>`;
+    document.getElementById('dot-briefing').style.background = '#94a3b8';
+    return;
+  }
+
+  const pending = briefings.filter(b => b.status === 'awaiting_approval');
+  document.getElementById('dot-briefing').style.background = pending.length ? '#F59E0B' : '#1D9E75';
+
+  el.innerHTML = briefings.map(b => renderBriefingCard(b)).join('');
+}
+
+function renderBriefingCard(b) {
+  const allDone = b.checklist.every(c => c.done);
+  const execDone = b.checklist.find(c => c.id === 'exec')?.done;
+  const lauraDone = b.checklist.find(c => c.id === 'laura')?.done;
+  const isDistributed = distributionState[b.id] || lauraDone;
+
+  if (isDistributed) {
+    return `<div class="briefing-card">
+      <div class="bc-header">
+        <div class="bc-title-block">
+          <div class="bc-edition">${b.edition} — ${b.date}</div>
+          <div class="bc-headline">${b.headline}</div>
+        </div>
+        <span class="badge b-green" style="flex-shrink:0;">Distributed</span>
+      </div>
+      <div class="dist-confirmed">
+        <div class="dc-icon">✓</div>
+        <div class="dc-title">Distribution authorized and confirmed</div>
+        <div class="dc-sub">Laura has triggered distribution. Oliver is scheduled to post to LinkedIn at 0700 CT. This edition is locked.</div>
+      </div>
+    </div>`;
+  }
+
+  const checklistHtml = b.checklist.map(c => `
+    <div class="cl-item">
+      <div class="cl-check ${c.done ? 'done' : 'pending'}">${c.done ? '✓' : ''}</div>
+      <span class="cl-label">${c.label}</span>
+      <span class="cl-agent">${c.agent}</span>
+    </div>`).join('');
+
+  const itemsHtml = b.items.map(item => `
+    <div class="preview-item">
+      <div class="pi-label ${item.type}">${item.label}</div>
+      <div class="pi-title">${item.title}</div>
+      <div class="pi-source">${item.source}</div>
+    </div>`).join('');
+
+  const mavenApproved = b.checklist.find(c => c.id === 'maya')?.done;
+  const execReady = mavenApproved && !execDone;
+
+  return `<div class="briefing-card" id="bcard-${b.id}">
+    ${!mavenApproved ? `<div class="gate-banner warn">
+      <span class="gate-icon">⚠</span>
+      <div>
+        <div class="gate-text-title">Awaiting Maya's approval</div>
+        <div class="gate-text-body">This briefing has not yet received Managing Editor approval. Preview only — executive review is not available until Maya approves.</div>
+      </div>
+    </div>` : ''}
+
+    ${mavenApproved && !execDone ? `<div class="gate-banner">
+      <span class="gate-icon">🔒</span>
+      <div>
+        <div class="gate-text-title">Human-in-the-Loop review required</div>
+        <div class="gate-text-body">Maya has approved this edition. Your authorization is the final gate before Laura triggers distribution. Review the briefing below and approve to authorize.</div>
+      </div>
+    </div>` : ''}
+
+    <div class="bc-header">
+      <div class="bc-title-block">
+        <div class="bc-edition">${b.edition} — ${b.date}</div>
+        <div class="bc-headline">${b.headline}</div>
+        <div class="bc-meta">
+          <span class="bc-meta-item">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.2"/><path d="M6 3.5V6l1.5 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            Maya approved ${formatTime(b.maya_approved_at)}
+          </span>
+          <span class="bc-meta-item">7 items</span>
+          ${b.maya_note ? `<span class="bc-meta-item" style="color:var(--color-text-tertiary);font-style:italic;">"${b.maya_note}"</span>` : ''}
+        </div>
+      </div>
+      <div class="bc-actions">
+        ${execReady ? `
+          <button class="action-btn danger" onclick="rejectBriefing('${b.id}')">Request revision</button>
+          <button class="action-btn primary" onclick="approveBriefing('${b.id}')">Approve &amp; Authorize Distribution</button>
+        ` : execDone ? `
+          <span class="badge b-green">Approved — awaiting distribution</span>
+        ` : `
+          <span class="badge b-amber">Pending Maya approval</span>
+        `}
+      </div>
+    </div>
+
+    <div class="bc-preview">
+      <div class="preview-section-title">Briefing Contents — 7 Items</div>
+      ${itemsHtml}
+    </div>
+
+    <div class="approval-checklist">
+      <div class="cl-title">Distribution Gate Checklist</div>
+      ${checklistHtml}
+    </div>
+
+    <div class="approve-strip${execDone ? ' ready' : ''}">
+      <span class="as-label${execDone ? ' ready' : ''}">${execDone ? '✓ Executive approval logged — awaiting Laura\'s distribution trigger' : 'Awaiting executive review and authorization'}</span>
+      ${execReady ? `<button class="action-btn primary" onclick="approveBriefing('${b.id}')">Approve &amp; Authorize Distribution</button>` : ''}
+    </div>
+  </div>`;
+}
+
+function formatTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }) + ' · ' + d.toLocaleDateString([], { month:'short', day:'numeric' });
+}
+
+async function approveBriefing(id) {
+  const b = briefings.find(b => b.id === id);
+  if (!b) return;
+  try {
+    const res = await fetch(window.CS_API_BASE + '/api/ops/briefings/' + id + '/approve', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + (CS.Auth.getTokens().access || '')
+      }
+    });
+    if (!res.ok && res.status !== 404) throw new Error('API error');
+  } catch {}
+  // update local state
+  const execItem = b.checklist.find(c => c.id === 'exec');
+  if (execItem) execItem.done = true;
+  distributionState[id] = false;
+  showToast('Distribution authorized — Laura has been notified', 'success');
+  setTimeout(() => {
+    const lauraItem = b.checklist.find(c => c.id === 'laura');
+    if (lauraItem) lauraItem.done = true;
+    distributionState[id] = true;
+    renderBriefings();
+  }, 2000);
+  renderBriefings();
+}
+
+async function rejectBriefing(id) {
+  const reason = prompt('Reason for requesting revision (will be sent to Maya):');
+  if (!reason) return;
+  try {
+    await fetch(window.CS_API_BASE + '/api/ops/briefings/' + id + '/reject', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + (CS.Auth.getTokens().access || '')
+      },
+      body: JSON.stringify({ reason })
+    });
+  } catch {}
+  showToast('Revision request sent to Maya', '');
+}
+
+/* ── CAROUSEL ── */
+const SAMPLE_CAROUSELS = [
+  {
+    id: 'car-116',
+    title: 'Edition 116 — May 4, 2026',
+    platform: 'LinkedIn + Meta',
+    status: 'pending',
+    slides: [
+      { num: '01 / 05', text: '🔒 60-Day Blind Spot\nCritical cPanel zero-day was exploited for 60 days before disclosure.\nAre your SLAs built for pre-advisory windows?', brand: 'CyberSense.Solutions' },
+      { num: '02 / 05', text: '⚡ Windows TCP/IP RCE\nIPv6 fragment reassembly race condition.\nCVSS 8.1 — patch before it goes to PoC.', brand: 'CyberSense.Solutions' },
+      { num: '03 / 05', text: '🎯 APT28 LNK Theft\nZero-click NTLM credential harvesting via malicious shortcut files.\nNo user interaction required.', brand: 'CyberSense.Solutions' },
+      { num: '04 / 05', text: '🤖 AI in Security Ops\n89% of orgs now use AI in security operations.\nAdversary breakout time: 27 seconds.', brand: 'CyberSense.Solutions' },
+      { num: '05 / 05', text: '📬 Full brief in your inbox.\nEdition 116 — Monday, May 4, 2026\nSubscribe at CyberSense.Solutions', brand: 'CyberSense.Solutions' },
+    ]
+  }
+];
+
+let carousels = [];
+let carouselApproved = {};
+
+async function loadCarousels() {
+  try {
+    const res = await fetch(window.CS_API_BASE + '/api/ops/carousels/preview', {
+      headers: { Authorization: 'Bearer ' + (CS.Auth.getTokens().access || '') }
+    });
+    if (res.ok) {
+      carousels = await res.json();
+    } else {
+      carousels = SAMPLE_CAROUSELS;
+    }
+  } catch {
+    carousels = SAMPLE_CAROUSELS;
+  }
+  renderCarousels();
+}
+
+function renderCarousels() {
+  const el = document.getElementById('carousel-content');
+  if (!carousels.length) {
+    el.innerHTML = `<div class="empty-state"><svg width="40" height="40" viewBox="0 0 40 40" fill="none"><rect x="4" y="8" width="32" height="24" rx="3" stroke="currentColor" stroke-width="2"/><path d="M4 16h32" stroke="currentColor" stroke-width="2"/></svg><p>No carousel pending review.</p></div>`;
+    return;
+  }
+  el.innerHTML = carousels.map(c => {
+    const approved = carouselApproved[c.id];
+    const slidesHtml = c.slides.map(s => `
+      <div class="carousel-frame">
+        <div class="carousel-slide">
+          <div class="cs-slide-num">${s.num}</div>
+          <div class="cs-slide-text">${s.text.replace(/\n/g,'<br>')}</div>
+          <div class="cs-slide-brand">${s.brand}</div>
+        </div>
+        <div class="carousel-meta"><div class="cm-title">Slide ${s.num}</div></div>
+      </div>`).join('');
+
+    return `<div style="margin-bottom:28px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div style="font-size:14px;font-weight:600;color:var(--color-text-primary);margin-bottom:2px;">${c.title}</div>
+          <div style="font-size:12px;color:var(--color-text-tertiary);">${c.platform}</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          ${approved
+            ? `<span class="badge b-green">Approved for publishing</span>`
+            : `<button class="action-btn secondary" onclick="rejectCarousel('${c.id}')">Request revision</button>
+               <button class="action-btn primary" onclick="approveCarousel('${c.id}')">Approve Carousel</button>`
+          }
+        </div>
+      </div>
+      <div class="carousel-grid">${slidesHtml}</div>
+    </div>`;
+  }).join('');
+}
+
+function approveCarousel(id) {
+  carouselApproved[id] = true;
+  showToast('Carousel approved — Oliver and Lucy notified', 'success');
+  renderCarousels();
+}
+function rejectCarousel(id) {
+  const reason = prompt('Revision notes for Lucy (carousel designer):');
+  if (!reason) return;
+  showToast('Revision request sent to Lucy', '');
+}
+
+/* ── ARTICLES ── */
+const SAMPLE_ARTICLES = [
+  { id:'art-001', type:'threat', title:'CVE-2026-41940: Inside the 60-Day Pre-Disclosure Window That Defined April 2026', stage:'Human in the Loop', agent:'Rob', updated:'2026-05-03' },
+  { id:'art-002', type:'threat', title:'Windows TCP/IP Race Condition: What IPv6 Fragment Reassembly Attacks Look Like in the Wild', stage:'Human in the Loop', agent:'Rob', updated:'2026-05-03' },
+  { id:'art-003', type:'innovation', title:'Project Glasswing: What Anthropic\'s AI Vulnerability Discovery Initiative Means for Security Teams', stage:'Under Review', agent:'Jason', updated:'2026-05-02' },
+  { id:'art-004', type:'growth', title:'Detection Engineering in the AI-Compressed Attack Cycle: A 2026 Career Roadmap', stage:'Human in the Loop', agent:'Ed', updated:'2026-05-03' },
+  { id:'art-005', type:'policy', title:'CISA KEV Update: 14 New Entries Added Q1 2026 — What Federal Contractors Need to Know', stage:'Under Review', agent:'Jason', updated:'2026-05-01' },
+  { id:'art-006', type:'training', title:'Pre-Disclosure Readiness Checklist: Six Controls That Close the Blind Spot', stage:'Human in the Loop', agent:'Maya', updated:'2026-05-03' },
+];
+
+let articles = SAMPLE_ARTICLES;
+let activeArticleCat = 'all';
+let articleApproved = {};
+
+async function loadArticles() {
+  try {
+    const res = await fetch(window.CS_API_BASE + '/api/ops/articles/preview', {
+      headers: { Authorization: 'Bearer ' + (CS.Auth.getTokens().access || '') }
+    });
+    if (res.ok) {
+      articles = await res.json();
+    }
+  } catch {}
+  renderArticles();
+}
+
+function filterArticles(cat) {
+  activeArticleCat = cat;
+  ['all','threat','policy','innovation','growth','training'].forEach(c => {
+    document.getElementById('acat-' + c).classList.toggle('active', c === cat);
+  });
+  renderArticles();
+}
+
+function renderArticles() {
+  const filtered = activeArticleCat === 'all' ? articles : articles.filter(a => a.type === activeArticleCat);
+  const el = document.getElementById('articles-content');
+  if (!filtered.length) {
+    el.innerHTML = `<div class="empty-state"><p>No articles in this category.</p></div>`;
+    return;
+  }
+
+  const stageColor = { 'Human in the Loop':'b-amber', 'Under Review':'b-blue', 'Published':'b-green', 'In Progress':'b-gray' };
+
+  el.innerHTML = `<div class="article-list">` + filtered.map(a => {
+    const approved = articleApproved[a.id];
+    return `<div class="article-row">
+      <span class="ar-badge ${a.type}">${a.type === 'innovation' ? 'Innovation' : a.type === 'threat' ? 'Threat Intel' : a.type === 'policy' ? 'Policy' : a.type === 'growth' ? 'Growth' : 'Training'}</span>
+      <div class="ar-body">
+        <div class="ar-title">${a.title}</div>
+        <div class="ar-meta">
+          <span>Updated ${a.updated}</span>
+          <span>Agent: ${a.agent}</span>
+        </div>
+      </div>
+      <div class="ar-status">
+        <span class="badge ${stageColor[a.stage] || 'b-gray'}">${a.stage}</span>
+        ${a.stage === 'Human in the Loop' && !approved
+          ? `<button class="action-btn primary" style="padding:5px 12px;font-size:11px;" onclick="approveArticle('${a.id}')">Approve</button>`
+          : approved ? `<span class="badge b-green">Approved</span>` : ''
+        }
+      </div>
+    </div>`;
+  }).join('') + `</div>`;
+}
+
+function approveArticle(id) {
+  articleApproved[id] = true;
+  showToast('Article approved — Laura notified for distribution', 'success');
+  renderArticles();
+}
+
+/* ── auth wiring ── */
+document.addEventListener('cs:login', e => {
+  const user = e.detail;
+  const lbl = document.getElementById('nav-user-label');
+  if (lbl && user) lbl.textContent = user.email || user.name || '';
+  const logout = document.getElementById('nav-logout');
+  if (logout) logout.style.display = 'inline-block';
+
+  loadBriefings();
+  loadCarousels();
+  loadArticles();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const loginForm = document.getElementById('login-form');
+  const loginGate = document.getElementById('login-gate');
+  const dashShell = document.getElementById('dashboard-shell');
+
+  loginForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    const btn = loginForm.querySelector('button[type=submit]');
+    btn.disabled = true;
+    btn.textContent = 'Signing in…';
+    try {
+      const result = await CS.Auth.login(email, password);
+      if (result && result.user) {
+        loginGate.style.display = 'none';
+        dashShell.style.display = 'block';
+        document.dispatchEvent(new CustomEvent('cs:login', { detail: result.user }));
+      } else {
+        throw new Error('Login failed');
+      }
+    } catch {
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
+      btn.style.background = '#dc2626';
+      setTimeout(() => { btn.style.background = '#185FA5'; }, 1200);
+    }
+  });
+
+  // check existing session
+  if (typeof CS !== 'undefined' && CS.Auth) {
+    CS.Auth.initSession().then(user => {
+      if (user) {
+        loginGate.style.display = 'none';
+        dashShell.style.display = 'block';
+        document.dispatchEvent(new CustomEvent('cs:login', { detail: user }));
+      }
+    }).catch(() => {});
+  }
+});
+</script>
+</body>
+</html>

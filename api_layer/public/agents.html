@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://api.cybersense.solutions; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
+<title>CyberSense Admin — Agent Status</title>
+<script>window.CS_API_BASE = 'https://ops.cybersense.solutions';</script>
+<script src="auth.js"></script>
+<style>
+:root {
+  --color-background-primary: #ffffff;
+  --color-background-secondary: #f8fafc;
+  --color-background-tertiary: #f1f5f9;
+  --color-background-info: #eff6ff;
+  --color-text-primary: #1e293b;
+  --color-text-secondary: #475569;
+  --color-text-tertiary: #94a3b8;
+  --color-text-info: #185FA5;
+  --color-text-success: #16a34a;
+  --color-text-danger: #dc2626;
+  --color-border-tertiary: #e2e8f0;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background-primary: #1e293b;
+    --color-background-secondary: #0f172a;
+    --color-background-tertiary: #0d1117;
+    --color-background-info: #1e3a5f;
+    --color-text-primary: #f1f5f9;
+    --color-text-secondary: #cbd5e1;
+    --color-text-tertiary: #64748b;
+    --color-text-info: #60a5fa;
+    --color-text-success: #4ade80;
+    --color-text-danger: #f87171;
+    --color-border-tertiary: #334155;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-sans);font-size:13px;background:var(--color-background-tertiary);color:var(--color-text-primary);}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);}
+.topbar-left{display:flex;align-items:center;gap:10px;}
+.logo-mark{width:28px;height:28px;background:#185FA5;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;flex-shrink:0;}
+.topbar-title{font-size:13px;font-weight:600;color:var(--color-text-primary);}
+.topbar-sub{font-size:11px;color:var(--color-text-tertiary);}
+.status-dot{width:7px;height:7px;border-radius:50%;background:#1D9E75;display:inline-block;margin-right:4px;}
+.page-nav{display:flex;align-items:center;padding:0 16px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);}
+.pn-item{display:inline-flex;align-items:center;padding:9px 14px;font-size:12px;font-weight:500;color:var(--color-text-secondary);text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-0.5px;transition:color .12s,border-color .12s;white-space:nowrap;}
+.pn-item:hover{color:var(--color-text-primary);}
+.pn-item.active{color:#185FA5;border-bottom-color:#185FA5;}
+/* main layout */
+.agents-body{display:flex;min-height:calc(100vh - 82px);}
+.agents-main{flex:1;padding:16px;overflow:auto;}
+/* filter bar */
+.filter-bar{display:flex;align-items:center;gap:6px;margin-bottom:16px;flex-wrap:wrap;}
+.filter-btn{padding:5px 12px;border-radius:99px;font-size:12px;font-weight:500;cursor:pointer;border:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);color:var(--color-text-secondary);transition:all .12s;font-family:inherit;}
+.filter-btn:hover{border-color:#378ADD;color:#185FA5;}
+.filter-btn.active{background:#185FA5;color:#fff;border-color:#185FA5;}
+/* department section */
+.dept-section{margin-bottom:20px;}
+.dept-header{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:8px;padding-bottom:6px;border-bottom:0.5px solid var(--color-border-tertiary);}
+.agent-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;}
+/* agent card */
+.agent-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:12px;cursor:pointer;transition:box-shadow .15s,border-color .15s;position:relative;}
+.agent-card:hover{box-shadow:0 2px 12px rgba(0,0,0,.08);border-color:#378ADD;}
+.agent-card.selected{border-color:#185FA5;box-shadow:0 0 0 2px rgba(24,95,165,.15);}
+.agent-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;}
+.agent-avatar{width:32px;height:32px;border-radius:8px;background:#185FA5;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;flex-shrink:0;}
+.health-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:2px;}
+.h-green{background:#1D9E75;}
+.h-yellow{background:#BA7517;}
+.h-red{background:#E24B4A;}
+.h-gray{background:#94a3b8;}
+.agent-name{font-size:13px;font-weight:600;color:var(--color-text-primary);margin-bottom:2px;}
+.agent-role{font-size:11px;color:var(--color-text-secondary);margin-bottom:6px;}
+.agent-meta{font-size:11px;color:var(--color-text-tertiary);}
+.chat-btn{display:inline-flex;align-items:center;gap:4px;margin-top:8px;padding:4px 10px;border-radius:6px;background:#185FA5;color:#fff;font-size:11px;font-weight:500;border:none;cursor:pointer;font-family:inherit;transition:background .12s;}
+.chat-btn:hover{background:#1450A0;}
+/* side panel */
+.side-panel{width:360px;background:var(--color-background-primary);border-left:0.5px solid var(--color-border-tertiary);display:none;flex-direction:column;overflow:hidden;}
+.side-panel.open{display:flex;}
+.sp-header{padding:14px 16px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:space-between;}
+.sp-close{background:none;border:none;cursor:pointer;color:var(--color-text-tertiary);font-size:18px;line-height:1;padding:0;font-family:inherit;}
+.sp-close:hover{color:var(--color-text-primary);}
+.sp-agent-info{padding:14px 16px;border-bottom:0.5px solid var(--color-border-tertiary);}
+.sp-avatar{width:44px;height:44px;border-radius:10px;background:#185FA5;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;color:#fff;margin-bottom:10px;}
+.sp-name{font-size:15px;font-weight:600;color:var(--color-text-primary);margin-bottom:2px;}
+.sp-role{font-size:12px;color:var(--color-text-secondary);margin-bottom:8px;}
+.sp-stat-row{display:flex;gap:12px;margin-top:6px;}
+.sp-stat{font-size:11px;color:var(--color-text-tertiary);}
+.sp-stat strong{color:var(--color-text-primary);font-weight:600;}
+/* chat */
+.chat-area{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:10px;}
+.chat-msg{max-width:85%;padding:8px 12px;border-radius:10px;font-size:12px;line-height:1.5;}
+.chat-msg.user{align-self:flex-end;background:#185FA5;color:#fff;border-bottom-right-radius:3px;}
+.chat-msg.agent{align-self:flex-start;background:var(--color-background-secondary);color:var(--color-text-primary);border:0.5px solid var(--color-border-tertiary);border-bottom-left-radius:3px;}
+.chat-msg.system{align-self:center;font-size:11px;color:var(--color-text-tertiary);background:none;padding:4px 0;}
+.chat-input-area{padding:12px 16px;border-top:0.5px solid var(--color-border-tertiary);}
+.chat-input-row{display:flex;gap:8px;}
+.chat-input{flex:1;padding:8px 12px;border:0.5px solid var(--color-border-tertiary);border-radius:8px;font-size:12px;font-family:inherit;background:var(--color-background-primary);color:var(--color-text-primary);outline:none;resize:none;}
+.chat-input:focus{border-color:#378ADD;}
+.chat-send{padding:8px 14px;background:#185FA5;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .12s;flex-shrink:0;}
+.chat-send:hover{background:#1450A0;}
+.chat-send:disabled{background:#94a3b8;cursor:not-allowed;}
+/* detail (non-chat) panel */
+.sp-detail{padding:14px 16px;overflow-y:auto;flex:1;}
+.sp-section-hd{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:8px;margin-top:14px;}
+.sp-section-hd:first-child{margin-top:0;}
+.sp-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:12px;}
+.sp-row:last-child{border-bottom:none;}
+.sp-row-lbl{color:var(--color-text-secondary);}
+.sp-row-val{color:var(--color-text-primary);font-weight:500;}
+.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500;}
+.b-green{background:#EAF3DE;color:#3B6D11;} .b-red{background:#FCEBEB;color:#A32D2D;}
+.b-amber{background:#FAEEDA;color:#854F0B;} .b-blue{background:#E6F1FB;color:#185FA5;}
+.b-gray{background:#F1EFE8;color:#5F5E5A;} .b-purple{background:#EEEDFE;color:#534AB7;}
+@media(prefers-color-scheme:dark){
+  .b-green{background:#27500A;color:#C0DD97;} .b-red{background:#791F1F;color:#F7C1C1;}
+  .b-amber{background:#633806;color:#FAC775;} .b-blue{background:#0C447C;color:#B5D4F4;}
+  .b-gray{background:#444441;color:#D3D1C7;} .b-purple{background:#3C3489;color:#CECBF6;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN GATE -->
+<div id="login-gate" style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--color-background-secondary);">
+  <div style="width:340px;background:var(--color-background-primary);border:1px solid var(--color-border-tertiary);border-radius:12px;padding:32px;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="width:40px;height:40px;background:#185FA5;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:#fff;margin-bottom:12px;">CS</div>
+      <div style="font-size:16px;font-weight:600;color:var(--color-text-primary);">CyberSense Admin</div>
+      <div style="font-size:13px;color:var(--color-text-tertiary);margin-top:4px;">Restricted access</div>
+    </div>
+    <form id="login-form">
+      <div style="margin-bottom:14px;">
+        <label style="font-size:12px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:6px;">Email</label>
+        <input id="login-email" type="email" required autocomplete="email" placeholder="admin@cybersense.solutions"
+          style="width:100%;padding:9px 12px;border:1px solid var(--color-border-tertiary);border-radius:8px;font-size:13px;outline:none;font-family:inherit;background:var(--color-background-primary);color:var(--color-text-primary);">
+      </div>
+      <div style="margin-bottom:20px;">
+        <label style="font-size:12px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:6px;">Password</label>
+        <input id="login-password" type="password" required autocomplete="current-password"
+          style="width:100%;padding:9px 12px;border:1px solid var(--color-border-tertiary);border-radius:8px;font-size:13px;outline:none;font-family:inherit;background:var(--color-background-primary);color:var(--color-text-primary);">
+      </div>
+      <button type="submit" style="width:100%;padding:10px;background:#185FA5;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;">Sign In</button>
+    </form>
+  </div>
+</div>
+
+<!-- DASHBOARD SHELL -->
+<div id="dashboard-shell" style="display:none;">
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="logo-mark">CS</div>
+      <div>
+        <div class="topbar-title">CyberSense Admin</div>
+        <div class="topbar-sub">CyberSense.Solutions — restricted access</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <span style="font-size:12px;color:var(--color-text-secondary);"><span class="status-dot"></span>All systems operational</span>
+      <span id="nav-user-label" style="font-size:12px;color:var(--color-text-tertiary);"></span>
+      <button id="nav-logout" onclick="CS.Auth.logout()" style="display:none;font-size:12px;color:var(--color-text-secondary);background:none;border:0.5px solid var(--color-border-tertiary);border-radius:6px;padding:4px 10px;cursor:pointer;font-family:inherit;">Sign out</button>
+    </div>
+  </div>
+
+  <div class="page-nav">
+    <a href="admin.html" class="pn-item">Command Center</a>
+    <a href="agents.html" class="pn-item active">Agent Status</a>
+    <a href="conference.html" class="pn-item">Meeting Room</a>
+    <a href="production.html" class="pn-item">Preview &amp; Production</a>
+  </div>
+
+  <div class="agents-body">
+    <div class="agents-main" id="agents-main">
+
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="filterDept('all',this)">All departments</button>
+        <button class="filter-btn" onclick="filterDept('management',this)">Management</button>
+        <button class="filter-btn" onclick="filterDept('it',this)">IT / Security</button>
+        <button class="filter-btn" onclick="filterDept('ops',this)">Operations</button>
+        <button class="filter-btn" onclick="filterDept('editorial',this)">Editorial</button>
+        <button class="filter-btn" onclick="filterDept('training',this)">Training</button>
+        <button class="filter-btn" onclick="filterDept('sales',this)">Sales</button>
+        <button class="filter-btn" onclick="filterDept('distribution',this)">Distribution</button>
+      </div>
+
+      <div id="agent-fleet"></div>
+
+    </div>
+
+    <!-- SIDE PANEL -->
+    <div class="side-panel" id="side-panel">
+      <div class="sp-header">
+        <span id="sp-title" style="font-size:13px;font-weight:600;color:var(--color-text-primary);"></span>
+        <button class="sp-close" onclick="closePanel()">×</button>
+      </div>
+      <div class="sp-agent-info" id="sp-agent-info"></div>
+      <div id="sp-body" style="flex:1;display:flex;flex-direction:column;overflow:hidden;"></div>
+    </div>
+  </div>
+
+</div><!-- /#dashboard-shell -->
+
+<script>
+const AGENTS = [
+  // Management (chat enabled)
+  { id:'henry',   name:'Henry',       role:'General Manager',          dept:'management', color:'#185FA5', chat:true,  sop:'MG-ESC-001',  status:'green' },
+  { id:'valerie', name:'Valerie',     role:'Strategy',                  dept:'management', color:'#7F77DD', chat:true,  sop:null,           status:'green' },
+  { id:'victor',  name:'Victor',      role:'Risk',                      dept:'management', color:'#E24B4A', chat:true,  sop:null,           status:'green' },
+  { id:'barret',  name:'Barret',      role:'Coordination',              dept:'management', color:'#1D9E75', chat:true,  sop:null,           status:'green' },
+  { id:'alex',    name:'Alex',        role:'Training Manager',          dept:'management', color:'#BA7517', chat:false, sop:'PR-TRN-004',  status:'green' },
+  { id:'maya',    name:'Maya',        role:'Managing Editor',           dept:'management', color:'#185FA5', chat:true,  sop:'ED-MGT-001',  status:'green' },
+  // IT / Security
+  { id:'cy',      name:'Cy',          role:'CISO',                       dept:'it',         color:'#E24B4A', chat:true,  sop:'IT-CY-001',   status:'green' },
+  { id:'nora',    name:'Nora',        role:'System Health Monitor',     dept:'it',         color:'#1D9E75', chat:false, sop:'IT-NOR-001',  status:'green' },
+  { id:'owen',    name:'Owen',        role:'Vulnerability & Patch',     dept:'it',         color:'#BA7517', chat:false, sop:'IT-OWN-001',  status:'green' },
+  { id:'paige',   name:'Paige',       role:'Incident Response',         dept:'it',         color:'#E24B4A', chat:false, sop:'IT-PAI-001',  status:'yellow' },
+  { id:'quinn',   name:'Quinn',       role:'Access & Credentials',      dept:'it',         color:'#7F77DD', chat:false, sop:'IT-QNN-001',  status:'green' },
+  // Operations / Acquisitions
+  { id:'rick',    name:'Rick',        role:'Threat Intelligence',       dept:'ops',        color:'#E24B4A', chat:false, sop:'OA-RCK-001',  status:'green' },
+  { id:'ivan',    name:'Ivan / Charlie', role:'Intel Scout',            dept:'ops',        color:'#378ADD', chat:false, sop:'OA-IVC-001',  status:'green' },
+  { id:'barbara', name:'Barbara',     role:'Data Analyst',              dept:'ops',        color:'#1D9E75', chat:false, sop:'OA-BAR-001',  status:'green' },
+  { id:'laura',   name:'Laura',       role:'Operations Analyst',        dept:'ops',        color:'#185FA5', chat:false, sop:null,           status:'green' },
+  { id:'jim',     name:'Jim',         role:'Financial Analyst',         dept:'ops',        color:'#BA7517', chat:false, sop:'AD-FIN-001',  status:'green' },
+  { id:'jeff',    name:'Jeff',        role:'QA Analyst',                dept:'ops',        color:'#7F77DD', chat:false, sop:'ED-QA-001',   status:'green' },
+  // Editorial — Intel
+  { id:'james',   name:'James',       role:'Intel Acquisition',         dept:'editorial',  color:'#378ADD', chat:false, sop:'ED-INT-001',  status:'green' },
+  { id:'jason',   name:'Jason',       role:'Dev Editor — Intel',        dept:'editorial',  color:'#185FA5', chat:false, sop:'ED-INT-002',  status:'green' },
+  { id:'rob',     name:'Rob',         role:'EIC — Intel',               dept:'editorial',  color:'#1D9E75', chat:false, sop:'ED-INT-003',  status:'green' },
+  // Editorial — Awareness
+  { id:'ruth',    name:'Ruth',        role:'Awareness Acquisition',     dept:'editorial',  color:'#BA7517', chat:false, sop:'ED-AWR-001',  status:'green' },
+  { id:'peter',   name:'Peter',       role:'Dev Editor — Awareness',    dept:'editorial',  color:'#185FA5', chat:false, sop:'ED-AWR-002',  status:'green' },
+  { id:'ed',      name:'Ed',          role:'EIC — Awareness',           dept:'editorial',  color:'#1D9E75', chat:false, sop:'ED-AWR-003',  status:'green' },
+  // Training / Production
+  { id:'kirby',   name:'Kirby',       role:'Instructional Designer',    dept:'training',   color:'#BA7517', chat:false, sop:'PR-TRN-001',  status:'green' },
+  { id:'mario',   name:'Mario',       role:'Training Coordinator',      dept:'training',   color:'#7F77DD', chat:false, sop:'PR-TRN-002',  status:'green' },
+  { id:'matt',    name:'Matt',        role:'Trainer & Facilitator',     dept:'training',   color:'#1D9E75', chat:false, sop:'PR-TRN-003',  status:'green' },
+  // Sales
+  { id:'mary',    name:'Mary',        role:'SDR',                        dept:'sales',      color:'#378ADD', chat:false, sop:'AD-SAL-001',  status:'green' },
+  { id:'william', name:'William',     role:'Account Executive',         dept:'sales',      color:'#185FA5', chat:false, sop:'AD-SAL-002',  status:'green' },
+  { id:'joe',     name:'Joe',         role:'Account Manager',           dept:'sales',      color:'#1D9E75', chat:false, sop:'AD-SAL-003',  status:'green' },
+  // Social Media / Distribution
+  { id:'oliver',  name:'Oliver',      role:'LinkedIn',                  dept:'distribution', color:'#0A66C2', chat:false, sop:'DI-OLI-001', status:'yellow' },
+  { id:'lucy',    name:'Lucy',        role:'Meta',                       dept:'distribution', color:'#1877F2', chat:false, sop:'DI-LUC-001', status:'yellow' },
+  { id:'riley',   name:'Riley',       role:'TikTok / X',                dept:'distribution', color:'#7F77DD', chat:false, sop:'DI-RIL-001', status:'yellow' },
+  { id:'ethan',   name:'Ethan',       role:'YouTube',                   dept:'distribution', color:'#E24B4A', chat:false, sop:'DI-ETH-001', status:'yellow' },
+];
+
+const DEPT_LABELS = {
+  management:   'Management',
+  it:           'IT / Security',
+  ops:          'Operations & Acquisitions',
+  editorial:    'Editorial',
+  training:     'Training & Production',
+  sales:        'Sales',
+  distribution: 'Social Media & Distribution',
+};
+
+const DEPT_ORDER = ['management','it','ops','editorial','training','sales','distribution'];
+
+let currentFilter = 'all';
+let selectedAgent = null;
+let chatHistory = {};
+
+function initials(name) {
+  return name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+}
+
+function renderFleet(filter) {
+  const container = document.getElementById('agent-fleet');
+  const depts = filter === 'all' ? DEPT_ORDER : DEPT_ORDER.filter(d => d === filter || (filter === 'editorial' && d === 'editorial'));
+  container.innerHTML = '';
+
+  depts.forEach(dept => {
+    const agents = AGENTS.filter(a => a.dept === dept && (filter === 'all' || filter === dept || (filter === 'editorial' && dept === 'editorial')));
+    if (!agents.length) return;
+
+    const sec = document.createElement('div');
+    sec.className = 'dept-section';
+    sec.dataset.dept = dept;
+
+    sec.innerHTML = `<div class="dept-header">${DEPT_LABELS[dept]} <span style="font-weight:400;color:var(--color-text-tertiary);">(${agents.length})</span></div>
+      <div class="agent-grid">${agents.map(a => renderCard(a)).join('')}</div>`;
+    container.appendChild(sec);
+  });
+}
+
+function renderCard(a) {
+  const statusLabel = { green:'Active', yellow:'Warning', red:'Error', gray:'Idle' }[a.status] || 'Unknown';
+  const sopBadge = a.sop
+    ? `<span style="font-size:10px;color:var(--color-text-tertiary);">${a.sop}</span>`
+    : `<span style="font-size:10px;color:var(--color-text-tertiary);">SOP pending</span>`;
+  const chatBtn = a.chat
+    ? `<button class="chat-btn" onclick="event.stopPropagation();openChat('${a.id}')">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M1 2a1 1 0 011-1h8a1 1 0 011 1v6a1 1 0 01-1 1H7l-3 2V9H2a1 1 0 01-1-1V2z" stroke="currentColor" stroke-width="1.2"/></svg>
+        Chat
+       </button>`
+    : '';
+  return `
+    <div class="agent-card" id="card-${a.id}" onclick="openDetail('${a.id}')">
+      <div class="agent-card-top">
+        <div class="agent-avatar" style="background:${a.color};">${initials(a.name)}</div>
+        <div class="health-dot h-${a.status}" title="${statusLabel}"></div>
+      </div>
+      <div class="agent-name">${a.name}</div>
+      <div class="agent-role">${a.role}</div>
+      <div class="agent-meta">${sopBadge}</div>
+      ${chatBtn}
+    </div>`;
+}
+
+function filterDept(dept, btn) {
+  currentFilter = dept;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderFleet(dept);
+  closePanel();
+}
+
+function openDetail(agentId) {
+  const a = AGENTS.find(x => x.id === agentId);
+  if (!a) return;
+  selectedAgent = agentId;
+
+  document.querySelectorAll('.agent-card').forEach(c => c.classList.remove('selected'));
+  const card = document.getElementById('card-' + agentId);
+  if (card) card.classList.add('selected');
+
+  const panel = document.getElementById('side-panel');
+  const statusLabel = { green:'Active', yellow:'Warning', red:'Error', gray:'Idle' }[a.status];
+  const statusColor = { green:'#1D9E75', yellow:'#BA7517', red:'#E24B4A', gray:'#94a3b8' }[a.status];
+
+  document.getElementById('sp-title').textContent = a.name;
+  document.getElementById('sp-agent-info').innerHTML = `
+    <div class="sp-avatar" style="background:${a.color};">${initials(a.name)}</div>
+    <div class="sp-name">${a.name}</div>
+    <div class="sp-role">${a.role} — ${DEPT_LABELS[a.dept]}</div>
+    <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+      <span style="width:8px;height:8px;border-radius:50%;background:${statusColor};display:inline-block;"></span>
+      <span style="font-size:12px;color:${statusColor};font-weight:500;">${statusLabel}</span>
+    </div>`;
+
+  document.getElementById('sp-body').innerHTML = `
+    <div class="sp-detail">
+      <div class="sp-section-hd">Agent profile</div>
+      <div class="sp-row"><span class="sp-row-lbl">Agent ID</span><span class="sp-row-val">${a.id}</span></div>
+      <div class="sp-row"><span class="sp-row-lbl">Department</span><span class="sp-row-val">${DEPT_LABELS[a.dept]}</span></div>
+      <div class="sp-row"><span class="sp-row-lbl">SOP</span><span class="sp-row-val">${a.sop || '— pending'}</span></div>
+      <div class="sp-row"><span class="sp-row-lbl">Chat interface</span><span class="sp-row-val">${a.chat ? 'Enabled' : 'Management layer only'}</span></div>
+      <div class="sp-section-hd">Recent activity</div>
+      <div style="font-size:12px;color:var(--color-text-tertiary);padding:8px 0;">Loading task history…</div>
+      ${a.chat ? `<div style="margin-top:14px;"><button class="chat-btn" style="width:100%;justify-content:center;" onclick="openChat('${a.id}')">Open chat interface</button></div>` : ''}
+    </div>`;
+
+  panel.classList.add('open');
+}
+
+function openChat(agentId) {
+  const a = AGENTS.find(x => x.id === agentId);
+  if (!a) return;
+  selectedAgent = agentId;
+
+  document.querySelectorAll('.agent-card').forEach(c => c.classList.remove('selected'));
+  const card = document.getElementById('card-' + agentId);
+  if (card) card.classList.add('selected');
+
+  const panel = document.getElementById('side-panel');
+  const statusColor = { green:'#1D9E75', yellow:'#BA7517', red:'#E24B4A', gray:'#94a3b8' }[a.status];
+  const statusLabel = { green:'Active', yellow:'Warning', red:'Error', gray:'Idle' }[a.status];
+
+  document.getElementById('sp-title').textContent = a.name + ' — Chat';
+  document.getElementById('sp-agent-info').innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="sp-avatar" style="width:36px;height:36px;font-size:14px;margin-bottom:0;background:${a.color};">${initials(a.name)}</div>
+      <div>
+        <div class="sp-name" style="font-size:13px;">${a.name}</div>
+        <div style="display:flex;align-items:center;gap:5px;">
+          <span style="width:7px;height:7px;border-radius:50%;background:${statusColor};display:inline-block;"></span>
+          <span style="font-size:11px;color:var(--color-text-secondary);">${a.role} · ${statusLabel}</span>
+        </div>
+      </div>
+    </div>`;
+
+  if (!chatHistory[agentId]) chatHistory[agentId] = [];
+
+  const spBody = document.getElementById('sp-body');
+  spBody.innerHTML = `
+    <div class="chat-area" id="chat-area-${agentId}"></div>
+    <div class="chat-input-area">
+      <div class="chat-input-row">
+        <textarea class="chat-input" id="chat-input-${agentId}" placeholder="Message ${a.name}…" rows="2" onkeydown="handleChatKey(event,'${agentId}')"></textarea>
+        <button class="chat-send" id="chat-send-${agentId}" onclick="sendChatMessage('${agentId}')">Send</button>
+      </div>
+      <div style="font-size:10px;color:var(--color-text-tertiary);margin-top:6px;">Chain of command enforced — direct access to management-layer agents only.</div>
+    </div>`;
+
+  renderChatHistory(agentId);
+  panel.classList.add('open');
+
+  // Check for pre-filled prompt from URL
+  const params = new URLSearchParams(window.location.search);
+  const urlChat = params.get('chat');
+  const urlPrompt = params.get('prompt');
+  if (urlPrompt && urlChat === agentId) {
+    document.getElementById('chat-input-' + agentId).value = urlPrompt;
+    // Clear params so refresh doesn't re-trigger
+    window.history.replaceState({}, '', 'agents.html');
+  }
+
+  setTimeout(() => document.getElementById('chat-input-' + agentId)?.focus(), 50);
+}
+
+function renderChatHistory(agentId) {
+  const area = document.getElementById('chat-area-' + agentId);
+  if (!area) return;
+  const history = chatHistory[agentId] || [];
+
+  if (!history.length) {
+    area.innerHTML = `<div class="chat-msg system">Start a conversation with ${AGENTS.find(a=>a.id===agentId)?.name}.</div>`;
+  } else {
+    area.innerHTML = history.map(m => `<div class="chat-msg ${m.role}">${escHtml(m.content)}</div>`).join('');
+    area.scrollTop = area.scrollHeight;
+  }
+}
+
+async function sendChatMessage(agentId) {
+  const input = document.getElementById('chat-input-' + agentId);
+  const sendBtn = document.getElementById('chat-send-' + agentId);
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  if (!chatHistory[agentId]) chatHistory[agentId] = [];
+  chatHistory[agentId].push({ role: 'user', content: msg });
+  input.value = '';
+  sendBtn.disabled = true;
+  renderChatHistory(agentId);
+
+  // Thinking indicator
+  const area = document.getElementById('chat-area-' + agentId);
+  const thinking = document.createElement('div');
+  thinking.className = 'chat-msg system';
+  thinking.id = 'thinking-' + agentId;
+  thinking.textContent = 'Sending…';
+  area.appendChild(thinking);
+  area.scrollTop = area.scrollHeight;
+
+  try {
+    const data = await CS.Auth.apiFetch('/api/agent/chat', {
+      method: 'POST',
+      body: JSON.stringify({ agent_id: agentId, message: msg }),
+    });
+    thinking.remove();
+    chatHistory[agentId].push({ role: 'agent', content: data.reply || data.message || 'No response.' });
+  } catch (err) {
+    thinking.remove();
+    chatHistory[agentId].push({ role: 'system', content: 'Unable to reach ' + agentId + ': ' + (err.message || 'Connection error.') });
+  }
+
+  sendBtn.disabled = false;
+  renderChatHistory(agentId);
+}
+
+function handleChatKey(e, agentId) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendChatMessage(agentId);
+  }
+}
+
+function closePanel() {
+  document.getElementById('side-panel').classList.remove('open');
+  document.querySelectorAll('.agent-card').forEach(c => c.classList.remove('selected'));
+  selectedAgent = null;
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+document.addEventListener('cs:login', (e) => {
+  const u = e.detail;
+  const label = document.getElementById('nav-user-label');
+  if (label && u) label.textContent = (u.full_name || u.email || '') + (u.admin_role?.role ? ' — ' + u.admin_role.role.toUpperCase() : '');
+  const btn = document.getElementById('nav-logout');
+  if (btn) btn.style.display = 'inline-block';
+
+  renderFleet('all');
+
+  // Auto-open chat if URL params present
+  const params = new URLSearchParams(window.location.search);
+  const chatAgent = params.get('chat');
+  if (chatAgent && AGENTS.find(a => a.id === chatAgent && a.chat)) {
+    openChat(chatAgent);
+  }
+});
+</script>
+</body>
+</html>

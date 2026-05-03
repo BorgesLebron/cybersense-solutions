@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://api.cybersense.solutions; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
+<title>CyberSense Admin — Meeting Room</title>
+<script>window.CS_API_BASE = 'https://ops.cybersense.solutions';</script>
+<script src="auth.js"></script>
+<style>
+:root {
+  --color-background-primary: #ffffff;
+  --color-background-secondary: #f8fafc;
+  --color-background-tertiary: #f1f5f9;
+  --color-background-info: #eff6ff;
+  --color-text-primary: #1e293b;
+  --color-text-secondary: #475569;
+  --color-text-tertiary: #94a3b8;
+  --color-text-info: #185FA5;
+  --color-text-success: #16a34a;
+  --color-text-danger: #dc2626;
+  --color-border-tertiary: #e2e8f0;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background-primary: #1e293b;
+    --color-background-secondary: #0f172a;
+    --color-background-tertiary: #0d1117;
+    --color-background-info: #1e3a5f;
+    --color-text-primary: #f1f5f9;
+    --color-text-secondary: #cbd5e1;
+    --color-text-tertiary: #64748b;
+    --color-text-info: #60a5fa;
+    --color-text-success: #4ade80;
+    --color-text-danger: #f87171;
+    --color-border-tertiary: #334155;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-sans);font-size:13px;background:var(--color-background-tertiary);color:var(--color-text-primary);}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);}
+.topbar-left{display:flex;align-items:center;gap:10px;}
+.logo-mark{width:28px;height:28px;background:#185FA5;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;flex-shrink:0;}
+.topbar-title{font-size:13px;font-weight:600;color:var(--color-text-primary);}
+.topbar-sub{font-size:11px;color:var(--color-text-tertiary);}
+.status-dot{width:7px;height:7px;border-radius:50%;background:#1D9E75;display:inline-block;margin-right:4px;}
+.page-nav{display:flex;align-items:center;padding:0 16px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);}
+.pn-item{display:inline-flex;align-items:center;padding:9px 14px;font-size:12px;font-weight:500;color:var(--color-text-secondary);text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-0.5px;transition:color .12s,border-color .12s;white-space:nowrap;}
+.pn-item:hover{color:var(--color-text-primary);}
+.pn-item.active{color:#185FA5;border-bottom-color:#185FA5;}
+/* conference layout */
+.conf-body{display:grid;grid-template-columns:280px 1fr;min-height:calc(100vh - 82px);}
+.conf-list{border-right:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);display:flex;flex-direction:column;}
+.conf-list-header{padding:12px 14px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:space-between;}
+.conf-list-title{font-size:12px;font-weight:600;color:var(--color-text-primary);}
+.new-meeting-btn{padding:5px 12px;background:#185FA5;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .12s;}
+.new-meeting-btn:hover{background:#1450A0;}
+.meeting-item{padding:12px 14px;border-bottom:0.5px solid var(--color-border-tertiary);cursor:pointer;transition:background .12s;}
+.meeting-item:hover{background:var(--color-background-primary);}
+.meeting-item.active{background:var(--color-background-primary);border-left:2px solid #185FA5;}
+.mi-title{font-size:12px;font-weight:600;color:var(--color-text-primary);margin-bottom:3px;}
+.mi-meta{font-size:11px;color:var(--color-text-tertiary);margin-bottom:4px;}
+.mi-agents{display:flex;gap:3px;flex-wrap:wrap;}
+.mi-agent-chip{font-size:10px;padding:2px 6px;border-radius:4px;background:var(--color-background-info);color:var(--color-text-info);}
+/* meeting detail */
+.conf-detail{display:flex;flex-direction:column;background:var(--color-background-tertiary);}
+.cd-empty{display:flex;align-items:center;justify-content:center;flex:1;flex-direction:column;gap:12px;color:var(--color-text-tertiary);}
+.cd-header{padding:14px 20px;background:var(--color-background-primary);border-bottom:0.5px solid var(--color-border-tertiary);}
+.cd-title{font-size:15px;font-weight:600;color:var(--color-text-primary);margin-bottom:2px;}
+.cd-meta{font-size:12px;color:var(--color-text-secondary);}
+.cd-body{flex:1;overflow-y:auto;padding:16px 20px;}
+/* transcript */
+.transcript-msg{display:flex;gap:10px;margin-bottom:14px;}
+.tm-avatar{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;flex-shrink:0;margin-top:2px;}
+.tm-content{flex:1;}
+.tm-header{display:flex;align-items:baseline;gap:8px;margin-bottom:4px;}
+.tm-name{font-size:12px;font-weight:600;color:var(--color-text-primary);}
+.tm-time{font-size:11px;color:var(--color-text-tertiary);}
+.tm-text{font-size:12px;color:var(--color-text-secondary);line-height:1.6;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:8px;padding:10px 12px;}
+.tm-text.executive{border-left:3px solid #185FA5;}
+/* action items */
+.action-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:8px;margin-bottom:8px;}
+.ai-check{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--color-border-tertiary);flex-shrink:0;margin-top:1px;cursor:pointer;background:var(--color-background-primary);}
+.ai-check.done{background:#185FA5;border-color:#185FA5;}
+.ai-body{flex:1;}
+.ai-text{font-size:12px;color:var(--color-text-primary);margin-bottom:3px;}
+.ai-meta{font-size:11px;color:var(--color-text-tertiary);}
+/* new meeting form */
+.new-meeting-form{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:20px;margin:16px 20px;}
+.form-label{font-size:12px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:6px;}
+.form-input{width:100%;padding:8px 12px;border:0.5px solid var(--color-border-tertiary);border-radius:8px;font-size:13px;font-family:inherit;background:var(--color-background-primary);color:var(--color-text-primary);outline:none;margin-bottom:14px;}
+.form-input:focus{border-color:#378ADD;}
+.form-textarea{width:100%;padding:8px 12px;border:0.5px solid var(--color-border-tertiary);border-radius:8px;font-size:12px;font-family:inherit;background:var(--color-background-primary);color:var(--color-text-primary);outline:none;resize:vertical;margin-bottom:14px;}
+.form-textarea:focus{border-color:#378ADD;}
+.agent-selector{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.agent-chip{padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer;border:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);color:var(--color-text-secondary);transition:all .12s;}
+.agent-chip.selected{background:#185FA5;color:#fff;border-color:#185FA5;}
+.form-btn{padding:8px 20px;background:#185FA5;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .12s;}
+.form-btn:hover{background:#1450A0;}
+.form-btn.secondary{background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary);margin-left:8px;}
+.form-btn.secondary:hover{background:var(--color-background-primary);}
+.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500;}
+.b-green{background:#EAF3DE;color:#3B6D11;} .b-amber{background:#FAEEDA;color:#854F0B;}
+.b-blue{background:#E6F1FB;color:#185FA5;} .b-gray{background:#F1EFE8;color:#5F5E5A;}
+@media(prefers-color-scheme:dark){
+  .b-green{background:#27500A;color:#C0DD97;} .b-amber{background:#633806;color:#FAC775;}
+  .b-blue{background:#0C447C;color:#B5D4F4;} .b-gray{background:#444441;color:#D3D1C7;}
+}
+.section-hd{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:10px;margin-top:18px;}
+.section-hd:first-child{margin-top:0;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN GATE -->
+<div id="login-gate" style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--color-background-secondary);">
+  <div style="width:340px;background:var(--color-background-primary);border:1px solid var(--color-border-tertiary);border-radius:12px;padding:32px;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="width:40px;height:40px;background:#185FA5;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:#fff;margin-bottom:12px;">CS</div>
+      <div style="font-size:16px;font-weight:600;color:var(--color-text-primary);">CyberSense Admin</div>
+      <div style="font-size:13px;color:var(--color-text-tertiary);margin-top:4px;">Restricted access</div>
+    </div>
+    <form id="login-form">
+      <div style="margin-bottom:14px;">
+        <label style="font-size:12px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:6px;">Email</label>
+        <input id="login-email" type="email" required autocomplete="email" placeholder="admin@cybersense.solutions"
+          style="width:100%;padding:9px 12px;border:1px solid var(--color-border-tertiary);border-radius:8px;font-size:13px;outline:none;font-family:inherit;background:var(--color-background-primary);color:var(--color-text-primary);">
+      </div>
+      <div style="margin-bottom:20px;">
+        <label style="font-size:12px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:6px;">Password</label>
+        <input id="login-password" type="password" required autocomplete="current-password"
+          style="width:100%;padding:9px 12px;border:1px solid var(--color-border-tertiary);border-radius:8px;font-size:13px;outline:none;font-family:inherit;background:var(--color-background-primary);color:var(--color-text-primary);">
+      </div>
+      <button type="submit" style="width:100%;padding:10px;background:#185FA5;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;">Sign In</button>
+    </form>
+  </div>
+</div>
+
+<!-- DASHBOARD SHELL -->
+<div id="dashboard-shell" style="display:none;">
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="logo-mark">CS</div>
+      <div>
+        <div class="topbar-title">CyberSense Admin</div>
+        <div class="topbar-sub">CyberSense.Solutions — restricted access</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <span style="font-size:12px;color:var(--color-text-secondary);"><span class="status-dot"></span>All systems operational</span>
+      <span id="nav-user-label" style="font-size:12px;color:var(--color-text-tertiary);"></span>
+      <button id="nav-logout" onclick="CS.Auth.logout()" style="display:none;font-size:12px;color:var(--color-text-secondary);background:none;border:0.5px solid var(--color-border-tertiary);border-radius:6px;padding:4px 10px;cursor:pointer;font-family:inherit;">Sign out</button>
+    </div>
+  </div>
+
+  <div class="page-nav">
+    <a href="admin.html" class="pn-item">Command Center</a>
+    <a href="agents.html" class="pn-item">Agent Status</a>
+    <a href="conference.html" class="pn-item active">Meeting Room</a>
+    <a href="production.html" class="pn-item">Preview &amp; Production</a>
+  </div>
+
+  <div class="conf-body">
+    <!-- Meeting list -->
+    <div class="conf-list">
+      <div class="conf-list-header">
+        <span class="conf-list-title">Meetings</span>
+        <button class="new-meeting-btn" onclick="showNewMeetingForm()">+ New meeting</button>
+      </div>
+      <div id="meeting-list" style="overflow-y:auto;flex:1;">
+        <div style="padding:20px 14px;text-align:center;color:var(--color-text-tertiary);font-size:12px;">Loading meetings…</div>
+      </div>
+    </div>
+
+    <!-- Meeting detail -->
+    <div class="conf-detail" id="conf-detail">
+      <div class="cd-empty" id="cd-empty">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" style="opacity:.3;"><rect x="4" y="8" width="32" height="26" rx="3" stroke="currentColor" stroke-width="2"/><path d="M14 8V6M26 8V6M4 16h32" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <span style="font-size:13px;">Select a meeting or create a new one</span>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /#dashboard-shell -->
+
+<script>
+const MGMT_AGENTS = [
+  { id:'henry',   name:'Henry',   color:'#185FA5', role:'General Manager' },
+  { id:'valerie', name:'Valerie', color:'#7F77DD', role:'Strategy' },
+  { id:'victor',  name:'Victor',  color:'#E24B4A', role:'Risk' },
+  { id:'barret',  name:'Barret',  color:'#1D9E75', role:'Coordination' },
+  { id:'maya',    name:'Maya',    color:'#185FA5', role:'Managing Editor' },
+  { id:'cy',      name:'Cy',      color:'#E24B4A', role:'CISO' },
+];
+
+let meetings = [];
+let activeMeetingId = null;
+let newMeetingParticipants = [];
+
+function initials(name) {
+  return name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+}
+
+function escHtml(str) {
+  return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function timeStr(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return d.toLocaleDateString('en-US', { month:'short', day:'numeric' }) + ' ' +
+         d.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', hour12:true });
+}
+
+async function loadMeetings() {
+  try {
+    const data = await CS.Auth.apiFetch('/api/ops/meetings');
+    meetings = data.data || data || [];
+  } catch (e) {
+    meetings = getSampleMeetings();
+  }
+  renderMeetingList();
+}
+
+function getSampleMeetings() {
+  return [
+    {
+      id: 'mtg-001',
+      title: 'Weekly Operational Review',
+      initiated_by: 'executive',
+      status: 'completed',
+      created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
+      participants: ['henry','valerie','barret'],
+      transcript: [
+        { speaker:'executive', name:'Executive', color:'#185FA5', ts: new Date(Date.now()-86400000*2+600000).toISOString(), text:'Good morning. Let\'s review the pipeline status and open risk items before the week begins.' },
+        { speaker:'henry', name:'Henry', color:'#185FA5', ts: new Date(Date.now()-86400000*2+660000).toISOString(), text:'Good morning. Pipeline is running at 94% on-time rate this week. The awareness briefing has delivered on schedule for 6 consecutive editions. Two risk items require your attention: the NovaTech renewal risk (45 days out) and the training completion SLA for two enterprise clients.' },
+        { speaker:'barret', name:'Barret', color:'#1D9E75', ts: new Date(Date.now()-86400000*2+720000).toISOString(), text:'Pipeline handoff metrics are clean across intel and awareness. The only SLA concern is training — Alex is aware and has a remediation plan in place for the two affected clients.' },
+        { speaker:'valerie', name:'Valerie', color:'#7F77DD', ts: new Date(Date.now()-86400000*2+780000).toISOString(), text:'The FinServ negotiation is progressing. I\'d recommend a decision point by end of week on the NovaTech account — Joe has context and should brief you directly.' },
+        { speaker:'executive', name:'Executive', color:'#185FA5', ts: new Date(Date.now()-86400000*2+840000).toISOString(), text:'Understood. Henry, confirm: NovaTech gets a priority retention outreach this week. Valerie, keep FinServ moving. Barret, confirm training SLA remediation is logged as an open ticket.' },
+      ],
+      action_items: [
+        { id:'ai-001', text:'NovaTech priority retention outreach — Joe to lead, William to support', owner:'henry', due:'May 7', done:false },
+        { id:'ai-002', text:'Training SLA remediation plan logged as open ticket in Agent Status', owner:'barret', due:'May 5', done:true },
+        { id:'ai-003', text:'FinServ negotiation decision point by EOW', owner:'valerie', due:'May 8', done:false },
+      ],
+    },
+    {
+      id: 'mtg-002',
+      title: 'Security Posture Review — CSDP',
+      initiated_by: 'cy',
+      status: 'completed',
+      created_at: new Date(Date.now() - 86400000).toISOString(),
+      participants: ['henry','cy','owen'],
+      transcript: [
+        { speaker:'cy', name:'Cy', color:'#E24B4A', ts: new Date(Date.now()-86400000+300000).toISOString(), text:'Escalating to CSDP. CVE-2026-41940 in cPanel affects our hosting infrastructure. Exploitation was confirmed in the wild before disclosure. Owen has patch readiness assessment.' },
+        { speaker:'owen', name:'Owen', color:'#BA7517', ts: new Date(Date.now()-86400000+360000).toISOString(), text:'Our cPanel instance is on an affected branch. Patch is available. Estimated deployment: 2 hours with 15-minute maintenance window. No current indicators of compromise on our instance — Quinn has reviewed credential logs.' },
+        { speaker:'henry', name:'Henry', color:'#185FA5', ts: new Date(Date.now()-86400000+420000).toISOString(), text:'Authorize the patch deployment. Schedule the maintenance window tonight at 0200 CT. Cy, confirm once complete and update the CSDP log.' },
+        { speaker:'cy', name:'Cy', color:'#E24B4A', ts: new Date(Date.now()-86400000+480000).toISOString(), text:'Acknowledged. CSDP decision logged. Owen will execute tonight. I will confirm completion and update the open risk register. Note: this CVE appears in our edition 116 published today — brand integrity is preserved, patch will be complete before next cycle.' },
+      ],
+      action_items: [
+        { id:'ai-004', text:'Deploy cPanel CVE-2026-41940 patch at 0200 CT tonight', owner:'owen', due:'May 4', done:true },
+        { id:'ai-005', text:'CSDP completion log entry by Cy after deployment', owner:'cy', due:'May 4', done:false },
+        { id:'ai-006', text:'Close CVE-2026-41940 open risk item after patch confirmation', owner:'cy', due:'May 5', done:false },
+      ],
+    },
+  ];
+}
+
+function renderMeetingList() {
+  const container = document.getElementById('meeting-list');
+  if (!meetings.length) {
+    container.innerHTML = '<div style="padding:20px 14px;text-align:center;color:var(--color-text-tertiary);font-size:12px;">No meetings yet. Create one to begin.</div>';
+    return;
+  }
+  container.innerHTML = meetings.map(m => {
+    const initiatorLabel = m.initiated_by === 'executive' ? 'Executive' :
+      (MGMT_AGENTS.find(a => a.id === m.initiated_by)?.name || m.initiated_by);
+    const statusBadge = m.status === 'active'
+      ? '<span style="font-size:10px;padding:1px 6px;border-radius:4px;background:#EAF3DE;color:#3B6D11;font-weight:600;">LIVE</span>'
+      : '<span style="font-size:10px;color:var(--color-text-tertiary);">Completed</span>';
+    const chips = (m.participants || []).slice(0,4).map(p => {
+      const agent = MGMT_AGENTS.find(a => a.id === p);
+      return agent ? `<span class="mi-agent-chip">${agent.name}</span>` : '';
+    }).join('');
+    const openItems = (m.action_items || []).filter(a => !a.done).length;
+    return `
+      <div class="meeting-item ${activeMeetingId === m.id ? 'active' : ''}" onclick="selectMeeting('${m.id}')">
+        <div class="mi-title">${escHtml(m.title)}</div>
+        <div class="mi-meta">${timeStr(m.created_at)} · ${statusBadge} ${openItems ? `· <span style="color:#BA7517;">${openItems} open item${openItems>1?'s':''}</span>` : ''}</div>
+        <div class="mi-meta" style="margin-top:2px;">Initiated by ${escHtml(initiatorLabel)}</div>
+        <div class="mi-agents" style="margin-top:6px;">${chips}</div>
+      </div>`;
+  }).join('');
+}
+
+function selectMeeting(id) {
+  activeMeetingId = id;
+  renderMeetingList();
+  const m = meetings.find(x => x.id === id);
+  if (!m) return;
+  renderMeetingDetail(m);
+}
+
+function renderMeetingDetail(m) {
+  const detail = document.getElementById('conf-detail');
+  const openItems = (m.action_items || []).filter(a => !a.done);
+  const allItems = m.action_items || [];
+
+  const transcriptHtml = (m.transcript || []).map(msg => {
+    const isExec = msg.speaker === 'executive';
+    return `
+      <div class="transcript-msg">
+        <div class="tm-avatar" style="background:${msg.color || '#94a3b8'};">${initials(msg.name)}</div>
+        <div class="tm-content">
+          <div class="tm-header">
+            <span class="tm-name">${escHtml(msg.name)}</span>
+            <span class="tm-time">${timeStr(msg.ts)}</span>
+          </div>
+          <div class="tm-text${isExec ? ' executive' : ''}">${escHtml(msg.text)}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  const actionItemsHtml = allItems.map(item => `
+    <div class="action-item">
+      <div class="ai-check${item.done ? ' done' : ''}" onclick="toggleActionItem('${m.id}','${item.id}')"></div>
+      <div class="ai-body">
+        <div class="ai-text" style="${item.done ? 'text-decoration:line-through;color:var(--color-text-tertiary);' : ''}">${escHtml(item.text)}</div>
+        <div class="ai-meta">Owner: ${escHtml(item.owner)} · Due: ${escHtml(item.due)}</div>
+      </div>
+      ${item.done ? '<span class="badge b-green">Done</span>' : '<span class="badge b-amber">Open</span>'}
+    </div>`).join('');
+
+  const participantChips = (m.participants || []).map(p => {
+    const agent = MGMT_AGENTS.find(a => a.id === p);
+    if (!agent) return '';
+    return `<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);font-size:12px;">
+      <span style="width:8px;height:8px;border-radius:50%;background:${agent.color};display:inline-block;"></span>${agent.name}
+    </span>`;
+  }).join('');
+
+  detail.innerHTML = `
+    <div class="cd-header">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+        <div>
+          <div class="cd-title">${escHtml(m.title)}</div>
+          <div class="cd-meta">${timeStr(m.created_at)} · ${m.status === 'active' ? '<span style="color:#1D9E75;font-weight:500;">Active</span>' : 'Completed'} · ${allItems.length} action item${allItems.length!==1?'s':''} (${openItems.length} open)</div>
+        </div>
+        ${m.status === 'active' ? '<button onclick="closeMeeting(\'' + m.id + '\')" style="padding:6px 14px;background:#E24B4A;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;">Close meeting</button>' : ''}
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">${participantChips}</div>
+    </div>
+    <div class="cd-body">
+      ${allItems.length ? `<div class="section-hd">Action items</div>${actionItemsHtml}` : ''}
+      <div class="section-hd">Meeting record</div>
+      ${transcriptHtml || '<div style="font-size:12px;color:var(--color-text-tertiary);">No transcript available.</div>'}
+    </div>`;
+}
+
+function toggleActionItem(meetingId, itemId) {
+  const m = meetings.find(x => x.id === meetingId);
+  if (!m) return;
+  const item = m.action_items.find(i => i.id === itemId);
+  if (item) item.done = !item.done;
+  renderMeetingDetail(m);
+  renderMeetingList();
+  // Persist via API (best-effort)
+  CS.Auth.apiFetch('/api/ops/meetings/' + meetingId + '/actions/' + itemId, {
+    method: 'PATCH',
+    body: JSON.stringify({ done: item.done }),
+  }).catch(() => {});
+}
+
+function closeMeeting(meetingId) {
+  const m = meetings.find(x => x.id === meetingId);
+  if (!m) return;
+  m.status = 'completed';
+  CS.Auth.apiFetch('/api/ops/meetings/' + meetingId, {
+    method: 'PATCH',
+    body: JSON.stringify({ status: 'completed' }),
+  }).catch(() => {});
+  renderMeetingList();
+  renderMeetingDetail(m);
+}
+
+function showNewMeetingForm() {
+  activeMeetingId = null;
+  newMeetingParticipants = [];
+  renderMeetingList();
+
+  const detail = document.getElementById('conf-detail');
+  const agentChips = MGMT_AGENTS.map(a => `
+    <div class="agent-chip" id="nmp-${a.id}" onclick="toggleParticipant('${a.id}',this)">
+      ${a.name} <span style="font-size:10px;color:inherit;opacity:.7;">— ${a.role}</span>
+    </div>`).join('');
+
+  detail.innerHTML = `
+    <div class="cd-header">
+      <div class="cd-title">New meeting</div>
+      <div class="cd-meta">Human executive-initiated · Permanent audit record</div>
+    </div>
+    <div class="cd-body">
+      <div class="new-meeting-form">
+        <label class="form-label">Meeting title</label>
+        <input class="form-input" id="nm-title" placeholder="e.g. Weekly Operational Review" />
+
+        <label class="form-label">Agenda</label>
+        <textarea class="form-textarea" id="nm-agenda" rows="3" placeholder="Describe the meeting objective and any key items to address…"></textarea>
+
+        <label class="form-label">Participants <span style="font-weight:400;color:var(--color-text-tertiary);">(select management-layer agents)</span></label>
+        <div class="agent-selector">${agentChips}</div>
+
+        <label class="form-label">Opening statement</label>
+        <textarea class="form-textarea" id="nm-opening" rows="2" placeholder="Your opening message to the participants…"></textarea>
+
+        <div>
+          <button class="form-btn" onclick="createMeeting()">Start meeting</button>
+          <button class="form-btn secondary" onclick="cancelNewMeeting()">Cancel</button>
+        </div>
+        <div id="nm-error" style="display:none;margin-top:10px;font-size:12px;color:var(--color-text-danger);"></div>
+      </div>
+    </div>`;
+}
+
+function toggleParticipant(agentId, el) {
+  const idx = newMeetingParticipants.indexOf(agentId);
+  if (idx === -1) {
+    newMeetingParticipants.push(agentId);
+    el.classList.add('selected');
+  } else {
+    newMeetingParticipants.splice(idx, 1);
+    el.classList.remove('selected');
+  }
+}
+
+async function createMeeting() {
+  const title = document.getElementById('nm-title').value.trim();
+  const agenda = document.getElementById('nm-agenda').value.trim();
+  const opening = document.getElementById('nm-opening').value.trim();
+  const errorEl = document.getElementById('nm-error');
+
+  if (!title) { errorEl.textContent = 'Meeting title is required.'; errorEl.style.display='block'; return; }
+  if (!newMeetingParticipants.length) { errorEl.textContent = 'Select at least one participant.'; errorEl.style.display='block'; return; }
+
+  errorEl.style.display = 'none';
+
+  try {
+    let newMeeting;
+    try {
+      const data = await CS.Auth.apiFetch('/api/ops/meetings', {
+        method: 'POST',
+        body: JSON.stringify({ title, agenda, participants: newMeetingParticipants, opening_message: opening }),
+      });
+      newMeeting = data.meeting || data;
+    } catch (e) {
+      // Build local meeting if API not yet available
+      newMeeting = {
+        id: 'mtg-' + Date.now(),
+        title,
+        agenda,
+        initiated_by: 'executive',
+        status: 'active',
+        created_at: new Date().toISOString(),
+        participants: newMeetingParticipants,
+        transcript: opening ? [{ speaker:'executive', name:'Executive', color:'#185FA5', ts: new Date().toISOString(), text: opening }] : [],
+        action_items: [],
+      };
+    }
+
+    meetings.unshift(newMeeting);
+    activeMeetingId = newMeeting.id;
+    renderMeetingList();
+    renderMeetingDetail(newMeeting);
+  } catch (err) {
+    errorEl.textContent = err.message || 'Failed to create meeting.';
+    errorEl.style.display = 'block';
+  }
+}
+
+function cancelNewMeeting() {
+  document.getElementById('conf-detail').innerHTML = `
+    <div class="cd-empty" id="cd-empty">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none" style="opacity:.3;"><rect x="4" y="8" width="32" height="26" rx="3" stroke="currentColor" stroke-width="2"/><path d="M14 8V6M26 8V6M4 16h32" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <span style="font-size:13px;">Select a meeting or create a new one</span>
+    </div>`;
+}
+
+document.addEventListener('cs:login', (e) => {
+  const u = e.detail;
+  const label = document.getElementById('nav-user-label');
+  if (label && u) label.textContent = (u.full_name || u.email || '') + (u.admin_role?.role ? ' — ' + u.admin_role.role.toUpperCase() : '');
+  const btn = document.getElementById('nav-logout');
+  if (btn) btn.style.display = 'inline-block';
+  loadMeetings();
+});
+</script>
+</body>
+</html>
