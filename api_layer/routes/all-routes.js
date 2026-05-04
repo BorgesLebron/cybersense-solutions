@@ -728,6 +728,41 @@ adminRouter.post('/briefings/:id/confirm-distribution', requireAdminToken(['gm']
   } catch (e) { next(e); }
 });
 
+// Executive requests revision — returns briefing to Maya with a documented reason.
+// Status reverts to 'maya', maya_approved_at cleared, Maya notified.
+adminRouter.post('/briefings/:id/request-revision', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    const briefing = await db.getBriefingById(req.params.id);
+    if (!briefing) return res.status(404).json(err('NOT_FOUND', 'Briefing not found'));
+    if (briefing.pipeline_status !== 'approved')
+      return res.status(422).json(err('INVALID_STATUS', 'Only Maya-approved briefings can be returned for revision'));
+
+    const { reason = 'Executive requested revision before distribution' } = req.body;
+
+    await db.revertBriefingForRevision(req.params.id);
+
+    await db.logAuditEvent({
+      actor: req.user.id,
+      action: 'hitl_revision_requested',
+      target_agent: 'Maya',
+      reason,
+      affected_content_id: req.params.id,
+    });
+
+    await notifyAgents(['Maya'], {
+      type: 'REVISION_REQUESTED',
+      briefing_id: briefing.id,
+      edition_number: briefing.edition_number,
+      edition_date: briefing.edition_date,
+      subject_line: briefing.subject_line,
+      reason,
+      message: `Human executive returned Edition ${briefing.edition_number} for revision: "${reason}". Review, revise, and re-approve or escalate to Henry.`,
+    });
+
+    res.json({ revision_requested: true, briefing_id: briefing.id, reason });
+  } catch (e) { next(e); }
+});
+
 // ── Meetings (Conference tab) ─────────────────────────────────────────────────
 // Convener routing is enforced server-side: operational/editorial/training → Henry, security → Cy.
 

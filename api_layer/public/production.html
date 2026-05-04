@@ -369,9 +369,33 @@ const SAMPLE_BRIEFINGS = [
 let briefings = [];
 let distributionState = {};
 
+function transformBriefing(b) {
+  const d = new Date(b.edition_date + 'T12:00:00Z');
+  return {
+    id:              b.id,
+    edition:         b.edition_number ? 'Edition ' + b.edition_number : 'Latest Edition',
+    date:            d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' }),
+    headline:        b.subject_line || '',
+    file_path:       b.file_path || null,
+    maya_approved_at: b.maya_approved_at,
+    maya_note:       b.maya_note || null,
+    status:          'awaiting_approval',
+    checklist: [
+      { id: 'jeff',   label: 'QA pass — Jeff (Quality Assurance)',          done: true,  agent: 'Jeff'   },
+      { id: 'maya',   label: 'Editorial approval — Maya (Managing Editor)', done: true,  agent: 'Maya'   },
+      { id: 'exec',   label: 'Executive review — Human in the Loop',        done: false, agent: 'You'    },
+      { id: 'laura',  label: 'Distribution trigger — Laura (Operations)',   done: false, agent: 'Laura'  },
+      { id: 'oliver', label: 'LinkedIn post — Oliver (0700 CT)',            done: false, agent: 'Oliver' },
+    ],
+    items: b.items || [],
+  };
+}
+
 async function loadBriefings() {
   try {
-    briefings = await CS.Auth.apiFetch('/api/ops/briefings/preview');
+    const res = await CS.Auth.apiFetch('/api/admin/briefings/preview');
+    briefings = (res.data || []).map(transformBriefing);
+    if (!briefings.length) briefings = SAMPLE_BRIEFINGS;
   } catch {
     briefings = SAMPLE_BRIEFINGS;
   }
@@ -426,12 +450,16 @@ function renderBriefingCard(b) {
       <span class="cl-agent">${c.agent}</span>
     </div>`).join('');
 
-  const itemsHtml = b.items.map(item => `
+  const itemsHtml = b.items && b.items.length
+    ? b.items.map(item => `
     <div class="preview-item">
       <div class="pi-label ${item.type}">${item.label}</div>
       <div class="pi-title">${item.title}</div>
       <div class="pi-source">${item.source}</div>
-    </div>`).join('');
+    </div>`).join('')
+    : b.file_path
+      ? `<div style="padding:20px 0;text-align:center;"><a href="${b.file_path}" target="_blank" style="color:var(--color-text-info);font-size:13px;text-decoration:none;font-weight:500;">View full edition →</a></div>`
+      : `<div style="padding:20px 0;text-align:center;color:var(--color-text-tertiary);font-size:12px;">No preview available.</div>`;
 
   const mavenApproved = b.checklist.find(c => c.id === 'maya')?.done;
   const execReady = mavenApproved && !execDone;
@@ -505,7 +533,7 @@ async function approveBriefing(id) {
   const b = briefings.find(b => b.id === id);
   if (!b) return;
   try {
-    await CS.Auth.apiFetch('/api/ops/briefings/' + id + '/approve', { method: 'POST', body: '{}' });
+    await CS.Auth.apiFetch('/api/admin/briefings/' + id + '/confirm-distribution', { method: 'POST', body: '{}' });
   } catch {}
   // update local state
   const execItem = b.checklist.find(c => c.id === 'exec');
@@ -525,7 +553,7 @@ async function rejectBriefing(id) {
   const reason = prompt('Reason for requesting revision (will be sent to Maya):');
   if (!reason) return;
   try {
-    await CS.Auth.apiFetch('/api/ops/briefings/' + id + '/reject', { method: 'POST', body: JSON.stringify({ reason }) });
+    await CS.Auth.apiFetch('/api/admin/briefings/' + id + '/request-revision', { method: 'POST', body: JSON.stringify({ reason }) });
   } catch {}
   showToast('Revision request sent to Maya', '');
 }
