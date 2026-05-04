@@ -8,6 +8,7 @@
 <title>CyberSense.Solutions — Cybersecurity Intelligence, Delivered Daily</title>
 <meta name="description" content="Real-time threat intelligence, professional training, and daily awareness briefings for security teams.">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="auth.css">
 </head>
 <body>
 
@@ -110,7 +111,11 @@
             <h3>Subscribe to see the live feed</h3>
             <p>Full radar access includes all tracked threats, CVSS scores, and linked intelligence articles.</p>
             <a href="pricing.html" class="btn btn-primary">Get Access</a>
-    <p style="margin-top:16px;font-size:13px;color:var(--cs-gray-400);text-align:right;"><a href="radar.html">View full radar →</a></p>
+            <p style="margin-top:16px;font-size:13px;color:var(--cs-gray-400);text-align:right;"><a href="radar.html">View full radar →</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -297,10 +302,10 @@ async function loadHomeData(user) {
   if (user) {
     try {
       const LATEST_STATIC = {
-        edition_date: '2026-05-01', edition_number: 115,
-        subject_line: 'Backup Blind Spot: Veeam RCE, Ivanti MDM, and VMware vCenter',
-        description: `CVE-2026-27082 (CVSS 9.8) in Veeam Backup & Replication was actively exploited by ransomware operators to destroy backup repositories before deploying primary payloads — eliminating recovery before the ransom demand arrives. Ivanti EPMM disclosed twin pre-auth RCEs (CVE-2026-1281 and CVE-2026-1340, both CVSS 9.8) enabling backdoor and web shell deployment across government and healthcare sectors in four countries. VMware vCenter Server VMSA-2026-0019 documents a heap overflow granting any authenticated user SYSTEM-level hypervisor control.`,
-        file_path: '/newsletter/2026/May/05012026_edition115.html'
+        edition_date: '2026-05-04', edition_number: 116,
+        subject_line: 'Sixty-Day Blind Spot',
+        description: `On April 28, cPanel’s PSIRT disclosed CVE-2026-41940, a critical CRLF injection flaw that chains session writer injection with encryption-skip logic to grant unauthenticated root access. The advisory confirmed a 60-day "shadow window" of active exploitation dating back to February 2026, affecting an estimated 1.5 million exposed instances before public mitigation was possible.`,
+        file_path: '/newsletter/2026/May/05042026_edition116.html'
       };
 
       const briefingData = await CS.Auth.apiFetch('/api/content/briefings?limit=1');
