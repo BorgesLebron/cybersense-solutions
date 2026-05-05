@@ -81,13 +81,11 @@ def load_config():
             if line and not line.startswith('#') and '=' in line:
                 k, _, v = line.partition('=')
                 cfg[k.strip()] = v.strip()
-    for k in ('CS_API_URL', 'CS_ADMIN_EMAIL'):
+    for k in ('CS_API_URL', 'CS_ADMIN_EMAIL', 'CS_ADMIN_PASSWORD'):
         if k not in cfg:
             cfg[k] = os.environ.get(k, '')
     if not cfg['CS_API_URL']:
         cfg['CS_API_URL'] = 'https://api.cybersense.solutions'
-    # Password is never read from config — always prompted at runtime
-    cfg['CS_ADMIN_PASSWORD'] = ''
     return cfg
 
 
@@ -96,8 +94,10 @@ def prompt_credentials(cfg):
         cfg['CS_ADMIN_EMAIL'] = input("  Admin email: ").strip()
     else:
         print(f"  Admin email: {cfg['CS_ADMIN_EMAIL']}")
-    # Always prompt for password — never read from file
-    cfg['CS_ADMIN_PASSWORD'] = getpass.getpass("  Admin password: ")
+    if not cfg['CS_ADMIN_PASSWORD']:
+        cfg['CS_ADMIN_PASSWORD'] = getpass.getpass("  Admin password: ")
+    else:
+        print(f"  Admin password: {'*' * len(cfg['CS_ADMIN_PASSWORD'])}")
     return cfg
 
 
