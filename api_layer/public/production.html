@@ -198,6 +198,14 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
 @media(prefers-color-scheme:dark){.dc-icon{background:#27500A;}}
 .dc-title{font-size:16px;font-weight:600;color:var(--color-text-primary);}
 .dc-sub{font-size:13px;color:var(--color-text-secondary);max-width:440px;line-height:1.6;}
+
+/* item detail modal */
+.item-modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:200;align-items:center;justify-content:center;padding:24px;}
+.item-modal-overlay.open{display:flex;}
+.item-modal-pane{background:var(--color-background-primary);border-radius:var(--border-radius-lg);width:100%;max-width:560px;max-height:82vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25);display:flex;flex-direction:column;}
+.preview-item.clickable{cursor:pointer;transition:border-color .12s,background .12s;}
+.preview-item.clickable:hover{border-color:#185FA5;background:var(--color-background-primary);}
+@media(prefers-color-scheme:dark){.preview-item.clickable:hover{border-color:#3b82f6;background:var(--color-background-secondary);}}
 </style>
 </head>
 <body>
@@ -320,7 +328,51 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
 
 <div id="toast" class="toast"></div>
 
+<!-- ITEM DETAIL MODAL -->
+<div id="item-modal" class="item-modal-overlay" onclick="closeItemModal()">
+  <div class="item-modal-pane" onclick="event.stopPropagation()">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:15px 20px;border-bottom:0.5px solid var(--color-border-tertiary);flex-shrink:0;">
+      <div style="font-size:13px;font-weight:600;color:var(--color-text-primary);">Briefing Item Detail</div>
+      <button onclick="closeItemModal()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--color-text-tertiary);padding:2px 6px;line-height:1;font-family:inherit;">✕</button>
+    </div>
+    <div id="item-modal-body" style="flex:1;overflow-y:auto;"></div>
+  </div>
+</div>
+
 <script>
+/* ── item detail modal ── */
+const BRIEFING_ITEMS_STORE = {};
+
+function openItemDetail(briefingId, idx) {
+  const item = BRIEFING_ITEMS_STORE[briefingId + '_' + idx];
+  if (!item) return;
+  const typeMap = {
+    threat:     { full: 'Threat Intelligence', color: '#dc2626', bg: '#FEF2F2' },
+    innovation: { full: 'Innovation',          color: '#7F77DD', bg: '#F3F0FF' },
+    growth:     { full: 'Professional Growth', color: '#1D9E75', bg: '#ECFDF5' },
+    training:   { full: 'Training Resource',   color: '#185FA5', bg: '#EFF6FF' },
+  };
+  const t = typeMap[item.type] || { full: item.type, color: '#64748b', bg: '#f1f5f9' };
+  document.getElementById('item-modal-body').innerHTML = `
+    <div style="padding:24px 26px;">
+      <span style="display:inline-block;padding:3px 10px;border-radius:5px;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:${t.bg};color:${t.color};margin-bottom:16px;">${item.label || t.full}</span>
+      <div style="font-size:17px;font-weight:600;color:var(--color-text-primary);line-height:1.45;margin-bottom:14px;">${item.title}</div>
+      <div style="font-size:12px;color:var(--color-text-tertiary);display:flex;align-items:center;gap:6px;padding-bottom:20px;border-bottom:0.5px solid var(--color-border-tertiary);margin-bottom:20px;">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.2"/><path d="M6 3v3.5l2 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        Source: <strong style="color:var(--color-text-secondary);">${item.source}</strong>
+      </div>
+      <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:8px;">Pipeline Status</div>
+      <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.6;">This briefing item has passed Jeff's QA review and Maya's editorial approval. Full article body is staged in the content repository and will be published upon your distribution authorization below.</div>
+    </div>`;
+  document.getElementById('item-modal').classList.add('open');
+}
+
+function closeItemModal() {
+  document.getElementById('item-modal').classList.remove('open');
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeItemModal(); });
+
 /* ── helpers ── */
 function switchTab(name) {
   ['briefing','carousel','articles'].forEach(t => {
@@ -450,12 +502,18 @@ function renderBriefingCard(b) {
       <span class="cl-agent">${c.agent}</span>
     </div>`).join('');
 
+  (b.items || []).forEach((item, i) => { BRIEFING_ITEMS_STORE[b.id + '_' + i] = item; });
   const itemsHtml = b.items && b.items.length
-    ? b.items.map(item => `
-    <div class="preview-item">
-      <div class="pi-label ${item.type}">${item.label}</div>
-      <div class="pi-title">${item.title}</div>
-      <div class="pi-source">${item.source}</div>
+    ? b.items.map((item, i) => `
+    <div class="preview-item clickable" onclick="openItemDetail('${b.id}', ${i})" title="Click to read item details">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+        <div style="flex:1;">
+          <div class="pi-label ${item.type}">${item.label}</div>
+          <div class="pi-title">${item.title}</div>
+          <div class="pi-source">${item.source}</div>
+        </div>
+        <span style="font-size:11px;color:var(--color-text-tertiary);white-space:nowrap;padding-top:2px;flex-shrink:0;">Read →</span>
+      </div>
     </div>`).join('')
     : b.file_path
       ? `<div style="padding:20px 0;text-align:center;"><a href="${b.file_path}" target="_blank" style="color:var(--color-text-info);font-size:13px;text-decoration:none;font-weight:500;">View full edition →</a></div>`
