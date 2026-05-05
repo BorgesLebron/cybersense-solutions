@@ -188,39 +188,17 @@ class API:
         return data.get('data', [])
 
     def get_in_progress_briefings(self):
-        """Query for briefings that are not yet published."""
+        """Return briefings at 'approved' status waiting for the human gate."""
         if self.dry_run:
             return []
         r = self.session.get(
             self._url('/api/admin/briefings/preview'),
             headers={'Authorization': f"Bearer {self.admin_token}"},
         )
-        approved = r.json().get('data', []) if r.ok else []
-
-        # Also check pipeline directly for earlier-stage briefings
-        # We query the DB indirectly — the admin metrics endpoint has pipeline status
-        metrics = self._get('/api/admin/metrics', auth='admin')
-        pipeline = metrics.get('pipeline', [])
-
-        results = []
-        seen = set()
-
-        for b in approved:
-            if b['id'] not in seen:
-                results.append(b)
-                seen.add(b['id'])
-
-        # Extract any briefing IDs from pipeline events (best effort)
-        for item in pipeline:
-            bid = item.get('content_id') or item.get('id')
-            status = item.get('pipeline_status') or item.get('status')
-            if bid and bid not in seen and status not in ('published', None):
-                results.append({'id': bid, 'pipeline_status': status,
-                                 'subject_line': item.get('subject_line', '(no subject)'),
-                                 'edition_date': item.get('edition_date', '?')})
-                seen.add(bid)
-
-        return results
+        if not r.ok:
+            warn(f"Could not fetch preview queue ({r.status_code}). Use --id to target a briefing directly.")
+            return []
+        return r.json().get('data', [])
 
     def get_briefing(self, briefing_id):
         if self.dry_run:
@@ -277,8 +255,10 @@ def pick_briefing(api, explicit_id=None):
     candidates = api.get_in_progress_briefings()
 
     if not candidates:
-        warn("No pending briefings found in the approved queue.")
-        bid = input("  Enter briefing ID manually (or press Enter to abort): ").strip()
+        warn("No briefings found at 'approved' stage in the preview queue.")
+        info("If your briefing is at an earlier stage (draft → maya), provide its ID directly.")
+        info("Find the ID in the DB: SELECT id, edition_date, pipeline_status FROM briefings ORDER BY created_at DESC LIMIT 5;")
+        bid = input("  Briefing ID (or press Enter to abort): ").strip()
         if not bid:
             fail("No briefing selected. Exiting.")
             sys.exit(0)
