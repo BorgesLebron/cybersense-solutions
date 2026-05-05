@@ -239,6 +239,19 @@ class API:
             auth='henry',
         )
 
+    def create_manual_briefing(self, edition_date, edition_number, subject_line, file_path=None, body_md=None):
+        return self._post(
+            '/api/admin/briefings/create-manual',
+            body={
+                'edition_date':   edition_date,
+                'edition_number': int(edition_number),
+                'subject_line':   subject_line,
+                'file_path':      file_path or None,
+                'body_md':        body_md or subject_line,
+            },
+            auth='admin',
+        )
+
 
 # ── Briefing selection ────────────────────────────────────────────────────────
 
@@ -306,6 +319,7 @@ def confirm_step(prompt, confirm_all):
 def main():
     parser = argparse.ArgumentParser(description='CyberSense manual pipeline trigger')
     parser.add_argument('--id',          metavar='BRIEFING_ID', help='Target a specific briefing by ID')
+    parser.add_argument('--create',      action='store_true',   help='Create a new briefing entry before advancing')
     parser.add_argument('--from-stage',  metavar='STAGE',       help='Override starting stage (skips earlier steps)')
     parser.add_argument('--confirm-all', action='store_true',   help='Skip per-step confirmations')
     parser.add_argument('--dry-run',     action='store_true',   help='Print steps without calling the API')
@@ -349,8 +363,37 @@ def main():
         fail(f"Failed to issue Henry token: {e}")
         sys.exit(1)
 
+    # ── Create briefing (if --create) ────────────────────────────────────────
+    if args.create and not args.id:
+        hdr("Step 2 — Create briefing entry")
+        print(f"  {D}Transition mode: creates a briefing without requiring agent pipeline records.{X}")
+        print(f"  {D}file_path should match: newsletter/YYYY/Mon/MMDDYYYY_editionNNN.html{X}\n")
+
+        import datetime
+        today = datetime.date.today().isoformat()
+
+        edition_date   = input(f"  Edition date    [{today}]: ").strip() or today
+        edition_number = input( "  Edition number  : ").strip()
+        subject_line   = input( "  Subject line    : ").strip()
+        file_path      = input( "  File path (optional, e.g. newsletter/2026/May/05052026_edition118.html): ").strip() or None
+
+        if not edition_number or not subject_line:
+            fail("edition_number and subject_line are required.")
+            sys.exit(1)
+
+        try:
+            result = api.create_manual_briefing(edition_date, edition_number, subject_line, file_path)
+            if not api.dry_run:
+                ok(f"Briefing created — id: {result['id']}")
+                args.id = result['id']
+            else:
+                args.id = 'DRY_RUN_ID'
+        except RuntimeError as e:
+            fail(f"Create failed: {e}")
+            sys.exit(1)
+
     # ── Select briefing ──────────────────────────────────────────────────────
-    hdr("Step 2 — Select briefing")
+    hdr(f"Step {'3' if args.create else '2'} — Select briefing")
     briefing_id, briefing_meta = pick_briefing(api, args.id)
     current_status = briefing_meta.get('pipeline_status', args.from_stage or 'draft')
     edition = briefing_meta.get('edition_number', '?')

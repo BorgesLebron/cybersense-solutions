@@ -617,6 +617,41 @@ adminRouter.post('/users/:id/role', requireAdminToken(['gm']), async (req, res, 
   } catch (e) { next(e); }
 });
 
+// Transition-phase endpoint: create a briefing entry directly without requiring
+// the full agent pipeline (no threat/intel/training records needed). Used when
+// automated agents are not yet operational. Bypasses the API's 3-item composition
+// validation — matches the archive migration approach.
+adminRouter.post('/briefings/create-manual', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    const { edition_date, edition_number, subject_line, file_path, body_md } = req.body;
+    if (!edition_date || !edition_number || !subject_line)
+      return res.status(400).json(err('MISSING_FIELDS', 'edition_date, edition_number, subject_line are required'));
+
+    const existing = await db.getBriefingByDate(edition_date);
+    if (existing) return res.status(409).json(err('DUPLICATE_EDITION', `A briefing for ${edition_date} already exists (id: ${existing.id})`));
+
+    const result = await db.pool.query(
+      `INSERT INTO briefings
+         (id, edition_date, edition_number, subject_line, body_md, file_path,
+          threat_item_ids, innovation_item_ids, pipeline_status, draft_completed_at, open_count, click_count)
+       VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, '{}', '{}', 'draft', now(), 0, 0)
+       RETURNING id, edition_date, edition_number, subject_line, file_path, pipeline_status`,
+      [edition_date, edition_number, subject_line, body_md || subject_line, file_path || null]
+    );
+
+    const briefing = result.rows[0];
+    await db.logAuditEvent({
+      actor: req.user.id,
+      action: 'manual_briefing_created',
+      target_agent: 'Henry',
+      reason: `Manual briefing created by admin — Edition ${edition_number} (${edition_date})`,
+      affected_content_id: briefing.id,
+    });
+
+    res.status(201).json(briefing);
+  } catch (e) { next(e); }
+});
+
 adminRouter.delete('/briefings/:id', requireAdminToken(['gm']), async (req, res, next) => {
   try {
     await db.deleteBriefingById(req.params.id);
