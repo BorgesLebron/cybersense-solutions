@@ -302,10 +302,10 @@ async function loadHomeData(user) {
   if (user) {
     try {
       const LATEST_STATIC = {
-        edition_date: '2026-05-04', edition_number: 116,
-        subject_line: 'Sixty-Day Blind Spot',
-        description: `On April 28, cPanel’s PSIRT disclosed CVE-2026-41940, a critical CRLF injection flaw that chains session writer injection with encryption-skip logic to grant unauthenticated root access. The advisory confirmed a 60-day "shadow window" of active exploitation dating back to February 2026, affecting an estimated 1.5 million exposed instances before public mitigation was possible.`,
-        file_path: '/newsletter/2026/May/05042026_edition116.html'
+        edition_date: '2026-05-05', edition_number: 117,
+        subject_line: 'The Infrastructure Paradox',
+        description: `Today’s brief examines a critical paradox in the modern attack surface: the mechanisms designed to maintain system health (automated update pipelines and management interfaces) have become primary vectors for institutional compromise. As enterprise management software faces exploitation via overlooked debug endpoints and AI-assisted discovery subverts traditional update logic, the "trust-by-default" model of software maintenance is being fundamentally recalculated. Bridging the gap between operational agility and structural integrity now requires a transition toward rigorous verification of the local development environment and a hardening of the identity perimeter.`,
+        file_path: '/newsletter/2026/May/05052026_edition117.html'
       };
 
       const briefingData = await CS.Auth.apiFetch('/api/content/briefings?limit=1');
