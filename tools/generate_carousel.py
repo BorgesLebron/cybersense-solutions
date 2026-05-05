@@ -15,38 +15,36 @@ import math, os, io, requests
 # CONTENT – Edit this section for each new carousel
 # ══════════════════════════════════════════════════════════════════════════════
 
-EDITION_NUMBER   = "112"
+EDITION_NUMBER   = "117"
 CARD2_TAG        = "Why it matters now"
-CARD2_LINE1      = "FortiClient EMS"
-CARD2_LINE2      = "Pre-Auth RCE"
-CARD2_LINE3      = "Under Active Attack"
-CARD2_BODY1      = "CVE-2026-35616 exploits an access control gap in FortiClient EMS's API layer. An unauthenticated request bypasses all authorization checks and reaches command execution on the server managing endpoint policy for the entire fleet."
-CARD2_BODY2      = "EMS generates no alert for its own exploitation. The policies it distributes — VPN configs, firewall rules, compliance enforcement — can be silently modified from a single compromised API session."
-CARD2_STAT       = "CVSS 9.1"
-CARD2_STAT_LINE1 = "Pre-Auth API Bypass → RCE"
-CARD2_STAT_LINE2 = "CVE-2026-35616 (FortiClient EMS)"
+CARD2_LINE1      = "Local AI Tools"
+CARD2_LINE2      = "Update Hijacking"
+CARD2_LINE3      = "Subverted Pipeline Trust"
+CARD2_BODY1      = "Security researchers have identified a critical supply chain risk in the Windows version of Ollama, a popular tool for running local AI models. The flaw (CVE-2026-42249) allows for the delivery of silent malware through the tool’s automatic update mechanism. By subverting the pipeline trust, cybercriminals can theoretically push malicious code to local machines without user interaction or visual indicators."
+CARD2_BODY2      = "Many emerging AI tools utilize background auto-update mechanisms that may lack rigorous cryptographic signature verification. This creates a vulnerability where a threat actor, having compromised an update server or intercepted transit traffic, can push malicious code directly to a local workstation under the guise of a routine security patch."
+CARD2_STAT       = "CVSS: 7.7"
+CARD2_STAT_LINE1 = "Remote Code Execution via Unsigned Update Mechanism"
+CARD2_STAT_LINE2 = "CVE-2026-42249 → Ollama Auto-Updates"
 
 CARD3_TAG    = "What to do now"
-CARD3_LINE1  = "5 Actions"
-CARD3_LINE2  = "When Your Endpoint"
-CARD3_LINE3  = "Manager Is the Target"
+CARD3_LINE1  = "3 Controls"
+CARD3_LINE2  = "Defending Your"
+CARD3_LINE3  = "Local AI Pipeline"
 CARD3_STEPS  = [
-    ("①", "Apply the Hotfix Now",        "Fortinet released a fix for 7.4.5 and 7.4.6. No patch means live exposure on every EMS-managed device."),
-    ("②", "Restrict EMS API to VLAN",    "CVE-2026-35616 requires network access. A management plane not reachable from general subnets is not exploitable."),
-    ("③", "Audit Logs from March 31",    "Exploitation confirmed from that date. Look for unauthenticated API calls and unexpected policy modifications."),
-    ("④", "Validate Policy Integrity",   "If EMS was accessible and unpatched, treat endpoint configs as potentially tampered. Re-push known-good baselines."),
-    ("⑤", "Map the Blast Radius",        "VPN profiles, firewall rules, compliance posture — all within EMS scope. Know what's at stake before an incident.")
+    ("①", "Disable Passive Updates", "Locate and disable automatic background updates in all local AI tools. Reclaim state control over your environment."),
+    ("②", "Enforce Pull-and-Verify", "Transition to manual updates. Always pull installers from official developer channels and verify SHA-256 hashes against published checksums before executing."),
+    ("③", "Sandbox Emerging Toolsets", "Isolate untrusted AI packages and their update routines within containers or sandboxed environments to insulate the host OS from potential supply chain contamination.")
 ]
-CARD3_CLOSE  = "When the tool distributing your security policies is the exploit surface, the policy itself is the attacker's first target."
+CARD3_CLOSE  = "Automation is for scale; manual verification is for survival. Never let the speed of your tools outrun the rigor of your defense."
 
 CARD4_HEADLINE = f"Edition {EDITION_NUMBER}"
 CARD4_SUBHEAD  = "is live."
 CARD4_BULLETS  = [
-    "FortiClient EMS CVE-2026-35616 — Pre-Auth RCE, CVSS 9.1, Zero-Day Exploitation from March 31, Hotfix Available",
-    "Samsung MagicINFO CVE-2024-7399 — CISA KEV April 24, Mirai Botnet Active Exploitation, May 8 Federal Deadline",
-    "Storm-1747 Tycoon2FA — 100K+ Orgs Compromised, AI-Enhanced AiTM, 62% of Microsoft-Blocked Phishing Volume",
-    "AI Device Code Phishing — Microsoft Documents Fully Automated OAuth Token Capture Targeting Entra ID Tenants",
-    "Nation-State Machine Speed — Armis 2026 Report: AI-Compressed Intrusion Timelines, Volt Typhoon Pre-Positioning"
+    "Weaver E-cology Under Fire: Unauthenticated RCE via Debug Endpoint (CVE-2026-22679)",
+    "Emergency Chrome Update: Triage for High-Severity Zero-Day (CVE-2026-2441)",
+    "Ollama Windows Alert: Silent Malware via Subverted Auto-Updates (CVE-2026-42249)",
+    "Hypersonic Supply Chain Defense: Detecting Payloads Without Knowing the Content",
+    "Building for the Agentic Workforce: Is Your Enterprise Architecture Ready?"
 ]
 CARD4_URL = "cybersense.solutions/newsletter"
 
@@ -260,17 +258,17 @@ def make_card2(fonts):
     y = draw_wrapped(draw, CARD2_BODY1, fonts['body'], 60, 410, W-120, color=GRAY_LIGHT, line_height=40)
     
     # Increase gap between paragraphs (y += 40)
-    y += 40 
-    y = draw_wrapped(draw, CARD2_BODY2, fonts['body'], 60, y, W-120, color=GRAY_LIGHT, line_height=40)
+    y += 30 
+    y = draw_wrapped(draw, CARD2_BODY2, fonts['body'], 60, y, W-120, color=GRAY_LIGHT, line_height=30)
     
     # 4. Stat Box (Push it further down)
     # --- Refined Stat Box ---
-    y += 60 
+    y += 40 
     box_height = 110  # Slightly taller for better vertical centering
     draw.rounded_rectangle([60, y, W-60, y + box_height], radius=12, fill=(6, 18, 38), outline=CYAN_DIM)
     
     # Increase horizontal padding from 100 to 120
-    stat_x = 110 
+    stat_x = 100 
     # Center items vertically within the box_height
     # (y + box_height/2) is the middle line
     
@@ -333,11 +331,11 @@ def make_card3(fonts):
         # Description with more leading
         draw_wrapped(draw, desc, fonts['body'], text_x, y + 40, W-180, color=GRAY_MID, line_height=25) # Decrease line height for longer descriptions
         
-        y += 80  # Increased spacing between steps (from 100 to 125)
+        y += 125  # Increased spacing between steps (from 100 to 125)
     
     # 5. Footer Line and Closing Text
     draw.rectangle([60, y + 10, W-60, y + 12], fill=CYAN_DIM)
-    draw_wrapped(draw, CARD3_CLOSE, fonts['h3'], 60, y + 35, W-120, color=CYAN, line_height=42)
+    draw_wrapped(draw, CARD3_CLOSE, fonts['body'], 60, y + 35, W-120, color=CYAN, line_height=42)
     
     draw_bottom_bar(draw)
     draw_wordmark(draw, fonts)
@@ -383,7 +381,7 @@ def make_card4(fonts):
         
         # 3. Item text with more room
         draw_wrapped(draw, item, fonts['body'], 105, y, W-160, color=GRAY_LIGHT, line_height=34)
-        y += 100 # Increased space between bullet points
+        y += 90 # Increased space between bullet points
     
     # 4. Clean URL (Centered, no button box)
     url_y = H - 220

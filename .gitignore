@@ -8,3 +8,4 @@ node_modules/
 api_layer/package-lock.json
 engineernotes.md
 carousel_*.png
+.tools/.env
