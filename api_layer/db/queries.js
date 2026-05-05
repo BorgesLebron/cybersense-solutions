@@ -219,6 +219,9 @@ const advanceBriefingStatus = (id, to_status) =>
         published_at         = CASE WHEN $3='published' AND published_at        IS NULL THEN now() ELSE published_at        END
       WHERE id=$1 RETURNING *`, [id, to_status, to_status]);
 
+const revertBriefingForRevision = (id) =>
+  q1(`UPDATE briefings SET pipeline_status='maya', maya_approved_at=NULL WHERE id=$1 RETURNING *`, [id]);
+
 // ── PIPELINE EVENTS ────────────────────────────────────────────────────────────
 
 const logPipelineEvent = ({ content_type, content_id, from_status, to_status, agent_name, notes }) =>
@@ -597,7 +600,7 @@ module.exports = {
   createIntelItem, getIntelItems,
   processIntoRepository, getRepositoryQueue,
   createArticle, getArticle, getArticleById, listArticles, advanceArticleStatus, incrementArticleViews,
-  createBriefing, getBriefingByDate, getBriefingById, listBriefings, advanceBriefingStatus,
+  createBriefing, getBriefingByDate, getBriefingById, listBriefings, advanceBriefingStatus, revertBriefingForRevision,
   logPipelineEvent, countRejections, countAgentRejections24h,
   createSocialPost, updateSocialMetrics, listSocialPosts, getSocialPerformance,
   createTrainingModule, listTrainingModules, getTrainingModule, advanceModuleStatus,
