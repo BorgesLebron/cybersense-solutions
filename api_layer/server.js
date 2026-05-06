@@ -36,10 +36,10 @@ app.use(helmet(ADMIN_ONLY ? {
   contentSecurityPolicy: {
     directives: {
       defaultSrc:  ["'self'"],
-      scriptSrc:   ["'self'", "'unsafe-inline'"],
+      scriptSrc:   ["'self'", "'unsafe-inline'", "https://static.cloudflareinsights.com"],
       styleSrc:    ["'self'", "'unsafe-inline'"],
-      connectSrc:  ["'self'"],
-      imgSrc:      ["'self'", "data:"],
+      connectSrc:  ["'self'", "https://static.cloudflareinsights.com", "https://cloudflareinsights.com"],
+      imgSrc:      ["'self'", "data:", "https://raw.githubusercontent.com"],
     },
   },
 } : {}));
