@@ -130,6 +130,17 @@
     return data.user;
   }
 
+  async function adminLogin({ email, password }) {
+    const data = await apiFetch('/api/auth/admin-login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+    setToken(data.admin_token);
+    const adminUser = { admin_role: { role: data.role } };
+    setUser(adminUser);
+    return adminUser;
+  }
+
   async function logout() {
     try {
       await apiFetch('/api/auth/logout', { method: 'POST' });
@@ -1002,13 +1013,7 @@
       setLoading(btn, true, 'Authenticating…');
 
       try {
-        const user = await login({ email, password });
-
-        if (!isAdminUser(user)) {
-          await logout();
-          showError(errorEl, 'Access denied. Administrator credentials required.');
-          return;
-        }
+        const user = await adminLogin({ email, password });
 
         // Update nav logout button
         document.getElementById('nav-logout').style.display = 'block';
