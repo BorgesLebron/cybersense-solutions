@@ -136,6 +136,7 @@
       body: JSON.stringify({ email, password }),
     });
     setToken(data.admin_token);
+    sessionStorage.setItem('cs_admin_token', data.admin_token);
     const adminUser = { admin_role: { role: data.role } };
     setUser(adminUser);
     return adminUser;
@@ -146,6 +147,7 @@
       await apiFetch('/api/auth/logout', { method: 'POST' });
     } catch (e) { /* best effort */ }
     clearToken();
+    sessionStorage.removeItem('cs_admin_token');
     setUser(null);
     onLogout();
   }
@@ -208,6 +210,12 @@
       try {
         const profile = await apiFetch('/api/users/me');
         setUser(profile);
+        // On admin pages, restore stored admin token so applyPageGates fires
+        // with the correct token type (type:'admin') instead of the user token
+        const storedAdminToken = sessionStorage.getItem('cs_admin_token');
+        if (storedAdminToken && isAdminUser(profile)) {
+          setToken(storedAdminToken);
+        }
         onLogin(profile);
       } catch (e) {
         clearToken();
