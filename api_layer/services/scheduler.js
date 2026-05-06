@@ -1,6 +1,7 @@
 'use strict';
 
 // services/scheduler.js
+const { pollRuthTasks } = require('./ruth_runtime');
 // Scheduled jobs: nightly dashboard snapshot, awareness pipeline health check,
 // SLA breach monitoring, and daily financial summary trigger.
 // In production: run via node-cron, pg_cron, or AWS EventBridge.
@@ -636,10 +637,12 @@ function startScheduler() {
     // Content + credentials
     cron.schedule('0 0 * * 1-5',    runMidnightContentUpdate,      { timezone: 'America/Chicago' });
     cron.schedule('0 23 * * 0',     runLinkedInTokenRefresh,       { timezone: 'America/Chicago' });
-    // Awareness pipeline kickoff
+    // Awareness pipeline kickoff + runtime poll
     cron.schedule('30 4 * * 1-5',   runRuthDailyCycle,             { timezone: 'America/Chicago' });
     cron.schedule('0 7 * * 1-5',    runOliverDailyPost,            { timezone: 'America/Chicago' });
-    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SCHEDULER_STARTED', jobs: 17 }));
+    // Ruth runtime: poll every 2 min during pipeline window (04:00–09:30 CT, Mon–Fri)
+    cron.schedule('*/2 4-9 * * 1-5', pollRuthTasks,                { timezone: 'America/Chicago' });
+    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SCHEDULER_STARTED', jobs: 18 }));
   } catch (e) {
     console.warn('node-cron not installed — scheduler disabled. Install with: npm install node-cron');
   }
@@ -664,4 +667,5 @@ module.exports = {
   runLinkedInTokenRefresh,
   runRuthDailyCycle,
   runOliverDailyPost,
+  pollRuthTasks,
 };
