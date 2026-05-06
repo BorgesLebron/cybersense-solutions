@@ -35,11 +35,12 @@ app.set('trust proxy', 1);
 app.use(helmet(ADMIN_ONLY ? {
   contentSecurityPolicy: {
     directives: {
-      defaultSrc:  ["'self'"],
-      scriptSrc:   ["'self'", "'unsafe-inline'", "https://static.cloudflareinsights.com"],
-      styleSrc:    ["'self'", "'unsafe-inline'"],
-      connectSrc:  ["'self'", "https://static.cloudflareinsights.com", "https://cloudflareinsights.com"],
-      imgSrc:      ["'self'", "data:", "https://raw.githubusercontent.com"],
+      defaultSrc:    ["'self'"],
+      scriptSrc:     ["'self'", "'unsafe-inline'", "https://static.cloudflareinsights.com"],
+      scriptSrcAttr: ["'unsafe-inline'"],
+      styleSrc:      ["'self'", "'unsafe-inline'"],
+      connectSrc:    ["'self'", "https://static.cloudflareinsights.com", "https://cloudflareinsights.com"],
+      imgSrc:        ["'self'", "data:", "https://raw.githubusercontent.com"],
     },
   },
 } : {}));
