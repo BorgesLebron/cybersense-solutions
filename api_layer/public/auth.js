@@ -17,6 +17,7 @@
   ───────────────────────────────────────────────────────────────── */
   let _accessToken = null;
   let _refreshPromise = null;
+  const SESSION_EXPIRED_MESSAGE = 'Your session has expired. Please log in again.';
 
   const TIER_RANK = { free: 0, freemium: 1, monthly: 2, enterprise: 3 };
 
@@ -284,9 +285,28 @@
 
   function handleSessionExpired() {
     clearToken();
+    sessionStorage.removeItem('cs_admin_token');
     setUser(null);
-    showToast('Your session has expired. Please sign in again.', 'warning');
+    sessionStorage.setItem('cs_auth_notice', SESSION_EXPIRED_MESSAGE);
+    showToast(SESSION_EXPIRED_MESSAGE, 'warning');
     onGuest();
+    renderAuthNotice();
+  }
+
+  function renderAuthNotice() {
+    const msg = sessionStorage.getItem('cs_auth_notice');
+    if (!msg) return;
+    const form = document.getElementById('login-form');
+    if (!form) return;
+
+    let notice = document.getElementById('admin-auth-notice');
+    if (!notice) {
+      notice = document.createElement('div');
+      notice.id = 'admin-auth-notice';
+      notice.style.cssText = 'margin-bottom:14px;padding:10px 12px;border:1px solid #FDE68A;border-radius:8px;background:#FFFBEB;color:#854F0B;font-size:12px;line-height:1.4;text-align:center;';
+      form.prepend(notice);
+    }
+    notice.textContent = msg;
   }
 
   /* ─────────────────────────────────────────────────────────────────
@@ -1025,6 +1045,7 @@
   function initAdminDashboardPage() {
     const loginForm = document.getElementById('login-form');
     if (!loginForm) return;
+    renderAuthNotice();
 
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -1044,6 +1065,7 @@
       setLoading(btn, true, 'Authenticating…');
 
       try {
+        sessionStorage.removeItem('cs_auth_notice');
         const user = await adminLogin({ email, password });
 
         // Update nav logout button
