@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://ops.cybersense.solutions https://static.cloudflareinsights.com https://cloudflareinsights.com; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; script-src-attr 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://raw.githubusercontent.com;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://ops.cybersense.solutions https://cybersense.solutions https://static.cloudflareinsights.com https://cloudflareinsights.com; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; script-src-attr 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://raw.githubusercontent.com;">
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png">
 <title>CyberSense Admin — Preview &amp; Production</title>
 <script>window.CS_API_BASE = 'https://ops.cybersense.solutions';</script>
@@ -99,6 +99,10 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
 
 /* briefing body — scrollable preview */
 .bc-preview{max-height:420px;overflow-y:auto;padding:18px;border-bottom:0.5px solid var(--color-border-tertiary);}
+.newsletter-inline{margin-top:16px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);overflow:hidden;background:var(--color-background-primary);}
+.newsletter-inline-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border-bottom:0.5px solid var(--color-border-tertiary);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-tertiary);}
+.newsletter-inline-frame{width:100%;height:720px;border:0;background:#fff;display:block;}
+.newsletter-inline-empty{padding:24px;text-align:center;color:var(--color-text-tertiary);font-size:12px;}
 .preview-section-title{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:10px;margin-top:18px;}
 .preview-section-title:first-child{margin-top:0;}
 .preview-item{padding:12px 14px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);margin-bottom:8px;}
@@ -428,7 +432,7 @@ function transformBriefing(b) {
     edition:         b.edition_number ? 'Edition ' + b.edition_number : 'Latest Edition',
     date:            d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' }),
     headline:        b.subject_line || '',
-    file_path:       b.file_path || null,
+    file_path:       b.file_path || buildBriefingPath(b),
     maya_approved_at: b.maya_approved_at,
     maya_note:       b.maya_note || null,
     status:          'awaiting_approval',
@@ -441,6 +445,17 @@ function transformBriefing(b) {
     ],
     items: b.items || [],
   };
+}
+
+function buildBriefingPath(b) {
+  if (!b?.edition_date || !b?.edition_number) return null;
+  const d = new Date(b.edition_date + 'T12:00:00Z');
+  if (Number.isNaN(d.getTime())) return null;
+  const month = d.toLocaleString('en-US', { month: 'long', timeZone: 'UTC' });
+  const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(d.getUTCDate()).padStart(2, '0');
+  const yyyy = d.getUTCFullYear();
+  return `/newsletter/${yyyy}/${month}/${mm}${dd}${yyyy}_edition${b.edition_number}.html`;
 }
 
 async function loadBriefings() {
@@ -470,6 +485,7 @@ function renderBriefings() {
   document.getElementById('dot-briefing').style.background = pending.length ? '#F59E0B' : '#1D9E75';
 
   el.innerHTML = briefings.map(b => renderBriefingCard(b)).join('');
+  loadInlineNewsletterPreviews();
 }
 
 function renderBriefingCard(b) {
@@ -503,6 +519,16 @@ function renderBriefingCard(b) {
     </div>`).join('');
 
   (b.items || []).forEach((item, i) => { BRIEFING_ITEMS_STORE[b.id + '_' + i] = item; });
+  const inlineNewsletterHtml = b.file_path
+    ? `<div class="newsletter-inline" id="newsletter-inline-${b.id}">
+        <div class="newsletter-inline-hd">
+          <span>Full Newsletter Preview</span>
+          <span id="newsletter-inline-status-${b.id}">Loading</span>
+        </div>
+        <iframe class="newsletter-inline-frame" id="newsletter-frame-${b.id}" sandbox="" title="${b.edition} full newsletter preview"></iframe>
+      </div>`
+    : `<div class="newsletter-inline-empty">No newsletter file path is attached to this briefing.</div>`;
+
   const itemsHtml = b.items && b.items.length
     ? b.items.map((item, i) => `
     <div class="preview-item clickable" onclick="openItemDetail('${b.id}', ${i})" title="Click to read item details">
@@ -515,9 +541,7 @@ function renderBriefingCard(b) {
         <span style="font-size:11px;color:var(--color-text-tertiary);white-space:nowrap;padding-top:2px;flex-shrink:0;">Read →</span>
       </div>
     </div>`).join('')
-    : b.file_path
-      ? `<div style="padding:20px 0;text-align:center;"><a href="${b.file_path}" target="_blank" style="color:var(--color-text-info);font-size:13px;text-decoration:none;font-weight:500;">View full edition →</a></div>`
-      : `<div style="padding:20px 0;text-align:center;color:var(--color-text-tertiary);font-size:12px;">No preview available.</div>`;
+    : `<div style="padding:20px 0;text-align:center;color:var(--color-text-tertiary);font-size:12px;">No itemized preview available.</div>`;
 
   const mavenApproved = b.checklist.find(c => c.id === 'maya')?.done;
   const execReady = mavenApproved && !execDone;
@@ -567,6 +591,7 @@ function renderBriefingCard(b) {
     <div class="bc-preview">
       <div class="preview-section-title">Briefing Contents — 7 Items</div>
       ${itemsHtml}
+      ${inlineNewsletterHtml}
     </div>
 
     <div class="approval-checklist">
@@ -579,6 +604,34 @@ function renderBriefingCard(b) {
       ${execReady ? `<button class="action-btn primary" onclick="approveBriefing('${b.id}')">Approve &amp; Authorize Distribution</button>` : ''}
     </div>
   </div>`;
+}
+
+function newsletterUrl(filePath) {
+  const path = filePath.startsWith('/') ? filePath : '/' + filePath;
+  return `https://cybersense.solutions${path}`;
+}
+
+async function loadInlineNewsletterPreviews() {
+  const withFiles = briefings.filter(b => b.file_path && !distributionState[b.id]);
+  await Promise.all(withFiles.map(async b => {
+    const status = document.getElementById(`newsletter-inline-status-${b.id}`);
+    const frame = document.getElementById(`newsletter-frame-${b.id}`);
+    if (!frame) return;
+    try {
+      const url = newsletterUrl(b.file_path);
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const html = await res.text();
+      frame.srcdoc = html.replace(/<head([^>]*)>/i, `<head$1><base href="https://cybersense.solutions/">`);
+      if (status) status.textContent = 'Loaded';
+    } catch (e) {
+      if (status) status.textContent = 'Unavailable';
+      frame.replaceWith(Object.assign(document.createElement('div'), {
+        className: 'newsletter-inline-empty',
+        textContent: `Unable to load inline newsletter preview: ${e.message}`,
+      }));
+    }
+  }));
 }
 
 function formatTime(iso) {
