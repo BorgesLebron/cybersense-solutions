@@ -94,6 +94,23 @@ router.post('/intel-items', requireAgentToken(['Ivan/Charlie', 'Henry']), async 
 
     const item = await db.createIntelItem({ type, category, headline, summary, tags, priority, ingested_by: req.agent.name });
 
+    await db.processIntoRepository({
+      source_type: item.type,
+      source_id: item.id,
+      normalized_data: {
+        type: item.type,
+        category: item.category,
+        title: item.headline,
+        summary: item.summary,
+        priority: item.priority,
+        tags: item.tags,
+      },
+      correlation_tags: item.tags || [],
+      processed_by: req.agent.name,
+      ready_for_intel: true,
+      ready_for_awareness: true,
+    });
+
     const task = await db.createTask({
       agent_name: 'Barbara',
       task_type: 'normalize_intel',
