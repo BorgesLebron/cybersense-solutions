@@ -159,6 +159,96 @@ const getRepositoryQueue = ({ pipeline, limit = 30 } = {}) => {
             WHERE r.${col}=true ORDER BY r.processed_at ASC LIMIT $1`, [limit]);
 };
 
+const listApprovedBriefingPreviews = () =>
+  q(`SELECT b.id, b.edition_number, b.edition_date, b.subject_line, b.file_path,
+            b.maya_approved_at, b.pipeline_status,
+            COALESCE(jsonb_agg(item.data ORDER BY item.sort_order) FILTER (WHERE item.data IS NOT NULL), '[]'::jsonb) AS items
+     FROM briefings b
+     LEFT JOIN LATERAL (
+       SELECT x.ord AS sort_order,
+              jsonb_build_object(
+                'type', 'threat',
+                'source_type', 'threat',
+                'source_id', x.id,
+                'label', 'Threat Item ' || x.ord || ' / 3',
+                'title', COALESCE(t.threat_name, r.normalized_data->>'title', 'Threat Item'),
+                'source', COALESCE(t.source_url, r.normalized_data->>'source_url', 'Threat records'),
+                'repository_id', r.id
+              ) AS data
+       FROM unnest(b.threat_item_ids) WITH ORDINALITY AS x(id, ord)
+       LEFT JOIN threat_records t ON t.id = x.id
+       LEFT JOIN intel_repository r ON r.source_id = x.id
+
+       UNION ALL
+
+       SELECT 10 + x.ord AS sort_order,
+              jsonb_build_object(
+                'type', 'innovation',
+                'source_type', 'innovation',
+                'source_id', x.id,
+                'label', 'Innovation Item ' || x.ord || ' / 2',
+                'title', COALESCE(i.headline, r.normalized_data->>'title', 'Innovation Item'),
+                'source', COALESCE(i.category, r.normalized_data->>'category', 'Innovation intelligence'),
+                'repository_id', r.id
+              ) AS data
+       FROM unnest(b.innovation_item_ids) WITH ORDINALITY AS x(id, ord)
+       LEFT JOIN intel_items i ON i.id = x.id
+       LEFT JOIN intel_repository r ON r.source_id = x.id
+
+       UNION ALL
+
+       SELECT 20 AS sort_order,
+              jsonb_build_object(
+                'type', 'growth',
+                'source_type', 'growth',
+                'source_id', b.growth_item_id,
+                'label', 'Growth Item 1 / 1',
+                'title', COALESCE(i.headline, r.normalized_data->>'title', 'Growth Item'),
+                'source', COALESCE(i.category, r.normalized_data->>'category', 'Growth intelligence'),
+                'repository_id', r.id
+              ) AS data
+       FROM intel_items i
+       LEFT JOIN intel_repository r ON r.source_id = i.id
+       WHERE i.id = b.growth_item_id
+
+       UNION ALL
+
+       SELECT 30 AS sort_order,
+              jsonb_build_object(
+                'type', 'training',
+                'source_type', 'training',
+                'source_id', b.training_byte_id,
+                'label', 'Training Byte',
+                'title', COALESCE(tm.title, 'Training Byte'),
+                'source', 'Training modules',
+                'repository_id', null
+              ) AS data
+       FROM training_modules tm
+       WHERE tm.id = b.training_byte_id
+     ) item ON true
+     WHERE b.pipeline_status = 'approved'
+     GROUP BY b.id
+     ORDER BY b.edition_date DESC`);
+
+const getRepositoryItemDetail = (id) =>
+  q1(`SELECT r.id AS repository_id, r.source_type, r.source_id, r.normalized_data,
+             r.correlation_tags, r.ready_for_intel, r.ready_for_awareness,
+             r.processed_by, r.processed_at,
+             CASE r.source_type WHEN 'threat' THEN t.threat_name ELSE i.headline END AS title,
+             CASE r.source_type WHEN 'threat' THEN t.source_url ELSE i.category END AS source,
+             CASE r.source_type WHEN 'threat' THEN t.category ELSE i.category END AS category,
+             CASE r.source_type WHEN 'threat' THEN t.severity ELSE NULL END AS severity,
+             CASE r.source_type WHEN 'threat' THEN t.cvss_score ELSE NULL END AS cvss_score,
+             CASE r.source_type WHEN 'threat' THEN t.raw_data ELSE NULL END AS raw_threat_data,
+             CASE r.source_type WHEN 'threat' THEN NULL ELSE i.summary END AS item_summary,
+             CASE r.source_type WHEN 'threat' THEN t.tags ELSE i.tags END AS tags,
+             CASE r.source_type WHEN 'threat' THEN t.priority::text ELSE i.priority::text END AS priority
+      FROM intel_repository r
+      LEFT JOIN threat_records t ON t.id = r.source_id AND r.source_type = 'threat'
+      LEFT JOIN intel_items i ON i.id = r.source_id AND r.source_type IN ('innovation','growth','policy')
+      WHERE r.source_id = $1 OR r.id = $1
+      LIMIT 1`, [id]);
+
 // ── ARTICLES ───────────────────────────────────────────────────────────────────
 
 const createArticle = ({ title, section, body_md, access_tier, source_ids, created_by }) => {
@@ -598,7 +688,7 @@ module.exports = {
   getAgentToken, rotateAgentToken,
   createThreatRecord, getThreatRecords, getThreatById, linkThreatToArticle,
   createIntelItem, getIntelItems,
-  processIntoRepository, getRepositoryQueue,
+  processIntoRepository, getRepositoryQueue, listApprovedBriefingPreviews, getRepositoryItemDetail,
   createArticle, getArticle, getArticleById, listArticles, advanceArticleStatus, incrementArticleViews,
   createBriefing, getBriefingByDate, getBriefingById, listBriefings, advanceBriefingStatus, revertBriefingForRevision,
   logPipelineEvent, countRejections, countAgentRejections24h,

@@ -679,13 +679,16 @@ adminRouter.get('/audit', requireAdminToken(['gm']), async (req, res, next) => {
 // Returns briefings with pipeline_status='approved' — the Preview Briefing queue
 adminRouter.get('/briefings/preview', requireAdminToken(), async (req, res, next) => {
   try {
-    const briefings = await db.pool.query(`
-      SELECT id, edition_number, edition_date, subject_line, file_path, maya_approved_at, pipeline_status
-      FROM briefings
-      WHERE pipeline_status = 'approved'
-      ORDER BY edition_date DESC
-    `).then(r => r.rows);
+    const briefings = await db.listApprovedBriefingPreviews();
     res.json({ data: briefings });
+  } catch (e) { next(e); }
+});
+
+adminRouter.get('/repository/items/:id', requireAdminToken(), async (req, res, next) => {
+  try {
+    const item = await db.getRepositoryItemDetail(req.params.id);
+    if (!item) return res.status(404).json(err('NOT_FOUND', 'Repository item not found'));
+    res.json(item);
   } catch (e) { next(e); }
 });
 
