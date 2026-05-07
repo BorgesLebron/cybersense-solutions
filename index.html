@@ -301,17 +301,8 @@ async function loadHomeData(user) {
   // ── Briefing Preview ───────────────────────────────────────────
   if (user) {
     try {
-      const LATEST_STATIC = {
-        edition_date: ‘2026-05-06’, edition_number: 118,
-        subject_line: ‘Mass Exploitation Surge: cPanel, Linux Kernel, and Fortinet EMS’,
-        description: `A critical authentication bypass in cPanel and WHM (CVE-2026-41940, CVSS 9.8) is enabling mass exploitation across thousands of exposed hosting servers, with the Sorry ransomware deploying as the primary payload and confirmed victims across government, military, and MSP sectors. Simultaneously, CISA has added a Linux kernel local privilege escalation (CVE-2026-31431) to its KEV catalog, affecting every major distribution since 2017 with a federal patch deadline of May 15. FortiClient EMS accumulates a second CISA KEV entry as CVE-2026-35616 extends an existing RCE into a chained attack path through the endpoint management plane.`,
-        file_path: ‘/newsletter/2026/May/05062026_edition118.html’
-      };
-
-      const briefingData = await CS.Auth.apiFetch('/api/content/briefings?limit=1');
-      const apiLatest = (briefingData.data || [])[0] || null;
-      const b = (!apiLatest || new Date(LATEST_STATIC.edition_date) >= new Date(apiLatest.edition_date))
-        ? LATEST_STATIC : apiLatest;
+      const briefingData = await CS.Auth.apiFetch('/api/content/briefings?limit=3');
+      const b = normalizeBriefing((briefingData.data || [])[0] || null);
 
       if (b) {
         const dateStr = new Date(b.edition_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
@@ -330,6 +321,22 @@ async function loadHomeData(user) {
     link.href = '#';
     link.setAttribute('onclick', 'CS.Auth.showLoginModal();return false;');
   }
+}
+
+function buildBriefingPath(briefing) {
+  if (!briefing?.edition_date || !briefing?.edition_number) return null;
+  const d = new Date(briefing.edition_date);
+  if (Number.isNaN(d.getTime())) return null;
+  const month = d.toLocaleString('en-US', { month: 'long', timeZone: 'UTC' });
+  const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(d.getUTCDate()).padStart(2, '0');
+  const yyyy = d.getUTCFullYear();
+  return `/newsletter/${yyyy}/${month}/${mm}${dd}${yyyy}_edition${briefing.edition_number}.html`;
+}
+
+function normalizeBriefing(briefing) {
+  if (!briefing) return null;
+  return { ...briefing, file_path: briefing.file_path || buildBriefingPath(briefing) };
 }
 
 document.addEventListener('cs:login', (e) => loadHomeData(e.detail));

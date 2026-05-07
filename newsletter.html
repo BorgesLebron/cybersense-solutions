@@ -213,65 +213,21 @@ function toggleArchive() {
   }
 }
 
-// Static edition records for editions not yet registered in the pipeline DB.
-// Prepended to API results and deduped by edition_date.
-// Update this list each time a new edition is published.
-const STATIC_EDITIONS = [
-{
-    edition_date: ‘2026-05-06’, edition_number: 118,
-    subject_line: ‘Mass Exploitation Surge: cPanel, Linux Kernel, and Fortinet EMS’,
-    description: `A critical authentication bypass in cPanel and WHM (CVE-2026-41940, CVSS 9.8) is enabling mass exploitation across thousands of exposed hosting servers, with the Sorry ransomware deploying as the primary payload and confirmed victims across government, military, and MSP sectors. Simultaneously, CISA has added a Linux kernel local privilege escalation (CVE-2026-31431) to its KEV catalog, affecting every major distribution since 2017 with a federal patch deadline of May 15. FortiClient EMS accumulates a second CISA KEV entry as CVE-2026-35616 extends an existing RCE into a chained attack path through the endpoint management plane.`,
-    file_path: ‘/newsletter/2026/May/05062026_edition118.html’, pipeline_status: ‘published’
-  },
-{
-    edition_date: ‘2026-05-05’, edition_number: 117,
-    subject_line: ‘The Infrastructure Paradox’,
-    description: `Today’s brief examines a critical paradox in the modern attack surface: the mechanisms designed to maintain system health (automated update pipelines and management interfaces) have become primary vectors for institutional compromise. As enterprise management software faces exploitation via overlooked debug endpoints and AI-assisted discovery subverts traditional update logic, the "trust-by-default" model of software maintenance is being fundamentally recalculated. Bridging the gap between operational agility and structural integrity now requires a transition toward rigorous verification of the local development environment and a hardening of the identity perimeter.`,
-    file_path: ‘/newsletter/2026/May/05052026_edition117.html’, pipeline_status: ‘published’
-  },
-{
-    edition_date: '2026-05-04', edition_number: 116,
-    subject_line: 'Sixty-Day Blind Spot',
-    description: `On April 28, cPanel’s PSIRT disclosed CVE-2026-41940, a critical CRLF injection flaw that chains session writer injection with encryption-skip logic to grant unauthenticated root access. The advisory confirmed a 60-day "shadow window" of active exploitation dating back to February 2026, affecting an estimated 1.5 million exposed instances before public mitigation was possible. Simultaneously, Microsoft addressed CVE-2026-33827, a zero-click IPv6 kernel race condition allowing unauthenticated remote code execution (RCE) across Windows environments from 2012 R2 to 2025. Adding to the volatility, the MSRC confirmed that APT28 is actively weaponizing CVE-2026-32202—utilizing malicious LNK files to automate NTLM credential capture. This zero-click technique requires no user interaction beyond directory navigation, funneling Net-NTLMv2 hashes directly to GRU-affiliated relay infrastructure.`,
-    file_path: '/newsletter/2026/May/05042026_edition116.html', pipeline_status: 'published'
-  },  
-  {
-    edition_date: '2026-05-01', edition_number: 115,
-    subject_line: 'Backup Blind Spot: Veeam RCE, Ivanti MDM, and VMware vCenter',
-    description: `CVE-2026-27082 (CVSS 9.8) in Veeam Backup & Replication was actively exploited by ransomware operators to destroy backup repositories before deploying primary payloads — eliminating recovery before the ransom demand arrives. Ivanti EPMM disclosed twin pre-auth RCEs (CVE-2026-1281 and CVE-2026-1340, both CVSS 9.8) enabling backdoor and web shell deployment across government and healthcare sectors in four countries. VMware vCenter Server VMSA-2026-0019 documents a heap overflow granting any authenticated user SYSTEM-level hypervisor control.`,
-    file_path: '/newsletter/2026/May/05012026_edition115.html', pipeline_status: 'published'
-  },
-  {
-    edition_date: '2026-04-30', edition_number: 114,
-    subject_line: 'Stack Under Siege: GitHub RCE, cPanel Bypass, and ASP.NET Forgery',
-    description: `CVE-2026-3854 disclosed April 28 by Wiz Research landed on GitHub's foundational git push pipeline — any authenticated user with push access to any repository could achieve full remote code execution on GitHub's backend infrastructure via a single crafted git command, with 88% of internet-exposed GitHub Enterprise Server instances remaining unpatched at the time of public disclosure. Simultaneously, cPanel disclosed CVE-2026-41940, a critical authentication bypass affecting all supported versions of cPanel and WHM...`,
-    file_path: '/newsletter/2026/Apr/04302026_edition114.html', pipeline_status: 'published'
-  },  
-  {
-    edition_date: '2026-04-29', edition_number: 113,
-    subject_line: `Log In, Don't Break In: Windows Credential Theft, ScreenConnect's Return, and the New Math of Attacker Economics`,
-    description: 'FortiClient EMS (CVSS 9.1) enables unauthenticated command execution on the endpoint management console. Samsung MagicINFO is under active Mirai botnet exploitation with a CISA KEV May 8 federal deadline. Storm-1747\'s Tycoon2FA has crossed 100,000 compromised organizations by defeating MFA via real-time session token interception.',
-    file_path: '/newsletter/2026/Apr/04292026_edition113.html', pipeline_status: 'published'
-  },  
-  {
-    edition_date: '2026-04-28', edition_number: 112,
-    subject_line: 'Management Plane Under Siege: Fortinet, Samsung, and AI-MFA Bypass',
-    description: 'FortiClient EMS (CVSS 9.1) enables unauthenticated command execution on the endpoint management console. Samsung MagicINFO is under active Mirai botnet exploitation with a CISA KEV May 8 federal deadline. Storm-1747\'s Tycoon2FA has crossed 100,000 compromised organizations by defeating MFA via real-time session token interception.',
-    file_path: '/newsletter/2026/Apr/04282026_edition112.html', pipeline_status: 'published'
-  },
-  {
-    edition_date: '2026-04-27', edition_number: 111,
-    subject_line: 'The Security Stack Under Attack – When Windows Defender, SD-WAN Controllers, and Enterprise Middleware Become the Entry Points',
-    description: 'Three CISA-designated exploits share a structural reality: the enterprise tools organizations deploy to defend and control their environments — Windows Defender, Cisco SD-WAN, and Apache ActiveMQ — are themselves under active exploitation.',
-    file_path: '/newsletter/2026/Apr/04272026_edition111.html', pipeline_status: 'published'
-  },
-  {
-    edition_date: '2026-04-24', edition_number: 110,
-    subject_line: 'The Identity Perimeter – When Credentials Are the Keys and Attackers Already Have Them',
-    description: 'Three credential-based incidents: MFA fatigue bypassing enterprise Okta, a CVSS 9.8 PAN-OS authentication bypass requiring no credentials, and active VMware vCenter exploitation in ransomware pre-positioning operations.',
-    file_path: '/newsletter/2026/Apr/04242026_edition110.html', pipeline_status: 'published'
-  }
-];
+function buildBriefingPath(briefing) {
+  if (!briefing?.edition_date || !briefing?.edition_number) return null;
+  const d = new Date(briefing.edition_date);
+  if (Number.isNaN(d.getTime())) return null;
+  const month = d.toLocaleString('en-US', { month: 'long', timeZone: 'UTC' });
+  const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(d.getUTCDate()).padStart(2, '0');
+  const yyyy = d.getUTCFullYear();
+  return `/newsletter/${yyyy}/${month}/${mm}${dd}${yyyy}_edition${briefing.edition_number}.html`;
+}
+
+function normalizeBriefing(briefing) {
+  if (!briefing) return null;
+  return { ...briefing, file_path: briefing.file_path || buildBriefingPath(briefing) };
+}
 
 async function loadNewsletter(user) {
   if (!user) {
@@ -281,12 +237,11 @@ async function loadNewsletter(user) {
   }
 
   try {
-    const data = await CS.Auth.apiFetch('/api/content/briefings?limit=200');
-    const apiDates = new Set((data.data || []).map(b => b.edition_date));
-    const briefings = [
-      ...STATIC_EDITIONS.filter(e => !apiDates.has(e.edition_date)),
-      ...(data.data || [])
-    ].sort((a, b) => new Date(b.edition_date) - new Date(a.edition_date));
+    const data = await CS.Auth.apiFetch('/api/content/briefings?limit=3');
+    const briefings = (data.data || [])
+      .map(normalizeBriefing)
+      .filter(Boolean)
+      .sort((a, b) => new Date(b.edition_date) - new Date(a.edition_date));
 
     if (briefings.length > 0) {
       renderSidebar(briefings);
