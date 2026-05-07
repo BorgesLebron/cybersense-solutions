@@ -27,6 +27,12 @@
     } catch (e) { return null; }
   }
 
+  function getStoredAdminSession() {
+    const token = sessionStorage.getItem('cs_admin_token');
+    const user = getUser();
+    return token && isAdminUser(user) ? { token, user } : null;
+  }
+
   function setUser(user) {
     if (user) {
       sessionStorage.setItem('cs_user', JSON.stringify(user));
@@ -204,6 +210,23 @@
     // Render cached profile immediately to eliminate the sign-in flash
     const cached = getUser();
     if (cached) updateNavForUser(cached);
+
+    const adminSession = getStoredAdminSession();
+    if (adminSession) {
+      setToken(adminSession.token);
+      try {
+        const profile = await apiFetch('/api/admin/me');
+        setUser(profile);
+        onLogin(profile);
+        return;
+      } catch (e) {
+        clearToken();
+        sessionStorage.removeItem('cs_admin_token');
+        setUser(null);
+        onGuest();
+        return;
+      }
+    }
 
     const refreshed = await silentRefresh();
     if (refreshed) {
