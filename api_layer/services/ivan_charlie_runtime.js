@@ -20,7 +20,7 @@ const API_BASE = () =>
   process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
 
 const POLL_WINDOW_HOURS = 12;
-const RECENCY_HOURS = 168;
+const RECENCY_HOURS = 720;
 
 const FEEDS = [
   {
@@ -137,7 +137,7 @@ function parseFeedItems(xml) {
 }
 
 function normalizeFeedItem(block, feed) {
-  const published = xmlValue(block, 'pubDate') || xmlValue(block, 'published') || xmlValue(block, 'updated');
+  const published = xmlValue(block, 'pubDate') || xmlValue(block, 'published') || xmlValue(block, 'updated') || xmlValue(block, 'dc:date') || xmlValue(block, 'date');
   if (!isRecent(published)) return null;
 
   const title = decodeXml(xmlValue(block, 'title'));
@@ -152,7 +152,7 @@ function normalizeFeedItem(block, feed) {
     headline: title.slice(0, 220),
     summary: summary.slice(0, 1200),
     tags: feed.tags,
-    priority: feed.type === 'growth' ? 'medium' : 'high',
+    priority: feed.type === 'growth' ? 'normal' : 'high',
     source_url: link,
     published_at: published,
   };

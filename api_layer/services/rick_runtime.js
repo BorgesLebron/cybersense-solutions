@@ -21,6 +21,7 @@ const API_BASE = () =>
 
 const POLL_WINDOW_HOURS = 12;
 const RECENCY_HOURS = 48;
+const MAX_SUBMISSIONS = 20;
 const CISA_KEV_URL = 'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json';
 const NVD_CVE_URL = 'https://services.nvd.nist.gov/rest/json/cves/2.0';
 const US_CERT_URL = 'https://www.cisa.gov/uscert/ncas/current-activity.xml';
@@ -258,7 +259,7 @@ async function executeRickThreatIngest(task) {
   await db.updateTask(task.id, { status: 'in_progress' });
 
   try {
-    const records = await filterNewRecords(await collectThreatRecords());
+    const records = (await filterNewRecords(await collectThreatRecords())).slice(0, MAX_SUBMISSIONS);
     const submitted = [];
 
     for (const record of records) {
