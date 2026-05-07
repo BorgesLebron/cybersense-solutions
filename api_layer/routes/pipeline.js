@@ -36,6 +36,25 @@ router.post('/threat-records', requireAgentToken(['Rick', 'Henry']), async (req,
 
     const record = await db.createThreatRecord({ cve_id, threat_name, severity, cvss_score: score, category, source_url, raw_data, tags, priority, ingested_by: req.agent.name });
 
+    await db.processIntoRepository({
+      source_type: 'threat',
+      source_id: record.id,
+      normalized_data: {
+        cve_id: record.cve_id,
+        title: record.threat_name,
+        severity: record.severity,
+        cvss_score: record.cvss_score,
+        category: record.category,
+        source_url: record.source_url,
+        priority: record.priority,
+        tags: record.tags,
+      },
+      correlation_tags: record.tags || [],
+      processed_by: req.agent.name,
+      ready_for_intel: true,
+      ready_for_awareness: true,
+    });
+
     const task = await db.createTask({
       agent_name: 'Barbara',
       task_type: 'normalize_threat',
