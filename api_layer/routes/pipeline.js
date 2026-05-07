@@ -13,9 +13,9 @@ const TRAINING_AGENTS = ['Kirby', 'Mario', 'Matt', 'Jeff', 'Maya', 'Henry', 'Lau
 // Next-stage task and notification targets for each awareness pipeline transition.
 // Keyed on to_status. maya → approved is handled by AUTO-003 (Preview Briefing gate).
 const AWARENESS_DISPATCH = {
-  eic_review: { agent: 'Ed',   task_type: 'eic_review_briefing', sla_h: 6, sla_m: 45 },
-  qa:         { agent: 'Jeff', task_type: 'qa_briefing',         sla_h: 6, sla_m: 55 },
-  maya:       { agent: 'Maya', task_type: 'approve_briefing',    sla_h: 7, sla_m: 0  },
+  dev_edit:   { agent: 'Ed',   task_type: 'eic_review_briefing', sla_h: 6, sla_m: 30 },
+  eic_review: { agent: 'Jeff', task_type: 'qa_briefing',         sla_h: 6, sla_m: 45 },
+  qa:         { agent: 'Maya', task_type: 'approve_briefing',    sla_h: 7, sla_m: 0  },
 };
 
 // POST /api/pipeline/threat-records  (Rick only)
