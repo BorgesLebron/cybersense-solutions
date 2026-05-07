@@ -249,6 +249,62 @@ const getRepositoryItemDetail = (id) =>
       WHERE r.source_id = $1 OR r.id = $1
       LIMIT 1`, [id]);
 
+const getApprovedContentReferences = (id, limit = 8) =>
+  q(`WITH current_item AS (
+       SELECT r.id AS repository_id, r.source_type, r.source_id,
+              COALESCE(
+                CASE r.source_type WHEN 'threat' THEN t.category ELSE i.category END,
+                r.normalized_data->>'category',
+                r.source_type::text
+              ) AS category
+       FROM intel_repository r
+       LEFT JOIN threat_records t ON t.id = r.source_id AND r.source_type = 'threat'
+       LEFT JOIN intel_items i ON i.id = r.source_id AND r.source_type IN ('innovation','growth','policy')
+       WHERE r.source_id = $1 OR r.id = $1
+       LIMIT 1
+     ),
+     article_refs AS (
+       SELECT 'article' AS content_type, a.id, a.title,
+              a.pipeline_status::text AS status,
+              COALESCE(a.published_at, a.maya_approved_at, a.created_at) AS content_date,
+              a.section::text AS category,
+              a.slug AS path
+       FROM articles a, current_item c
+       WHERE a.pipeline_status IN ('approved','published')
+         AND (
+           a.section::text = CASE WHEN c.source_type = 'threat' THEN 'threat' ELSE c.source_type::text END
+           OR lower(a.title) LIKE '%' || lower(c.category) || '%'
+           OR lower(a.body_md) LIKE '%' || lower(c.category) || '%'
+         )
+       ORDER BY COALESCE(a.published_at, a.maya_approved_at, a.created_at) DESC
+       LIMIT $2
+     ),
+     briefing_refs AS (
+       SELECT 'briefing' AS content_type, b.id, b.subject_line AS title,
+              b.pipeline_status::text AS status,
+              COALESCE(b.published_at, b.maya_approved_at, b.edition_date::timestamptz) AS content_date,
+              'briefing' AS category,
+              b.file_path AS path
+       FROM briefings b, current_item c
+       WHERE b.pipeline_status IN ('approved','published')
+         AND (
+           c.source_id = ANY(b.threat_item_ids)
+           OR c.source_id = ANY(b.innovation_item_ids)
+           OR c.source_id = b.growth_item_id
+           OR lower(b.subject_line) LIKE '%' || lower(c.category) || '%'
+           OR lower(b.body_md) LIKE '%' || lower(c.category) || '%'
+         )
+       ORDER BY COALESCE(b.published_at, b.maya_approved_at, b.edition_date::timestamptz) DESC
+       LIMIT $2
+     )
+     SELECT * FROM (
+       SELECT * FROM article_refs
+       UNION ALL
+       SELECT * FROM briefing_refs
+     ) refs
+     ORDER BY content_date DESC
+     LIMIT $2`, [id, limit]);
+
 // ── ARTICLES ───────────────────────────────────────────────────────────────────
 
 const createArticle = ({ title, section, body_md, access_tier, source_ids, created_by }) => {
@@ -688,7 +744,7 @@ module.exports = {
   getAgentToken, rotateAgentToken,
   createThreatRecord, getThreatRecords, getThreatById, linkThreatToArticle,
   createIntelItem, getIntelItems,
-  processIntoRepository, getRepositoryQueue, listApprovedBriefingPreviews, getRepositoryItemDetail,
+  processIntoRepository, getRepositoryQueue, listApprovedBriefingPreviews, getRepositoryItemDetail, getApprovedContentReferences,
   createArticle, getArticle, getArticleById, listArticles, advanceArticleStatus, incrementArticleViews,
   createBriefing, getBriefingByDate, getBriefingById, listBriefings, advanceBriefingStatus, revertBriefingForRevision,
   logPipelineEvent, countRejections, countAgentRejections24h,

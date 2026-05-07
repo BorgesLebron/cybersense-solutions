@@ -692,6 +692,13 @@ adminRouter.get('/repository/items/:id', requireAdminToken(), async (req, res, n
   } catch (e) { next(e); }
 });
 
+adminRouter.get('/repository/items/:id/references', requireAdminToken(), async (req, res, next) => {
+  try {
+    const refs = await db.getApprovedContentReferences(req.params.id, parseInt(req.query.limit) || 8);
+    res.json({ data: refs });
+  } catch (e) { next(e); }
+});
+
 // Human-in-the-loop gate. Confirms distribution, creates Laura's release task,
 // and schedules Oliver's LinkedIn post for next 0700 CT.
 // Distribution is blocked until this endpoint is called — no exceptions.
