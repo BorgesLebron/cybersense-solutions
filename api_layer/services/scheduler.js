@@ -7,6 +7,11 @@
 
 const db = require('../db/queries');
 const { checkAwarenessPipelineHealth, notifyAgents } = require('./agents');
+const { pollRuthTasks }         = require('./ruth_runtime');
+const { pollPeterTasks }        = require('./peter_runtime');
+const { pollEdTasks }           = require('./ed_runtime');
+const { pollRickTasks }         = require('./rick_runtime');
+const { pollIvanCharlieTasks }  = require('./ivan_charlie_runtime');
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
@@ -639,7 +644,13 @@ function startScheduler() {
     // Awareness pipeline kickoff
     cron.schedule('30 4 * * 1-5',   runRuthDailyCycle,             { timezone: 'America/Chicago' });
     cron.schedule('0 7 * * 1-5',    runOliverDailyPost,            { timezone: 'America/Chicago' });
-    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SCHEDULER_STARTED', jobs: 17 }));
+    // Agent runtime task pollers
+    cron.schedule('*/2 4-9 * * 1-5', pollRuthTasks,                { timezone: 'America/Chicago' });
+    cron.schedule('*/2 4-9 * * 1-5', pollPeterTasks,               { timezone: 'America/Chicago' });
+    cron.schedule('*/2 4-9 * * 1-5', pollEdTasks,                  { timezone: 'America/Chicago' });
+    cron.schedule('0 */4 * * *',     pollRickTasks,                 { timezone: 'America/Chicago' });
+    cron.schedule('45 5 * * *',      pollIvanCharlieTasks,          { timezone: 'America/Chicago' });
+    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SCHEDULER_STARTED', jobs: 22 }));
   } catch (e) {
     console.warn('node-cron not installed — scheduler disabled. Install with: npm install node-cron');
   }
@@ -664,4 +675,9 @@ module.exports = {
   runLinkedInTokenRefresh,
   runRuthDailyCycle,
   runOliverDailyPost,
+  pollRuthTasks,
+  pollPeterTasks,
+  pollEdTasks,
+  pollRickTasks,
+  pollIvanCharlieTasks,
 };

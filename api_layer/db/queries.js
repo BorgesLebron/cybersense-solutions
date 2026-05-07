@@ -700,7 +700,7 @@ const createEscalation = ({ from_agent, to_agent, reason, content_id, severity }
 // ── MEETINGS ──────────────────────────────────────────────────────────────────
 
 const countActiveThreats = () =>
-  q1("SELECT COUNT(*) AS count FROM threat_records WHERE status != 'archived'");
+  q1("SELECT COUNT(*) AS count FROM threat_records");
 
 const createMeeting = ({ title, type, convener, initiated_by, agenda }) =>
   q1(`INSERT INTO meetings (id,title,type,convener,initiated_by,agenda)

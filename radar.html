@@ -148,14 +148,15 @@ function severityBadge(s) {
 }
 
 function threatRow(t) {
+  if (!t.threat_name) return `<tr><td><span class="badge badge-high">—</span></td><td style="font-weight:500;color:var(--cs-navy);">Threat Record</td><td class="mono">—</td><td class="mono">—</td><td style="font-size:13px;">—</td><td></td></tr>`;
   const article = t.article_link
     ? `<a href="intel/article.html?slug=${t.article_link.split('/').pop()}" style="font-size:13px;color:var(--cs-cyan);font-weight:500;">Read Intel Brief →</a>`
     : `<span style="font-size:13px;color:var(--cs-gray-400);">Article coming soon</span>`;
   return `
-    <tr class="threat-row" data-severity="${t.severity}" data-name="${t.threat_name.toLowerCase()}" data-cve="${t.cve_id.toLowerCase()}">
+    <tr class="threat-row" data-severity="${t.severity}" data-name="${t.threat_name.toLowerCase()}" data-cve="${(t.cve_id || '').toLowerCase()}">
       <td>${severityBadge(t.severity)}</td>
       <td style="font-weight:500;color:var(--cs-navy);">${t.threat_name}</td>
-      <td class="mono">${t.cve_id}</td>
+      <td class="mono">${t.cve_id || '—'}</td>
       <td class="mono">${parseFloat(t.cvss_score).toFixed(1)}</td>
       <td style="font-size:13px;color:var(--cs-gray-600);">${t.category}</td>
       <td>${article}</td>

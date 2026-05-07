@@ -761,6 +761,17 @@ adminRouter.post('/briefings/:id/confirm-distribution', requireAdminToken(['gm']
       message: `LinkedIn post for Edition ${briefing.edition_number} scheduled for ${scheduledAt.toISOString()}. Prepare post content. Scheduler triggers execution at 0700 CT.`,
     });
 
+    await db.advanceBriefingStatus(briefing.id, 'published');
+
+    await db.logPipelineEvent({
+      content_type: 'briefing',
+      content_id: briefing.id,
+      from_status: 'approved',
+      to_status: 'published',
+      agent_name: 'human_executive',
+      notes: `Distribution confirmed by human executive — Edition ${briefing.edition_number}`,
+    });
+
     res.json({
       confirmed: true,
       briefing_id: briefing.id,
@@ -906,7 +917,7 @@ agentsRouter.post('/:name/notify', requireInternal, async (req, res, next) => {
     await db.createTask({
       agent_name: agentName,
       task_type: 'notification',
-      content_type: type,
+      content_type: 'system',
       content_id: resolvedContentId,
       sla_deadline: null,
     });
