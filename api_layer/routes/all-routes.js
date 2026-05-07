@@ -581,6 +581,60 @@ adminRouter.get('/me', requireAdminToken(), async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+adminRouter.post('/threat-records', requireAdminToken(['gm', 'analyst']), async (req, res, next) => {
+  try {
+    const { cve_id, threat_name, severity, cvss_score, category, source_url, raw_data, tags, priority } = req.body;
+
+    if (!threat_name || !severity || cvss_score == null || !category || !raw_data || !tags || !priority)
+      return res.status(400).json(err('MISSING_FIELDS', 'threat_name, severity, cvss_score, category, raw_data, tags, priority are required'));
+
+    const validSeverities = ['critical', 'high', 'medium', 'low'];
+    if (!validSeverities.includes(severity)) return res.status(400).json(err('INVALID_SEVERITY', `severity must be one of: ${validSeverities.join(', ')}`, 'severity'));
+
+    const score = parseFloat(cvss_score);
+    if (isNaN(score) || score < 0 || score > 10) return res.status(400).json(err('INVALID_CVSS', 'cvss_score must be between 0.0 and 10.0', 'cvss_score'));
+
+    if (!Array.isArray(tags)) return res.status(400).json(err('INVALID_TAGS', 'tags must be an array', 'tags'));
+
+    const record = await db.createThreatRecord({
+      cve_id: cve_id || null,
+      threat_name,
+      severity,
+      cvss_score: score,
+      category,
+      source_url,
+      raw_data,
+      tags,
+      priority,
+      ingested_by: `admin:${req.user.id}`,
+    });
+
+    await db.processIntoRepository({
+      source_type: 'threat',
+      source_id: record.id,
+      normalized_data: {
+        cve_id: record.cve_id,
+        title: record.threat_name,
+        severity: record.severity,
+        cvss_score: record.cvss_score,
+        category: record.category,
+        source_url: record.source_url,
+        priority: record.priority,
+        tags: record.tags,
+      },
+      correlation_tags: record.tags || [],
+      processed_by: 'admin',
+      ready_for_intel: true,
+      ready_for_awareness: true,
+    });
+
+    res.status(201).json(record);
+  } catch (e) {
+    if (e.code === '23505' && req.body?.cve_id) return res.status(409).json(err('DUPLICATE_CVE', `CVE ${req.body.cve_id} already exists in the system`, 'cve_id'));
+    next(e);
+  }
+});
+
 adminRouter.get('/agents', requireAdminToken(['gm']), async (req, res, next) => {
   try {
     const health = await db.getAgentHealthSummary();
