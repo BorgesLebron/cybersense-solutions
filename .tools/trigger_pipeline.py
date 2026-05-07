@@ -389,8 +389,26 @@ def main():
             else:
                 args.id = 'DRY_RUN_ID'
         except RuntimeError as e:
-            fail(f"Create failed: {e}")
-            sys.exit(1)
+            err_msg = str(e)
+            if '409' in err_msg and 'DUPLICATE_EDITION' in err_msg:
+                import re as _re
+                m = _re.search(r'\(id: ([0-9a-f\-]{36})\)', err_msg)
+                if m:
+                    existing_id = m.group(1)
+                    warn(f"A briefing for {edition_date} already exists.")
+                    ans = input(f"  Use existing briefing (id: {existing_id})? [Y/n]: ").strip().lower()
+                    if ans in ('', 'y', 'yes'):
+                        ok(f"Using existing briefing — id: {existing_id}")
+                        args.id = existing_id
+                    else:
+                        print("  Aborted.")
+                        sys.exit(0)
+                else:
+                    fail(f"Create failed: {e}")
+                    sys.exit(1)
+            else:
+                fail(f"Create failed: {e}")
+                sys.exit(1)
 
     # ── Select briefing ──────────────────────────────────────────────────────
     hdr(f"Step {'3' if args.create else '2'} — Select briefing")

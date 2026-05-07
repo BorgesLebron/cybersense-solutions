@@ -2,9 +2,38 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Context Management — Non-Negotiable
+
+When your context window reaches approximately 90% capacity, you must
+immediately do the following before continuing any task:
+
+1. **Write a session memory file** to `.notes/session_[YYYYMMDD_HHMM].md`
+   containing:
+   - Current task status (what is done, what is in progress, what is next)
+   - All decisions made this session (with rationale)
+   - All commit hashes produced this session
+   - Open questions or blockers
+   - Exact state of any file you are currently editing
+
+2. **Notify Hector** with this exact message:
+   "Context at 90%. Session state saved to .notes/session\_[timestamp].md.
+   Review before continuing. Ready to compact and resume."
+
+3. **Stop all implementation work** until Hector acknowledges.
+
+This rule supersedes all task urgency. A task that cannot be paused
+at 90% context is a task that was scoped incorrectly. The session
+memory file is the handoff artifact that allows the next session to
+resume without re-deriving context.
+
+Do not attempt to compress or summarize this step. Write the full
+state. Token cost of the write is always lower than the cost of
+context loss.
+
 ## Commands
 
 ### Backend (api_layer/)
+
 ```bash
 npm run dev          # Development with auto-reload (nodemon)
 npm start            # Production start
@@ -13,9 +42,11 @@ npm test             # Jest tests (--runInBand, sequential)
 ```
 
 ### Frontend
+
 No build step — vanilla JS/HTML/CSS served directly from root. No compilation required.
 
 ### Tools
+
 ```bash
 python tools/generate_carousel.py   # Generate Meta carousel images for social posts
 ```
@@ -66,16 +97,16 @@ The platform uses **27 named agents** organized into departments. Agents receive
 
 ### Department Structure
 
-| Department | Agents |
-|-----------|--------|
-| **Management** | Henry (GM), Valerie (Strategy), Victor (Risk), Barret (Coordination), Alex (Training Mgr), Maya (Managing Editor) |
-| **IT / Security** | Cy (CISO), Nora (System Health), Owen (Vulnerability/Patch), Paige (Incident Response), Quinn (Access/Credentials) |
-| **Operations / Acquisitions** | Rick (Threat Intel), Ivan/Charlie (Intel Scout), Barbara (Data Analyst), Laura (Operations Analyst), Jim (Financial Analyst), Jeff (QA Analyst) |
-| **Editorial — Intel** | James (Intel Acquisition), Jason (Dev Editor Intel), Rob (EIC Intel) |
-| **Editorial — Awareness** | Ruth (Awareness Acquisition — dual role: Ops + Editorial), Peter (Dev Editor Awareness), Ed (EIC Awareness) |
-| **Training / Production** | Kirby (Instructional Designer), Mario (Training Coordinator), Matt (Trainer/Facilitator) |
-| **Sales** | Mary (SDR), William (AE — includes pre-sales technical support, Dale consolidated), Joe (Account Manager) |
-| **Social Media / Distribution** | Oliver (LinkedIn), Lucy (Meta), Riley (TikTok/X), Ethan (YouTube) |
+| Department                      | Agents                                                                                                                                          |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Management**                  | Henry (GM), Valerie (Strategy), Victor (Risk), Barret (Coordination), Alex (Training Mgr), Maya (Managing Editor)                               |
+| **IT / Security**               | Cy (CISO), Nora (System Health), Owen (Vulnerability/Patch), Paige (Incident Response), Quinn (Access/Credentials)                              |
+| **Operations / Acquisitions**   | Rick (Threat Intel), Ivan/Charlie (Intel Scout), Barbara (Data Analyst), Laura (Operations Analyst), Jim (Financial Analyst), Jeff (QA Analyst) |
+| **Editorial — Intel**           | James (Intel Acquisition), Jason (Dev Editor Intel), Rob (EIC Intel)                                                                            |
+| **Editorial — Awareness**       | Ruth (Awareness Acquisition — dual role: Ops + Editorial), Peter (Dev Editor Awareness), Ed (EIC Awareness)                                     |
+| **Training / Production**       | Kirby (Instructional Designer), Mario (Training Coordinator), Matt (Trainer/Facilitator)                                                        |
+| **Sales**                       | Mary (SDR), William (AE — includes pre-sales technical support, Dale consolidated), Joe (Account Manager)                                       |
+| **Social Media / Distribution** | Oliver (LinkedIn), Lucy (Meta), Riley (TikTok/X), Ethan (YouTube)                                                                               |
 
 ### Key Agent Architecture Notes
 
@@ -94,6 +125,7 @@ Agents pull their SOPs via authenticated API at runtime (on startup or task assi
 **API endpoint:** `GET /api/agent/sop` → returns the calling agent's current SOP. Server-side GitHub API call to private repository — private repo credentials never leave backend.
 
 **Private repository structure:**
+
 ```
 cybersense-sop (private GitHub repo)
 ├── ops/           # OA series — Operations/Acquisitions SOPs
@@ -118,61 +150,61 @@ A complete Standard Operating Procedure library governs every agent's function, 
 
 ### Completed SOPs
 
-| Series | SOP ID | Agent / Function |
-|--------|--------|-----------------|
-| **OA** | OA-RCK-001 | Rick — Threat Intelligence Acquisition |
-| | OA-IVC-001 | Ivan/Charlie — Innovation and Growth Intelligence |
-| | OA-BAR-001 | Barbara — Intelligence Normalization and Repository |
-| | OA-AWR-001 | Ruth — Awareness Acquisition (Operations scope) |
-| **ED** | ED-INT-001 | James — Intel Acquisition |
-| | ED-INT-002 | Jason — Intel Developmental Editing |
-| | ED-INT-003 | Rob — Intel EIC Final Review |
-| | ED-AWR-001 | Ruth — Awareness Acquisition (Editorial scope) |
-| | ED-AWR-002 | Peter — Awareness Developmental Editing |
-| | ED-AWR-003 | Ed — Awareness EIC Final Review |
-| | ED-QA-001 | Jeff — Quality Assurance (cross-pipeline) |
-| | ED-MGT-001 | Maya — Managing Editor Final Approval |
-| **MG** | MG-ESC-001 | Management Escalation Procedures |
-| | MG-DSH-001 | Dashboard Governance |
-| **IT** | IT-CY-001 | Cy — CISO |
-| | IT-NOR-001 | Nora — System Health Monitor |
-| | IT-OWN-001 | Owen — Vulnerability and Patch Management |
-| | IT-PAI-001 | Paige — Incident Response |
-| | IT-QNN-001 | Quinn — Access and Credential Management |
-| **AD** | AD-SAL-001 | Mary — Sales Development Representative |
-| | AD-SAL-002 | William — Account Executive |
-| | AD-SAL-003 | Joe — Account Manager |
-| | AD-FIN-001 | Jim — Financial Analyst |
-| **PR** | PR-TRN-001 | Kirby — Instructional Designer |
-| | PR-TRN-002 | Mario — Training Coordinator |
-| | PR-TRN-003 | Matt — Trainer and Facilitator |
-| | PR-TRN-004 | Alex — Training Manager |
-| | PR-VID-001 | Video Production (Placeholder — Project 3) |
-| | PR-LAB-001 | Ambient Threat Simulation Lab (Placeholder — Project 4) |
-| **DI** | DI series | Social Media / Distribution — In progress |
+| Series | SOP ID     | Agent / Function                                        |
+| ------ | ---------- | ------------------------------------------------------- |
+| **OA** | OA-RCK-001 | Rick — Threat Intelligence Acquisition                  |
+|        | OA-IVC-001 | Ivan/Charlie — Innovation and Growth Intelligence       |
+|        | OA-BAR-001 | Barbara — Intelligence Normalization and Repository     |
+|        | OA-AWR-001 | Ruth — Awareness Acquisition (Operations scope)         |
+| **ED** | ED-INT-001 | James — Intel Acquisition                               |
+|        | ED-INT-002 | Jason — Intel Developmental Editing                     |
+|        | ED-INT-003 | Rob — Intel EIC Final Review                            |
+|        | ED-AWR-001 | Ruth — Awareness Acquisition (Editorial scope)          |
+|        | ED-AWR-002 | Peter — Awareness Developmental Editing                 |
+|        | ED-AWR-003 | Ed — Awareness EIC Final Review                         |
+|        | ED-QA-001  | Jeff — Quality Assurance (cross-pipeline)               |
+|        | ED-MGT-001 | Maya — Managing Editor Final Approval                   |
+| **MG** | MG-ESC-001 | Management Escalation Procedures                        |
+|        | MG-DSH-001 | Dashboard Governance                                    |
+| **IT** | IT-CY-001  | Cy — CISO                                               |
+|        | IT-NOR-001 | Nora — System Health Monitor                            |
+|        | IT-OWN-001 | Owen — Vulnerability and Patch Management               |
+|        | IT-PAI-001 | Paige — Incident Response                               |
+|        | IT-QNN-001 | Quinn — Access and Credential Management                |
+| **AD** | AD-SAL-001 | Mary — Sales Development Representative                 |
+|        | AD-SAL-002 | William — Account Executive                             |
+|        | AD-SAL-003 | Joe — Account Manager                                   |
+|        | AD-FIN-001 | Jim — Financial Analyst                                 |
+| **PR** | PR-TRN-001 | Kirby — Instructional Designer                          |
+|        | PR-TRN-002 | Mario — Training Coordinator                            |
+|        | PR-TRN-003 | Matt — Trainer and Facilitator                          |
+|        | PR-TRN-004 | Alex — Training Manager                                 |
+|        | PR-VID-001 | Video Production (Placeholder — Project 3)              |
+|        | PR-LAB-001 | Ambient Threat Simulation Lab (Placeholder — Project 4) |
+| **DI** | DI series  | Social Media / Distribution — In progress               |
 
 ### Pending SOPs
 
-| SOP ID | Function |
-|--------|---------|
-| DI-OLI-001 | Oliver — LinkedIn Agent |
-| DI-LUC-001 | Lucy — Meta Agent |
-| DI-RIL-001 | Riley — TikTok and X Agent |
-| DI-ETH-001 | Ethan — YouTube Agent |
+| SOP ID      | Function                              |
+| ----------- | ------------------------------------- |
+| DI-OLI-001  | Oliver — LinkedIn Agent               |
+| DI-LUC-001  | Lucy — Meta Agent                     |
+| DI-RIL-001  | Riley — TikTok and X Agent            |
+| DI-ETH-001  | Ethan — YouTube Agent                 |
 | MGT-GOV-001 | Master Governance Document (capstone) |
-| MGT-TRG-001 | Master Trigger Registry (capstone) |
+| MGT-TRG-001 | Master Trigger Registry (capstone)    |
 
 ### Pending Batch Amendments
 
 The following amendments are queued for batch application across completed SOPs:
 
-| # | Amendment | Affected SOPs |
-|---|-----------|--------------|
-| 1 | Awareness pipeline production cycle: Sunday–Thursday. Delivery: Monday–Friday. | Fleet v1.1, OA-AWR-001, ED-AWR-001, ED-AWR-002, ED-AWR-003, Engineering Notes |
-| 2 | Option B timing: Ruth starts 0430 CT, Kirby deadline 0500 CT, Ivan/Charlie deadline 0530 CT, Peter deadline 0630 CT, Jeff 0645–0655 CT, Maya 0655–0700 CT | Fleet v1.1, all Awareness pipeline SOPs |
-| 3 | Dale (Sales Engineer) consolidated into William for current phase. Re-activates in fleet v1.2 at Federal/Defense tier launch. | Fleet v1.1, AD-SAL-002 |
-| 4 | Social Media ad hoc breaking news: after Maya seals the Daily Briefing, no changes to that edition. Breaking threats delivered ad hoc via Social Media with "covered in Edition XXX" notation. Separate Maya approval required for ad hoc posts. | DI series, ED-AWR-003, ED-MGT-001 |
-| 5 | Private SOP Repository architecture: runtime SOP pull via authenticated API, version logging, per-agent access control. | Engineering Notes, Fleet v1.1, MGT-GOV-001 |
+| #   | Amendment                                                                                                                                                                                                                                        | Affected SOPs                                                                 |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
+| 1   | Awareness pipeline production cycle: Sunday–Thursday. Delivery: Monday–Friday.                                                                                                                                                                   | Fleet v1.1, OA-AWR-001, ED-AWR-001, ED-AWR-002, ED-AWR-003, Engineering Notes |
+| 2   | Option B timing: Ruth starts 0430 CT, Kirby deadline 0500 CT, Ivan/Charlie deadline 0530 CT, Peter deadline 0630 CT, Jeff 0645–0655 CT, Maya 0655–0700 CT                                                                                        | Fleet v1.1, all Awareness pipeline SOPs                                       |
+| 3   | Dale (Sales Engineer) consolidated into William for current phase. Re-activates in fleet v1.2 at Federal/Defense tier launch.                                                                                                                    | Fleet v1.1, AD-SAL-002                                                        |
+| 4   | Social Media ad hoc breaking news: after Maya seals the Daily Briefing, no changes to that edition. Breaking threats delivered ad hoc via Social Media with "covered in Edition XXX" notation. Separate Maya approval required for ad hoc posts. | DI series, ED-AWR-003, ED-MGT-001                                             |
+| 5   | Private SOP Repository architecture: runtime SOP pull via authenticated API, version logging, per-agent access control.                                                                                                                          | Engineering Notes, Fleet v1.1, MGT-GOV-001                                    |
 
 ---
 
@@ -183,6 +215,7 @@ The following amendments are queued for batch application across completed SOPs:
 Production cycle: **Sunday through Thursday**. Delivery to subscribers: **Monday through Friday before 0700 CT**.
 
 **Timing chain (Option B — current standard):**
+
 ```
 0430 CT  Ruth begins daily cycle (source, select, structure 7 items)
 0500 CT  Kirby training byte delivered to Mario AND Ruth
@@ -195,6 +228,7 @@ Production cycle: **Sunday through Thursday**. Delivery to subscribers: **Monday
 ```
 
 **Ruth's required composition (7 items):**
+
 - 3 Threat Items (Critical/High, last 24–48h, from Barbara's repository)
 - 2 Innovation Items (from Ivan/Charlie direct delivery)
 - 1 Growth Item (from Ivan/Charlie direct delivery)
@@ -223,6 +257,7 @@ Kirby → Ruth (training byte, 0500 CT daily)
 ```
 
 ### Full editorial pipeline stages:
+
 ```
 R&D → In Progress → Under Review → Human in the Loop → Published
 ```
@@ -247,20 +282,21 @@ Three primary navigation destinations:
 
 **Agent Status** — Fleet management: 27 agents organized by department, color-coded health indicators (Green/Yellow/Red), hover tooltips, agent detail panels. Six management-layer agents have dashboard chat interfaces:
 
-| Agent | Chat Scope |
-|-------|-----------|
-| Henry | Fleet directives, executive summaries, overrides |
-| Cy | Security status, incidents, vulnerabilities |
-| Victor | Risk posture, escalations |
-| Barret | Pipeline handoff, SLA status |
-| Maya | Editorial direction, approval status |
-| Valerie | Strategic planning, financial signals |
+| Agent   | Chat Scope                                       |
+| ------- | ------------------------------------------------ |
+| Henry   | Fleet directives, executive summaries, overrides |
+| Cy      | Security status, incidents, vulnerabilities      |
+| Victor  | Risk posture, escalations                        |
+| Barret  | Pipeline handoff, SLA status                     |
+| Maya    | Editorial direction, approval status             |
+| Valerie | Strategic planning, financial signals            |
 
 **Chain of command is enforced at the application layer.** No direct human-to-agent chat exists outside these six management-layer agents.
 
 **Meeting Room** — Structured multi-agent collaboration: human executive-initiated or agent-initiated (via Henry for operational, via Cy for security). Meeting records are permanent audit artifacts. Action items appear as Open Tickets in the Agent Status dashboard.
 
 ### Preview Controls (header dropdown)
+
 ```
 Preview ▼
 ├── Preview Briefing      (Maya-approved newsletter — human gate before distribution)
@@ -279,11 +315,11 @@ Preview ▼
 
 All intelligence sources across Rick's and Ivan/Charlie's source registries are classified into three tiers governing how they are integrated and referenced in published content:
 
-| Tier | Description | Linking Policy |
-|------|-------------|---------------|
-| **Tier 1** | Institutional APIs — CISA, NVD, MITRE, FBI, NCSC, MSRC | Always linkable |
+| Tier       | Description                                                                                | Linking Policy                                |
+| ---------- | ------------------------------------------------------------------------------------------ | --------------------------------------------- |
+| **Tier 1** | Institutional APIs — CISA, NVD, MITRE, FBI, NCSC, MSRC                                     | Always linkable                               |
 | **Tier 2** | Vendor research RSS — Unit 42, CrowdStrike, Microsoft Security Research, Cisco Talos, etc. | Linkable with editorial redirect verification |
-| **Tier 3** | Commercial news outlets, any source with uncontrolled redirect behavior | Name only — no links ever |
+| **Tier 3** | Commercial news outlets, any source with uncontrolled redirect behavior                    | Name only — no links ever                     |
 
 **RSS Feed Aggregator:** foorilla allinfosecnews_sources (CC0 licensed source list). Rick pulls directly from Tier 1 and Tier 2 RSS feeds via this registry. No dependency on Foorilla's commercial API — avoids single point of failure.
 
@@ -297,15 +333,15 @@ All intelligence sources across Rick's and Ivan/Charlie's source registries are 
 
 Tier is checked in `middleware/auth.js` to gate content access:
 
-| Feature | Free | Freemium | Monthly | Enterprise |
-|---------|------|----------|---------|------------|
-| Daily Briefing | ✓ (3 items visible) | ✓ (all 7) | ✓ | ✓ |
-| Radar | 3 threats | 5 threats | Full | Full + click-through |
-| Intel Articles | Partial (banner) | 2 articles | Full | Full |
-| Newsletter Archive | Top 3 blurred | Full | Full | Full |
-| Training | — | — | Awareness level | All levels |
-| Ambient Lab | — | — | Awareness, limited sessions | Full, unlimited |
-| Compliance Dashboard | — | — | — | ✓ |
+| Feature              | Free                | Freemium   | Monthly                     | Enterprise           |
+| -------------------- | ------------------- | ---------- | --------------------------- | -------------------- |
+| Daily Briefing       | ✓ (3 items visible) | ✓ (all 7)  | ✓                           | ✓                    |
+| Radar                | 3 threats           | 5 threats  | Full                        | Full + click-through |
+| Intel Articles       | Partial (banner)    | 2 articles | Full                        | Full                 |
+| Newsletter Archive   | Top 3 blurred       | Full       | Full                        | Full                 |
+| Training             | —                   | —          | Awareness level             | All levels           |
+| Ambient Lab          | —                   | —          | Awareness, limited sessions | Full, unlimited      |
+| Compliance Dashboard | —                   | —          | —                           | ✓                    |
 
 ---
 
@@ -347,6 +383,7 @@ PostgreSQL (single connection via `DATABASE_URL`). All queries abstracted throug
 ## Rate Limiting
 
 Three tiers defined in `server.js`:
+
 - Unauthenticated users: most restrictive
 - Authenticated users: standard limits
 - Agents: higher limits for pipeline ingestion
@@ -355,22 +392,23 @@ Three tiers defined in `server.js`:
 
 ## External Services
 
-| Service | Purpose | Config |
-|---------|---------|--------|
-| PostgreSQL | Primary database | `DATABASE_URL` |
-| Stripe | Subscription billing | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` |
-| SendGrid | Transactional email | `SENDGRID_API_KEY`, `SG_TEMPLATE_*` |
-| AWS S3 | Training content storage | `AWS_*`, `S3_BUCKET_TRAINING` |
-| LinkedIn API | Social posting | via `linkedin.js` service |
-| Railway | API hosting | `railway.toml` |
-| GitHub Pages | Frontend hosting | Root of repo, main branch |
-| GitHub (private) | SOP repository | Server-side API call only — credentials never exposed |
+| Service          | Purpose                  | Config                                                |
+| ---------------- | ------------------------ | ----------------------------------------------------- |
+| PostgreSQL       | Primary database         | `DATABASE_URL`                                        |
+| Stripe           | Subscription billing     | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`          |
+| SendGrid         | Transactional email      | `SENDGRID_API_KEY`, `SG_TEMPLATE_*`                   |
+| AWS S3           | Training content storage | `AWS_*`, `S3_BUCKET_TRAINING`                         |
+| LinkedIn API     | Social posting           | via `linkedin.js` service                             |
+| Railway          | API hosting              | `railway.toml`                                        |
+| GitHub Pages     | Frontend hosting         | Root of repo, main branch                             |
+| GitHub (private) | SOP repository           | Server-side API call only — credentials never exposed |
 
 ---
 
 ## Scheduled Jobs
 
 `services/scheduler.js` runs nightly in production (`NODE_ENV=production`):
+
 - Dashboard metric snapshots → `dashboard_snapshots` table
 - SLA breach detection → triggers escalations
 - Health score updates for organizations
@@ -389,6 +427,7 @@ Archive access: Subscribers and above see full archive. Free users see top 3 edi
 ## Product Roadmap
 
 ### Active Platform (October 2026 Enterprise Launch Target)
+
 - Daily Digital Awareness Briefing (Monday–Friday, 0700 CT)
 - Threat Radar (tiered visibility)
 - Intel Briefs (continuous production)
@@ -399,6 +438,7 @@ Archive access: Subscribers and above see full archive. Free users see top 3 edi
 ### Future Projects (Session Notes)
 
 **Project 1 — Agentic SOC Expansion (fleet v1.2):**
+
 - Recon Agent (asset discovery / Nmap / perimeter monitoring)
 - Analyst Agent (NVIDIA Morpheus — behavioral anomaly detection, telemetry ingest)
 - Owen's SOP updated to include Recon Agent as discovery input layer
@@ -407,10 +447,12 @@ Archive access: Subscribers and above see full archive. Free users see top 3 edi
 - NIM integration (Nemotron/Llama-3) for agent reasoning and threat summarization
 
 **Project 2 — Standalone SOC Platform:**
+
 - Influenced by CyberSense.Solutions agent architecture and governance model
 - To be discussed when ready
 
 **Project 3 — Digital Production Pipeline (separate infrastructure):**
+
 - Agent roster: Scout (Creative Director), Rex (Script/Storyboard), Aria (Voice/Audio), Nova (Animation/Visual), Reel (Post-Production), Production Manager
 - Tools: DirectML, Bountiful, Runway, NVIDIA Omniverse, ElevenLabs/PlayHT
 - Infrastructure: Mac Studio M4 Max (local orchestration) + Cloud GPU (render workloads — AWS p4d / Lambda Labs / RunPod)
@@ -419,6 +461,7 @@ Archive access: Subscribers and above see full archive. Free users see top 3 edi
 - Governed by PR-VID-001 (placeholder until Phase 1 complete)
 
 **Project 4 — Ambient Threat Simulation Lab:**
+
 - Browser-based simulated workday environment (email, calendar, browser, internal tools)
 - Organic indicators of compromise — no step-by-step instructions
 - User notepad for self-documentation of findings
