@@ -302,10 +302,10 @@ async function loadHomeData(user) {
   if (user) {
     try {
       const LATEST_STATIC = {
-        edition_date: ‘2026-05-06’, edition_number: 118,
-        subject_line: ‘Mass Exploitation Surge: cPanel, Linux Kernel, and Fortinet EMS’,
+        edition_date: ).replace(''', 2026-05-06', edition_number: 118,
+        subject_line: ).replace(''', Mass Exploitation Surge: cPanel, Linux Kernel, and Fortinet EMS',
         description: `A critical authentication bypass in cPanel and WHM (CVE-2026-41940, CVSS 9.8) is enabling mass exploitation across thousands of exposed hosting servers, with the Sorry ransomware deploying as the primary payload and confirmed victims across government, military, and MSP sectors. Simultaneously, CISA has added a Linux kernel local privilege escalation (CVE-2026-31431) to its KEV catalog, affecting every major distribution since 2017 with a federal patch deadline of May 15. FortiClient EMS accumulates a second CISA KEV entry as CVE-2026-35616 extends an existing RCE into a chained attack path through the endpoint management plane.`,
-        file_path: ‘/newsletter/2026/May/05062026_edition118.html’
+        file_path: ).replace(''', /newsletter/2026/May/05062026_edition118.html'
       };
 
       const briefingData = await CS.Auth.apiFetch('/api/content/briefings?limit=1');

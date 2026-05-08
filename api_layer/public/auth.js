@@ -17,6 +17,7 @@
   ───────────────────────────────────────────────────────────────── */
   let _accessToken = null;
   let _refreshPromise = null;
+  const SESSION_EXPIRED_MESSAGE = 'Your session has expired. Please log in again.';
 
   const TIER_RANK = { free: 0, freemium: 1, monthly: 2, enterprise: 3 };
 
@@ -25,6 +26,12 @@
       const raw = sessionStorage.getItem('cs_user');
       return raw ? JSON.parse(raw) : null;
     } catch (e) { return null; }
+  }
+
+  function getStoredAdminSession() {
+    const token = sessionStorage.getItem('cs_admin_token');
+    const user = getUser();
+    return token && isAdminUser(user) ? { token, user } : null;
   }
 
   function setUser(user) {
@@ -205,6 +212,23 @@
     const cached = getUser();
     if (cached) updateNavForUser(cached);
 
+    const adminSession = getStoredAdminSession();
+    if (adminSession) {
+      setToken(adminSession.token);
+      try {
+        const profile = await apiFetch('/api/admin/me');
+        setUser(profile);
+        onLogin(profile);
+        return;
+      } catch (e) {
+        clearToken();
+        sessionStorage.removeItem('cs_admin_token');
+        setUser(null);
+        onGuest();
+        return;
+      }
+    }
+
     const refreshed = await silentRefresh();
     if (refreshed) {
       try {
@@ -261,9 +285,28 @@
 
   function handleSessionExpired() {
     clearToken();
+    sessionStorage.removeItem('cs_admin_token');
     setUser(null);
-    showToast('Your session has expired. Please sign in again.', 'warning');
+    sessionStorage.setItem('cs_auth_notice', SESSION_EXPIRED_MESSAGE);
+    showToast(SESSION_EXPIRED_MESSAGE, 'warning');
     onGuest();
+    renderAuthNotice();
+  }
+
+  function renderAuthNotice() {
+    const msg = sessionStorage.getItem('cs_auth_notice');
+    if (!msg) return;
+    const form = document.getElementById('login-form');
+    if (!form) return;
+
+    let notice = document.getElementById('admin-auth-notice');
+    if (!notice) {
+      notice = document.createElement('div');
+      notice.id = 'admin-auth-notice';
+      notice.style.cssText = 'margin-bottom:14px;padding:10px 12px;border:1px solid #FDE68A;border-radius:8px;background:#FFFBEB;color:#854F0B;font-size:12px;line-height:1.4;text-align:center;';
+      form.prepend(notice);
+    }
+    notice.textContent = msg;
   }
 
   /* ─────────────────────────────────────────────────────────────────
@@ -1002,6 +1045,7 @@
   function initAdminDashboardPage() {
     const loginForm = document.getElementById('login-form');
     if (!loginForm) return;
+    renderAuthNotice();
 
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -1021,6 +1065,7 @@
       setLoading(btn, true, 'Authenticating…');
 
       try {
+        sessionStorage.removeItem('cs_auth_notice');
         const user = await adminLogin({ email, password });
 
         // Update nav logout button

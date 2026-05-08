@@ -679,13 +679,74 @@ adminRouter.get('/audit', requireAdminToken(['gm']), async (req, res, next) => {
 // Returns briefings with pipeline_status='approved' — the Preview Briefing queue
 adminRouter.get('/briefings/preview', requireAdminToken(), async (req, res, next) => {
   try {
-    const briefings = await db.pool.query(`
-      SELECT id, edition_number, edition_date, subject_line, file_path, maya_approved_at, pipeline_status
-      FROM briefings
-      WHERE pipeline_status = 'approved'
-      ORDER BY edition_date DESC
-    `).then(r => r.rows);
+    const briefings = await db.listApprovedBriefingPreviews();
     res.json({ data: briefings });
+  } catch (e) { next(e); }
+});
+
+adminRouter.get('/repository/items/:id', requireAdminToken(), async (req, res, next) => {
+  try {
+    const item = await db.getRepositoryItemDetail(req.params.id);
+    if (!item) return res.status(404).json(err('NOT_FOUND', 'Repository item not found'));
+    res.json(item);
+  } catch (e) { next(e); }
+});
+
+adminRouter.get('/repository/items/:id/references', requireAdminToken(), async (req, res, next) => {
+  try {
+    const refs = await db.getApprovedContentReferences(req.params.id, parseInt(req.query.limit) || 8);
+    res.json({ data: refs });
+  } catch (e) { next(e); }
+});
+
+// Manual awareness pipeline trigger. Fires Ruth's daily_cycle task for the
+// given edition_date (defaults to tomorrow CT). Bypasses idempotency guard only
+// when force:true. Intended for validation runs and pipeline recovery.
+adminRouter.post('/pipeline/ruth/trigger', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    const { date, force = false } = req.body;
+    const editionDate = date || (() => {
+      const d = new Date();
+      d.setDate(d.getDate() + 1);
+      return d.toLocaleDateString('en-CA', { timeZone: 'America/Chicago' });
+    })();
+
+    if (!force) {
+      const existing = await db.getBriefingByDate(editionDate);
+      if (existing)
+        return res.status(409).json(err('BRIEFING_EXISTS', `A briefing for ${editionDate} already exists. Pass force:true to override.`));
+    }
+
+    const sla = new Date(Date.now() + 2 * 60 * 60 * 1000);
+
+    const task = await db.createTask({
+      agent_name: 'Ruth',
+      task_type: 'daily_cycle',
+      content_type: 'briefing',
+      content_id: '00000000-0000-0000-0000-000000000000',
+      sla_deadline: sla,
+    });
+
+    await notifyAgents(['Ruth'], {
+      type: 'DAILY_CYCLE_START',
+      edition_date: editionDate,
+      sla_deadline: sla.toISOString(),
+      composition_required: { threat: 3, innovation: 2, growth: 1, training_byte: 1 },
+      kirby_deadline: '05:00 CT',
+      ivan_charlie_deadline: '05:30 CT',
+      triggered_by: 'manual_admin',
+      message: `Begin daily cycle for ${editionDate}. Source, select, and structure 7 items per SOP OA-AWR-001. Deliver package to Peter by ${sla.toISOString()}.`,
+    });
+
+    await db.logAuditEvent({
+      actor: req.user.id,
+      action: 'ruth_cycle_manual_trigger',
+      target_agent: 'Ruth',
+      reason: `Manual trigger for ${editionDate}${force ? ' (forced)' : ''}`,
+      affected_content_id: task.id,
+    });
+
+    res.json({ triggered: true, edition_date: editionDate, task_id: task.id, sla_deadline: sla.toISOString() });
   } catch (e) { next(e); }
 });
 
@@ -749,6 +810,17 @@ adminRouter.post('/briefings/:id/confirm-distribution', requireAdminToken(['gm']
       scheduled_at: scheduledAt.toISOString(),
       platform: 'linkedin',
       message: `LinkedIn post for Edition ${briefing.edition_number} scheduled for ${scheduledAt.toISOString()}. Prepare post content. Scheduler triggers execution at 0700 CT.`,
+    });
+
+    await db.advanceBriefingStatus(briefing.id, 'published');
+
+    await db.logPipelineEvent({
+      content_type: 'briefing',
+      content_id: briefing.id,
+      from_status: 'approved',
+      to_status: 'published',
+      agent_name: 'human_executive',
+      notes: `Distribution confirmed by human executive — Edition ${briefing.edition_number}`,
     });
 
     res.json({
@@ -896,7 +968,7 @@ agentsRouter.post('/:name/notify', requireInternal, async (req, res, next) => {
     await db.createTask({
       agent_name: agentName,
       task_type: 'notification',
-      content_type: type,
+      content_type: 'system',
       content_id: resolvedContentId,
       sla_deadline: null,
     });

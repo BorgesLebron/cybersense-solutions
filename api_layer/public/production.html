@@ -343,7 +343,7 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
 /* ── item detail modal ── */
 const BRIEFING_ITEMS_STORE = {};
 
-function openItemDetail(briefingId, idx) {
+async function openItemDetail(briefingId, idx) {
   const item = BRIEFING_ITEMS_STORE[briefingId + '_' + idx];
   if (!item) return;
   const typeMap = {
@@ -353,18 +353,94 @@ function openItemDetail(briefingId, idx) {
     training:   { full: 'Training Resource',   color: '#185FA5', bg: '#EFF6FF' },
   };
   const t = typeMap[item.type] || { full: item.type, color: '#64748b', bg: '#f1f5f9' };
+  const contentId = item.source_id || item.repository_id || item.id;
   document.getElementById('item-modal-body').innerHTML = `
     <div style="padding:24px 26px;">
       <span style="display:inline-block;padding:3px 10px;border-radius:5px;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:${t.bg};color:${t.color};margin-bottom:16px;">${item.label || t.full}</span>
-      <div style="font-size:17px;font-weight:600;color:var(--color-text-primary);line-height:1.45;margin-bottom:14px;">${item.title}</div>
+      <div style="font-size:17px;font-weight:600;color:var(--color-text-primary);line-height:1.45;margin-bottom:14px;">${escapeHtml(item.title || 'Briefing item')}</div>
       <div style="font-size:12px;color:var(--color-text-tertiary);display:flex;align-items:center;gap:6px;padding-bottom:20px;border-bottom:0.5px solid var(--color-border-tertiary);margin-bottom:20px;">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.2"/><path d="M6 3v3.5l2 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-        Source: <strong style="color:var(--color-text-secondary);">${item.source}</strong>
+        Source: <strong style="color:var(--color-text-secondary);">${escapeHtml(item.source || 'Repository')}</strong>
       </div>
       <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:8px;">Pipeline Status</div>
-      <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.6;">This briefing item has passed Jeff's QA review and Maya's editorial approval. Full article body is staged in the content repository and will be published upon your distribution authorization below.</div>
+      <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.6;margin-bottom:20px;">This briefing item has passed Jeff's QA review and Maya's editorial approval.</div>
+      <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:8px;">Full Item Content</div>
+      <div id="item-full-content" style="font-size:13px;color:var(--color-text-primary);line-height:1.7;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:8px;padding:14px;white-space:pre-wrap;">Loading full repository content...</div>
+      ${contentId && item.type !== 'training' ? `
+      <div style="margin-top:18px;border-top:0.5px solid var(--color-border-tertiary);padding-top:18px;">
+        <button class="action-btn secondary" onclick="loadPreviouslyApproved('${encodeURIComponent(contentId)}')">View Previously Approved</button>
+        <div id="previously-approved-panel" style="display:none;margin-top:12px;"></div>
+      </div>` : ''}
     </div>`;
   document.getElementById('item-modal').classList.add('open');
+
+  if (!contentId || item.type === 'training') {
+    document.getElementById('item-full-content').textContent = item.content || 'No repository-backed content is attached to this item yet.';
+    return;
+  }
+
+  try {
+    const detail = await CS.Auth.apiFetch('/api/admin/repository/items/' + encodeURIComponent(contentId));
+    const fullContent = getRepositoryDisplayContent(detail);
+    document.getElementById('item-full-content').textContent = fullContent || 'No full content is available for this repository item.';
+  } catch (e) {
+    document.getElementById('item-full-content').textContent = 'Unable to load full repository content. Refresh the preview and try again.';
+  }
+}
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
+}
+
+function getRepositoryDisplayContent(detail) {
+  const normalized = detail.normalized_data || {};
+  const candidates = [
+    normalized.content,
+    normalized.summary,
+    normalized.description,
+    normalized.body,
+    normalized.analysis,
+    normalized.title && normalized.source_url ? `${normalized.title}\n\nSource: ${normalized.source_url}` : null,
+    detail.item_summary,
+    detail.raw_threat_data?.description,
+    detail.raw_threat_data?.summary,
+    detail.raw_threat_data?.notes,
+  ];
+  const content = candidates.find(v => typeof v === 'string' && v.trim().length > 0);
+  if (content) return content.trim();
+  return JSON.stringify(normalized, null, 2);
+}
+
+async function loadPreviouslyApproved(encodedId) {
+  const panel = document.getElementById('previously-approved-panel');
+  if (!panel) return;
+  panel.style.display = 'block';
+  panel.innerHTML = '<div style="font-size:12px;color:var(--color-text-tertiary);padding:10px 0;">Loading previously approved content...</div>';
+
+  try {
+    const res = await CS.Auth.apiFetch('/api/admin/repository/items/' + encodedId + '/references?limit=8');
+    const refs = res.data || [];
+    if (!refs.length) {
+      panel.innerHTML = '<div style="font-size:12px;color:var(--color-text-tertiary);padding:10px 0;">No previously approved related content found.</div>';
+      return;
+    }
+
+    panel.innerHTML = refs.map(ref => {
+      const date = ref.content_date ? new Date(ref.content_date).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : '';
+      const label = ref.content_type === 'briefing' ? 'Briefing' : 'Article';
+      const href = ref.content_type === 'briefing' && ref.path ? ref.path : null;
+      return `<div style="padding:10px 0;border-bottom:0.5px solid var(--color-border-tertiary);">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
+          <span class="badge b-blue">${label}</span>
+          <span style="font-size:11px;color:var(--color-text-tertiary);">${escapeHtml(ref.status || '')}${date ? ' · ' + date : ''}</span>
+        </div>
+        <div style="font-size:13px;font-weight:600;color:var(--color-text-primary);line-height:1.4;">${escapeHtml(ref.title || 'Approved content')}</div>
+        ${href ? `<a href="${escapeHtml(href)}" target="_blank" style="display:inline-block;margin-top:5px;font-size:12px;color:var(--color-text-info);text-decoration:none;">Open briefing →</a>` : ''}
+      </div>`;
+    }).join('');
+  } catch (e) {
+    panel.innerHTML = '<div style="font-size:12px;color:var(--color-text-danger);padding:10px 0;">Unable to load previously approved content.</div>';
+  }
 }
 
 function closeItemModal() {

@@ -218,21 +218,21 @@ function toggleArchive() {
 // Update this list each time a new edition is published.
 const STATIC_EDITIONS = [
 {
-    edition_date: ‘2026-05-06’, edition_number: 118,
-    subject_line: ‘Mass Exploitation Surge: cPanel, Linux Kernel, and Fortinet EMS’,
+    edition_date: '2026-05-06', edition_number: 118,
+    subject_line: 'Mass Exploitation Surge: cPanel, Linux Kernel, and Fortinet EMS',
     description: `A critical authentication bypass in cPanel and WHM (CVE-2026-41940, CVSS 9.8) is enabling mass exploitation across thousands of exposed hosting servers, with the Sorry ransomware deploying as the primary payload and confirmed victims across government, military, and MSP sectors. Simultaneously, CISA has added a Linux kernel local privilege escalation (CVE-2026-31431) to its KEV catalog, affecting every major distribution since 2017 with a federal patch deadline of May 15. FortiClient EMS accumulates a second CISA KEV entry as CVE-2026-35616 extends an existing RCE into a chained attack path through the endpoint management plane.`,
-    file_path: ‘/newsletter/2026/May/05062026_edition118.html’, pipeline_status: ‘published’
+    file_path: '/newsletter/2026/May/05062026_edition118.html', pipeline_status: 'published'
   },
 {
-    edition_date: ‘2026-05-05’, edition_number: 117,
-    subject_line: ‘The Infrastructure Paradox’,
-    description: `Today’s brief examines a critical paradox in the modern attack surface: the mechanisms designed to maintain system health (automated update pipelines and management interfaces) have become primary vectors for institutional compromise. As enterprise management software faces exploitation via overlooked debug endpoints and AI-assisted discovery subverts traditional update logic, the "trust-by-default" model of software maintenance is being fundamentally recalculated. Bridging the gap between operational agility and structural integrity now requires a transition toward rigorous verification of the local development environment and a hardening of the identity perimeter.`,
-    file_path: ‘/newsletter/2026/May/05052026_edition117.html’, pipeline_status: ‘published’
+    edition_date: '2026-05-05', edition_number: 117,
+    subject_line: 'The Infrastructure Paradox',
+    description: `Today's brief examines a critical paradox in the modern attack surface: the mechanisms designed to maintain system health (automated update pipelines and management interfaces) have become primary vectors for institutional compromise. As enterprise management software faces exploitation via overlooked debug endpoints and AI-assisted discovery subverts traditional update logic, the "trust-by-default" model of software maintenance is being fundamentally recalculated. Bridging the gap between operational agility and structural integrity now requires a transition toward rigorous verification of the local development environment and a hardening of the identity perimeter.`,
+    file_path: '/newsletter/2026/May/05052026_edition117.html', pipeline_status: 'published'
   },
 {
     edition_date: '2026-05-04', edition_number: 116,
     subject_line: 'Sixty-Day Blind Spot',
-    description: `On April 28, cPanel’s PSIRT disclosed CVE-2026-41940, a critical CRLF injection flaw that chains session writer injection with encryption-skip logic to grant unauthenticated root access. The advisory confirmed a 60-day "shadow window" of active exploitation dating back to February 2026, affecting an estimated 1.5 million exposed instances before public mitigation was possible. Simultaneously, Microsoft addressed CVE-2026-33827, a zero-click IPv6 kernel race condition allowing unauthenticated remote code execution (RCE) across Windows environments from 2012 R2 to 2025. Adding to the volatility, the MSRC confirmed that APT28 is actively weaponizing CVE-2026-32202—utilizing malicious LNK files to automate NTLM credential capture. This zero-click technique requires no user interaction beyond directory navigation, funneling Net-NTLMv2 hashes directly to GRU-affiliated relay infrastructure.`,
+    description: `On April 28, cPanel's PSIRT disclosed CVE-2026-41940, a critical CRLF injection flaw that chains session writer injection with encryption-skip logic to grant unauthenticated root access. The advisory confirmed a 60-day "shadow window" of active exploitation dating back to February 2026, affecting an estimated 1.5 million exposed instances before public mitigation was possible. Simultaneously, Microsoft addressed CVE-2026-33827, a zero-click IPv6 kernel race condition allowing unauthenticated remote code execution (RCE) across Windows environments from 2012 R2 to 2025. Adding to the volatility, the MSRC confirmed that APT28 is actively weaponizing CVE-2026-32202—utilizing malicious LNK files to automate NTLM credential capture. This zero-click technique requires no user interaction beyond directory navigation, funneling Net-NTLMv2 hashes directly to GRU-affiliated relay infrastructure.`,
     file_path: '/newsletter/2026/May/05042026_edition116.html', pipeline_status: 'published'
   },  
   {
