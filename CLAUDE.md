@@ -20,6 +20,48 @@ No build step — vanilla JS/HTML/CSS served directly from root. No compilation 
 python tools/generate_carousel.py   # Generate Meta carousel images for social posts
 ```
 
+## Session Workflow
+
+Every session follows the Startup Checklist before any code is written. Do not open files or begin investigation until Hector confirms the checklist is cleared.
+
+**Startup Checklist (Hector runs before opening Alan):**
+1. `git pull origin main` + `git status` — clean state confirmed
+2. API health: `GET https://api.cybersense.solutions/health` → 200
+3. Ops console: `https://ops.cybersense.solutions` → accessible
+4. Local DB: `npm run dev` → connected
+5. Review last EOD Report
+6. Credential review: AGENT_JWT_SECRET, LinkedIn token, GitHub SOP token
+7. Railway — both services green
+8. Pre-session inspection notes compiled
+9. Task Brief staged
+10. Tools open: Alan | Gwen
+
+**Session structure:** Sprint 1 → EOD evaluation → Sprint 2 (if viable)
+
+**EOD Report sequence:** Gwen files first → Alan adds + verifies → Hector closes.
+
+**Alan's investigation gate:** For any fix session, Alan investigates and reports findings to Hector before writing a single line of implementation code. The investigation prompt goes in first. Hector reviews findings. Then implementation begins. This prevents spending tokens on the wrong fix.
+
+---
+
+## Credential Status
+
+| Credential | Status | Notes |
+|---|---|---|
+| `AGENT_JWT_SECRET` | ✅ Rotated 2026-05-08 | 64-byte hex. Previous value was JWT-shaped (wrong format). |
+| `JWT_SECRET` | ✅ Active | 15-min subscriber access tokens |
+| `JWT_REFRESH_SECRET` | ✅ Active | 7-day subscriber refresh tokens |
+| LinkedIn token | ✅ Active | Sunday auto-refresh cron running |
+| GitHub SOP token | ✅ Active | Read-only, server-side only |
+
+To rotate `AGENT_JWT_SECRET` in future:
+```bash
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+```
+Update in Railway API service → Variables, Railway ops service → Variables, and `api_layer/.env`. Log in Quinn's credential registry.
+
+---
+
 ## Architecture
 
 CyberSense.Solutions is a B2B cybersecurity intelligence SaaS with two separate deployable parts:
@@ -60,22 +102,22 @@ api_layer/
 
 ## Agent Fleet (v1.1 — Current)
 
-The platform uses **27 named agents** organized into departments. Agents receive work via the task queue (`tasks` table) and webhook notifications. The `AGENT_JWT_SECRET` authenticates agent API calls separately from user JWTs.
+The platform uses **33 named agents** organized into departments. Agents receive work via the task queue (`tasks` table) and webhook notifications. The `AGENT_JWT_SECRET` authenticates agent API calls separately from user JWTs.
 
-**Agent count increased from 20+ to 27** following the addition of the full IT security team (Cy, Nora, Owen, Paige, Quinn) and Mario (Training Coordinator) in fleet v1.1.
+**Fleet count: 33.** Cy is listed exclusively in Management (not also in IT) — he holds the CISO role and department lead authority over IT/Security, but is counted once.
 
 ### Department Structure
 
-| Department | Agents |
-|-----------|--------|
-| **Management** | Henry (GM), Valerie (Strategy), Victor (Risk), Barret (Coordination), Alex (Training Mgr), Maya (Managing Editor) |
-| **IT / Security** | Cy (CISO), Nora (System Health), Owen (Vulnerability/Patch), Paige (Incident Response), Quinn (Access/Credentials) |
-| **Operations / Acquisitions** | Rick (Threat Intel), Ivan/Charlie (Intel Scout), Barbara (Data Analyst), Laura (Operations Analyst), Jim (Financial Analyst), Jeff (QA Analyst) |
-| **Editorial — Intel** | James (Intel Acquisition), Jason (Dev Editor Intel), Rob (EIC Intel) |
-| **Editorial — Awareness** | Ruth (Awareness Acquisition — dual role: Ops + Editorial), Peter (Dev Editor Awareness), Ed (EIC Awareness) |
-| **Training / Production** | Kirby (Instructional Designer), Mario (Training Coordinator), Matt (Trainer/Facilitator) |
-| **Sales** | Mary (SDR), William (AE — includes pre-sales technical support, Dale consolidated), Joe (Account Manager) |
-| **Social Media / Distribution** | Oliver (LinkedIn), Lucy (Meta), Riley (TikTok/X), Ethan (YouTube) |
+| Department | Lead | Agents |
+|-----------|------|--------|
+| **Management (7)** | Henry (GM) | Henry, Valerie, Victor, Barret, Alex, Maya, Cy |
+| **IT / Security (4)** | Cy (CISO) | Nora, Owen, Paige, Quinn |
+| **Operations / Acquisitions (6)** | Barret | Rick, Ivan/Charlie, Barbara, Laura, Jim, Jeff |
+| **Editorial — Intel (3)** | Maya | James, Jason, Rob |
+| **Editorial — Awareness (3)** | Maya | Ruth, Peter, Ed |
+| **Production / Training (3)** | Alex | Kirby, Mario, Matt |
+| **Sales (3)** | Victor | Mary, William, Joe |
+| **Distribution / Social Media (4)** | Valerie | Oliver, Lucy, Riley, Ethan |
 
 ### Key Agent Architecture Notes
 
@@ -83,7 +125,7 @@ The platform uses **27 named agents** organized into departments. Agents receive
 - **Ivan/Charlie** is a single consolidated agent covering two intelligence streams: Innovation (Ivan function) and Growth (Charlie function).
 - **Dale** (Sales Engineer) is consolidated into William's scope for the current phase. Dale re-activates in fleet v1.2 upon Federal/Defense tier launch.
 - **Jeff** (QA Analyst) is listed under Operations/Acquisitions in the fleet but cross-pipeline — he reviews Intel, Awareness, and Training content.
-- **Cy** is both the platform's CISO agent and the brand avatar. His security standards are publicly accountable — the platform cannot publish threat intelligence about vulnerabilities it has not patched in its own stack.
+- **Cy** is both the platform's CISO agent (Management layer, IT/Security department lead) and the brand avatar. He is counted once in Management. His security standards are publicly accountable — the platform cannot publish threat intelligence about vulnerabilities it has not patched in its own stack.
 
 ### Agent SOP Access — Private Repository Architecture
 
@@ -245,7 +287,7 @@ Three primary navigation destinations:
 
 **Command Center** — Operational intelligence: live subscriber metrics, MRR (Jim-validated, Stripe), Open Risks (Victor + Cy), Content Pipeline Status (stage + agent name), Radar Threat Counter (live from Barbara's repository), Recent Activity feed.
 
-**Agent Status** — Fleet management: 27 agents organized by department, color-coded health indicators (Green/Yellow/Red), hover tooltips, agent detail panels. Six management-layer agents have dashboard chat interfaces:
+**Agent Status** — Fleet management: 33 agents organized by department, color-coded health indicators (Green/Yellow/Red), hover tooltips, agent detail panels. Six management-layer agents have dashboard chat interfaces:
 
 | Agent | Chat Scope |
 |-------|-----------|
