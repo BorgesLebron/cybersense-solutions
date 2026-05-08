@@ -58,9 +58,9 @@ api_layer/
 
 ---
 
-## Agent Fleet (v1.1 — Current)
+## Agent Fleet (v1.2 — Current)
 
-The platform uses **27 named agents** organized into departments. Agents receive work via the task queue (`tasks` table) and webhook notifications. The `AGENT_JWT_SECRET` authenticates agent API calls separately from user JWTs.
+The platform uses **33 named agents** organized into departments. Agents receive work via the task queue (`tasks` table) and webhook notifications. The `AGENT_JWT_SECRET` authenticates agent API calls separately from user JWTs.
 
 **Agent count increased from 20+ to 27** following the addition of the full IT security team (Cy, Nora, Owen, Paige, Quinn) and Mario (Training Coordinator) in fleet v1.1.
 
