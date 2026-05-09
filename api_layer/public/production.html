@@ -523,9 +523,16 @@ async function loadBriefings() {
   try {
     const res = await CS.Auth.apiFetch('/api/admin/briefings/preview');
     briefings = (res.data || []).map(transformBriefing);
-    if (!briefings.length) briefings = SAMPLE_BRIEFINGS;
-  } catch {
-    briefings = SAMPLE_BRIEFINGS;
+  } catch (e) {
+    briefings = [];
+    const el = document.getElementById('briefing-content');
+    el.innerHTML = `<div class="empty-state">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="16" stroke="currentColor" stroke-width="2"/><path d="M20 13v8M20 25v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <p>Unable to load pending briefings.</p>
+      <p style="font-size:11px;">${e.code === 'SESSION_EXPIRED' ? 'Your session expired before the preview could load. Sign in again and reopen Preview Briefing.' : 'Refresh the page and try again.'}</p>
+    </div>`;
+    document.getElementById('dot-briefing').style.background = '#dc2626';
+    return;
   }
   renderBriefings();
 }
@@ -668,7 +675,10 @@ async function approveBriefing(id) {
   if (!b) return;
   try {
     await CS.Auth.apiFetch('/api/admin/briefings/' + id + '/confirm-distribution', { method: 'POST', body: '{}' });
-  } catch {}
+  } catch (e) {
+    showToast(e.code === 'SESSION_EXPIRED' ? 'Session expired before approval. Sign in again and retry.' : (e.message || 'Approval failed. Refresh and try again.'), 'warning');
+    return;
+  }
   // update local state
   const execItem = b.checklist.find(c => c.id === 'exec');
   if (execItem) execItem.done = true;

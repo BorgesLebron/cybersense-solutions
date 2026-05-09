@@ -684,6 +684,14 @@ adminRouter.get('/briefings/preview', requireAdminToken(), async (req, res, next
   } catch (e) { next(e); }
 });
 
+adminRouter.get('/threats', requireAdminToken(), async (req, res, next) => {
+  try {
+    const { severity, page = 1, limit = 50 } = req.query;
+    const threats = await db.getThreatRecords({ severity, page: +page, limit: +limit });
+    res.json({ data: threats });
+  } catch (e) { next(e); }
+});
+
 adminRouter.get('/repository/items/:id', requireAdminToken(), async (req, res, next) => {
   try {
     const item = await db.getRepositoryItemDetail(req.params.id);

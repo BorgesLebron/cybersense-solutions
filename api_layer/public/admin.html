@@ -276,21 +276,16 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
         <div class="panel-title">Threat radar</div>
         <div class="panel-sub">Live feed managed by Rick — linked to Intel Brief as articles complete</div>
         <div class="metric-row">
-          <div class="met"><div class="met-lbl">Active threats tracked</div><div class="met-val">47</div><div class="met-delta dn">6 new today</div></div>
-          <div class="met"><div class="met-lbl">Critical (CVSS 9+)</div><div class="met-val">3</div><div class="met-delta dn">Needs immediate Intel</div></div>
-          <div class="met"><div class="met-lbl">Articles in progress</div><div class="met-val">8</div><div class="met-delta nt">James queue</div></div>
-          <div class="met"><div class="met-lbl">Published this week</div><div class="met-val">22</div><div class="met-delta up">+4 vs last week</div></div>
+          <div class="met"><div class="met-lbl">Active threats tracked</div><div class="met-val" id="radar-total">—</div><div class="met-delta nt" id="radar-delta-total">Loading...</div></div>
+          <div class="met"><div class="met-lbl">Critical (CVSS 9+)</div><div class="met-val" id="radar-critical">—</div><div class="met-delta dn">Needs immediate Intel</div></div>
+          <div class="met"><div class="met-lbl">No article yet</div><div class="met-val" id="radar-no-article">—</div><div class="met-delta nt">Intel pipeline pending</div></div>
+          <div class="met"><div class="met-lbl">Article linked</div><div class="met-val" id="radar-has-article">—</div><div class="met-delta up">Intel brief published</div></div>
         </div>
         <div class="card">
           <div class="card-hd">Live threat feed</div>
           <table class="tbl">
-            <tr><th>Severity</th><th>Threat name</th><th>CVE</th><th>CVSS</th><th>Status</th><th>Article</th></tr>
-            <tr><td><span class="badge b-red">Critical</span></td><td>FortiGate SSL-VPN RCE</td><td>CVE-2025-3841</td><td>9.8</td><td><span class="badge b-blue">In review</span></td><td><span class="badge b-blue">Draft</span></td></tr>
-            <tr><td><span class="badge b-red">Critical</span></td><td>Windows NTLM relay chain</td><td>CVE-2025-3701</td><td>9.1</td><td><span class="badge b-amber">Writing</span></td><td><span class="badge b-amber">In progress</span></td></tr>
-            <tr><td><span class="badge b-red">Critical</span></td><td>Apache Kafka deserialization</td><td>CVE-2025-3522</td><td>9.0</td><td><span class="badge b-red">New</span></td><td><span class="badge b-gray">Queued</span></td></tr>
-            <tr><td><span class="badge b-amber">High</span></td><td>Chrome V8 sandbox escape</td><td>CVE-2025-3489</td><td>8.8</td><td><span class="badge b-green">Published</span></td><td><span class="badge b-green">Live</span></td></tr>
-            <tr><td><span class="badge b-amber">High</span></td><td>OpenSSH pre-auth RCE</td><td>CVE-2025-3401</td><td>8.4</td><td><span class="badge b-green">Published</span></td><td><span class="badge b-green">Live</span></td></tr>
-            <tr><td><span class="badge b-blue">Medium</span></td><td>Kubernetes RBAC escalation</td><td>CVE-2025-3280</td><td>6.5</td><td><span class="badge b-amber">Writing</span></td><td><span class="badge b-amber">In progress</span></td></tr>
+            <tr><th>Severity</th><th>Threat name</th><th>CVE</th><th>CVSS</th><th>Category</th><th>Article</th></tr>
+            <tbody id="radar-tbody"><tr><td colspan="6" style="text-align:center;color:#666;padding:12px;">Loading threat data...</td></tr></tbody>
           </table>
         </div>
         <button class="ask-btn" onclick="sendPrompt('What data fields should the CyberSense threat radar database schema include for Rick to structure his CVE intake properly?','cy')">Design threat intake schema ↗</button>
@@ -551,7 +546,76 @@ document.addEventListener('cs:login', (e) => {
   if (label && u) label.textContent = (u.full_name || u.email || '') + (u.admin_role?.role ? ' — ' + u.admin_role.role.toUpperCase() : '');
   const btn = document.getElementById('nav-logout');
   if (btn) btn.style.display = 'inline-block';
+  loadRadarData();
 });
+
+async function loadRadarData() {
+  const token = localStorage.getItem('cs_access_token') || sessionStorage.getItem('cs_access_token');
+  if (!token) return;
+  try {
+    const res = await fetch('/api/admin/threats?limit=50', { headers: { Authorization: 'Bearer ' + token } });
+    if (!res.ok) return;
+    const { data: threats } = await res.json();
+
+    document.getElementById('radar-total').textContent = threats.length;
+    document.getElementById('radar-delta-total').textContent = threats.length + ' in repository';
+    const critical = threats.filter(t => parseFloat(t.cvss_score) >= 9 || t.severity === 'Critical').length;
+    document.getElementById('radar-critical').textContent = critical;
+    document.getElementById('radar-no-article').textContent = threats.filter(t => !t.has_article).length;
+    document.getElementById('radar-has-article').textContent = threats.filter(t => t.has_article).length;
+
+    const sevBadge = (sev, cvss) => {
+      const s = parseFloat(cvss) || 0;
+      if (sev === 'Critical' || s >= 9) return '<span class="badge b-red">Critical</span>';
+      if (sev === 'High' || s >= 7) return '<span class="badge b-amber">High</span>';
+      if (sev === 'Medium' || s >= 4) return '<span class="badge b-blue">Medium</span>';
+      return '<span class="badge b-gray">Low</span>';
+    };
+
+    const tbody = document.getElementById('radar-tbody');
+    if (!threats.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#666;padding:12px;">No threat records in repository</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = threats.map(t => `<tr class="radar-row" style="cursor:pointer;"
+      data-name="${(t.threat_name || '').replace(/"/g, '&quot;')}"
+      data-cve="${t.cve_id || 'N/A'}"
+      data-cvss="${t.cvss_score != null ? parseFloat(t.cvss_score).toFixed(1) : 'N/A'}"
+      data-category="${t.category || 'N/A'}"
+      data-tags="${(Array.isArray(t.tags) ? t.tags : (t.tags ? [t.tags] : [])).join(', ') || 'none'}"
+      data-priority="${t.priority || 'N/A'}"
+      data-ingested="${t.ingested_at ? new Date(t.ingested_at).toLocaleDateString('en-US') : 'N/A'}">
+      <td>${sevBadge(t.severity, t.cvss_score)}</td>
+      <td>${t.threat_name || 'Unknown'}</td>
+      <td>${t.cve_id || '—'}</td>
+      <td>${t.cvss_score != null ? parseFloat(t.cvss_score).toFixed(1) : '—'}</td>
+      <td>${t.category || '—'}</td>
+      <td>${t.has_article ? '<span class="badge b-green">Linked</span>' : '<span class="badge b-gray">None</span>'}</td>
+    </tr>`).join('');
+
+    const tip = document.getElementById('radar-tooltip');
+    tbody.querySelectorAll('.radar-row').forEach(row => {
+      row.addEventListener('mouseenter', () => {
+        tip.innerHTML = `<div style="font-weight:600;margin-bottom:6px;">${row.dataset.name}</div>
+          <div><span style="color:#aaa;">CVE</span> ${row.dataset.cve}</div>
+          <div><span style="color:#aaa;">CVSS</span> ${row.dataset.cvss}</div>
+          <div><span style="color:#aaa;">Category</span> ${row.dataset.category}</div>
+          <div><span style="color:#aaa;">Tags</span> ${row.dataset.tags}</div>
+          <div><span style="color:#aaa;">Priority</span> ${row.dataset.priority}</div>
+          <div><span style="color:#aaa;">Ingested</span> ${row.dataset.ingested}</div>`;
+        tip.style.display = 'block';
+      });
+      row.addEventListener('mousemove', (e) => {
+        tip.style.left = (e.clientX + 16) + 'px';
+        tip.style.top = Math.min(e.clientY - 8, window.innerHeight - 200) + 'px';
+      });
+      row.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+    });
+  } catch (e) { console.error('Radar load failed:', e); }
+}
 </script>
+
+<div id="radar-tooltip" style="display:none;position:fixed;z-index:9999;background:#1a1a2e;border:1px solid #333;border-radius:6px;padding:12px 16px;font-size:13px;color:#e0e0e0;line-height:1.8;max-width:280px;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,0.5);"></div>
 </body>
 </html>

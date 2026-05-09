@@ -61,9 +61,9 @@ async function sendBriefingEmail(to_list, briefing) {
     dynamicTemplateData: {
       name,
       edition_date: dateFormatted,
-      subject: briefing.subject_line,
+      subject: briefing.subject_line || 'Daily Digital Awareness Brief',
       preview_url: briefing.file_path
-        ? `${process.env.APP_URL}${briefing.file_path}`
+        ? `${process.env.APP_URL}/${briefing.file_path.replace(/^\//, '')}`
         : `${process.env.APP_URL}/newsletter`
     },
   }));
