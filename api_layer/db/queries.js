@@ -332,6 +332,12 @@ const listArticles = ({ section, access_tier, status = 'published', page = 1, li
             FROM articles WHERE ${conds.join(' AND ')} ORDER BY published_at DESC NULLS LAST LIMIT $${params.length - 1} OFFSET $${params.length}`, params);
 };
 
+const listArticlesForPreview = () =>
+  q(`SELECT id, section AS type, title, pipeline_status::text AS stage,
+            TO_CHAR(GREATEST(maya_approved_at, published_at, created_at), 'YYYY-MM-DD') AS updated
+     FROM articles WHERE pipeline_status::text != 'published'
+     ORDER BY created_at DESC`);
+
 const advanceArticleStatus = (id, to_status) =>
   q1(`UPDATE articles SET pipeline_status=$2,
         qa_passed_at = CASE WHEN $3='maya' THEN now() ELSE qa_passed_at END,
@@ -745,7 +751,7 @@ module.exports = {
   createThreatRecord, getThreatRecords, getThreatById, linkThreatToArticle,
   createIntelItem, getIntelItems,
   processIntoRepository, getRepositoryQueue, listApprovedBriefingPreviews, getRepositoryItemDetail, getApprovedContentReferences,
-  createArticle, getArticle, getArticleById, listArticles, advanceArticleStatus, incrementArticleViews,
+  createArticle, getArticle, getArticleById, listArticles, listArticlesForPreview, advanceArticleStatus, incrementArticleViews,
   createBriefing, getBriefingByDate, getBriefingById, listBriefings, advanceBriefingStatus, revertBriefingForRevision,
   logPipelineEvent, countRejections, countAgentRejections24h,
   createSocialPost, updateSocialMetrics, listSocialPosts, getSocialPerformance,
