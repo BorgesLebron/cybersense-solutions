@@ -650,11 +650,11 @@ const getLiveMetricsDelta = () =>
 
 const getPipelineStatus = () =>
   q(`SELECT content_type, pipeline_status, COUNT(*) FROM
-      (SELECT 'article' AS content_type, pipeline_status FROM articles WHERE pipeline_status != 'published'
+      (SELECT 'article' AS content_type, pipeline_status::text AS pipeline_status FROM articles WHERE pipeline_status::text != 'published'
        UNION ALL
-       SELECT 'briefing', pipeline_status FROM briefings WHERE pipeline_status != 'published'
+       SELECT 'briefing', pipeline_status::text FROM briefings WHERE pipeline_status::text != 'published'
        UNION ALL
-       SELECT 'training', pipeline_status FROM training_modules WHERE pipeline_status != 'published') x
+       SELECT 'training', pipeline_status::text FROM training_modules WHERE pipeline_status::text != 'published') x
      GROUP BY content_type, pipeline_status ORDER BY content_type, pipeline_status`);
 
 const getActivityFeed = (limit = 20) =>
