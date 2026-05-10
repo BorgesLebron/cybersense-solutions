@@ -488,6 +488,38 @@ opsRouter.post('/escalate', requireAgentToken([]), async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+// Returns non-published articles for the Production tab Articles preview panel.
+// Agent mapping and stage display labels are resolved client-side.
+opsRouter.get('/articles/preview', requireAdminToken(), async (req, res, next) => {
+  try {
+    const rows = await db.listArticlesForPreview();
+    const stageMap = {
+      draft: 'In Progress', in_progress: 'In Progress',
+      under_review: 'Under Review', qa: 'Under Review',
+      maya: 'Human in the Loop', approved: 'Human in the Loop',
+    };
+    const agentMap = {
+      draft: 'James', in_progress: 'James',
+      under_review: 'Jason', qa: 'Jeff',
+      maya: 'Maya', approved: 'Maya',
+    };
+    res.json(rows.map(r => ({
+      id: r.id,
+      type: r.type,
+      title: r.title,
+      stage: stageMap[r.stage] || r.stage,
+      agent: agentMap[r.stage] || 'Editorial',
+      updated: r.updated || '',
+    })));
+  } catch (e) { next(e); }
+});
+
+// Carousel preview — infrastructure not yet built (Lucy/Oliver generate ad hoc).
+// Returns empty array so the production panel shows the correct empty state.
+opsRouter.get('/carousels/preview', requireAdminToken(), async (req, res, next) => {
+  res.json([]);
+});
+
 // ── social.js ─────────────────────────────────────────────────────────────────
 const socialRouter = express.Router();
 const SOCIAL_AGENTS = ['Oliver', 'Lucy', 'Riley', 'Ethan', 'Henry'];
