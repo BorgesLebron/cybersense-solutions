@@ -550,12 +550,8 @@ document.addEventListener('cs:login', (e) => {
 });
 
 async function loadRadarData() {
-  const token = localStorage.getItem('cs_access_token') || sessionStorage.getItem('cs_access_token');
-  if (!token) return;
   try {
-    const res = await fetch('/api/admin/threats?limit=50', { headers: { Authorization: 'Bearer ' + token } });
-    if (!res.ok) return;
-    const { data: threats } = await res.json();
+    const { data: threats } = await CS.Auth.apiFetch('/api/admin/threats?limit=50');
 
     document.getElementById('radar-total').textContent = threats.length;
     document.getElementById('radar-delta-total').textContent = threats.length + ' in repository';

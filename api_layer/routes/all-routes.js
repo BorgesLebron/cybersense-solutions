@@ -5,6 +5,7 @@ const express = require('express');
 const contentRouter = express.Router();
 const db = require('../db/queries');
 const { requireUserToken, requireAdminToken, gateContent, TIER_RANK, AGENT_PERMISSIONS, err } = require('../middleware/auth');
+const { sendBriefingEmail } = require('../services/sendgrid');
 
 contentRouter.get('/articles', requireUserToken('free'), async (req, res, next) => {
   try {
@@ -656,6 +657,22 @@ adminRouter.delete('/briefings/:id', requireAdminToken(['gm']), async (req, res,
   try {
     await db.deleteBriefingById(req.params.id);
     res.json({ deleted: true, id: req.params.id });
+  } catch (e) { next(e); }
+});
+
+// Single-address test send for validating SendGrid template and URL formatting.
+// Sends to one address only — never touches the subscriber list.
+adminRouter.post('/briefings/:id/send-test', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email || typeof email !== 'string' || !email.includes('@'))
+      return res.status(400).json(err('INVALID_EMAIL', 'A valid email address is required'));
+
+    const briefing = await db.getBriefingById(req.params.id);
+    if (!briefing) return res.status(404).json(err('NOT_FOUND', 'Briefing not found'));
+
+    await sendBriefingEmail([{ email, name: 'Test Recipient' }], briefing);
+    res.json({ sent: true, to: email, briefing_id: briefing.id, edition: briefing.edition_number });
   } catch (e) { next(e); }
 });
 

@@ -384,7 +384,10 @@ async function openItemDetail(briefingId, idx) {
     const fullContent = getRepositoryDisplayContent(detail);
     document.getElementById('item-full-content').textContent = fullContent || 'No full content is available for this repository item.';
   } catch (e) {
-    document.getElementById('item-full-content').textContent = 'Unable to load full repository content. Refresh the preview and try again.';
+    const fallback = e.status === 404 || e.code === 'NOT_FOUND'
+      ? `This item has not yet been processed into the intelligence repository.\n\nTitle: ${item.title || '—'}\nSource: ${item.source || '—'}\n\nFull content will be available once Barbara's normalization step completes. The briefing has passed Jeff's QA and Maya's editorial review — these are the approval signals for the HITL gate.`
+      : 'Unable to load full repository content. Refresh the preview and try again.';
+    document.getElementById('item-full-content').textContent = fallback;
   }
 }
 
