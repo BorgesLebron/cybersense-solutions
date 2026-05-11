@@ -151,12 +151,21 @@ const processIntoRepository = ({ source_type, source_id, normalized_data, correl
 
 const getRepositoryQueue = ({ pipeline, limit = 30 } = {}) => {
   const col = pipeline === 'awareness' ? 'ready_for_awareness' : 'ready_for_intel';
-  return q(`SELECT r.*, 
+  const excludeUsed = pipeline === 'awareness'
+    ? `AND NOT EXISTS (
+         SELECT 1
+         FROM briefings b
+         WHERE r.source_id = ANY(b.threat_item_ids)
+            OR r.source_id = ANY(b.innovation_item_ids)
+            OR r.source_id = b.growth_item_id
+       )`
+    : '';
+  return q(`SELECT r.*,
               CASE r.source_type WHEN 'threat' THEN t.threat_name WHEN 'innovation' THEN i.headline ELSE i.headline END AS title
             FROM intel_repository r
             LEFT JOIN threat_records t ON t.id=r.source_id AND r.source_type='threat'
             LEFT JOIN intel_items i ON i.id=r.source_id AND r.source_type IN ('innovation','growth','policy')
-            WHERE r.${col}=true ORDER BY r.processed_at ASC LIMIT $1`, [limit]);
+            WHERE r.${col}=true ${excludeUsed} ORDER BY r.processed_at ASC LIMIT $1`, [limit]);
 };
 
 const listApprovedBriefingPreviews = () =>
@@ -349,10 +358,10 @@ const incrementArticleViews = (id) => q('UPDATE articles SET view_count=view_cou
 
 // ── BRIEFINGS ──────────────────────────────────────────────────────────────────
 
-const createBriefing = ({ edition_date, subject_line, body_md, threat_item_ids, innovation_item_ids, growth_item_id, training_byte_id }) =>
-  q1(`INSERT INTO briefings (id,edition_date,subject_line,body_md,threat_item_ids,innovation_item_ids,growth_item_id,training_byte_id,pipeline_status,draft_completed_at,open_count,click_count)
-      VALUES (gen_random_uuid(),$1,$2,$3,$4,$5,$6,$7,'draft',now(),0,0) RETURNING *`,
-    [edition_date, subject_line, body_md, threat_item_ids, innovation_item_ids, growth_item_id, training_byte_id]);
+const createBriefing = ({ edition_date, edition_number, subject_line, body_md, threat_item_ids, innovation_item_ids, growth_item_id, training_byte_id, file_path, description }) =>
+  q1(`INSERT INTO briefings (id,edition_date,edition_number,subject_line,body_md,threat_item_ids,innovation_item_ids,growth_item_id,training_byte_id,file_path,description,pipeline_status,draft_completed_at,open_count,click_count)
+      VALUES (gen_random_uuid(),$1,COALESCE($2, (SELECT COALESCE(MAX(edition_number), 0) + 1 FROM briefings)),$3,$4,$5,$6,$7,$8,$9,$10,'draft',now(),0,0) RETURNING *`,
+    [edition_date, edition_number || null, subject_line, body_md, threat_item_ids, innovation_item_ids, growth_item_id, training_byte_id, file_path || null, description || null]);
 
 const getBriefingByDate = (date) => q1('SELECT * FROM briefings WHERE edition_date=$1', [date]);
 const getBriefingById = (id) => q1('SELECT * FROM briefings WHERE id=$1', [id]);
