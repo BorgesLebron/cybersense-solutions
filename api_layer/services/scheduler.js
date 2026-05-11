@@ -641,13 +641,13 @@ function startScheduler() {
     // Content + credentials
     cron.schedule('0 0 * * 1-5',    runMidnightContentUpdate,      { timezone: 'America/Chicago' });
     cron.schedule('0 23 * * 0',     runLinkedInTokenRefresh,       { timezone: 'America/Chicago' });
-    // Awareness pipeline kickoff
-    cron.schedule('30 4 * * 1-5',   runRuthDailyCycle,             { timezone: 'America/Chicago' });
+    // Awareness pipeline kickoff — Sun–Thu mornings (0-4) for Mon–Fri delivery
+    cron.schedule('30 4 * * 0-4',   runRuthDailyCycle,             { timezone: 'America/Chicago' });
     cron.schedule('0 7 * * 1-5',    runOliverDailyPost,            { timezone: 'America/Chicago' });
-    // Agent runtime task pollers
-    cron.schedule('*/2 4-9 * * 1-5', pollRuthTasks,                { timezone: 'America/Chicago' });
-    cron.schedule('*/2 4-9 * * 1-5', pollPeterTasks,               { timezone: 'America/Chicago' });
-    cron.schedule('*/2 4-9 * * 1-5', pollEdTasks,                  { timezone: 'America/Chicago' });
+    // Agent runtime task pollers — Sun–Thu only, matching production nights
+    cron.schedule('*/2 4-9 * * 0-4', pollRuthTasks,                { timezone: 'America/Chicago' });
+    cron.schedule('*/2 4-9 * * 0-4', pollPeterTasks,               { timezone: 'America/Chicago' });
+    cron.schedule('*/2 4-9 * * 0-4', pollEdTasks,                  { timezone: 'America/Chicago' });
     cron.schedule('0 */4 * * *',     pollRickTasks,                 { timezone: 'America/Chicago' });
     cron.schedule('45 5 * * *',      pollIvanCharlieTasks,          { timezone: 'America/Chicago' });
     console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SCHEDULER_STARTED', jobs: 22 }));
