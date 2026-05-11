@@ -362,10 +362,10 @@ async function openItemDetail(briefingId, idx) {
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.2"/><path d="M6 3v3.5l2 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
         Source: <strong style="color:var(--color-text-secondary);">${escapeHtml(item.source || 'Repository')}</strong>
       </div>
+      <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:8px;">Full Item Content</div>
+      <div id="item-full-content" style="font-size:13px;color:var(--color-text-primary);line-height:1.7;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:8px;padding:14px;white-space:pre-wrap;max-height:360px;overflow-y:auto;margin-bottom:20px;">Loading full repository content...</div>
       <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:8px;">Pipeline Status</div>
       <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.6;margin-bottom:20px;">This briefing item has passed Jeff's QA review and Maya's editorial approval.</div>
-      <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:8px;">Full Item Content</div>
-      <div id="item-full-content" style="font-size:13px;color:var(--color-text-primary);line-height:1.7;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:8px;padding:14px;white-space:pre-wrap;">Loading full repository content...</div>
       ${contentId && item.type !== 'training' ? `
       <div style="margin-top:18px;border-top:0.5px solid var(--color-border-tertiary);padding-top:18px;">
         <button class="action-btn secondary" onclick="loadPreviouslyApproved('${encodeURIComponent(contentId)}')">View Previously Approved</button>
@@ -576,7 +576,8 @@ function renderBriefingCard(b) {
       <div class="dist-confirmed">
         <div class="dc-icon">✓</div>
         <div class="dc-title">Distribution authorized and confirmed</div>
-        <div class="dc-sub">Laura has triggered distribution. Oliver is scheduled to post to LinkedIn at 0700 CT. This edition is locked.</div>
+        <div class="dc-sub">Email distribution has been triggered. Social posting remains manual for this phase.</div>
+        ${b.public_url ? `<a href="${escapeHtml(b.public_url)}" target="_blank" style="color:var(--color-text-info);font-size:13px;text-decoration:none;font-weight:600;">Open public newsletter URL -></a>` : ''}
       </div>
     </div>`;
   }
@@ -676,8 +677,9 @@ function formatTime(iso) {
 async function approveBriefing(id) {
   const b = briefings.find(b => b.id === id);
   if (!b) return;
+  let result;
   try {
-    await CS.Auth.apiFetch('/api/admin/briefings/' + id + '/confirm-distribution', { method: 'POST', body: '{}' });
+    result = await CS.Auth.apiFetch('/api/admin/briefings/' + id + '/confirm-distribution', { method: 'POST', body: '{}' });
   } catch (e) {
     showToast(e.code === 'SESSION_EXPIRED' ? 'Session expired before approval. Sign in again and retry.' : (e.message || 'Approval failed. Refresh and try again.'), 'warning');
     return;
@@ -685,8 +687,9 @@ async function approveBriefing(id) {
   // update local state
   const execItem = b.checklist.find(c => c.id === 'exec');
   if (execItem) execItem.done = true;
+  b.public_url = result.public_url || null;
   distributionState[id] = false;
-  showToast('Distribution authorized — Laura has been notified', 'success');
+  showToast('Distribution authorized - email delivery started', 'success');
   setTimeout(() => {
     const lauraItem = b.checklist.find(c => c.id === 'laura');
     if (lauraItem) lauraItem.done = true;

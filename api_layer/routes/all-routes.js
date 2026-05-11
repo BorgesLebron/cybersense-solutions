@@ -807,8 +807,8 @@ adminRouter.post('/pipeline/ruth/trigger', requireAdminToken(['gm']), async (req
   } catch (e) { next(e); }
 });
 
-// Human-in-the-loop gate. Confirms distribution, creates Laura's release task,
-// and schedules Oliver's LinkedIn post for next 0700 CT.
+// Human-in-the-loop gate. Confirms distribution, publishes the briefing, and
+// sends subscriber email. Social distribution is manual for this phase.
 // Distribution is blocked until this endpoint is called — no exceptions.
 adminRouter.post('/briefings/:id/confirm-distribution', requireAdminToken(['gm']), async (req, res, next) => {
   try {
@@ -816,27 +816,6 @@ adminRouter.post('/briefings/:id/confirm-distribution', requireAdminToken(['gm']
     if (!briefing) return res.status(404).json(err('NOT_FOUND', 'Briefing not found'));
     if (briefing.pipeline_status !== 'approved')
       return res.status(422).json(err('NOT_APPROVED', 'Briefing must be in approved status before distribution can be confirmed'));
-
-    // Next 0700 CT (server local time — same timezone convention as rest of codebase)
-    const scheduledAt = new Date();
-    scheduledAt.setDate(scheduledAt.getDate() + 1);
-    scheduledAt.setHours(7, 0, 0, 0);
-
-    const lauraTask = await db.createTask({
-      agent_name: 'Laura',
-      task_type: 'release_briefing',
-      content_type: 'briefing',
-      content_id: briefing.id,
-      sla_deadline: new Date(scheduledAt.getTime() - 5 * 60 * 1000),
-    });
-
-    const oliverTask = await db.createTask({
-      agent_name: 'Oliver',
-      task_type: 'post_scheduled',
-      content_type: 'briefing',
-      content_id: briefing.id,
-      sla_deadline: scheduledAt,
-    });
 
     await db.logAuditEvent({
       actor: req.user.id,
@@ -846,48 +825,51 @@ adminRouter.post('/briefings/:id/confirm-distribution', requireAdminToken(['gm']
       affected_content_id: briefing.id,
     });
 
+    const published = await db.advanceBriefingStatus(briefing.id, 'published');
+    const subscribers = await db.pool.query(
+      `SELECT email, full_name FROM users
+       WHERE email_subscribed = true
+         AND email_verified = true
+         AND deleted_at IS NULL`
+    ).then(r => r.rows.map(u => ({ email: u.email, name: u.full_name || 'Reader' })));
+
+    if (subscribers.length > 0) {
+      await sendBriefingEmail(subscribers, published);
+    }
+
+    const appUrl = (process.env.APP_URL || 'https://cybersense.solutions').replace(/\/$/, '');
+    const publicUrl = published.file_path
+      ? `${appUrl}/${published.file_path.replace(/^\//, '')}`
+      : `${appUrl}/newsletter.html`;
+
     await notifyAgents(['Laura'], {
-      type: 'DISTRIBUTION_CONFIRMED',
-      briefing_id: briefing.id,
-      edition_number: briefing.edition_number,
-      edition_date: briefing.edition_date,
-      subject_line: briefing.subject_line,
-      task_id: lauraTask.id,
-      scheduled_post_at: scheduledAt.toISOString(),
-      message: `Human executive confirmed distribution for Edition ${briefing.edition_number}. Release briefing and trigger email distribution. Oliver's LinkedIn post is scheduled for ${scheduledAt.toISOString()}.`,
+      type: 'BRIEFING_EMAIL_DISTRIBUTED',
+      briefing_id: published.id,
+      edition_number: published.edition_number,
+      edition_date: published.edition_date,
+      subject_line: published.subject_line,
+      recipient_count: subscribers.length,
+      public_url: publicUrl,
+      message: `Human executive confirmed Edition ${published.edition_number}. Email distribution is complete. Social posting remains manual for this phase.`,
     });
-
-    await notifyAgents(['Oliver'], {
-      type: 'POST_SCHEDULED',
-      briefing_id: briefing.id,
-      edition_number: briefing.edition_number,
-      edition_date: briefing.edition_date,
-      subject_line: briefing.subject_line,
-      task_id: oliverTask.id,
-      scheduled_at: scheduledAt.toISOString(),
-      platform: 'linkedin',
-      message: `LinkedIn post for Edition ${briefing.edition_number} scheduled for ${scheduledAt.toISOString()}. Prepare post content. Scheduler triggers execution at 0700 CT.`,
-    });
-
-    await db.advanceBriefingStatus(briefing.id, 'published');
 
     await db.logPipelineEvent({
       content_type: 'briefing',
-      content_id: briefing.id,
+      content_id: published.id,
       from_status: 'approved',
       to_status: 'published',
       agent_name: 'human_executive',
-      notes: `Distribution confirmed by human executive — Edition ${briefing.edition_number}`,
+      notes: `Email distribution confirmed by human executive - Edition ${published.edition_number}; recipients=${subscribers.length}`,
     });
 
     res.json({
       confirmed: true,
-      briefing_id: briefing.id,
-      edition_number: briefing.edition_number,
-      edition_date: briefing.edition_date,
-      scheduled_post_at: scheduledAt.toISOString(),
-      laura_task_id: lauraTask.id,
-      oliver_task_id: oliverTask.id,
+      briefing_id: published.id,
+      edition_number: published.edition_number,
+      edition_date: published.edition_date,
+      public_url: publicUrl,
+      email_recipients: subscribers.length,
+      social_distribution: 'manual',
     });
   } catch (e) { next(e); }
 });
