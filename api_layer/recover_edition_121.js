@@ -10,13 +10,13 @@
 //   $env:INNOVATION_IDS="uuid1,uuid2"
 //   $env:GROWTH_ID="uuid"
 //   $env:TRAINING_BYTE_ID="uuid" # required for --execute; should derive from one selected threat
-//   $env:FILE_PATH="newsletter/2026/May/05102026_edition121.html"
+//   $env:FILE_PATH="newsletter/2026/May/05112026_edition121.html"
 //   node recover_edition_121.js --execute
 
 require('dotenv').config();
 const db = require('./db/queries');
 
-const EDITION_DATE = process.env.EDITION_DATE || '2026-05-10';
+const EDITION_DATE = process.env.EDITION_DATE || '2026-05-11';
 const EDITION_NUMBER = Number(process.env.EDITION_NUMBER || 121);
 const EXECUTE = process.argv.includes('--execute');
 

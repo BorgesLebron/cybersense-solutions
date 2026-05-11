@@ -6,10 +6,10 @@ const db = require('./db/queries');
 const EXECUTE = process.argv.includes('--execute');
 
 const edition = {
-  date: '2026-05-10',
+  date: '2026-05-11',
   number: 121,
   subject: 'Edition 121 - Trust Surfaces Under Pressure',
-  file_path: 'newsletter/2026/May/05102026_edition121.html',
+  file_path: 'newsletter/2026/May/05112026_edition121.html',
   description: 'Canvas/Instructure extortion pressure, PAN-OS captive portal exploitation, Oracle monthly critical patch cadence, Cloudflare growth learning, Linux Copy Fail, and quantum infrastructure advances.',
 };
 
