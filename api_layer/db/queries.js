@@ -140,6 +140,34 @@ const getIntelItems = ({ type, ready_for_awareness, limit = 20, since } = {}) =>
   return q(`SELECT * FROM intel_items WHERE ${conds.join(' AND ')} ORDER BY priority DESC, ingested_at DESC LIMIT $${params.length}`, params);
 };
 
+const getIntelRadarItems = ({ type, limit = 50 } = {}) => {
+  const params = [];
+  const conds = [];
+  if (type) {
+    params.push(type);
+    conds.push(`i.type=$${params.length}`);
+  } else {
+    conds.push(`i.type IN ('innovation', 'growth')`);
+  }
+  params.push(limit);
+  const where = conds.length ? `WHERE ${conds.join(' AND ')}` : '';
+  return q(`SELECT i.id, i.type, i.category, i.headline, i.summary, i.tags, i.priority,
+                   i.ingested_at,
+                   EXISTS (
+                     SELECT 1
+                     FROM briefings b
+                     WHERE i.id = ANY(b.innovation_item_ids)
+                        OR i.id = b.growth_item_id
+                   ) AS used_in_briefing,
+                   CASE WHEN i.article_id IS NOT NULL THEN true ELSE false END AS has_article,
+                   r.id AS repository_id, r.ready_for_intel, r.ready_for_awareness, r.processed_at
+            FROM intel_items i
+            LEFT JOIN intel_repository r ON r.source_id = i.id
+            ${where}
+            ORDER BY i.ingested_at DESC
+            LIMIT $${params.length}`, params);
+};
+
 // ── INTEL REPOSITORY ───────────────────────────────────────────────────────────
 
 const processIntoRepository = ({ source_type, source_id, normalized_data, correlation_tags, processed_by, ready_for_intel, ready_for_awareness }) =>
@@ -337,16 +365,24 @@ const getApprovedContentReferences = (id, limit = 8) =>
 
 // ── ARTICLES ───────────────────────────────────────────────────────────────────
 
-const createArticle = ({ title, section, body_md, access_tier, source_ids, created_by }) => {
+const createArticle = async ({ title, section, body_md, access_tier, source_ids, created_by }) => {
   const slug = title.toLowerCase()
     .replace(/[^a-z0-9\s-]/g, '')
     .replace(/\s+/g, '-')
     .replace(/-{2,}/g, '-')
     .trim();
-  return q1(`INSERT INTO articles (id,title,slug,section,body_md,access_tier,pipeline_status,view_count,read_time_min,created_at)
+  const article = await q1(`INSERT INTO articles (id,title,slug,section,body_md,access_tier,pipeline_status,view_count,read_time_min,created_at)
       VALUES (gen_random_uuid(),$1,$2,$3,$4,$5,'draft',0,
               GREATEST(1, ROUND(array_length(regexp_split_to_array(trim($4),E'\\\\s+'),1)/200.0)),now()) RETURNING *`,
     [title, slug, section, body_md, access_tier]);
+
+  const ids = Array.isArray(source_ids) ? source_ids.filter(Boolean) : [];
+  if (ids.length) {
+    await q('UPDATE threat_records SET article_id=$1 WHERE id = ANY($2::uuid[])', [article.id, ids]);
+    await q('UPDATE intel_items SET article_id=$1 WHERE id = ANY($2::uuid[])', [article.id, ids]);
+  }
+
+  return article;
 };
 
 const getArticle = (slug) => q1('SELECT * FROM articles WHERE slug=$1', [slug]);
@@ -779,7 +815,7 @@ module.exports = {
   createSession, deleteSession, deleteSessionByToken,
   getAgentToken, rotateAgentToken,
   createThreatRecord, getThreatRecords, getThreatById, linkThreatToArticle,
-  createIntelItem, getIntelItems,
+  createIntelItem, getIntelItems, getIntelRadarItems,
   processIntoRepository, getRepositoryQueue, listApprovedBriefingPreviews, getRepositoryItemDetail, getApprovedContentReferences,
   createArticle, getArticle, getArticleById, listArticles, listArticlesForPreview, advanceArticleStatus, incrementArticleViews,
   createBriefing, getBriefingByDate, getBriefingById, listBriefings, advanceBriefingStatus, revertBriefingForRevision,

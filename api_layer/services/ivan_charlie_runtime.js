@@ -21,6 +21,8 @@ const API_BASE = () =>
 
 const POLL_WINDOW_HOURS = 12;
 const RECENCY_HOURS = 720;
+const REQUIRED_INNOVATION = 2;
+const REQUIRED_GROWTH = 1;
 
 const FEEDS = [
   {
@@ -202,9 +204,10 @@ async function filterNewItems(items) {
 }
 
 function selectRequiredItems(items) {
-  const innovation = items.find(item => item.type === 'innovation');
-  const growth = items.find(item => item.type === 'growth');
-  return [innovation, growth].filter(Boolean);
+  return [
+    ...items.filter(item => item.type === 'innovation').slice(0, REQUIRED_INNOVATION),
+    ...items.filter(item => item.type === 'growth').slice(0, REQUIRED_GROWTH),
+  ];
 }
 
 // Cycle execution
@@ -221,9 +224,10 @@ async function executeIvanCharlieIngest(task) {
 
   try {
     const selected = selectRequiredItems(await filterNewItems(await collectIntelItems()));
-    const types = new Set(selected.map(item => item.type));
-    if (!types.has('innovation') || !types.has('growth')) {
-      throw new Error(`Incomplete innovation/growth ingest: innovation=${types.has('innovation')}, growth=${types.has('growth')}`);
+    const innovationCount = selected.filter(item => item.type === 'innovation').length;
+    const growthCount = selected.filter(item => item.type === 'growth').length;
+    if (innovationCount < REQUIRED_INNOVATION || growthCount < REQUIRED_GROWTH) {
+      throw new Error(`Incomplete innovation/growth ingest: innovations=${innovationCount}/${REQUIRED_INNOVATION}, growth=${growthCount}/${REQUIRED_GROWTH}`);
     }
 
     const submitted = [];
@@ -232,6 +236,29 @@ async function executeIvanCharlieIngest(task) {
       const result = await apiCall('/api/pipeline/intel-items', 'POST', {
         ...payload,
         summary: `${payload.summary}\n\nSource: ${source_url}\nPublished: ${published_at}`,
+      });
+      await db.processIntoRepository({
+        source_type: item.type,
+        source_id: result.id,
+        normalized_data: {
+          title: item.headline,
+          summary: item.summary,
+          content: item.summary,
+          source_url,
+          published_at,
+          category: item.category,
+        },
+        correlation_tags: item.tags,
+        processed_by: 'Barbara',
+        ready_for_intel: true,
+        ready_for_awareness: true,
+      });
+      await notifyAgents(['James', 'Ruth'], {
+        type: 'REPOSITORY_UPDATE',
+        record_id: result.id,
+        source_type: item.type,
+        ready_for_intel: true,
+        ready_for_awareness: true,
       });
       submitted.push({ type: item.type, id: result.id });
     }
