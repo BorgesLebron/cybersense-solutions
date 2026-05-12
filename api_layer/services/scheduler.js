@@ -17,6 +17,12 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const OPS_ALERT_EMAIL = 'hjborges@gmail.com';
 
+function nextCtDate(daysAhead = 1) {
+  const d = new Date();
+  d.setDate(d.getDate() + daysAhead);
+  return d.toLocaleDateString('en-CA', { timeZone: 'America/Chicago' });
+}
+
 // ── Nightly dashboard snapshot (runs at 00:05 CT) ─────────────────────────────
 async function runNightlySnapshot() {
   console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'nightly_snapshot', status: 'start' }));
@@ -451,8 +457,8 @@ async function runOliverDailyPost() {
       WHERE agent_name = 'Oliver'
         AND task_type = 'post_scheduled'
         AND status = 'queued'
-        AND created_at > now() - INTERVAL '2 days'
-      ORDER BY created_at DESC
+        AND started_at > now() - INTERVAL '2 days'
+      ORDER BY started_at DESC
       LIMIT 1
     `).then(r => r.rows);
 
@@ -488,7 +494,7 @@ async function runOliverDailyPost() {
 // briefing record for today already exists. Failure escalates immediately
 // because Ruth missing her start blocks the entire 0700 CT delivery chain.
 async function runRuthDailyCycle() {
-  const editionDate = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Chicago' });
+  const editionDate = nextCtDate();
   try {
     const existing = await db.getBriefingByDate(editionDate);
     if (existing) {

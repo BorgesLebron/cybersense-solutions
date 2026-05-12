@@ -265,8 +265,8 @@ async function pollIvanCharlieTasks() {
       SELECT * FROM agent_tasks
       WHERE agent_name = 'Ivan/Charlie'
         AND status      = 'queued'
-        AND created_at  > now() - INTERVAL '${POLL_WINDOW_HOURS} hours'
-      ORDER BY created_at ASC
+        AND started_at  > now() - INTERVAL '${POLL_WINDOW_HOURS} hours'
+      ORDER BY started_at ASC
       LIMIT 1
     `).then(r => r.rows);
 

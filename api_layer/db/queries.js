@@ -160,6 +160,27 @@ const getRepositoryQueue = ({ pipeline, limit = 30 } = {}) => {
             OR r.source_id = b.growth_item_id
        )`
     : '';
+  if (pipeline === 'awareness') {
+    return q(`WITH ranked AS (
+              SELECT r.*,
+                     CASE r.source_type
+                       WHEN 'growth' THEN 1
+                       WHEN 'innovation' THEN 2
+                       WHEN 'threat' THEN 3
+                       ELSE 4
+                     END AS source_type_rank,
+                     row_number() OVER (PARTITION BY r.source_type ORDER BY r.processed_at ASC) AS type_row,
+                     CASE r.source_type WHEN 'threat' THEN t.threat_name WHEN 'innovation' THEN i.headline ELSE i.headline END AS title
+              FROM intel_repository r
+              LEFT JOIN threat_records t ON t.id=r.source_id AND r.source_type='threat'
+              LEFT JOIN intel_items i ON i.id=r.source_id AND r.source_type IN ('innovation','growth','policy')
+              WHERE r.${col}=true ${excludeUsed}
+            )
+            SELECT *
+            FROM ranked
+            WHERE type_row <= $1
+            ORDER BY source_type_rank, processed_at ASC`, [limit]);
+  }
   return q(`SELECT r.*,
               CASE r.source_type WHEN 'threat' THEN t.threat_name WHEN 'innovation' THEN i.headline ELSE i.headline END AS title
             FROM intel_repository r

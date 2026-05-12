@@ -22,6 +22,12 @@ const API_BASE = () =>
 const COMPOSITION = { threats: 3, innovations: 2, growth: 1 };
 const POLL_WINDOW_HOURS = 12;
 
+function nextCtDate(daysAhead = 1) {
+  const d = new Date();
+  d.setDate(d.getDate() + daysAhead);
+  return d.toLocaleDateString('en-CA', { timeZone: 'America/Chicago' });
+}
+
 // ── Token management ─────────────────────────────────────────────────────────
 
 let _ruthToken = null;
@@ -122,7 +128,7 @@ function buildContent(threats, innovations, growthItem) {
 
 async function executeRuthDailyCycle(task) {
   const ts          = new Date().toISOString();
-  const editionDate = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Chicago' });
+  const editionDate = nextCtDate();
 
   console.log(JSON.stringify({
     ts, runtime: 'ruth', event: 'CYCLE_START',
@@ -217,8 +223,8 @@ async function pollRuthTasks() {
       WHERE agent_name = 'Ruth'
         AND task_type   = 'daily_cycle'
         AND status      = 'queued'
-        AND created_at  > now() - INTERVAL '${POLL_WINDOW_HOURS} hours'
-      ORDER BY created_at ASC
+        AND started_at  > now() - INTERVAL '${POLL_WINDOW_HOURS} hours'
+      ORDER BY started_at ASC
       LIMIT 1
     `).then(r => r.rows);
 

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CyberSense Daily Briefing - Edition 122</title>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; background: #f6f8fb; color: #172033; }
+    .wrap { max-width: 920px; margin: 0 auto; padding: 32px 18px 48px; }
+    .header { background: #07192f; color: #fff; padding: 34px 30px; border-radius: 8px 8px 0 0; }
+    .kicker { color: #66d9c6; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    h1 { margin: 10px 0 8px; font-size: 30px; line-height: 1.2; }
+    .date { color: #c8d4e4; font-size: 14px; }
+    .panel { background: #fff; border: 1px solid #d9e1ec; border-top: 0; padding: 28px 30px; }
+    h2 { color: #07192f; margin: 30px 0 14px; font-size: 20px; }
+    h3 { color: #102a43; margin: 18px 0 8px; font-size: 17px; }
+    p { line-height: 1.62; margin: 0 0 14px; }
+    .item { border-left: 4px solid #1d9e75; padding: 14px 18px; margin: 14px 0; background: #f9fbfd; }
+    .threat { border-left-color: #dc2626; }
+    .meta { font-size: 12px; color: #5f6f83; margin-top: 10px; word-break: break-word; }
+    .footer { background: #0b1220; color: #cbd5e1; padding: 22px 30px; border-radius: 0 0 8px 8px; font-size: 13px; }
+    a { color: #0f766e; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="header">
+      <div class="kicker">CyberSense.Solutions Daily Digital Awareness Briefing</div>
+      <h1>Edition 122 - Mobile Trust, Open Intelligence, and Identity Verification</h1>
+      <div class="date">May 12, 2026</div>
+    </section>
+
+    <section class="panel">
+      <p>This overdue recovery edition restores the May 12 awareness sequence and prepares the platform to resume normal cadence with Edition 123. Today's brief focuses on exposed mobile management surfaces, open intelligence platform risk, web application defense reliability, and practical identity verification standards.</p>
+
+      <h2>Threat Radar</h2>
+
+      <article class="item threat">
+        <h3>Ivanti Endpoint Manager Mobile remote code execution exposure</h3>
+        <p>Ivanti Endpoint Manager Mobile contains an improper input validation flaw that can allow a remotely authenticated administrator to achieve remote code execution. Because the product sits in the mobile device management layer, affected organizations should treat remediation as an identity, endpoint, and management-plane priority.</p>
+        <p>Required action: apply vendor mitigations or patches, validate administrative account exposure, and remove unsupported deployments if mitigation is unavailable.</p>
+        <div class="meta">CVE-2026-6973 | Severity: critical | Source: https://nvd.nist.gov/vuln/detail/CVE-2026-6973</div>
+      </article>
+
+      <article class="item threat">
+        <h3>OpenCTI privilege escalation threatens intelligence integrity</h3>
+        <p>OpenCTI versions 6.6.0 through 6.9.12 include a privilege escalation vulnerability that can allow unauthenticated attackers to query the API as existing users, including the default administrator account. For security teams that rely on OpenCTI as a system of record, this is not only an access-control issue; it can undermine trust in intelligence workflows.</p>
+        <p>Required action: upgrade to OpenCTI 6.9.13 or disable the default administrator with external management controls where upgrade timing is constrained.</p>
+        <div class="meta">CVE-2026-27960 | Severity: critical | Source: https://nvd.nist.gov/vuln/detail/CVE-2026-27960</div>
+      </article>
+
+      <article class="item threat">
+        <h3>ModSecurity denial-of-service condition affects WAF reliability</h3>
+        <p>Libmodsecurity versions before 3.0.15 can crash worker processes when a rule using the hexDecode transformation inspects a query string parameter containing a single character. While service can resume after the attack stops, repeated triggering can reduce the defensive reliability of web application firewall deployments.</p>
+        <p>Required action: upgrade libModSecurity3 to 3.0.15 and review custom rules that use transformation logic against untrusted query parameters.</p>
+        <div class="meta">CVE-2026-30923 | Severity: high | Source: https://nvd.nist.gov/vuln/detail/CVE-2026-30923</div>
+      </article>
+
+      <h2>Innovation Watch</h2>
+
+      <article class="item">
+        <h3>NIST small-business cybersecurity resources</h3>
+        <p>NIST's National Small Business Week coverage highlights new and upcoming resources focused on strengthening cybersecurity and resilience for small businesses. The practical significance is the continued movement from enterprise-only guidance toward lightweight, adoptable controls for smaller organizations.</p>
+        <div class="meta">Category: cybersecurity innovation | Source: NIST Cybersecurity Insights</div>
+      </article>
+
+      <article class="item">
+        <h3>Verifiable digital credential issuance</h3>
+        <p>NIST's review of mobile driver's licenses and verifiable credential issuance shows that credential trust depends on both format and issuance process. Standards activity across FIDO, ISO, and OpenID Foundation is pushing identity proofing toward more interoperable, wallet-based trust models.</p>
+        <div class="meta">Category: cybersecurity innovation | Source: NIST Cybersecurity Insights</div>
+      </article>
+
+      <h2>Growth Signal</h2>
+
+      <article class="item">
+        <h3>AI-accelerated vulnerability pressure favors platform consolidation</h3>
+        <p>CrowdStrike partners are framing AI-accelerated vulnerability exploitation as a reason for customers to consolidate around security platforms that combine speed, telemetry, and services. For buyers, the decision point is whether tool sprawl can keep pace with faster exploitation cycles.</p>
+        <div class="meta">Category: channel growth | Source: CRN</div>
+      </article>
+
+      <h2>Training Byte</h2>
+      <article class="item">
+        <h3>ShinyHunters breach of Canvas Instructure</h3>
+        <p>Use this incident pattern to reinforce credential hygiene, page-defacement recognition, and escalation discipline. When a trusted login experience changes unexpectedly, users should stop, verify the URL and visual indicators, and report the anomaly before submitting credentials.</p>
+      </article>
+    </section>
+
+    <section class="footer">
+      CyberSense.Solutions - Daily Digital Awareness Briefing. Edition 122 was staged as an overdue recovery edition after scheduler and runtime polling issues prevented normal pipeline creation.
+    </section>
+  </main>
+</body>
+</html>
