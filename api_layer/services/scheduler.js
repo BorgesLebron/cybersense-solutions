@@ -12,6 +12,7 @@ const { pollPeterTasks }        = require('./peter_runtime');
 const { pollEdTasks }           = require('./ed_runtime');
 const { pollRickTasks }         = require('./rick_runtime');
 const { pollIvanCharlieTasks }  = require('./ivan_charlie_runtime');
+const { sendBriefingEmail }     = require('./sendgrid');
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
@@ -21,6 +22,10 @@ function nextCtDate(daysAhead = 1) {
   const d = new Date();
   d.setDate(d.getDate() + daysAhead);
   return d.toLocaleDateString('en-CA', { timeZone: 'America/Chicago' });
+}
+
+function currentCtDate() {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Chicago' });
 }
 
 // ── Nightly dashboard snapshot (runs at 00:05 CT) ─────────────────────────────
@@ -493,6 +498,130 @@ async function runOliverDailyPost() {
 // 06:00 CT SLA, then delivers a live notification. Idempotent — skips if a
 // briefing record for today already exists. Failure escalates immediately
 // because Ruth missing her start blocks the entire 0700 CT delivery chain.
+// Subscriber briefing distribution (04:30 CT, Mon-Fri).
+// Sends the current CT date's human-authorized newsletter. This is separate
+// from Ruth's 0430 production kickoff, which creates the next publishing-day
+// newsletter.
+async function runDailyBriefingEmailDistribution() {
+  const editionDate = currentCtDate();
+  try {
+    const briefing = await db.pool.query(
+      `SELECT *
+       FROM briefings
+       WHERE edition_date = $1
+         AND pipeline_status = 'published'
+       LIMIT 1`,
+      [editionDate]
+    ).then(r => r.rows[0] || null);
+
+    if (!briefing) {
+      console.log(JSON.stringify({
+        ts: new Date().toISOString(),
+        job: 'daily_briefing_email_distribution',
+        status: 'no_authorized_briefing',
+        edition_date: editionDate,
+      }));
+      return;
+    }
+
+    const existingDistribution = await db.pool.query(
+      `SELECT id
+       FROM pipeline_events
+       WHERE content_type = 'briefing'
+         AND content_id = $1
+         AND (
+           notes LIKE 'Daily briefing email distribution %'
+           OR notes LIKE 'Email distribution confirmed by human executive%'
+           OR notes LIKE 'Distribution confirmed by human executive%'
+         )
+       LIMIT 1`,
+      [briefing.id]
+    ).then(r => r.rows[0] || null);
+
+    if (existingDistribution) {
+      console.log(JSON.stringify({
+        ts: new Date().toISOString(),
+        job: 'daily_briefing_email_distribution',
+        status: 'already_distributed',
+        edition_date: editionDate,
+        briefing_id: briefing.id,
+      }));
+      return;
+    }
+
+    const subscribers = await db.pool.query(
+      `SELECT email, full_name
+       FROM users
+       WHERE email_subscribed = true
+         AND email_verified = true
+         AND deleted_at IS NULL`
+    ).then(r => r.rows.map(u => ({ email: u.email, name: u.full_name || 'Reader' })));
+
+    if (subscribers.length === 0) {
+      await db.logPipelineEvent({
+        content_type: 'briefing',
+        content_id: briefing.id,
+        from_status: 'published',
+        to_status: 'published',
+        agent_name: 'Laura',
+        notes: `Daily briefing email distribution skipped - Edition ${briefing.edition_number}; recipients=0`,
+      });
+      console.log(JSON.stringify({
+        ts: new Date().toISOString(),
+        job: 'daily_briefing_email_distribution',
+        status: 'skipped_no_subscribers',
+        edition_date: editionDate,
+        briefing_id: briefing.id,
+      }));
+      return;
+    }
+
+    await sendBriefingEmail(subscribers, briefing);
+
+    await db.logPipelineEvent({
+      content_type: 'briefing',
+      content_id: briefing.id,
+      from_status: 'published',
+      to_status: 'published',
+      agent_name: 'Laura',
+      notes: `Daily briefing email distribution sent - Edition ${briefing.edition_number}; recipients=${subscribers.length}`,
+    });
+
+    await notifyAgents(['Laura', 'Nora'], {
+      type: 'BRIEFING_EMAIL_DISTRIBUTED',
+      briefing_id: briefing.id,
+      edition_number: briefing.edition_number,
+      edition_date: briefing.edition_date,
+      recipient_count: subscribers.length,
+      message: `Edition ${briefing.edition_number} subscriber email distribution completed at the 0430 CT publishing-day window.`,
+    });
+
+    console.log(JSON.stringify({
+      ts: new Date().toISOString(),
+      job: 'daily_briefing_email_distribution',
+      status: 'sent',
+      edition_date: editionDate,
+      briefing_id: briefing.id,
+      recipients: subscribers.length,
+    }));
+  } catch (e) {
+    const ts = new Date().toISOString();
+    console.error(JSON.stringify({ ts, job: 'daily_briefing_email_distribution', status: 'error', edition_date: editionDate, error: e.message }));
+    await notifyAgents(['Barret', 'Cy'], {
+      type: 'BRIEFING_EMAIL_DISTRIBUTION_FAILED',
+      edition_date: editionDate,
+      error: e.message,
+      message: `Subscriber briefing email distribution failed for ${editionDate}. Manual intervention required.`,
+    });
+    await sgMail.send({
+      to: OPS_ALERT_EMAIL,
+      from: { email: process.env.FROM_EMAIL || 'noreply@cybersense.solutions', name: 'CyberSense.Solutions' },
+      subject: `[OPS ALERT] Briefing email distribution failed - ${editionDate}`,
+      text: `Subscriber briefing email distribution failed at ${ts}.\n\nEdition date: ${editionDate}\nError: ${e.message}\n\nBarret and Cy notified. Manual intervention required.\n\n- CyberSense Scheduler`,
+    }).catch(emailErr => console.error(JSON.stringify({ ts, job: 'daily_briefing_email_distribution', event: 'OPS_EMAIL_FAILED', error: emailErr.message })));
+  }
+}
+
 async function runRuthDailyCycle() {
   const editionDate = nextCtDate();
   try {
@@ -648,6 +777,7 @@ function startScheduler() {
     cron.schedule('0 0 * * 1-5',    runMidnightContentUpdate,      { timezone: 'America/Chicago' });
     cron.schedule('0 23 * * 0',     runLinkedInTokenRefresh,       { timezone: 'America/Chicago' });
     // Awareness pipeline kickoff — Sun–Thu mornings (0-4) for Mon–Fri delivery
+    cron.schedule('30 4 * * 1-5',   runDailyBriefingEmailDistribution, { timezone: 'America/Chicago' });
     cron.schedule('30 4 * * 0-4',   runRuthDailyCycle,             { timezone: 'America/Chicago' });
     cron.schedule('0 7 * * 1-5',    runOliverDailyPost,            { timezone: 'America/Chicago' });
     // Agent runtime task pollers — Sun–Thu only, matching production nights
@@ -656,7 +786,7 @@ function startScheduler() {
     cron.schedule('*/2 4-9 * * 0-4', pollEdTasks,                  { timezone: 'America/Chicago' });
     cron.schedule('0 */4 * * *',     pollRickTasks,                 { timezone: 'America/Chicago' });
     cron.schedule('45 5 * * *',      pollIvanCharlieTasks,          { timezone: 'America/Chicago' });
-    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SCHEDULER_STARTED', jobs: 22 }));
+    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SCHEDULER_STARTED', jobs: 23 }));
   } catch (e) {
     console.warn('node-cron not installed — scheduler disabled. Install with: npm install node-cron');
   }
@@ -679,6 +809,7 @@ module.exports = {
   runLeadQualificationCheck,
   runMidnightContentUpdate,
   runLinkedInTokenRefresh,
+  runDailyBriefingEmailDistribution,
   runRuthDailyCycle,
   runOliverDailyPost,
   pollRuthTasks,

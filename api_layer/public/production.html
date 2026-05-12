@@ -571,12 +571,12 @@ function renderBriefingCard(b) {
           <div class="bc-edition">${b.edition} — ${b.date}</div>
           <div class="bc-headline">${b.headline}</div>
         </div>
-        <span class="badge b-green" style="flex-shrink:0;">Distributed</span>
+        <span class="badge b-green" style="flex-shrink:0;">Authorized</span>
       </div>
       <div class="dist-confirmed">
         <div class="dc-icon">✓</div>
-        <div class="dc-title">Distribution authorized and confirmed</div>
-        <div class="dc-sub">Email distribution has been triggered. Social posting remains manual for this phase.</div>
+        <div class="dc-title">Distribution authorized</div>
+        <div class="dc-sub">Subscriber email is scheduled for the 0430 CT publishing-day distribution job. Social posting remains manual for this phase.</div>
         ${b.public_url ? `<a href="${escapeHtml(b.public_url)}" target="_blank" style="color:var(--color-text-info);font-size:13px;text-decoration:none;font-weight:600;">Open public newsletter URL -></a>` : ''}
       </div>
     </div>`;
@@ -689,7 +689,7 @@ async function approveBriefing(id) {
   if (execItem) execItem.done = true;
   b.public_url = result.public_url || null;
   distributionState[id] = false;
-  showToast('Distribution authorized - email delivery started', 'success');
+  showToast('Distribution authorized - email scheduled for 0430 CT', 'success');
   setTimeout(() => {
     const lauraItem = b.checklist.find(c => c.id === 'laura');
     if (lauraItem) lauraItem.done = true;

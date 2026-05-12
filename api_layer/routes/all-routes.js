@@ -826,16 +826,6 @@ adminRouter.post('/briefings/:id/confirm-distribution', requireAdminToken(['gm']
     });
 
     const published = await db.advanceBriefingStatus(briefing.id, 'published');
-    const subscribers = await db.pool.query(
-      `SELECT email, full_name FROM users
-       WHERE email_subscribed = true
-         AND email_verified = true
-         AND deleted_at IS NULL`
-    ).then(r => r.rows.map(u => ({ email: u.email, name: u.full_name || 'Reader' })));
-
-    if (subscribers.length > 0) {
-      await sendBriefingEmail(subscribers, published);
-    }
 
     const appUrl = (process.env.APP_URL || 'https://cybersense.solutions').replace(/\/$/, '');
     const publicUrl = published.file_path
@@ -843,14 +833,14 @@ adminRouter.post('/briefings/:id/confirm-distribution', requireAdminToken(['gm']
       : `${appUrl}/newsletter.html`;
 
     await notifyAgents(['Laura'], {
-      type: 'BRIEFING_EMAIL_DISTRIBUTED',
+      type: 'BRIEFING_DISTRIBUTION_AUTHORIZED',
       briefing_id: published.id,
       edition_number: published.edition_number,
       edition_date: published.edition_date,
       subject_line: published.subject_line,
-      recipient_count: subscribers.length,
       public_url: publicUrl,
-      message: `Human executive confirmed Edition ${published.edition_number}. Email distribution is complete. Social posting remains manual for this phase.`,
+      scheduled_distribution: '0430 CT on edition date',
+      message: `Human executive confirmed Edition ${published.edition_number}. Subscriber email is authorized for the 0430 CT publishing-day distribution job. Social posting remains manual for this phase.`,
     });
 
     await db.logPipelineEvent({
@@ -859,7 +849,7 @@ adminRouter.post('/briefings/:id/confirm-distribution', requireAdminToken(['gm']
       from_status: 'approved',
       to_status: 'published',
       agent_name: 'human_executive',
-      notes: `Email distribution confirmed by human executive - Edition ${published.edition_number}; recipients=${subscribers.length}`,
+      notes: `Distribution authorized by human executive - Edition ${published.edition_number}; email scheduled for 0430 CT publishing day`,
     });
 
     res.json({
@@ -868,7 +858,7 @@ adminRouter.post('/briefings/:id/confirm-distribution', requireAdminToken(['gm']
       edition_number: published.edition_number,
       edition_date: published.edition_date,
       public_url: publicUrl,
-      email_recipients: subscribers.length,
+      email_distribution: 'scheduled_0430_ct',
       social_distribution: 'manual',
     });
   } catch (e) { next(e); }
