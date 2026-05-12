@@ -183,8 +183,8 @@ async function pollPeterTasks() {
       WHERE agent_name = 'Peter'
         AND task_type   = 'dev_edit_briefing'
         AND status      = 'queued'
-        AND created_at  > now() - INTERVAL '${POLL_WINDOW_HOURS} hours'
-      ORDER BY created_at ASC
+        AND started_at  > now() - INTERVAL '${POLL_WINDOW_HOURS} hours'
+      ORDER BY started_at ASC
       LIMIT 1
     `).then(r => r.rows);
 
