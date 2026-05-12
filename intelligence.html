@@ -20,11 +20,6 @@
     <li><a href="radar.html">Radar</a></li>
     <li><a href="intelligence.html" class="active">Intel</a></li>
     <li><a href="newsletter.html">Newsletter</a></li>
-    <li><a href="training.html">Training</a></li>
-    <li><a href="growth.html">Proficient</a></li>
-    <li><a href="innovation.html">Innovation</a></li>
-    <li><a href="zerotrust.html">Zero-Trust</a></li>
-    <li><a href="pricing.html">Pricing</a></li>
   </ul>
   <button class="nav-login" onclick="CS.Auth.showLoginModal()">Login</button>
   <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
@@ -36,11 +31,6 @@
     <li><a href="radar.html">Radar</a></li>
     <li><a href="intelligence.html">Intel</a></li>
     <li><a href="newsletter.html">Newsletter</a></li>
-    <li><a href="training.html">Training</a></li>
-    <li><a href="growth.html">Proficient</a></li>
-    <li><a href="innovation.html">Innovation</a></li>
-    <li><a href="zerotrust.html">Zero-Trust</a></li>
-    <li><a href="pricing.html">Pricing</a></li>
   </ul>
   <a href="#" class="drawer-login" onclick="CS.Auth.showLoginModal();return false;">Login</a>
 </div>
@@ -116,13 +106,13 @@
           <span class="badge badge-beginner">Beginner</span>
           <div class="card-headline">Vulnerability Triage Lab: From CVE Publication to Remediation Decision</div>
           <p style="font-size:13.5px;color:var(--cs-gray-600);line-height:1.6;">A hands-on lab walking through the complete vulnerability triage workflow — from NVD CVE publication through CVSS contextualization, exploitability assessment, and patch prioritization decision-making.</p>
-          <a href="training.html" class="card-link">Start Lab →</a>
+          <span class="card-link" aria-disabled="true">Coming soon</span>
         </div>
         <div class="article-card">
           <span class="badge badge-intermediate">Intermediate</span>
           <div class="card-headline">Phishing Email Analysis: Identifying Sophisticated Spear-Phishing Indicators</div>
           <p style="font-size:13.5px;color:var(--cs-gray-600);line-height:1.6;">An intermediate-level training module covering email header analysis, domain spoofing detection, HTML anchor tag obfuscation, and the threat actor techniques that bypass traditional email security gateways.</p>
-          <a href="training.html" class="card-link">Start Module →</a>
+          <span class="card-link" aria-disabled="true">Coming soon</span>
         </div>
       </div>
     </div>
@@ -134,7 +124,7 @@
   <div class="footer-inner">
     <div class="footer-grid">
       <div><div class="footer-logo">CyberSense<span>.Solutions</span></div><p class="footer-mission">Delivering actionable cybersecurity intelligence, daily awareness briefings, and professional training to teams that can't afford to be caught off guard.</p><div class="footer-socials"><a href="https://www.linkedin.com/company/cybersense-solutions/" target="_blank" class="footer-social-icon">in</a><a href="https://www.facebook.com/profile.php?id=61570667370162" target="_blank" class="footer-social-icon">f</a><a href="https://x.com/cybersensesec" target="_blank" class="footer-social-icon">𝕏</a><a href="https://www.instagram.com/cybersense.solutions/" target="_blank" class="footer-social-icon">ig</a><a href="https://www.threads.com/@cybersense.solutions" target="_blank" class="footer-social-icon">tt</a></div></div>
-      <div class="footer-col"><h4>Platform</h4><ul><li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li><li><a href="radar.html">Threat Radar</a></li><li><a href="intelligence.html">Intel Briefs</a></li><li><a href="newsletter.html">Newsletter</a></li><li><a href="training.html">Training</a></li><li><a href="growth.html">Proficient</a></li><li><a href="innovation.html">Innovation</a></li><li><a href="zerotrust.html">Zero-Trust</a></li><li><a href="pricing.html">Pricing</a></li></ul></div>
+      <div class="footer-col"><h4>Platform</h4><ul><li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li><li><a href="radar.html">Threat Radar</a></li><li><a href="intelligence.html">Intel Briefs</a></li><li><a href="newsletter.html">Newsletter</a></li></ul></div>
       <div class="footer-col"><h4>Legal</h4><ul><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li><li><a href="about.html">Contact Us</a></li></ul></div>
     </div>
     <div class="footer-bottom">
@@ -173,7 +163,7 @@ function articleCard(article, isLocked) {
           <div class="gate-card">
             <h3>Standard subscribers get full access</h3>
             <p>Unlock all Intel Briefs for $9/month.</p>
-            <a href="pricing.html" class="btn btn-primary btn-sm">See Plans</a>
+            <a href="newsletter.html#subscribe" class="btn btn-primary btn-sm">Subscribe Free</a>
           </div>
         </div>
       </div>`;
@@ -194,7 +184,7 @@ function renderGuestState() {
         <p>Create a free account to access Intel Briefs. No credit card required.</p>
         <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:16px;">
           <a href="#" class="btn btn-primary btn-sm" onclick="CS.Auth.showLoginModal();return false;">Sign Up Free</a>
-          <a href="pricing.html" class="btn btn-outline btn-sm">See Plans</a>
+          <a href="newsletter.html#subscribe" class="btn btn-outline btn-sm">Subscribe Free</a>
         </div>
       </div>
     </div>`;
