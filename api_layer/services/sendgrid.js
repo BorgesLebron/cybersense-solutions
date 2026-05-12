@@ -71,6 +71,7 @@ async function sendBriefingEmail(to_list, briefing) {
     await sgMail.send(messages);
   } catch (e) {
     logSgError('briefing email', e);
+    throw e;
   }
 }
 
