@@ -741,6 +741,14 @@ adminRouter.get('/threats', requireAdminToken(), async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+adminRouter.get('/intel-radar', requireAdminToken(), async (req, res, next) => {
+  try {
+    const { type, limit = 50 } = req.query;
+    const items = await db.getIntelRadarItems({ type, limit: parseInt(limit) || 50 });
+    res.json({ data: items });
+  } catch (e) { next(e); }
+});
+
 adminRouter.get('/repository/items/:id', requireAdminToken(), async (req, res, next) => {
   try {
     const item = await db.getRepositoryItemDetail(req.params.id);

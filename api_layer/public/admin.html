@@ -327,21 +327,16 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
         <div class="panel-title">Innovation &amp; AI/ML/Quantum radar</div>
         <div class="panel-sub">Managed by Ivan/Charlie — feeds Intel Brief, Awareness pipeline, and Innovation page</div>
         <div class="metric-row">
-          <div class="met"><div class="met-lbl">Topics tracked</div><div class="met-val">142</div><div class="met-delta nt">Across 11 categories</div></div>
-          <div class="met"><div class="met-lbl">Articles published (MTD)</div><div class="met-val">19</div><div class="met-delta up">+3 vs last month</div></div>
-          <div class="met"><div class="met-lbl">Awareness inputs</div><div class="met-val">84</div><div class="met-delta nt">This month to Ruth</div></div>
-          <div class="met"><div class="met-lbl">Trending topic</div><div class="met-val" style="font-size:14px;">Quantum AI</div><div class="met-delta up">+340% coverage</div></div>
+          <div class="met"><div class="met-lbl">Topics tracked</div><div class="met-val" id="innovation-total">-</div><div class="met-delta nt" id="innovation-categories">Loading...</div></div>
+          <div class="met"><div class="met-lbl">Ready for Intel</div><div class="met-val" id="innovation-ready-intel">-</div><div class="met-delta up">James queue</div></div>
+          <div class="met"><div class="met-lbl">Ready for Ruth</div><div class="met-val" id="innovation-ready-awareness">-</div><div class="met-delta nt">Awareness inputs</div></div>
+          <div class="met"><div class="met-lbl">Unused for Ruth</div><div class="met-val" id="innovation-unused">-</div><div class="met-delta up">Next production buffer</div></div>
         </div>
         <div class="card">
-          <div class="card-hd">Coverage by category</div>
+          <div class="card-hd">Live innovation and growth intake</div>
           <table class="tbl">
-            <tr><th>Category</th><th>Articles MTD</th><th>Trend</th><th>Priority</th></tr>
-            <tr><td>Artificial intelligence</td><td>6</td><td class="up">Rising</td><td><span class="badge b-red">High</span></td></tr>
-            <tr><td>Quantum computing</td><td>4</td><td class="up">Rising fast</td><td><span class="badge b-red">High</span></td></tr>
-            <tr><td>Large language models</td><td>3</td><td class="up">Stable</td><td><span class="badge b-amber">Medium</span></td></tr>
-            <tr><td>Cloud computing</td><td>2</td><td class="nt">Stable</td><td><span class="badge b-amber">Medium</span></td></tr>
-            <tr><td>Cryptography</td><td>2</td><td class="up">Rising</td><td><span class="badge b-amber">Medium</span></td></tr>
-            <tr><td>Machine learning</td><td>1</td><td class="nt">Stable</td><td><span class="badge b-gray">Normal</span></td></tr>
+            <thead><tr><th>Type</th><th>Headline</th><th>Category</th><th>Ruth</th><th>Intel</th><th>Article</th></tr></thead>
+            <tbody id="innovation-tbody"><tr><td colspan="6" style="text-align:center;color:#666;padding:12px;">Loading innovation and growth data...</td></tr></tbody>
           </table>
         </div>
         <button class="ask-btn" onclick="sendPrompt('How should Ivan/Charlie structure the innovation intelligence intake process to feed both the daily briefing and long-form articles efficiently?','henry')">Design intake workflow ↗</button>
@@ -547,6 +542,7 @@ document.addEventListener('cs:login', (e) => {
   const btn = document.getElementById('nav-logout');
   if (btn) btn.style.display = 'inline-block';
   loadRadarData();
+  loadInnovationRadarData();
 });
 
 async function loadRadarData() {
@@ -609,6 +605,45 @@ async function loadRadarData() {
       row.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
     });
   } catch (e) { console.error('Radar load failed:', e); }
+}
+
+async function loadInnovationRadarData() {
+  try {
+    const { data: items } = await CS.Auth.apiFetch('/api/admin/intel-radar?limit=80');
+    const categories = new Set(items.map(i => i.category).filter(Boolean));
+    const readyIntel = items.filter(i => i.ready_for_intel).length;
+    const readyAwareness = items.filter(i => i.ready_for_awareness).length;
+    const unused = items.filter(i => i.ready_for_awareness && !i.used_in_briefing).length;
+
+    document.getElementById('innovation-total').textContent = items.length;
+    document.getElementById('innovation-categories').textContent = categories.size + ' categories';
+    document.getElementById('innovation-ready-intel').textContent = readyIntel;
+    document.getElementById('innovation-ready-awareness').textContent = readyAwareness;
+    document.getElementById('innovation-unused').textContent = unused;
+
+    const tbody = document.getElementById('innovation-tbody');
+    if (!items.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#666;padding:12px;">No innovation or growth items in repository</td></tr>';
+      return;
+    }
+
+    const badge = (ok, yes, no) => ok
+      ? `<span class="badge b-green">${yes}</span>`
+      : `<span class="badge b-gray">${no}</span>`;
+
+    tbody.innerHTML = items.map(item => `<tr>
+      <td><span class="badge ${item.type === 'growth' ? 'b-blue' : 'b-amber'}">${item.type}</span></td>
+      <td>${item.headline || 'Untitled'}</td>
+      <td>${item.category || '-'}</td>
+      <td>${badge(item.ready_for_awareness && !item.used_in_briefing, 'Ready', item.used_in_briefing ? 'Used' : 'No')}</td>
+      <td>${badge(item.ready_for_intel, 'Ready', 'No')}</td>
+      <td>${badge(item.has_article, 'Linked', 'None')}</td>
+    </tr>`).join('');
+  } catch (e) {
+    console.error('Innovation radar load failed:', e);
+    const tbody = document.getElementById('innovation-tbody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#a33;padding:12px;">Unable to load innovation radar</td></tr>';
+  }
 }
 </script>
 
