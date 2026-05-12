@@ -50,3 +50,6 @@ Boundaries:
 ### Credential Boundary
 - Hector explicitly confirmed `api_layer/.env` must never be committed or pushed. Keep it local/untracked only.
 - Hector confirmed `cyberSense_agent_fleet_v1.1.md` is intentionally deleted to avoid confusion; archive copy is maintained outside this repo.
+
+### Manual Newsletter Recovery
+- If a newsletter edition must be created manually, review the previous published newsletter artifact first and match its format before publishing or committing. For Edition 122, `newsletter/2026/May/05112026_edition121.html` was used as the format source and `newsletter/2026/May/05122026_edition122.html` was adapted to that structure.
