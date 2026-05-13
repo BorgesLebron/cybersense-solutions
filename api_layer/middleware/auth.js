@@ -179,7 +179,7 @@ function validatePipelineTransition(contentType, fromStatus, toStatus, agentName
   if (['maya', 'approved', 'published'].includes(toStatus) && !content.qa_passed_at) {
     return { valid: false, reason: 'Cannot advance past qa stage without qa_passed_at timestamp' };
   }
-  if (['approved', 'published'].includes(toStatus) && !content.maya_approved_at) {
+  if (toStatus === 'published' && !content.maya_approved_at) {
     return { valid: false, reason: 'Cannot advance past maya stage without maya_approved_at timestamp' };
   }
 

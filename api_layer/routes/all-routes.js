@@ -489,28 +489,79 @@ opsRouter.post('/escalate', requireAgentToken([]), async (req, res, next) => {
 });
 
 // Returns non-published articles for the Production tab Articles preview panel.
-// Agent mapping and stage display labels are resolved client-side.
 opsRouter.get('/articles/preview', requireAdminToken(), async (req, res, next) => {
   try {
     const rows = await db.listArticlesForPreview();
-    const stageMap = {
-      draft: 'In Progress', in_progress: 'In Progress',
-      under_review: 'Under Review', qa: 'Under Review',
-      maya: 'Human in the Loop', approved: 'Human in the Loop',
-    };
-    const agentMap = {
-      draft: 'James', in_progress: 'James',
-      under_review: 'Jason', qa: 'Jeff',
-      maya: 'Maya', approved: 'Maya',
-    };
     res.json(rows.map(r => ({
       id: r.id,
       type: r.type,
       title: r.title,
-      stage: stageMap[r.stage] || r.stage,
-      agent: agentMap[r.stage] || 'Editorial',
+      slug: r.slug,
+      stage: r.stage_label,
+      raw_stage: r.stage,
+      agent: r.agent,
+      summary: r.summary,
+      body_md: r.body_md,
+      access_tier: r.access_tier,
+      read_time_min: r.read_time_min,
       updated: r.updated || '',
     })));
+  } catch (e) { next(e); }
+});
+
+opsRouter.get('/articles/:id/review', requireAdminToken(), async (req, res, next) => {
+  try {
+    const article = await db.getArticleById(req.params.id);
+    if (!article) return res.status(404).json(err('NOT_FOUND', 'Article not found'));
+    res.json({
+      id: article.id,
+      type: article.section,
+      title: article.title,
+      slug: article.slug,
+      body_md: article.body_md,
+      access_tier: article.access_tier,
+      pipeline_status: article.pipeline_status,
+      read_time_min: article.read_time_min,
+      summary: article.body_md ? article.body_md.replace(/[#*_`>\n\r-]+/g, ' ').trim().slice(0, 320) : '',
+    });
+  } catch (e) { next(e); }
+});
+
+opsRouter.post('/articles/:id/approve-release', requireAdminToken(), async (req, res, next) => {
+  try {
+    const article = await db.getArticleById(req.params.id);
+    if (!article) return res.status(404).json(err('NOT_FOUND', 'Article not found'));
+    if (article.pipeline_status !== 'approved') {
+      return res.status(422).json(err('INVALID_STATUS', 'Only Maya-approved articles can be released from Preview Articles'));
+    }
+
+    const updated = await db.advanceArticleStatus(article.id, 'published');
+    await db.logPipelineEvent({
+      content_type: 'article',
+      content_id: article.id,
+      from_status: 'approved',
+      to_status: 'published',
+      agent_name: 'Laura',
+      notes: 'Final HITL article release approved in Preview Articles',
+    });
+    await notifyAgents(['Laura', 'Maya'], {
+      type: 'ARTICLE_RELEASED',
+      article_id: article.id,
+      title: article.title,
+      slug: article.slug,
+      message: `Final HITL release approved for Intel article "${article.title}". Public Intel link is now available.`,
+    });
+
+    res.json({
+      id: updated.id,
+      title: updated.title,
+      slug: updated.slug,
+      section: updated.section,
+      pipeline_status: updated.pipeline_status,
+      published_at: updated.published_at,
+      summary: updated.body_md ? updated.body_md.replace(/[#*_`>\n\r-]+/g, ' ').trim().slice(0, 320) : '',
+      public_url: `/intel/article.html?slug=${updated.slug}`,
+    });
   } catch (e) { next(e); }
 });
 

@@ -399,7 +399,27 @@ const listArticles = ({ section, access_tier, status = 'published', page = 1, li
 };
 
 const listArticlesForPreview = () =>
-  q(`SELECT id, section AS type, title, pipeline_status::text AS stage,
+  q(`SELECT id, section AS type, title, slug, body_md, access_tier, read_time_min,
+            pipeline_status::text AS stage,
+            CASE pipeline_status::text
+              WHEN 'draft' THEN 'James'
+              WHEN 'dev_edit' THEN 'Jason'
+              WHEN 'eic_review' THEN 'Rob'
+              WHEN 'qa' THEN 'Jeff'
+              WHEN 'maya' THEN 'Maya'
+              WHEN 'approved' THEN 'Maya'
+              ELSE 'Editorial'
+            END AS agent,
+            CASE pipeline_status::text
+              WHEN 'draft' THEN 'In Progress'
+              WHEN 'dev_edit' THEN 'Development Edit'
+              WHEN 'eic_review' THEN 'EIC Review'
+              WHEN 'qa' THEN 'QA'
+              WHEN 'maya' THEN 'Maya Review'
+              WHEN 'approved' THEN 'Final HITL'
+              ELSE pipeline_status::text
+            END AS stage_label,
+            LEFT(regexp_replace(body_md, E'[#*_>\\n\\r-]+', ' ', 'g'), 320) AS summary,
             TO_CHAR(GREATEST(maya_approved_at, published_at, created_at), 'YYYY-MM-DD') AS updated
      FROM articles WHERE pipeline_status::text != 'published'
      ORDER BY created_at DESC`);

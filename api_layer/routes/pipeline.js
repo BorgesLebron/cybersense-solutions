@@ -18,6 +18,12 @@ const AWARENESS_DISPATCH = {
   maya:       { agent: 'Maya', task_type: 'approve_briefing',    sla_h: 7, sla_m: 0  },
 };
 
+const INTEL_DISPATCH = {
+  eic_review: { agent: 'Rob',   task_type: 'eic_review_article' },
+  qa:         { agent: 'Jeff',  task_type: 'qa_article' },
+  maya:       { agent: 'Maya',  task_type: 'approve_article' },
+};
+
 // POST /api/pipeline/threat-records  (Rick only)
 router.post('/threat-records', requireAgentToken(['Rick', 'Henry']), async (req, res, next) => {
   try {
@@ -151,7 +157,8 @@ router.post('/articles', requireAgentToken([...INTEL_AGENTS]), async (req, res, 
     if (!validSections.includes(section)) return res.status(400).json(err('INVALID_SECTION', `section must be one of: ${validSections.join(', ')}`));
     if (!validTiers.includes(access_tier)) return res.status(400).json(err('INVALID_TIER', `access_tier must be one of: ${validTiers.join(', ')}`));
 
-    const article = await db.createArticle({ title, section, body_md, access_tier, source_ids: source_ids || [], created_by: req.agent.name });
+    const effectiveTier = section === 'training' ? access_tier : 'monthly';
+    const article = await db.createArticle({ title, section, body_md, access_tier: effectiveTier, source_ids: source_ids || [], created_by: req.agent.name });
 
     await db.logPipelineEvent({ content_type: 'article', content_id: article.id, from_status: null, to_status: 'draft', agent_name: req.agent.name, notes: 'Article created' });
   
@@ -180,8 +187,34 @@ router.patch('/articles/:id/status', requireAgentToken([...INTEL_AGENTS]), async
 
     await triggerEscalationCheck('intel', agent_name, id, to_status);
 
-    if (to_status === 'published' && article.threat_records_linked) {
-      await db.linkThreatToArticle(article.threat_records_linked, id);
+    const dispatch = INTEL_DISPATCH[to_status];
+    if (dispatch) {
+      const task = await db.createTask({
+        agent_name: dispatch.agent,
+        task_type: dispatch.task_type,
+        content_type: 'article',
+        content_id: id,
+        sla_deadline: null,
+      });
+      await notifyAgents([dispatch.agent], {
+        type: 'ARTICLE_HANDOFF',
+        article_id: id,
+        title: article.title,
+        from_agent: agent_name,
+        stage: to_status,
+        task_id: task.id,
+        message: `Intel article "${article.title}" handed off to ${dispatch.agent} by ${agent_name}.`,
+      });
+    }
+
+    if (to_status === 'approved') {
+      await notifyAgents(['Laura'], {
+        type: 'ARTICLE_READY_FOR_HITL_RELEASE',
+        article_id: id,
+        title: article.title,
+        from_agent: agent_name,
+        message: `Maya approved Intel article "${article.title}". It is now waiting in Preview Articles for final human release.`,
+      });
     }
 
     res.json({ id, from_status: article.pipeline_status, to_status, updated_at: updated.updated_at || new Date().toISOString() });
@@ -350,32 +383,8 @@ router.post('/release', requireAgentToken(['Laura', 'Henry']), async (req, res, 
     else if (content_type === 'training') await db.advanceModuleStatus(content_id, 'published');
 
     await db.logPipelineEvent({ content_type, content_id, from_status: 'approved', to_status: 'published', agent_name: 'Laura', notes: 'Released by Laura after Maya approval' });
-    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'CONTENT_TYPE_CHECK', content_type: content_type, is_briefing: content_type === 'briefing' }));
     
     // ── Email distribution ────────────────────────────────────────────────
-    if (content_type === 'briefing') {
-      try {
-        console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'RELEASE_DEBUG', content_type, content_id }));
-        const { sendBriefingEmail } = require('../services/sendgrid');
-        const subscribers = await db.pool.query(
-          `SELECT email, full_name FROM users
-           WHERE email_subscribed = true
-           AND email_verified = true
-           AND deleted_at IS NULL`
-        ).then(r => r.rows.map(u => ({ email: u.email, name: u.full_name || 'Reader' })));
-
-        console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'BRIEFING_EMAIL_ATTEMPT', briefing_id: content_id, subject: content.subject_line, edition_date: content.edition_date, subscribers: subscribers.length }));
-
-        if (subscribers.length > 0) {
-          await sendBriefingEmail(subscribers, content);
-          console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'BRIEFING_EMAIL_SENT', briefing_id: content_id, recipients: subscribers.length }));
-        } else {
-          console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'BRIEFING_EMAIL_SKIPPED', briefing_id: content_id, reason: 'no eligible subscribers' }));
-        }
-      } catch (e) {
-        console.error(JSON.stringify({ ts: new Date().toISOString(), event: 'BRIEFING_EMAIL_FAILED', briefing_id: content_id, error: e.message }));
-      }
-    }
     // ── End email distribution ────────────────────────────────────────────
 
     const distribution_tasks = [];
