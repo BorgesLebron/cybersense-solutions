@@ -114,6 +114,25 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
 .risk-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary);}
 .risk-row:last-child{border-bottom:none;}
 .risk-label{flex:1;font-size:12px;color:var(--color-text-primary);}
+.nl-status-card{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(280px,.75fr);gap:10px;margin-bottom:10px;}
+.nl-headline{font-size:15px;font-weight:600;color:var(--color-text-primary);line-height:1.35;margin:4px 0 8px;}
+.nl-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.nl-summary{font-size:12px;color:var(--color-text-secondary);line-height:1.55;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:8px;padding:10px;}
+.nl-pipeline{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:12px;}
+.nl-step{min-height:54px;border:0.5px solid var(--color-border-tertiary);border-radius:8px;background:var(--color-background-secondary);padding:7px 6px;}
+.nl-step.done{border-color:#1D9E75;background:#EAF3DE;}
+.nl-step.active{border-color:#185FA5;background:var(--color-background-info);}
+.nl-step-title{font-size:10px;font-weight:600;color:var(--color-text-primary);line-height:1.2;}
+.nl-step-agent{font-size:10px;color:var(--color-text-tertiary);margin-top:3px;}
+.nl-chat{display:flex;flex-direction:column;min-height:250px;}
+.nl-chat-log{flex:1;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:8px;padding:10px;overflow:auto;margin-bottom:8px;}
+.nl-msg{font-size:12px;line-height:1.45;margin-bottom:8px;padding:8px;border-radius:8px;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);}
+.nl-msg.user{border-color:#185FA5;}
+.nl-msg.system{color:var(--color-text-secondary);}
+.nl-chat-input{width:100%;min-height:70px;resize:vertical;border:0.5px solid var(--color-border-tertiary);border-radius:8px;background:var(--color-background-primary);color:var(--color-text-primary);font-family:inherit;font-size:12px;padding:9px;outline:none;}
+.nl-chat-send{margin-top:8px;padding:8px 12px;border:0;border-radius:8px;background:#185FA5;color:#fff;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;}
+.nl-chat-send:disabled{opacity:.55;cursor:not-allowed;}
+@media(max-width:900px){.nl-status-card{grid-template-columns:1fr}.nl-pipeline{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
@@ -345,33 +364,48 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
       <!-- NEWSLETTER -->
       <div class="panel" id="p-newsletter">
         <div class="panel-title">Newsletter report</div>
-        <div class="panel-sub">Daily Digital Awareness Briefing — Ruth → Peter → Ed → Jeff → Maya → Oliver</div>
+        <div class="panel-sub">Daily Digital Awareness Briefing - Ruth -> Peter -> Ed -> Jeff -> Maya -> HITL -> Laura</div>
         <div class="metric-row">
-          <div class="met"><div class="met-lbl">Email subscribers</div><div class="met-val">3,847</div><div class="met-delta up">+114 this week</div></div>
-          <div class="met"><div class="met-lbl">Open rate (7d avg)</div><div class="met-val">41%</div><div class="met-delta up">+3pts vs benchmark</div></div>
-          <div class="met"><div class="met-lbl">Click-through rate</div><div class="met-val">8.2%</div><div class="met-delta up">+1.4pts WoW</div></div>
-          <div class="met"><div class="met-lbl">Published on time</div><div class="met-val">97%</div><div class="met-delta nt">23/24 this month</div></div>
+          <div class="met"><div class="met-lbl">Current edition</div><div class="met-val" id="nl-edition">-</div><div class="met-delta nt" id="nl-edition-date">Loading...</div></div>
+          <div class="met"><div class="met-lbl">Pipeline stage</div><div class="met-val" id="nl-stage-short">-</div><div class="met-delta nt" id="nl-owner">-</div></div>
+          <div class="met"><div class="met-lbl">Pipeline progress</div><div class="met-val" id="nl-progress">-</div><div class="met-delta nt" id="nl-hold-short">-</div></div>
+          <div class="met"><div class="met-lbl">Last distribution</div><div class="met-val" id="nl-last-delivery">-</div><div class="met-delta nt" id="nl-last-delivery-note">-</div></div>
+        </div>
+        <div class="nl-status-card">
+          <div class="card">
+            <div class="card-hd">Editorial pipeline location <span id="nl-status-badge" class="badge b-gray">Loading</span></div>
+            <div class="nl-headline" id="nl-headline">Loading current newsletter...</div>
+            <div class="nl-meta">
+              <span class="badge b-blue" id="nl-stage-badge">Stage</span>
+              <span class="badge b-gray" id="nl-owner-badge">Owner</span>
+              <span class="badge b-amber" id="nl-hold-badge" title="">Hold</span>
+            </div>
+            <div class="nl-summary" id="nl-summary" title="">Loading summary and approval notes...</div>
+            <div class="nl-pipeline" id="nl-pipeline"></div>
+          </div>
+          <div class="card nl-chat">
+            <div class="card-hd">Troubleshoot with Maya</div>
+            <div class="nl-chat-log" id="nl-chat-log">
+              <div class="nl-msg system">Ask Maya to investigate an editorial hold. This creates a Maya task and notification; autonomous agent replies are still a capability gap.</div>
+            </div>
+            <textarea class="nl-chat-input" id="nl-chat-input" placeholder="Ask Maya where the newsletter is blocked or what her department needs to clear it..."></textarea>
+            <button class="nl-chat-send" id="nl-chat-send" onclick="sendMayaNewsletterMessage()">Send to Maya</button>
+          </div>
         </div>
         <div class="grid2">
-          <div class="card"><div class="card-hd">Delivery performance (last 7 days)</div>
+          <div class="card"><div class="card-hd">Recent distribution history</div>
             <table class="tbl">
-              <tr><th>Date</th><th>Draft</th><th>Published</th><th>Open rate</th></tr>
-              <tr><td>May 1</td><td>06:52</td><td>06:58</td><td class="up">44%</td></tr>
-              <tr><td>Apr 30</td><td>06:58</td><td>06:55</td><td class="up">43%</td></tr>
-              <tr><td>Apr 29</td><td>07:01</td><td>07:02</td><td class="nt">41%</td></tr>
-              <tr><td>Apr 28</td><td>06:48</td><td>06:49</td><td class="up">42%</td></tr>
-              <tr><td>Apr 27</td><td>07:12</td><td>07:15</td><td class="dn">38%</td></tr>
+              <thead><tr><th>Edition</th><th>Date</th><th>Distributed</th><th>Result</th></tr></thead>
+              <tbody id="nl-delivery-tbody"><tr><td colspan="4" style="text-align:center;color:#666;padding:12px;">Loading deliveries...</td></tr></tbody>
             </table>
           </div>
-          <div class="card"><div class="card-hd">Content section performance</div>
-            <div class="progress-row"><span class="progress-lbl">Threat items</span><div class="progress-bar"><div class="bar-fill" style="width:78%;background:#E24B4A;"></div></div><span class="progress-val">78%</span></div>
-            <div class="progress-row"><span class="progress-lbl">Innovation items</span><div class="progress-bar"><div class="bar-fill" style="width:62%;background:#7F77DD;"></div></div><span class="progress-val">62%</span></div>
-            <div class="progress-row"><span class="progress-lbl">Training byte</span><div class="progress-bar"><div class="bar-fill" style="width:55%;background:#BA7517;"></div></div><span class="progress-val">55%</span></div>
-            <div class="progress-row"><span class="progress-lbl">Pro growth</span><div class="progress-bar"><div class="bar-fill" style="width:48%;background:#1D9E75;"></div></div><span class="progress-val">48%</span></div>
-            <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:8px;">Click-through rate by section</div>
+          <div class="card"><div class="card-hd">Current edition events</div>
+            <div id="nl-events">
+              <div class="feed-item"><div class="feed-dot" style="background:#94a3b8;"></div><div><div class="feed-txt" style="color:var(--color-text-tertiary);">Loading events...</div></div></div>
+            </div>
           </div>
         </div>
-        <button class="ask-btn" onclick="sendPrompt('What should Ed and the Awareness team track to continuously improve the Daily Digital Awareness Briefing open and click-through rates?','maya')">Optimize newsletter performance ↗</button>
+        <button class="ask-btn" onclick="sendPrompt('What agentic capabilities do Maya and the department heads need to diagnose and unblock newsletter production without manual DB inspection?','maya')">Define department-head agentic capabilities -></button>
       </div>
 
       <!-- TRAINING -->
@@ -543,6 +577,7 @@ document.addEventListener('cs:login', (e) => {
   if (btn) btn.style.display = 'inline-block';
   loadRadarData();
   loadInnovationRadarData();
+  loadNewsletterStatus();
 });
 
 async function loadRadarData() {
@@ -643,6 +678,142 @@ async function loadInnovationRadarData() {
     console.error('Innovation radar load failed:', e);
     const tbody = document.getElementById('innovation-tbody');
     if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#a33;padding:12px;">Unable to load innovation radar</td></tr>';
+  }
+}
+
+let newsletterStatus = null;
+
+function esc(value) {
+  return String(value ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function fmtDate(value) {
+  if (!value) return '-';
+  return new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+}
+
+function fmtTime(value) {
+  if (!value) return '-';
+  return new Date(value).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Chicago' }) + ' CT';
+}
+
+async function loadNewsletterStatus() {
+  try {
+    newsletterStatus = await CS.Auth.apiFetch('/api/admin/newsletter/status');
+    renderNewsletterStatus(newsletterStatus);
+  } catch (e) {
+    console.error('Newsletter status load failed:', e);
+    const headline = document.getElementById('nl-headline');
+    if (headline) headline.textContent = 'Unable to load newsletter pipeline status';
+  }
+}
+
+function renderNewsletterStatus(data) {
+  const current = data.current;
+  const lastDelivery = (data.deliveries || [])[0];
+
+  document.getElementById('nl-last-delivery').textContent = lastDelivery ? 'Edition ' + lastDelivery.edition_number : '-';
+  document.getElementById('nl-last-delivery-note').textContent = lastDelivery?.distributed_at ? fmtTime(lastDelivery.distributed_at) : 'No recent send';
+
+  const tbody = document.getElementById('nl-delivery-tbody');
+  tbody.innerHTML = (data.deliveries || []).length
+    ? data.deliveries.map(d => `<tr>
+        <td>Edition ${esc(d.edition_number)}</td>
+        <td>${fmtDate(d.edition_date)}</td>
+        <td>${d.distributed_at ? fmtTime(d.distributed_at) : '-'}</td>
+        <td>${d.notes ? '<span class="badge b-green">Sent</span>' : '<span class="badge b-gray">No event</span>'}</td>
+      </tr>`).join('')
+    : '<tr><td colspan="4" style="text-align:center;color:#666;padding:12px;">No delivery history found</td></tr>';
+
+  if (!current) {
+    document.getElementById('nl-edition').textContent = '-';
+    document.getElementById('nl-stage-short').textContent = 'Idle';
+    document.getElementById('nl-progress').textContent = '0%';
+    document.getElementById('nl-headline').textContent = 'No active newsletter in production';
+    document.getElementById('nl-summary').textContent = 'The production queue has no non-published briefing.';
+    document.getElementById('nl-events').innerHTML = '<div class="feed-item"><div class="feed-dot" style="background:#94a3b8;"></div><div><div class="feed-txt">No active edition events.</div></div></div>';
+    renderNewsletterPipeline(0);
+    return;
+  }
+
+  document.getElementById('nl-edition').textContent = current.edition_number ? 'E' + current.edition_number : '-';
+  document.getElementById('nl-edition-date').textContent = fmtDate(current.edition_date);
+  document.getElementById('nl-stage-short').textContent = current.pipeline_status || '-';
+  document.getElementById('nl-owner').textContent = 'Owner: ' + (current.owner || '-');
+  document.getElementById('nl-progress').textContent = (current.progress_pct || 0) + '%';
+  document.getElementById('nl-hold-short').textContent = current.hold ? current.hold.slice(0, 42) : '-';
+  document.getElementById('nl-headline').textContent = current.subject_line || 'Untitled newsletter';
+  document.getElementById('nl-stage-badge').textContent = current.stage || current.pipeline_status;
+  document.getElementById('nl-owner-badge').textContent = current.owner || 'Unassigned';
+  document.getElementById('nl-hold-badge').textContent = current.hold || 'No hold';
+  document.getElementById('nl-hold-badge').title = current.hold || '';
+  document.getElementById('nl-status-badge').className = 'badge ' + (current.pipeline_status === 'approved' ? 'b-green' : current.hold?.startsWith('No active') ? 'b-red' : 'b-amber');
+  document.getElementById('nl-status-badge').textContent = current.pipeline_status === 'approved' ? 'Preview ready' : 'In production';
+  document.getElementById('nl-summary').textContent = current.summary || 'No issue summary or approval notes available yet.';
+  document.getElementById('nl-summary').title = current.summary || '';
+
+  renderNewsletterPipeline(current.stage_index || 0);
+  renderNewsletterEvents(current.events || []);
+}
+
+function renderNewsletterPipeline(activeIndex) {
+  const stages = [
+    ['Ruth', 'Draft'],
+    ['Peter', 'Dev edit'],
+    ['Ed', 'EIC review'],
+    ['Jeff', 'QA'],
+    ['Maya', 'Approval'],
+    ['HITL', 'Authorize'],
+    ['Laura', '0430 send'],
+  ];
+  document.getElementById('nl-pipeline').innerHTML = stages.map((s, idx) => {
+    const step = idx + 1;
+    const cls = step < activeIndex ? 'done' : step === activeIndex ? 'active' : '';
+    return `<div class="nl-step ${cls}">
+      <div class="nl-step-title">${esc(s[1])}</div>
+      <div class="nl-step-agent">${esc(s[0])}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderNewsletterEvents(events) {
+  const el = document.getElementById('nl-events');
+  if (!events.length) {
+    el.innerHTML = '<div class="feed-item"><div class="feed-dot" style="background:#94a3b8;"></div><div><div class="feed-txt">No pipeline events found for current edition.</div></div></div>';
+    return;
+  }
+  el.innerHTML = events.slice(0, 6).map(ev => `<div class="feed-item">
+    <div class="feed-dot" style="background:${ev.to_status === 'draft' ? '#94a3b8' : ev.to_status === 'dev_edit' ? '#BA7517' : '#185FA5'};"></div>
+    <div>
+      <div class="feed-txt">${esc(ev.agent_name)} moved ${esc(ev.from_status || 'new')} -> <strong>${esc(ev.to_status)}</strong></div>
+      <div class="feed-time">${fmtTime(ev.created_at)}${ev.notes ? ' - ' + esc(ev.notes).slice(0, 120) : ''}</div>
+    </div>
+  </div>`).join('');
+}
+
+async function sendMayaNewsletterMessage() {
+  const input = document.getElementById('nl-chat-input');
+  const btn = document.getElementById('nl-chat-send');
+  const log = document.getElementById('nl-chat-log');
+  const msg = input.value.trim();
+  if (!msg) return;
+  const briefingId = newsletterStatus?.current?.id || null;
+  log.innerHTML += `<div class="nl-msg user">${esc(msg)}</div>`;
+  input.value = '';
+  btn.disabled = true;
+  try {
+    const res = await CS.Auth.apiFetch('/api/admin/newsletter/maya-chat', {
+      method: 'POST',
+      body: JSON.stringify({ briefing_id: briefingId, message: msg }),
+    });
+    log.innerHTML += `<div class="nl-msg system">${esc(res.reply || 'Maya was notified.')}</div>`;
+  } catch (e) {
+    log.innerHTML += `<div class="nl-msg system">Unable to notify Maya: ${esc(e.message || 'Request failed')}</div>`;
+  } finally {
+    btn.disabled = false;
+    log.scrollTop = log.scrollHeight;
   }
 }
 </script>

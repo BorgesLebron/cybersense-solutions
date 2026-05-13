@@ -220,6 +220,12 @@ const getRepositoryQueue = ({ pipeline, limit = 30 } = {}) => {
 const listApprovedBriefingPreviews = () =>
   q(`SELECT b.id, b.edition_number, b.edition_date, b.subject_line, b.file_path,
             b.maya_approved_at, b.pipeline_status,
+            EXISTS (
+              SELECT 1 FROM pipeline_events pe
+              WHERE pe.content_type = 'briefing'
+                AND pe.content_id = b.id
+                AND pe.notes LIKE 'Distribution authorized for 0430 CT%'
+            ) AS authorized_for_distribution,
             COALESCE(jsonb_agg(item.data ORDER BY item.sort_order) FILTER (WHERE item.data IS NOT NULL), '[]'::jsonb) AS items
      FROM briefings b
      LEFT JOIN LATERAL (
