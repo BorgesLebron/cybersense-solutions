@@ -759,6 +759,162 @@ adminRouter.post('/briefings/:id/send-test', requireAdminToken(['gm']), async (r
   } catch (e) { next(e); }
 });
 
+adminRouter.get('/newsletter/status', requireAdminToken(), async (req, res, next) => {
+  try {
+    const [current, recentPublished, deliveries] = await Promise.all([
+      db.pool.query(`
+        SELECT id, edition_number, edition_date, subject_line, pipeline_status,
+               draft_completed_at, qa_passed_at, maya_approved_at, published_at,
+               file_path, body_md
+        FROM briefings
+        WHERE pipeline_status != 'published'
+        ORDER BY edition_date DESC
+        LIMIT 1
+      `).then(r => r.rows[0] || null),
+      db.pool.query(`
+        SELECT id, edition_number, edition_date, subject_line, pipeline_status,
+               draft_completed_at, qa_passed_at, maya_approved_at, published_at,
+               file_path
+        FROM briefings
+        WHERE pipeline_status = 'published'
+        ORDER BY edition_date DESC
+        LIMIT 5
+      `).then(r => r.rows),
+      db.pool.query(`
+        SELECT b.id, b.edition_number, b.edition_date, b.subject_line, b.published_at,
+               pe.created_at AS distributed_at, pe.notes
+        FROM briefings b
+        LEFT JOIN LATERAL (
+          SELECT created_at, notes
+          FROM pipeline_events
+          WHERE content_type = 'briefing'
+            AND content_id = b.id
+            AND notes LIKE 'Daily briefing email distribution%'
+          ORDER BY created_at DESC
+          LIMIT 1
+        ) pe ON true
+        WHERE b.pipeline_status = 'published'
+        ORDER BY b.edition_date DESC
+        LIMIT 7
+      `).then(r => r.rows),
+    ]);
+
+    let tasks = [];
+    let events = [];
+    if (current) {
+      [tasks, events] = await Promise.all([
+        db.pool.query(`
+          SELECT id, agent_name, task_type, status, sla_deadline, started_at,
+                 completed_at, error_message
+          FROM agent_tasks
+          WHERE content_type = 'briefing'
+            AND content_id = $1
+          ORDER BY started_at DESC
+          LIMIT 12
+        `, [current.id]).then(r => r.rows),
+        db.pool.query(`
+          SELECT from_status, to_status, agent_name, notes, created_at
+          FROM pipeline_events
+          WHERE content_type = 'briefing'
+            AND content_id = $1
+          ORDER BY created_at DESC
+          LIMIT 12
+        `, [current.id]).then(r => r.rows),
+      ]);
+    }
+
+    const statusMap = {
+      draft:      { stage: 'Ruth draft', owner: 'Ruth', next_owner: 'Peter', stage_index: 1 },
+      dev_edit:   { stage: 'Development edit complete', owner: 'Ed', next_owner: 'Ed', stage_index: 2 },
+      eic_review: { stage: 'EIC review complete', owner: 'Jeff', next_owner: 'Jeff', stage_index: 3 },
+      qa:         { stage: 'QA complete', owner: 'Maya', next_owner: 'Maya', stage_index: 4 },
+      maya:       { stage: 'Maya review', owner: 'Maya', next_owner: 'HITL', stage_index: 5 },
+      approved:   { stage: 'Preview Briefing / HITL', owner: 'Human executive', next_owner: 'Laura', stage_index: 6 },
+      published:  { stage: 'Distributed', owner: 'Laura', next_owner: null, stage_index: 7 },
+    };
+
+    const stage = current ? statusMap[current.pipeline_status] || statusMap.draft : null;
+    const ownerTask = current && stage?.owner
+      ? tasks.find(t => t.agent_name === stage.owner && ['queued', 'in_progress'].includes(t.status))
+      : null;
+    const failedTask = tasks.find(t => t.status === 'failed');
+    const lastEvent = events[0] || null;
+    const summarySource = current?.body_md || current?.subject_line || '';
+    const summary = summarySource.replace(/[#*_`>\n\r-]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 360);
+    const hold = current ? (
+      failedTask
+        ? `Blocked by ${failedTask.agent_name}: ${failedTask.error_message || failedTask.task_type + ' failed'}`
+        : ownerTask
+          ? `Waiting on ${ownerTask.agent_name} to complete ${ownerTask.task_type}`
+          : current.pipeline_status === 'approved'
+            ? 'Waiting for HITL authorization or scheduled 0430 distribution'
+            : `No active ${stage?.owner || 'owner'} task found for current stage after last event`
+    ) : 'No active newsletter in production';
+
+    res.json({
+      current: current ? {
+        ...current,
+        stage: stage.stage,
+        owner: stage.owner,
+        next_owner: stage.next_owner,
+        stage_index: stage.stage_index,
+        stage_total: 7,
+        progress_pct: Math.round((stage.stage_index / 7) * 100),
+        summary,
+        hold,
+        last_event: lastEvent,
+        tasks,
+        events,
+      } : null,
+      recent_published: recentPublished,
+      deliveries,
+      generated_at: new Date().toISOString(),
+    });
+  } catch (e) { next(e); }
+});
+
+adminRouter.post('/newsletter/maya-chat', requireAdminToken(['gm', 'editor']), async (req, res, next) => {
+  try {
+    const { briefing_id, message } = req.body;
+    if (!message || typeof message !== 'string') return res.status(400).json(err('MISSING_FIELDS', 'message is required'));
+
+    const briefing = briefing_id ? await db.getBriefingById(briefing_id) : null;
+    const contentId = briefing?.id || '00000000-0000-0000-0000-000000000000';
+    const task = await db.createTask({
+      agent_name: 'Maya',
+      task_type: 'editorial_troubleshoot',
+      content_type: 'briefing',
+      content_id: contentId,
+      sla_deadline: new Date(Date.now() + 30 * 60 * 1000),
+    });
+
+    await db.logAuditEvent({
+      actor: req.user.id,
+      action: 'maya_troubleshoot_message',
+      target_agent: 'Maya',
+      reason: message.slice(0, 500),
+      affected_content_id: briefing?.id || null,
+    });
+
+    await notifyAgents(['Maya'], {
+      type: 'EDITORIAL_TROUBLESHOOT_REQUEST',
+      briefing_id: briefing?.id || null,
+      edition_number: briefing?.edition_number || null,
+      from_user: req.user.email,
+      task_id: task.id,
+      message,
+    });
+
+    res.json({
+      sent: true,
+      task_id: task.id,
+      reply: briefing
+        ? `Maya has been notified for Edition ${briefing.edition_number}. Current status is ${briefing.pipeline_status}; check the task queue for her response or escalation.`
+        : 'Maya has been notified. Current implementation records the request as an agent task; autonomous chat replies are not yet enabled.',
+    });
+  } catch (e) { next(e); }
+});
+
 adminRouter.delete('/users/:id', requireAdminToken(['gm']), async (req, res, next) => {
   try {
     const user = await db.getUserById(req.params.id);
@@ -866,8 +1022,8 @@ adminRouter.post('/pipeline/ruth/trigger', requireAdminToken(['gm']), async (req
   } catch (e) { next(e); }
 });
 
-// Human-in-the-loop gate. Confirms distribution, publishes the briefing, and
-// sends subscriber email. Social distribution is manual for this phase.
+// Human-in-the-loop gate. Authorizes the approved briefing for its publishing-day
+// 0430 CT email distribution. The scheduler owns the actual publish/send step.
 // Distribution is blocked until this endpoint is called — no exceptions.
 adminRouter.post('/briefings/:id/confirm-distribution', requireAdminToken(['gm']), async (req, res, next) => {
   try {
@@ -884,38 +1040,47 @@ adminRouter.post('/briefings/:id/confirm-distribution', requireAdminToken(['gm']
       affected_content_id: briefing.id,
     });
 
-    const published = await db.advanceBriefingStatus(briefing.id, 'published');
+    const existingAuthorization = await db.pool.query(
+      `SELECT id FROM pipeline_events
+       WHERE content_type = 'briefing'
+         AND content_id = $1
+         AND notes LIKE 'Distribution authorized for 0430 CT%'
+       LIMIT 1`,
+      [briefing.id]
+    ).then(r => r.rows[0] || null);
 
     const appUrl = (process.env.APP_URL || 'https://cybersense.solutions').replace(/\/$/, '');
-    const publicUrl = published.file_path
-      ? `${appUrl}/${published.file_path.replace(/^\//, '')}`
+    const publicUrl = briefing.file_path
+      ? `${appUrl}/${briefing.file_path.replace(/^\//, '')}`
       : `${appUrl}/newsletter.html`;
 
     await notifyAgents(['Laura'], {
       type: 'BRIEFING_DISTRIBUTION_AUTHORIZED',
-      briefing_id: published.id,
-      edition_number: published.edition_number,
-      edition_date: published.edition_date,
-      subject_line: published.subject_line,
+      briefing_id: briefing.id,
+      edition_number: briefing.edition_number,
+      edition_date: briefing.edition_date,
+      subject_line: briefing.subject_line,
       public_url: publicUrl,
       scheduled_distribution: '0430 CT on edition date',
-      message: `Human executive confirmed Edition ${published.edition_number}. Subscriber email is authorized for the 0430 CT publishing-day distribution job. Social posting remains manual for this phase.`,
+      message: `Human executive authorized Edition ${briefing.edition_number} for the 0430 CT publishing-day distribution job. Social posting remains manual for this phase.`,
     });
 
-    await db.logPipelineEvent({
-      content_type: 'briefing',
-      content_id: published.id,
-      from_status: 'approved',
-      to_status: 'published',
-      agent_name: 'human_executive',
-      notes: `Distribution authorized by human executive - Edition ${published.edition_number}; email scheduled for 0430 CT publishing day`,
-    });
+    if (!existingAuthorization) {
+      await db.logPipelineEvent({
+        content_type: 'briefing',
+        content_id: briefing.id,
+        from_status: 'approved',
+        to_status: 'approved',
+        agent_name: 'human_executive',
+        notes: `Distribution authorized for 0430 CT publishing-day job - Edition ${briefing.edition_number}`,
+      });
+    }
 
     res.json({
       confirmed: true,
-      briefing_id: published.id,
-      edition_number: published.edition_number,
-      edition_date: published.edition_date,
+      briefing_id: briefing.id,
+      edition_number: briefing.edition_number,
+      edition_date: briefing.edition_date,
       public_url: publicUrl,
       email_distribution: 'scheduled_0430_ct',
       social_distribution: 'manual',

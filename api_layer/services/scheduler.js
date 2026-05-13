@@ -501,7 +501,8 @@ async function runOliverDailyPost() {
 // Subscriber briefing distribution (04:30 CT, Mon-Fri).
 // Sends the current CT date's human-authorized newsletter. This is separate
 // from Ruth's 0430 production kickoff, which creates the next publishing-day
-// newsletter.
+// newsletter. HITL authorization keeps the briefing approved; this job is the
+// only path that sends subscriber email and marks the edition published.
 async function runDailyBriefingEmailDistribution() {
   const editionDate = currentCtDate();
   try {
@@ -509,7 +510,13 @@ async function runDailyBriefingEmailDistribution() {
       `SELECT *
        FROM briefings
        WHERE edition_date = $1
-         AND pipeline_status = 'published'
+         AND pipeline_status = 'approved'
+         AND EXISTS (
+           SELECT 1 FROM pipeline_events pe
+           WHERE pe.content_type = 'briefing'
+             AND pe.content_id = briefings.id
+             AND pe.notes LIKE 'Distribution authorized for 0430 CT%'
+         )
        LIMIT 1`,
       [editionDate]
     ).then(r => r.rows[0] || null);
@@ -528,12 +535,11 @@ async function runDailyBriefingEmailDistribution() {
       `SELECT id
        FROM pipeline_events
        WHERE content_type = 'briefing'
-         AND content_id = $1
-         AND (
-           notes LIKE 'Daily briefing email distribution %'
-           OR notes LIKE 'Email distribution confirmed by human executive%'
-           OR notes LIKE 'Distribution confirmed by human executive%'
-         )
+          AND content_id = $1
+          AND (
+            notes LIKE 'Daily briefing email distribution sent%'
+            OR notes LIKE 'Daily briefing email distribution skipped%'
+          )
        LIMIT 1`,
       [briefing.id]
     ).then(r => r.rows[0] || null);
@@ -558,42 +564,44 @@ async function runDailyBriefingEmailDistribution() {
     ).then(r => r.rows.map(u => ({ email: u.email, name: u.full_name || 'Reader' })));
 
     if (subscribers.length === 0) {
+      const published = await db.advanceBriefingStatus(briefing.id, 'published');
       await db.logPipelineEvent({
         content_type: 'briefing',
-        content_id: briefing.id,
-        from_status: 'published',
+        content_id: published.id,
+        from_status: 'approved',
         to_status: 'published',
         agent_name: 'Laura',
-        notes: `Daily briefing email distribution skipped - Edition ${briefing.edition_number}; recipients=0`,
+        notes: `Daily briefing email distribution skipped - Edition ${published.edition_number}; recipients=0`,
       });
       console.log(JSON.stringify({
         ts: new Date().toISOString(),
         job: 'daily_briefing_email_distribution',
         status: 'skipped_no_subscribers',
         edition_date: editionDate,
-        briefing_id: briefing.id,
+        briefing_id: published.id,
       }));
       return;
     }
 
     await sendBriefingEmail(subscribers, briefing);
+    const published = await db.advanceBriefingStatus(briefing.id, 'published');
 
     await db.logPipelineEvent({
       content_type: 'briefing',
-      content_id: briefing.id,
-      from_status: 'published',
+      content_id: published.id,
+      from_status: 'approved',
       to_status: 'published',
       agent_name: 'Laura',
-      notes: `Daily briefing email distribution sent - Edition ${briefing.edition_number}; recipients=${subscribers.length}`,
+      notes: `Daily briefing email distribution sent - Edition ${published.edition_number}; recipients=${subscribers.length}`,
     });
 
     await notifyAgents(['Laura', 'Nora'], {
       type: 'BRIEFING_EMAIL_DISTRIBUTED',
-      briefing_id: briefing.id,
-      edition_number: briefing.edition_number,
-      edition_date: briefing.edition_date,
+      briefing_id: published.id,
+      edition_number: published.edition_number,
+      edition_date: published.edition_date,
       recipient_count: subscribers.length,
-      message: `Edition ${briefing.edition_number} subscriber email distribution completed at the 0430 CT publishing-day window.`,
+      message: `Edition ${published.edition_number} subscriber email distribution completed at the 0430 CT publishing-day window.`,
     });
 
     console.log(JSON.stringify({
@@ -601,7 +609,7 @@ async function runDailyBriefingEmailDistribution() {
       job: 'daily_briefing_email_distribution',
       status: 'sent',
       edition_date: editionDate,
-      briefing_id: briefing.id,
+      briefing_id: published.id,
       recipients: subscribers.length,
     }));
   } catch (e) {

@@ -560,11 +560,12 @@ function transformBriefing(b) {
     file_path:       b.file_path || null,
     maya_approved_at: b.maya_approved_at,
     maya_note:       b.maya_note || null,
+    authorized_for_distribution: !!b.authorized_for_distribution,
     status:          'awaiting_approval',
     checklist: [
       { id: 'jeff',   label: 'QA pass — Jeff (Quality Assurance)',          done: true,  agent: 'Jeff'   },
       { id: 'maya',   label: 'Editorial approval — Maya (Managing Editor)', done: true,  agent: 'Maya'   },
-      { id: 'exec',   label: 'Executive review — Human in the Loop',        done: false, agent: 'You'    },
+      { id: 'exec',   label: 'Executive review — Human in the Loop',        done: !!b.authorized_for_distribution, agent: 'You'    },
       { id: 'laura',  label: 'Distribution trigger — Laura (Operations)',   done: false, agent: 'Laura'  },
       { id: 'oliver', label: 'LinkedIn post — Oliver (0700 CT)',            done: false, agent: 'Oliver' },
     ],
@@ -626,7 +627,7 @@ function renderBriefingCard(b) {
       <div class="dist-confirmed">
         <div class="dc-icon">✓</div>
         <div class="dc-title">Distribution authorized</div>
-        <div class="dc-sub">Subscriber email is scheduled for the 0430 CT publishing-day distribution job. Social posting remains manual for this phase.</div>
+        <div class="dc-sub">Subscriber email is authorized for the 0430 CT publishing-day distribution job. Social posting remains manual for this phase.</div>
         ${b.public_url ? `<a href="${escapeHtml(b.public_url)}" target="_blank" style="color:var(--color-text-info);font-size:13px;text-decoration:none;font-weight:600;">Open public newsletter URL -></a>` : ''}
       </div>
     </div>`;
@@ -672,7 +673,7 @@ function renderBriefingCard(b) {
       <span class="gate-icon">🔒</span>
       <div>
         <div class="gate-text-title">Human-in-the-Loop review required</div>
-        <div class="gate-text-body">Maya has approved this edition. Your authorization is the final gate before Laura triggers distribution. Review the briefing below and approve to authorize.</div>
+        <div class="gate-text-body">Maya has approved this edition. Your authorization queues it for the separate 0430 CT publishing-day email distribution job.</div>
       </div>
     </div>` : ''}
 
@@ -694,7 +695,7 @@ function renderBriefingCard(b) {
           <button class="action-btn danger" onclick="rejectBriefing('${b.id}')">Request revision</button>
           <button class="action-btn primary" onclick="approveBriefing('${b.id}')">Approve &amp; Authorize Distribution</button>
         ` : execDone ? `
-          <span class="badge b-green">Approved — awaiting distribution</span>
+          <span class="badge b-green">Authorized — awaiting 0430 distribution</span>
         ` : `
           <span class="badge b-amber">Pending Maya approval</span>
         `}
@@ -712,7 +713,7 @@ function renderBriefingCard(b) {
     </div>
 
     <div class="approve-strip${execDone ? ' ready' : ''}">
-      <span class="as-label${execDone ? ' ready' : ''}">${execDone ? '✓ Executive approval logged — awaiting Laura\'s distribution trigger' : 'Awaiting executive review and authorization'}</span>
+      <span class="as-label${execDone ? ' ready' : ''}">${execDone ? '✓ Executive authorization logged — awaiting 0430 CT distribution job' : 'Awaiting executive review and authorization'}</span>
       ${execReady ? `<button class="action-btn primary" onclick="approveBriefing('${b.id}')">Approve &amp; Authorize Distribution</button>` : ''}
     </div>
   </div>`;
@@ -738,14 +739,9 @@ async function approveBriefing(id) {
   const execItem = b.checklist.find(c => c.id === 'exec');
   if (execItem) execItem.done = true;
   b.public_url = result.public_url || null;
+  b.authorized_for_distribution = true;
   distributionState[id] = false;
-  showToast('Distribution authorized - email scheduled for 0430 CT', 'success');
-  setTimeout(() => {
-    const lauraItem = b.checklist.find(c => c.id === 'laura');
-    if (lauraItem) lauraItem.done = true;
-    distributionState[id] = true;
-    renderBriefings();
-  }, 2000);
+  showToast('Distribution authorized - email queued for 0430 CT', 'success');
   renderBriefings();
 }
 
