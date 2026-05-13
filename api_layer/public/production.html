@@ -151,7 +151,8 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
 .art-cat{padding:5px 12px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);color:var(--color-text-secondary);transition:all .12s;}
 .art-cat.active{background:#185FA5;color:#fff;border-color:#185FA5;}
 .article-list{display:flex;flex-direction:column;gap:10px;}
-.article-row{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:14px 16px;display:flex;align-items:flex-start;gap:14px;}
+.article-row{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:14px 16px;display:flex;align-items:flex-start;gap:14px;cursor:pointer;transition:border-color .12s,background .12s;}
+.article-row:hover{border-color:#185FA5;background:var(--color-background-secondary);}
 .ar-badge{flex-shrink:0;padding:3px 8px;border-radius:5px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;}
 .ar-badge.threat{background:#FEF2F2;color:#dc2626;}
 .ar-badge.policy{background:#EFF6FF;color:#185FA5;}
@@ -167,7 +168,8 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
 }
 .ar-body{flex:1;}
 .ar-title{font-size:13px;font-weight:600;color:var(--color-text-primary);margin-bottom:3px;line-height:1.4;}
-.ar-meta{font-size:11px;color:var(--color-text-tertiary);display:flex;gap:10px;flex-wrap:wrap;}
+.ar-meta{font-size:11px;color:var(--color-text-tertiary);display:flex;gap:10px;flex-wrap:wrap;margin-bottom:4px;}
+.ar-summary{font-size:12px;color:var(--color-text-secondary);line-height:1.45;max-width:720px;}
 .ar-status{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
 
 /* badges */
@@ -412,6 +414,54 @@ function getRepositoryDisplayContent(detail) {
   const content = candidates.find(v => typeof v === 'string' && v.trim().length > 0);
   if (content) return content.trim();
   return JSON.stringify(normalized, null, 2);
+}
+
+function renderArticleMarkdown(md) {
+  const safe = escapeHtml(md || 'No article body available.');
+  return safe
+    .replace(/^### (.*)$/gm, '<h3 style="font-size:14px;margin:18px 0 8px;color:var(--color-text-primary);">$1</h3>')
+    .replace(/^## (.*)$/gm, '<h2 style="font-size:16px;margin:20px 0 10px;color:var(--color-text-primary);">$1</h2>')
+    .replace(/^# (.*)$/gm, '<h1 style="font-size:20px;margin:0 0 16px;color:var(--color-text-primary);line-height:1.3;">$1</h1>')
+    .split(/\n{2,}/)
+    .map(block => block.startsWith('<h') ? block : `<p style="margin:0 0 14px;">${block.replace(/\n/g, '<br>')}</p>`)
+    .join('');
+}
+
+async function openArticleReview(id) {
+  let article = articles.find(a => a.id === id);
+  try {
+    article = await CS.Auth.apiFetch('/api/ops/articles/' + encodeURIComponent(id) + '/review');
+  } catch (e) {
+    if (!article) {
+      showToast('Unable to load article review', 'error');
+      return;
+    }
+  }
+
+  document.getElementById('item-modal-body').innerHTML = `
+    <div style="padding:24px 26px;">
+      <span class="ar-badge ${article.type || article.section || 'threat'}">${escapeHtml(article.type || article.section || 'article')}</span>
+      <div style="font-size:18px;font-weight:600;color:var(--color-text-primary);line-height:1.4;margin:16px 0 8px;">${escapeHtml(article.title || 'Intel article')}</div>
+      <div style="font-size:12px;color:var(--color-text-tertiary);display:flex;gap:10px;flex-wrap:wrap;padding-bottom:18px;border-bottom:0.5px solid var(--color-border-tertiary);margin-bottom:18px;">
+        <span>Status: ${escapeHtml(article.pipeline_status || article.raw_stage || 'preview')}</span>
+        <span>Tier: ${escapeHtml(article.access_tier || '')}</span>
+        ${article.read_time_min ? `<span>${article.read_time_min} min read</span>` : ''}
+      </div>
+      <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:8px;">Summary</div>
+      <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.6;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:8px;padding:13px;margin-bottom:20px;">${escapeHtml(article.summary || 'No summary available.')}</div>
+      <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:8px;">Article Body</div>
+      <div style="font-size:13px;color:var(--color-text-primary);line-height:1.75;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:8px;padding:16px;max-height:430px;overflow-y:auto;margin-bottom:20px;">${renderArticleMarkdown(article.body_md)}</div>
+      ${(article.pipeline_status === 'approved' || article.raw_stage === 'approved') ? `
+        <div class="approve-strip ready" style="border-radius:8px;">
+          <span class="as-label ready">Maya approved. Final HITL release will publish this article link to Intel.</span>
+          <button class="action-btn primary" onclick="approveArticle('${escapeHtml(article.id)}')">Approve Release</button>
+        </div>` : `
+        <div class="gate-banner warn" style="margin-bottom:0;">
+          <div class="gate-icon">!</div>
+          <div><div class="gate-text-title">Not ready for final HITL</div><div class="gate-text-body">This article is still with ${escapeHtml(article.agent || 'the editorial pipeline')}.</div></div>
+        </div>`}
+    </div>`;
+  document.getElementById('item-modal').classList.add('open');
 }
 
 async function loadPreviouslyApproved(encodedId) {
@@ -802,7 +852,9 @@ let articleApproved = {};
 async function loadArticles() {
   try {
     articles = await CS.Auth.apiFetch('/api/ops/articles/preview');
-  } catch {}
+  } catch (e) {
+    showToast(e.message || 'Unable to load article previews', 'error');
+  }
   renderArticles();
 }
 
@@ -822,34 +874,51 @@ function renderArticles() {
     return;
   }
 
-  const stageColor = { 'Human in the Loop':'b-amber', 'Under Review':'b-blue', 'Published':'b-green', 'In Progress':'b-gray' };
+  const stageColor = {
+    'Final HITL':'b-amber',
+    'Maya Review':'b-blue',
+    'QA':'b-blue',
+    'EIC Review':'b-blue',
+    'Development Edit':'b-blue',
+    'In Progress':'b-gray',
+  };
 
   el.innerHTML = `<div class="article-list">` + filtered.map(a => {
     const approved = articleApproved[a.id];
-    return `<div class="article-row">
+    const canRelease = a.raw_stage === 'approved';
+    return `<div class="article-row" title="${escapeHtml(a.summary || 'Click to review article')}" onclick="openArticleReview('${a.id}')">
       <span class="ar-badge ${a.type}">${a.type === 'innovation' ? 'Innovation' : a.type === 'threat' ? 'Threat Intel' : a.type === 'policy' ? 'Policy' : a.type === 'growth' ? 'Growth' : 'Training'}</span>
       <div class="ar-body">
         <div class="ar-title">${a.title}</div>
         <div class="ar-meta">
           <span>Updated ${a.updated}</span>
-          <span>Agent: ${a.agent}</span>
+          <span>${a.agent}</span>
         </div>
+        <div class="ar-summary">${escapeHtml(a.summary || 'No summary available.')}</div>
       </div>
       <div class="ar-status">
         <span class="badge ${stageColor[a.stage] || 'b-gray'}">${a.stage}</span>
-        ${a.stage === 'Human in the Loop' && !approved
-          ? `<button class="action-btn primary" style="padding:5px 12px;font-size:11px;" onclick="approveArticle('${a.id}')">Approve</button>`
-          : approved ? `<span class="badge b-green">Approved</span>` : ''
+        <span style="font-size:11px;color:var(--color-text-tertiary);">${a.agent}</span>
+        ${canRelease && !approved
+          ? `<button class="action-btn primary" style="padding:5px 12px;font-size:11px;" onclick="event.stopPropagation();approveArticle('${a.id}')">Approve</button>`
+          : approved ? `<span class="badge b-green">Published</span>` : ''
         }
       </div>
     </div>`;
   }).join('') + `</div>`;
 }
 
-function approveArticle(id) {
-  articleApproved[id] = true;
-  showToast('Article approved — Laura notified for distribution', 'success');
-  renderArticles();
+async function approveArticle(id) {
+  try {
+    const released = await CS.Auth.apiFetch('/api/ops/articles/' + encodeURIComponent(id) + '/approve-release', { method:'POST', body:'{}' });
+    articleApproved[id] = true;
+    articles = articles.filter(a => a.id !== id);
+    closeItemModal();
+    showToast('Article approved — Laura notified for distribution', 'success');
+    renderArticles();
+  } catch (e) {
+    showToast(e.message || 'Article release failed', 'error');
+  }
 }
 
 /* ── auth wiring ── */

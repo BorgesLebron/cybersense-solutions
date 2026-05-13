@@ -21,7 +21,7 @@ const drafts = [
   {
     title: 'Verifiable Credentials Need Operational Trust, Not Just Wallet Support',
     section: 'innovation',
-    access_tier: 'freemium',
+    access_tier: 'monthly',
     source_headlines: [
       'NIST verifiable credential issuance work moves identity modernization from format to process',
       'NIST FISSEA agenda frames black-box AI trust as a human security behavior problem',
