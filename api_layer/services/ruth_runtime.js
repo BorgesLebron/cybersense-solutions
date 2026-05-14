@@ -87,16 +87,27 @@ async function selectCompositionItems() {
   // Training byte: Kirby delivers these as training_modules type='training_byte'.
   // Query directly — not routed through intel_repository.
   const trainingByte = await db.pool.query(`
-    SELECT id, title FROM training_modules
-    WHERE type = 'training_byte'
-      AND pipeline_status = 'published'
-      AND id NOT IN (
-        SELECT training_byte_id
-        FROM briefings
-        WHERE training_byte_id IS NOT NULL
-        ORDER BY edition_date DESC
-        LIMIT 5
-      )
+    WITH published AS (
+      SELECT id, title, created_at
+      FROM training_modules
+      WHERE type = 'training_byte'
+        AND pipeline_status = 'published'
+    ),
+    recent_unique AS (
+      SELECT training_byte_id, MAX(edition_date) AS last_used
+      FROM briefings
+      WHERE training_byte_id IS NOT NULL
+      GROUP BY training_byte_id
+    ),
+    exclusions AS (
+      SELECT training_byte_id
+      FROM recent_unique
+      ORDER BY last_used DESC
+      LIMIT GREATEST((SELECT COUNT(*) FROM published) - 1, 0)
+    )
+    SELECT id, title
+    FROM published
+    WHERE id NOT IN (SELECT training_byte_id FROM exclusions)
     ORDER BY created_at DESC
     LIMIT 1
   `).then(r => r.rows[0] || null);
@@ -105,7 +116,7 @@ async function selectCompositionItems() {
   if (threats.length    < COMPOSITION.threats)     missing.push(`threats (need ${COMPOSITION.threats}, found ${threats.length})`);
   if (innovations.length < COMPOSITION.innovations) missing.push(`innovations (need ${COMPOSITION.innovations}, found ${innovations.length})`);
   if (!growthItem)   missing.push('growth item (0 found)');
-  if (!trainingByte) missing.push('training_byte (none published — Kirby runtime not yet operational)');
+  if (!trainingByte) missing.push('training_byte (no published candidate available — Kirby runtime may need to publish new bytes)');
 
   return { threats, innovations, growthItem, trainingByte, missing };
 }

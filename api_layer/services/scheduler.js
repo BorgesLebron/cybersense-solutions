@@ -633,35 +633,108 @@ async function runDailyBriefingEmailDistribution() {
 
 async function runRuthDailyCycle() {
   const editionDate = nextCtDate();
+  const triggerDate = currentCtDate();
+  let task = null;
+
   try {
-    const existing = await db.getBriefingByDate(editionDate);
-    if (existing) {
-      console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'ruth_daily_cycle', status: 'skipped', reason: 'briefing_exists', edition_date: editionDate }));
-      return;
+    const client = await db.pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      const locked = await client.query(
+        'SELECT pg_try_advisory_xact_lock(hashtext($1)::bigint) AS locked',
+        [`ruth_daily_cycle:${editionDate}`]
+      ).then(r => r.rows[0]?.locked);
+
+      if (!locked) {
+        await client.query('ROLLBACK');
+        console.log(JSON.stringify({
+          ts: new Date().toISOString(),
+          job: 'ruth_daily_cycle',
+          status: 'skipped',
+          reason: 'lock_held',
+          edition_date: editionDate,
+        }));
+        return;
+      }
+
+      const existing = await client.query(
+        'SELECT id FROM briefings WHERE edition_date=$1 LIMIT 1',
+        [editionDate]
+      ).then(r => r.rows[0] || null);
+      if (existing) {
+        await client.query('COMMIT');
+        console.log(JSON.stringify({
+          ts: new Date().toISOString(),
+          job: 'ruth_daily_cycle',
+          status: 'skipped',
+          reason: 'briefing_exists',
+          edition_date: editionDate,
+          briefing_id: existing.id,
+        }));
+        return;
+      }
+
+      const existingTask = await client.query(
+        `SELECT id, status
+         FROM agent_tasks
+         WHERE agent_name = 'Ruth'
+           AND task_type = 'daily_cycle'
+           AND started_at >= (($1::date)::timestamp AT TIME ZONE 'America/Chicago')
+           AND started_at <  (($1::date + interval '1 day')::timestamp AT TIME ZONE 'America/Chicago')
+         ORDER BY started_at ASC
+         LIMIT 1`,
+        [triggerDate]
+      ).then(r => r.rows[0] || null);
+      if (existingTask) {
+        await client.query('COMMIT');
+        console.log(JSON.stringify({
+          ts: new Date().toISOString(),
+          job: 'ruth_daily_cycle',
+          status: 'skipped',
+          reason: 'task_exists',
+          edition_date: editionDate,
+          task_id: existingTask.id,
+          task_status: existingTask.status,
+        }));
+        return;
+      }
+
+      const sla = new Date();
+      sla.setHours(6, 0, 0, 0);
+
+      task = await client.query(
+        `INSERT INTO agent_tasks (id,agent_name,task_type,content_type,content_id,status,sla_deadline,started_at)
+         VALUES (gen_random_uuid(),'Ruth','daily_cycle','briefing','00000000-0000-0000-0000-000000000000','queued',$1,now())
+         RETURNING *`,
+        [sla]
+      ).then(r => r.rows[0]);
+
+      await client.query('COMMIT');
+    } catch (e) {
+      await client.query('ROLLBACK').catch(() => {});
+      throw e;
+    } finally {
+      client.release();
     }
-
-    const sla = new Date();
-    sla.setHours(6, 0, 0, 0);
-
-    await db.createTask({
-      agent_name: 'Ruth',
-      task_type: 'daily_cycle',
-      content_type: 'briefing',
-      content_id: '00000000-0000-0000-0000-000000000000',
-      sla_deadline: sla,
-    });
 
     await notifyAgents(['Ruth'], {
       type: 'DAILY_CYCLE_START',
       edition_date: editionDate,
-      sla_deadline: sla.toISOString(),
+      sla_deadline: task.sla_deadline.toISOString(),
       composition_required: { threat: 3, innovation: 2, growth: 1, training_byte: 1 },
       kirby_deadline: '05:00 CT',
       ivan_charlie_deadline: '05:30 CT',
       message: `Begin daily cycle for ${editionDate}. Source, select, and structure 7 items per SOP OA-AWR-001. Deliver package to Peter by 06:00 CT.`,
     });
 
-    console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'ruth_daily_cycle', status: 'triggered', edition_date: editionDate }));
+    console.log(JSON.stringify({
+      ts: new Date().toISOString(),
+      job: 'ruth_daily_cycle',
+      status: 'triggered',
+      edition_date: editionDate,
+      task_id: task.id,
+    }));
   } catch (e) {
     const ts = new Date().toISOString();
     console.error(JSON.stringify({ ts, job: 'ruth_daily_cycle', status: 'error', error: e.message }));

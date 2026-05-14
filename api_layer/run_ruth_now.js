@@ -11,8 +11,8 @@ require('dotenv').config();
 const db           = require('./db/queries');
 const { notifyAgents } = require('./services/agents');
 
-const EDITION_DATE = '2026-05-08';
-const RUTH_TASK_ID = '3cc05093-531d-4c0d-a232-a320821f1a54';
+const EDITION_DATE = process.env.EDITION_DATE || '2026-05-08';
+const RUTH_TASK_ID = process.env.RUTH_TASK_ID || '3cc05093-531d-4c0d-a232-a320821f1a54';
 
 async function main() {
   const ts = new Date().toISOString();
@@ -38,16 +38,29 @@ async function main() {
 
   // Training byte — direct query, not routed through intel_repository
   const trainingByteRow = await db.pool.query(`
-    SELECT id, title FROM training_modules
-    WHERE type = 'training_byte' AND pipeline_status = 'published'
-      AND id NOT IN (
-        SELECT training_byte_id
-        FROM briefings
-        WHERE training_byte_id IS NOT NULL
-        ORDER BY edition_date DESC
-        LIMIT 5
-      )
-    ORDER BY created_at DESC LIMIT 1
+    WITH published AS (
+      SELECT id, title, created_at
+      FROM training_modules
+      WHERE type = 'training_byte'
+        AND pipeline_status = 'published'
+    ),
+    recent_unique AS (
+      SELECT training_byte_id, MAX(edition_date) AS last_used
+      FROM briefings
+      WHERE training_byte_id IS NOT NULL
+      GROUP BY training_byte_id
+    ),
+    exclusions AS (
+      SELECT training_byte_id
+      FROM recent_unique
+      ORDER BY last_used DESC
+      LIMIT GREATEST((SELECT COUNT(*) FROM published) - 1, 0)
+    )
+    SELECT id, title
+    FROM published
+    WHERE id NOT IN (SELECT training_byte_id FROM exclusions)
+    ORDER BY created_at DESC
+    LIMIT 1
   `).then(r => r.rows[0] || null);
 
   // ── COMPOSITION_RESULT ───────────────────────────────────────────────────────
@@ -55,7 +68,7 @@ async function main() {
   if (threats.length    < 3) missing.push(`threats (need 3, found ${threats.length})`);
   if (innovations.length < 2) missing.push(`innovations (need 2, found ${innovations.length})`);
   if (!growthItem)            missing.push('growth item (0 found)');
-  if (!trainingByteRow)       missing.push('training_byte (none published)');
+  if (!trainingByteRow)       missing.push('training_byte (no published candidate available)');
 
   console.log(JSON.stringify({
     ts: new Date().toISOString(),
