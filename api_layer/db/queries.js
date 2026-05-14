@@ -692,6 +692,42 @@ const listTasks = ({ agent_name, status, content_type, date, page = 1, limit = 5
   return q(`SELECT * FROM agent_tasks WHERE ${conds.join(' AND ')} ORDER BY started_at DESC LIMIT $${params.length - 1} OFFSET $${params.length}`, params);
 };
 
+const getTaskById = (id) => q1('SELECT * FROM agent_tasks WHERE id=$1', [id]);
+
+const createAgentMessage = ({
+  thread_id, task_id, content_type = 'system', content_id,
+  from_role, from_name, to_agent, message, metadata,
+}) =>
+  q1(`INSERT INTO agent_messages
+        (id,thread_id,task_id,content_type,content_id,from_role,from_name,to_agent,message,metadata,created_at)
+      VALUES (gen_random_uuid(),$1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,now())
+      RETURNING *`,
+    [
+      thread_id,
+      task_id || null,
+      content_type,
+      content_id || null,
+      from_role,
+      from_name,
+      to_agent || null,
+      message,
+      JSON.stringify(metadata || {}),
+    ]);
+
+const listAgentMessages = ({ thread_id, task_id, content_id, to_agent, limit = 50 } = {}) => {
+  const conds = ['1=1'];
+  const params = [];
+  if (thread_id) { params.push(thread_id); conds.push(`thread_id=$${params.length}`); }
+  if (task_id) { params.push(task_id); conds.push(`task_id=$${params.length}`); }
+  if (content_id) { params.push(content_id); conds.push(`content_id=$${params.length}`); }
+  if (to_agent) { params.push(to_agent); conds.push(`to_agent=$${params.length}`); }
+  params.push(Math.min(Math.max(+limit || 50, 1), 200));
+  return q(`SELECT * FROM agent_messages
+            WHERE ${conds.join(' AND ')}
+            ORDER BY created_at ASC
+            LIMIT $${params.length}`, params);
+};
+
 const getSLABreaches = () =>
   q(`SELECT at.*, h.breached, h.delta_sec, h.escalated_to
      FROM agent_tasks at
@@ -854,7 +890,9 @@ module.exports = {
   listSubscriptions, getMRRSummary, logStripeEvent,
   createLead, updateLead, listLeads,
   createPartner, listPartners,
-  createTask, updateTask, bumpTaskRetry, listTasks, getSLABreaches, logHandoffSLA,
+  createTask, updateTask, bumpTaskRetry, listTasks, getTaskById,
+  createAgentMessage, listAgentMessages,
+  getSLABreaches, logHandoffSLA,
   createRisk, updateRisk, listRisks,
   getLatestSnapshot, getLiveMetricsDelta, getPipelineStatus, getActivityFeed,
   getAgentHealthSummary, logAuditEvent, getAuditLog,

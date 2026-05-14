@@ -12,6 +12,7 @@ const { pollPeterTasks }        = require('./peter_runtime');
 const { pollEdTasks }           = require('./ed_runtime');
 const { pollRickTasks }         = require('./rick_runtime');
 const { pollIvanCharlieTasks }  = require('./ivan_charlie_runtime');
+const { pollMayaTasks }         = require('./maya_runtime');
 const { sendBriefingEmail }     = require('./sendgrid');
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -792,9 +793,10 @@ function startScheduler() {
     cron.schedule('*/2 4-9 * * 0-4', pollRuthTasks,                { timezone: 'America/Chicago' });
     cron.schedule('*/2 4-9 * * 0-4', pollPeterTasks,               { timezone: 'America/Chicago' });
     cron.schedule('*/2 4-9 * * 0-4', pollEdTasks,                  { timezone: 'America/Chicago' });
+    cron.schedule('*/2 * * * *',      pollMayaTasks,                { timezone: 'America/Chicago' });
     cron.schedule('0 */4 * * *',     pollRickTasks,                 { timezone: 'America/Chicago' });
     cron.schedule('45 5 * * *',      pollIvanCharlieTasks,          { timezone: 'America/Chicago' });
-    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SCHEDULER_STARTED', jobs: 23 }));
+    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SCHEDULER_STARTED', jobs: 24 }));
   } catch (e) {
     console.warn('node-cron not installed — scheduler disabled. Install with: npm install node-cron');
   }
@@ -823,6 +825,7 @@ module.exports = {
   pollRuthTasks,
   pollPeterTasks,
   pollEdTasks,
+  pollMayaTasks,
   pollRickTasks,
   pollIvanCharlieTasks,
 };
