@@ -386,7 +386,7 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
           <div class="card nl-chat">
             <div class="card-hd">Troubleshoot with Maya</div>
             <div class="nl-chat-log" id="nl-chat-log">
-              <div class="nl-msg system">Ask Maya to investigate an editorial hold. This creates a Maya task and notification; autonomous agent replies are still a capability gap.</div>
+              <div class="nl-msg system">Ask Maya to investigate an editorial hold. She will inspect the briefing, task queue, and pipeline events before replying here.</div>
             </div>
             <textarea class="nl-chat-input" id="nl-chat-input" placeholder="Ask Maya where the newsletter is blocked or what her department needs to clear it..."></textarea>
             <button class="nl-chat-send" id="nl-chat-send" onclick="sendMayaNewsletterMessage()">Send to Maya</button>
@@ -682,6 +682,10 @@ async function loadInnovationRadarData() {
 }
 
 let newsletterStatus = null;
+let mayaNewsletterThreadId = null;
+let mayaNewsletterPoll = null;
+let mayaRenderedMessageIds = new Set();
+let mayaPendingTaskId = null;
 
 function esc(value) {
   return String(value ?? '').replace(/[&<>"']/g, c => ({
@@ -793,27 +797,64 @@ function renderNewsletterEvents(events) {
   </div>`).join('');
 }
 
+function appendMayaMessage(message, role = 'system') {
+  const log = document.getElementById('nl-chat-log');
+  log.innerHTML += `<div class="nl-msg ${role === 'user' ? 'user' : 'system'}">${esc(message).replace(/\n/g, '<br>')}</div>`;
+  log.scrollTop = log.scrollHeight;
+}
+
+function renderMayaThread(messages) {
+  const log = document.getElementById('nl-chat-log');
+  const fresh = (messages || []).filter(m => !mayaRenderedMessageIds.has(m.id));
+  if (!fresh.length) return;
+
+  fresh.forEach(m => {
+    mayaRenderedMessageIds.add(m.id);
+    const cls = m.from_role === 'user' ? 'user' : 'system';
+    log.innerHTML += `<div class="nl-msg ${cls}"><strong>${esc(m.from_name || (m.from_role === 'agent' ? 'Maya' : 'System'))}</strong><br>${esc(m.message).replace(/\n/g, '<br>')}</div>`;
+  });
+  log.scrollTop = log.scrollHeight;
+}
+
+async function pollMayaNewsletterThread() {
+  if (!mayaNewsletterThreadId) return;
+  try {
+    const res = await CS.Auth.apiFetch('/api/admin/agent-messages?thread_id=' + encodeURIComponent(mayaNewsletterThreadId));
+    renderMayaThread(res.data || []);
+    const hasAgentReply = (res.data || []).some(m => m.from_role === 'agent' && (!mayaPendingTaskId || m.task_id === mayaPendingTaskId));
+    if (hasAgentReply && mayaNewsletterPoll) {
+      clearInterval(mayaNewsletterPoll);
+      mayaNewsletterPoll = null;
+      mayaPendingTaskId = null;
+    }
+  } catch (e) {
+    console.error('Maya thread poll failed:', e);
+  }
+}
+
 async function sendMayaNewsletterMessage() {
   const input = document.getElementById('nl-chat-input');
   const btn = document.getElementById('nl-chat-send');
-  const log = document.getElementById('nl-chat-log');
   const msg = input.value.trim();
   if (!msg) return;
   const briefingId = newsletterStatus?.current?.id || null;
-  log.innerHTML += `<div class="nl-msg user">${esc(msg)}</div>`;
   input.value = '';
   btn.disabled = true;
   try {
     const res = await CS.Auth.apiFetch('/api/admin/newsletter/maya-chat', {
       method: 'POST',
-      body: JSON.stringify({ briefing_id: briefingId, message: msg }),
+      body: JSON.stringify({ briefing_id: briefingId, message: msg, thread_id: mayaNewsletterThreadId }),
     });
-    log.innerHTML += `<div class="nl-msg system">${esc(res.reply || 'Maya was notified.')}</div>`;
+    mayaNewsletterThreadId = res.thread_id || mayaNewsletterThreadId;
+    mayaPendingTaskId = res.task_id || null;
+    await pollMayaNewsletterThread();
+    appendMayaMessage(res.reply || 'Maya was notified.');
+    if (mayaNewsletterPoll) clearInterval(mayaNewsletterPoll);
+    mayaNewsletterPoll = setInterval(pollMayaNewsletterThread, 4000);
   } catch (e) {
-    log.innerHTML += `<div class="nl-msg system">Unable to notify Maya: ${esc(e.message || 'Request failed')}</div>`;
+    appendMayaMessage('Unable to notify Maya: ' + (e.message || 'Request failed'));
   } finally {
     btn.disabled = false;
-    log.scrollTop = log.scrollHeight;
   }
 }
 </script>

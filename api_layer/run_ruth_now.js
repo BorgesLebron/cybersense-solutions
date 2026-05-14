@@ -40,6 +40,13 @@ async function main() {
   const trainingByteRow = await db.pool.query(`
     SELECT id, title FROM training_modules
     WHERE type = 'training_byte' AND pipeline_status = 'published'
+      AND id NOT IN (
+        SELECT training_byte_id
+        FROM briefings
+        WHERE training_byte_id IS NOT NULL
+        ORDER BY edition_date DESC
+        LIMIT 5
+      )
     ORDER BY created_at DESC LIMIT 1
   `).then(r => r.rows[0] || null);
 

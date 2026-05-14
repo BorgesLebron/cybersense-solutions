@@ -875,17 +875,35 @@ adminRouter.get('/newsletter/status', requireAdminToken(), async (req, res, next
 
 adminRouter.post('/newsletter/maya-chat', requireAdminToken(['gm', 'editor']), async (req, res, next) => {
   try {
-    const { briefing_id, message } = req.body;
+    const { briefing_id, message, thread_id } = req.body;
     if (!message || typeof message !== 'string') return res.status(400).json(err('MISSING_FIELDS', 'message is required'));
 
     const briefing = briefing_id ? await db.getBriefingById(briefing_id) : null;
     const contentId = briefing?.id || '00000000-0000-0000-0000-000000000000';
+    const threadId = thread_id || require('crypto').randomUUID();
     const task = await db.createTask({
       agent_name: 'Maya',
       task_type: 'editorial_troubleshoot',
       content_type: 'briefing',
       content_id: contentId,
       sla_deadline: new Date(Date.now() + 30 * 60 * 1000),
+    });
+
+    await db.createAgentMessage({
+      thread_id: threadId,
+      task_id: task.id,
+      content_type: 'briefing',
+      content_id: briefing?.id || null,
+      from_role: 'user',
+      from_name: req.user.email || 'Command Center',
+      to_agent: 'Maya',
+      message,
+      metadata: {
+        route: 'newsletter/maya-chat',
+        user_id: req.user.id,
+        briefing_id: briefing?.id || null,
+        edition_number: briefing?.edition_number || null,
+      },
     });
 
     await db.logAuditEvent({
@@ -902,16 +920,37 @@ adminRouter.post('/newsletter/maya-chat', requireAdminToken(['gm', 'editor']), a
       edition_number: briefing?.edition_number || null,
       from_user: req.user.email,
       task_id: task.id,
+      thread_id: threadId,
       message,
     });
 
     res.json({
       sent: true,
       task_id: task.id,
+      thread_id: threadId,
       reply: briefing
-        ? `Maya has been notified for Edition ${briefing.edition_number}. Current status is ${briefing.pipeline_status}; check the task queue for her response or escalation.`
-        : 'Maya has been notified. Current implementation records the request as an agent task; autonomous chat replies are not yet enabled.',
+        ? `Maya is checking Edition ${briefing.edition_number}. Her response will appear in this thread when the runtime completes.`
+        : 'Maya is checking the active newsletter queue. Her response will appear in this thread when the runtime completes.',
     });
+  } catch (e) { next(e); }
+});
+
+adminRouter.get('/agent-messages', requireAdminToken(), async (req, res, next) => {
+  try {
+    const { thread_id, task_id, content_id, agent, limit = 50 } = req.query;
+    if (!thread_id && !task_id && !content_id) {
+      return res.status(400).json(err('MISSING_FIELDS', 'thread_id, task_id, or content_id is required'));
+    }
+
+    const messages = await db.listAgentMessages({
+      thread_id,
+      task_id,
+      content_id,
+      to_agent: agent,
+      limit: +limit,
+    });
+
+    res.json({ data: messages });
   } catch (e) { next(e); }
 });
 
