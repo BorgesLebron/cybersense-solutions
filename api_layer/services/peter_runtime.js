@@ -62,7 +62,8 @@ async function apiCall(path, method = 'GET', body = null) {
   const res = await fetch(`${API_BASE()}${path}`, opts);
   const json = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(`${method} ${path} → ${res.status}: ${json.error || json.message || JSON.stringify(json)}`);
+    const detail = json.error?.message || json.error?.code || json.message || JSON.stringify(json);
+    throw new Error(`${method} ${path} -> ${res.status}: ${detail}`);
   }
   return json;
 }
