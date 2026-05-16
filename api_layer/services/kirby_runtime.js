@@ -186,7 +186,16 @@ async function produceDailyTrainingByte(task) {
 
     // 4. Update status and notify
     await db.advanceModuleStatus(byte.id, 'published');
-    await db.updateTask(task.id, { status: 'complete', metadata: { byte_id: byte.id, source_id: sourceIntel.source_id } });
+    
+    // Explicit lineage tracking for Peter and downstream audit
+    await db.updateTask(task.id, { 
+      status: 'complete', 
+      metadata: { 
+        byte_id: byte.id, 
+        source_id: sourceIntel.id, // Explicit link to intel_repository.id
+        threat_record_id: sourceIntel.source_id // Link to threat_records.id
+      } 
+    });
     
     console.log(JSON.stringify({ ts, runtime: 'kirby', event: 'BYTE_PUBLISHED', byte_id: byte.id }));
 
