@@ -221,3 +221,51 @@ Boundaries:
 
 ### SOP Note
 - Peter's SOP needs an update to reflect this convergence role and the shared-source lineage expectation.
+
+## 2026-05-16 (Gwen - Intel Article E2E Validation)
+
+### Scope
+- Validated one staged Intel Article through the Gwen-owned E2E path:
+  James -> Jason -> Rob -> Jeff -> Maya -> HITL release -> public article visibility.
+- Article validated:
+  - Title: `Verifiable Credentials Need Operational Trust, Not Just Wallet Support`
+  - ID: `77bd851b-55e8-4431-8ff6-6cd5a875835f`
+  - Section: `innovation`
+  - Slug: `verifiable-credentials-need-operational-trust-not-just-wallet-support`
+
+### Code Fix
+- File changed: `api_layer/db/queries.js`
+- Fixed `advanceArticleStatus()` so article `qa_passed_at` is set when article status reaches `qa`.
+- Reason:
+  - `validatePipelineTransition()` requires `qa_passed_at` before advancing `qa -> maya`.
+  - Article status advancement previously set `qa_passed_at` only when moving to `maya`, which blocked the E2E path.
+  - Briefings already set `qa_passed_at` at `qa`; the article behavior now matches the working briefing pattern.
+
+### Validation Result
+- Advanced the article through:
+  - `draft -> dev_edit` by Jason
+  - `dev_edit -> eic_review` by Rob
+  - `eic_review -> qa` by Jeff
+  - `qa -> maya` by Maya
+  - `maya -> approved` by Maya
+  - `approved -> published` by Laura/HITL release
+- Confirmed article appeared in Preview Articles while approved.
+- Confirmed public contract:
+  - `/intel/article.html?slug=verifiable-credentials-need-operational-trust-not-just-wallet-support`
+- Confirmed public content API resolves the article as `published`.
+- Confirmed `intelligence.html` Innovation list data includes the published article.
+- Confirmed gating behavior:
+  - Free view is blurred/gated.
+  - Monthly view includes full `body_md`.
+- Confirmed source linkage to original innovation intel items through `intel_items.article_id`.
+
+### Remaining Backlog
+- One staged article remains unpublished:
+  - `AI-Driven Vulnerability Discovery Raises the Bar for Platform Skills`
+  - ID: `747b530a-8bd9-45a6-9336-e7d15d05377a`
+  - Section: `growth`
+  - Status: `draft`
+
+### Verification
+- Ran `git diff --check` successfully.
+- Ran `npm.cmd test`; Jest executed but found no configured tests.

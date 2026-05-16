@@ -432,7 +432,7 @@ const listArticlesForPreview = () =>
 
 const advanceArticleStatus = (id, to_status) =>
   q1(`UPDATE articles SET pipeline_status=$2,
-        qa_passed_at = CASE WHEN $3='maya' THEN now() ELSE qa_passed_at END,
+        qa_passed_at = CASE WHEN $3='qa' AND qa_passed_at IS NULL THEN now() ELSE qa_passed_at END,
         maya_approved_at = CASE WHEN $4='approved' THEN now() ELSE maya_approved_at END,
         published_at = CASE WHEN $5='published' THEN now() ELSE published_at END
       WHERE id=$1 RETURNING *`, [id, to_status, to_status, to_status, to_status]);
