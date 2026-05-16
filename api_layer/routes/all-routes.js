@@ -198,6 +198,38 @@ trainingRouter.get('/modules/:id', requireUserToken('free'), async (req, res, ne
   } catch (e) { next(e); }
 });
 
+trainingRouter.get('/glossary', requireUserToken('free'), async (req, res, next) => {
+  try {
+    const { category, search, page = 1, limit = 100 } = req.query;
+    const terms = await db.listGlossaryTerms({ category, search, page: +page, limit: +limit });
+    res.json({ data: terms, meta: { page: +page, limit: +limit } });
+  } catch (e) { next(e); }
+});
+
+trainingRouter.post('/glossary', requireAdminToken(['gm', 'training']), async (req, res, next) => {
+  try {
+    const { term, definition, category } = req.body;
+    if (!term || !definition) return res.status(400).json(err('MISSING_FIELDS', 'term and definition are required'));
+    const created = await db.createGlossaryTerm({ term, definition, category });
+    res.status(201).json(created);
+  } catch (e) { next(e); }
+});
+
+trainingRouter.patch('/glossary/:id', requireAdminToken(['gm', 'training']), async (req, res, next) => {
+  try {
+    const term = await db.updateGlossaryTerm(req.params.id, req.body);
+    if (!term) return res.status(404).json(err('NOT_FOUND', 'Term not found'));
+    res.json(term);
+  } catch (e) { next(e); }
+});
+
+trainingRouter.delete('/glossary/:id', requireAdminToken(['gm', 'training']), async (req, res, next) => {
+  try {
+    await db.deleteGlossaryTerm(req.params.id);
+    res.json({ deleted: true, id: req.params.id });
+  } catch (e) { next(e); }
+});
+
 trainingRouter.post('/completions', requireUserToken('monthly'), async (req, res, next) => {
   try {
     const { module_id, score, time_spent_min } = req.body;

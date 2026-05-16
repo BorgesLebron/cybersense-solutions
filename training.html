@@ -165,46 +165,7 @@
           <input class="search-input" id="glossary-search" type="text" placeholder="Search terms and definitions..." style="width:100%;max-width:400px;" aria-label="Search glossary">
         </div>
         <div id="glossary-list">
-          <div class="glossary-item">
-            <div class="glossary-term">APT (Advanced Persistent Threat)</div>
-            <div class="glossary-def">A sophisticated, typically state-sponsored threat actor that employs multiple attack vectors to gain unauthorized access and maintain long-term persistence within a target network, often with objectives beyond immediate financial gain.</div>
-          </div>
-          <div class="glossary-item">
-            <div class="glossary-term">CVSS (Common Vulnerability Scoring System)</div>
-            <div class="glossary-def">A standardized framework for rating the severity of security vulnerabilities on a scale from 0.0 to 10.0, incorporating metrics for exploitability, scope, and impact across confidentiality, integrity, and availability dimensions.</div>
-          </div>
-          <div class="glossary-item">
-            <div class="glossary-term">Lateral Movement</div>
-            <div class="glossary-def">Post-exploitation techniques used by attackers to progressively move through a network from their initial access point to high-value targets, typically leveraging compromised credentials, RDP, PsExec, or protocol exploitation.</div>
-          </div>
-          <div class="glossary-item">
-            <div class="glossary-term">LOLBin (Living Off the Land Binary)</div>
-            <div class="glossary-def">Legitimate, pre-installed operating system binaries that attackers abuse to execute malicious actions, evading signature-based detection by using trusted system tools like certutil.exe, mshta.exe, or PowerShell.</div>
-          </div>
-          <div class="glossary-item">
-            <div class="glossary-term">MFA Fatigue Attack</div>
-            <div class="glossary-def">A social engineering technique where attackers who have already obtained valid credentials flood a target with MFA push notifications, hoping the user will approve one out of frustration or confusion. Mitigated by number matching and phishing-resistant MFA like FIDO2.</div>
-          </div>
-          <div class="glossary-item">
-            <div class="glossary-term">MITRE ATT&amp;CK</div>
-            <div class="glossary-def">A globally-accessible knowledge base of adversary tactics and techniques based on real-world observations, widely used by security teams for threat modeling, detection development, and red team exercise planning.</div>
-          </div>
-          <div class="glossary-item">
-            <div class="glossary-term">Pass-the-Hash</div>
-            <div class="glossary-def">An authentication attack technique where an attacker uses a captured NTLM password hash to authenticate to network services without needing to know the plaintext password, commonly used in lateral movement within Active Directory environments.</div>
-          </div>
-          <div class="glossary-item">
-            <div class="glossary-term">Supply Chain Attack</div>
-            <div class="glossary-def">An attack that targets the trusted third-party components, software, or services an organization depends on – rather than the organization directly – to gain unauthorized access through a trusted distribution channel. SolarWinds Orion and XZ Utils are prominent examples.</div>
-          </div>
-          <div class="glossary-item">
-            <div class="glossary-term">Threat Intelligence (TI)</div>
-            <div class="glossary-def">Evidence-based knowledge about existing or emerging adversary capabilities, infrastructure, and motivations that enables informed decision-making for defenders. Distinct from raw data – intelligence has been analyzed, contextualized, and validated.</div>
-          </div>
-          <div class="glossary-item">
-            <div class="glossary-term">Zero-Day Vulnerability</div>
-            <div class="glossary-def">A software vulnerability that is unknown to the software vendor and therefore has no available patch at the time of discovery or exploitation. Zero-days command significant value in both criminal and government markets due to their effectiveness against fully patched systems.</div>
-          </div>
+          <div style="padding:40px;text-align:center;color:var(--cs-gray-400);">Loading glossary...</div>
         </div>
       </div>
     </div>
@@ -258,5 +219,39 @@
 <script>window.CS_API_BASE = 'https://api.cybersense.solutions';</script>
 <script src="auth.js"></script>
 <script src="main.js"></script>
+<script>
+  /* ── Training Glossary Integration ──────────────────────────────── */
+  (function() {
+    const list = document.getElementById('glossary-list');
+    if (!list) return;
+
+    async function initGlossary() {
+      try {
+        const res = await fetch(window.CS_API_BASE + '/api/training/glossary');
+        const json = await res.json();
+        const terms = json.data || [];
+        
+        if (terms.length === 0) {
+          list.innerHTML = '<div style="padding:40px;text-align:center;color:var(--cs-gray-400);">No terms found in glossary.</div>';
+          return;
+        }
+
+        list.innerHTML = terms.map(t => `
+          <div class="glossary-item" data-category="${t.category || ''}">
+            <div class="glossary-term">${t.term}</div>
+            <div class="glossary-def">${t.definition}</div>
+          </div>
+        `).join('');
+
+        // The search logic in main.js will now work on these dynamic items
+      } catch (e) {
+        console.error('Glossary load error:', e);
+        list.innerHTML = '<div style="padding:40px;text-align:center;color:var(--cs-red);opacity:0.7;">Error loading glossary. Please refresh.</div>';
+      }
+    }
+
+    initGlossary();
+  })();
+</script>
 </body>
 </html>
