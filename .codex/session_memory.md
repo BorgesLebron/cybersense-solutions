@@ -45,11 +45,36 @@ Boundaries:
 ### Next Gwen Step
 - Continue with GWEN-002: Briefing Item Detail full content display, unless Hector reports a GWEN-001 live verification failure.
 
-## 2026-05-11
+## 2026-05-14 (Gemma - Training & Labs Initiation)
 
-### Credential Boundary
-- Hector explicitly confirmed `api_layer/.env` must never be committed or pushed. Keep it local/untracked only.
-- Hector confirmed `cyberSense_agent_fleet_v1.1.md` is intentionally deleted to avoid confusion; archive copy is maintained outside this repo.
+### Identity & Role
+- **Gemma** (Engineer, SynVec AI) onboarded.
+- Component: Training & Labs.
+- Identity: Engineering contractor (SynVec) reporting to Hector (PM).
 
-### Manual Newsletter Recovery
-- If a newsletter edition must be created manually, review the previous published newsletter artifact first and match its format before publishing or committing. For Edition 122, `newsletter/2026/May/05112026_edition121.html` was used as the format source and `newsletter/2026/May/05122026_edition122.html` was adapted to that structure.
+### Infrastructure & Database
+- **Migration 008:** Created `training_glossary` table and seeded with 10 industry terms.
+- **Migration 009:** Added `body_md` column to `training_modules` to support direct text storage for Training Bytes.
+- **Database Query Layer:** Updated `api_layer/db/queries.js` with full CRUD for `training_glossary` and support for `body_md` in `training_modules`.
+
+### API Layer
+- **Training Router:** Updated `api_layer/routes/all-routes.js` with dynamic glossary endpoints (`GET`, `POST`, `PATCH`, `DELETE`).
+- **Access Control:** Integrated `requireUserToken`, `requireAdminToken`, and `TIER_RANK` gating for new training routes.
+
+### Agent Fleet (Kirby)
+- **Kirby Runtime:** Created `api_layer/services/kirby_runtime.js`.
+- **Functionality:** 
+  - Automated JWT token management/rotation (`ensureKirbyToken`).
+  - Task polling logic for `production` tasks.
+  - Content generation scaffolding for "Daily Training Byte" based on High/Critical intel repository items.
+  - Auto-publication of bytes to support Ruth's newsletter cycle.
+
+### Strategic Analysis
+- Reviewed `.notes/agents.md` (Agents Capability Enhancement Plan).
+- Recommendation: Prioritize **LangGraph** (orchestration), **Langfuse** (observability), **Open Policy Agent** (governance), and **Temporal.io** (durable agency).
+- Architecture shift: Move from "Chatbots" to "Governed Workers" with explicit toolsets and audit trails.
+
+### Next Steps
+- LLM integration for Kirby's "brain."
+- Update `training.html` to consume dynamic Glossary API.
+- Scaffold Mario (Coordinator) and Matt (Trainer) runtimes.

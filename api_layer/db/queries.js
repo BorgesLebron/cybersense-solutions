@@ -513,10 +513,10 @@ const getSocialPerformance = ({ platform, from_date, to_date } = {}) => {
 
 // ── TRAINING MODULES ───────────────────────────────────────────────────────────
 
-const createTrainingModule = ({ title, type, phase, zt_module, access_tier, duration_min, content_url, created_by }) =>
-  q1(`INSERT INTO training_modules (id,title,type,phase,zt_module,access_tier,duration_min,content_url,pipeline_status,created_by)
-      VALUES (gen_random_uuid(),$1,$2,$3,$4,$5,$6,$7,'draft',$8) RETURNING *`,
-    [title, type, phase, zt_module, access_tier, duration_min, content_url, created_by]);
+const createTrainingModule = ({ title, type, phase, zt_module, access_tier, duration_min, content_url, body_md, created_by }) =>
+  q1(`INSERT INTO training_modules (id,title,type,phase,zt_module,access_tier,duration_min,content_url,body_md,pipeline_status,created_by)
+      VALUES (gen_random_uuid(),$1,$2,$3,$4,$5,$6,$7,$8,'draft',$9) RETURNING *`,
+    [title, type, phase, zt_module, access_tier, duration_min, content_url, body_md, created_by]);
 
 const listTrainingModules = ({ type, phase, zt_module, page = 1, limit = 30 } = {}) => {
   const conds = ["pipeline_status='published'"];
@@ -537,6 +537,30 @@ const advanceModuleStatus = (id, to_status) =>
         maya_approved_at = CASE WHEN $3='maya'      AND maya_approved_at IS NULL THEN now() ELSE maya_approved_at END,
         published_at     = CASE WHEN $3='published' AND published_at     IS NULL THEN now() ELSE published_at     END
       WHERE id=$1 RETURNING *`, [id, to_status, to_status]);
+
+// ── TRAINING GLOSSARY ──────────────────────────────────────────────────────────
+
+const listGlossaryTerms = ({ category, search, page = 1, limit = 100 } = {}) => {
+  const conds = ['1=1'];
+  const params = [];
+  if (category) { params.push(category); conds.push(`category=$${params.length}`); }
+  if (search) { params.push(`%${search}%`); conds.push(`(term ILIKE $${params.length} OR definition ILIKE $${params.length})`); }
+  params.push(limit, (page - 1) * limit);
+  return q(`SELECT * FROM training_glossary WHERE ${conds.join(' AND ')} ORDER BY term ASC LIMIT $${params.length - 1} OFFSET $${params.length}`, params);
+};
+
+const getGlossaryTerm = (id_or_term) =>
+  q1('SELECT * FROM training_glossary WHERE id=$1 OR term=$1', [id_or_term]);
+
+const createGlossaryTerm = ({ term, definition, category }) =>
+  q1('INSERT INTO training_glossary (id, term, definition, category) VALUES (gen_random_uuid(), $1, $2, $3) RETURNING *', [term, definition, category]);
+
+const updateGlossaryTerm = (id, fields) => {
+  const sets = Object.keys(fields).map((k, i) => `${k}=$${i + 2}`).join(',');
+  return q1(`UPDATE training_glossary SET ${sets}, updated_at=now() WHERE id=$1 RETURNING *`, [id, ...Object.values(fields)]);
+};
+
+const deleteGlossaryTerm = (id) => q('DELETE FROM training_glossary WHERE id=$1', [id]);
 
 // ── TRAINING COMPLETIONS ───────────────────────────────────────────────────────
 
