@@ -268,16 +268,22 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
         </div>
         <div class="grid3">
           <div class="card"><div class="card-hd">Content queue</div>
-            <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary);"><span style="font-size:12px;color:var(--color-text-secondary);">Pending QA</span><span class="badge b-amber">4</span></div>
-            <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary);"><span style="font-size:12px;color:var(--color-text-secondary);">Pending Maya</span><span class="badge b-blue">2</span></div>
-            <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary);"><span style="font-size:12px;color:var(--color-text-secondary);">Published today</span><span class="badge b-green">3</span></div>
-            <div style="display:flex;justify-content:space-between;padding:5px 0;"><span style="font-size:12px;color:var(--color-text-secondary);">Returned for revision</span><span class="badge b-red">1</span></div>
+            <div id="content-queue-summary">
+              <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary);"><span style="font-size:12px;color:var(--color-text-secondary);">Articles in preview</span><span class="badge b-gray">-</span></div>
+              <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary);"><span style="font-size:12px;color:var(--color-text-secondary);">Briefings in preview</span><span class="badge b-gray">-</span></div>
+              <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary);"><span style="font-size:12px;color:var(--color-text-secondary);">Ready for articles</span><span class="badge b-gray">-</span></div>
+              <div style="display:flex;justify-content:space-between;padding:5px 0;"><span style="font-size:12px;color:var(--color-text-secondary);">Ready for newsletter</span><span class="badge b-gray">-</span></div>
+            </div>
           </div>
-          <div class="card"><div class="card-hd">Acquisition funnel</div>
-            <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary);"><span style="font-size:12px;color:var(--color-text-secondary);">Free → Freemium</span><span style="font-size:12px;font-weight:500;color:var(--color-text-primary);">31%</span></div>
-            <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary);"><span style="font-size:12px;color:var(--color-text-secondary);">Freemium → Paid</span><span style="font-size:12px;font-weight:500;color:var(--color-text-primary);">22%</span></div>
-            <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary);"><span style="font-size:12px;color:var(--color-text-secondary);">Paid → Enterprise</span><span style="font-size:12px;font-weight:500;color:var(--color-text-primary);">1.1%</span></div>
-            <div style="display:flex;justify-content:space-between;padding:5px 0;"><span style="font-size:12px;color:var(--color-text-secondary);">Churn rate</span><span style="font-size:12px;font-weight:500;color:var(--color-text-danger);">2.4%</span></div>
+          <div class="card"><div class="card-hd">War Room Status</div>
+            <div id="war-room-summary">
+              <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px;" id="war-room-title">No active meeting</div>
+              <div id="war-room-depts">
+                <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:0.5px solid var(--color-border-tertiary);"><span style="font-size:11px;color:var(--color-text-tertiary);">Acquisition</span><span class="badge b-gray">Pending</span></div>
+                <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:0.5px solid var(--color-border-tertiary);"><span style="font-size:11px;color:var(--color-text-tertiary);">Awareness</span><span class="badge b-gray">Pending</span></div>
+                <div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="font-size:11px;color:var(--color-text-tertiary);">Training</span><span class="badge b-gray">Pending</span></div>
+              </div>
+            </div>
           </div>
           <div class="card"><div class="card-hd">Agent health</div>
             <div id="agent-health-summary">
@@ -575,10 +581,115 @@ document.addEventListener('cs:login', (e) => {
   if (label && u) label.textContent = (u.full_name || u.email || '') + (u.admin_role?.role ? ' — ' + u.admin_role.role.toUpperCase() : '');
   const btn = document.getElementById('nav-logout');
   if (btn) btn.style.display = 'inline-block';
+  loadCommandCenterSummary();
   loadRadarData();
   loadInnovationRadarData();
   loadNewsletterStatus();
 });
+
+function ccEscape(value) {
+  return String(value ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+
+function ccNumber(value) {
+  const n = Number(value || 0);
+  return Number.isFinite(n) ? n.toLocaleString() : '0';
+}
+
+function ccMoney(cents) {
+  return '$' + ((Number(cents || 0) / 100).toLocaleString(undefined, { maximumFractionDigits: 0 }));
+}
+
+function ccRow(label, value, badgeClass = 'b-gray', last = false) {
+  return `<div style="display:flex;justify-content:space-between;gap:10px;padding:5px 0;${last ? '' : 'border-bottom:0.5px solid var(--color-border-tertiary);'}">
+    <span style="font-size:12px;color:var(--color-text-secondary);">${ccEscape(label)}</span>
+    <span class="badge ${badgeClass}">${ccEscape(value)}</span>
+  </div>`;
+}
+
+function ccStageCount(rows, type) {
+  return (rows || [])
+    .filter(row => row.content_type === type)
+    .reduce((sum, row) => sum + Number(row.count || 0), 0);
+}
+
+async function loadCommandCenterSummary() {
+  try {
+    const data = await CS.Auth.apiFetch('/api/admin/command-center/summary');
+    const live = data.live || {};
+    const snapshot = data.snapshot || {};
+    const pipelineRows = data.pipeline?.status_counts || [];
+    const repoTotals = data.repository?.totals || {};
+
+    document.getElementById('metric-subscribers').textContent = ccNumber(live.total_subscribers ?? snapshot.total_subscribers);
+    document.getElementById('metric-paid').textContent = ccNumber(live.paid_accounts ?? snapshot.paid_subscribers);
+    document.getElementById('metric-enterprise').textContent = ccNumber(live.enterprise_accounts ?? snapshot.enterprise_accounts);
+    document.getElementById('metric-mrr').textContent = ccMoney(live.mrr_cents ?? snapshot.mrr_cents);
+    document.getElementById('metric-risks').textContent = ccNumber(live.open_risk_count ?? snapshot.open_risks);
+
+    const pipelineTotals = [
+      { label: 'Intel pipeline', type: 'article', color: '#378ADD' },
+      { label: 'Awareness', type: 'briefing', color: '#1D9E75' },
+      { label: 'Training', type: 'training', color: '#BA7517' },
+    ];
+    const maxTotal = Math.max(1, ...pipelineTotals.map(item => ccStageCount(pipelineRows, item.type)));
+    document.getElementById('pipeline-status-bars').innerHTML = pipelineTotals.map(item => {
+      const count = ccStageCount(pipelineRows, item.type);
+      const width = Math.max(4, Math.round((count / maxTotal) * 100));
+      return `<div class="progress-row"><span class="progress-lbl">${item.label}</span><div class="progress-bar"><div class="bar-fill" style="width:${width}%;background:${item.color};"></div></div><span class="progress-val">${count}</span></div>`;
+    }).join('');
+
+    const feed = data.pipeline?.recent_events || data.pipeline?.recent_activity || [];
+    const feedEl = document.getElementById('activity-feed');
+    if (feed.length) {
+      feedEl.innerHTML = feed.slice(0, 6).map(event => {
+        const title = event.content_title || event.content_type || 'Pipeline item';
+        const transition = [event.from_status, event.to_status].filter(Boolean).join(' -> ') || event.to_status || 'updated';
+        const when = event.created_at ? new Date(event.created_at).toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' }) : '';
+        return `<div class="feed-item"><div class="feed-dot" style="background:#378ADD;"></div><div><div class="feed-txt">${ccEscape(title)}</div><div style="font-size:11px;color:var(--color-text-tertiary);">${ccEscape(event.agent_name || 'System')} - ${ccEscape(transition)} ${ccEscape(when)}</div></div></div>`;
+      }).join('');
+    } else {
+      feedEl.innerHTML = '<div class="feed-item"><div class="feed-dot" style="background:#94a3b8;"></div><div><div class="feed-txt" style="color:var(--color-text-tertiary);">No recent pipeline activity</div></div></div>';
+    }
+
+    document.getElementById('content-queue-summary').innerHTML = [
+      ccRow('Articles in preview', data.articles?.preview_count || 0, data.articles?.preview_count ? 'b-blue' : 'b-gray'),
+      ccRow('Briefings in preview', data.newsletter?.preview_count || 0, data.newsletter?.preview_count ? 'b-amber' : 'b-gray'),
+      ccRow('Ready for articles', repoTotals.ready_for_article || 0, repoTotals.ready_for_article ? 'b-green' : 'b-gray'),
+      ccRow('Ready for newsletter', repoTotals.ready_for_newsletter || 0, repoTotals.ready_for_newsletter ? 'b-green' : 'b-gray', true),
+    ].join('');
+
+    const meeting = data.meeting;
+    const titleEl = document.getElementById('war-room-title');
+    const deptsEl = document.getElementById('war-room-depts');
+
+    if (meeting) {
+      titleEl.textContent = meeting.title + ' (' + meeting.type + ')';
+      const briefings = meeting.briefings || {};
+      const depts = ['acquisition', 'awareness', 'training', 'security', 'production'];
+      deptsEl.innerHTML = depts.map(d => {
+        const hasData = briefings[d] && Object.keys(briefings[d]).length > 0;
+        const status = hasData ? '<span class="badge b-green">Updated</span>' : '<span class="badge b-gray">Pending</span>';
+        return `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:0.5px solid var(--color-border-tertiary);">
+          <span style="font-size:11px;color:var(--color-text-tertiary);text-transform:capitalize;">${ccEscape(d)}</span>
+          ${status}
+        </div>`;
+      }).join('');
+    } else {
+      titleEl.textContent = 'No active meeting in last 24h';
+    }
+
+    if (data.agents) {
+      const summaryEl = document.getElementById('agent-health-summary');
+      summaryEl.innerHTML = `
+        <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary);"><span style="font-size:12px;color:var(--color-text-secondary);">Active agents</span><span class="badge b-blue">${ccNumber(data.agents.active_count)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary);"><span style="font-size:12px;color:var(--color-text-secondary);">Total reporting</span><span style="font-size:12px;font-weight:500;color:var(--color-text-primary);">${ccNumber(data.agents.reporting_count)} / ${ccNumber(data.agents.configured_count)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:5px 0;"><span style="font-size:12px;color:var(--color-text-secondary);">With errors</span><span class="badge ${data.agents.failed_today_count > 0 ? 'b-red' : 'b-gray'}">${ccNumber(data.agents.failed_today_count)}</span></div>
+      `;
+    }
+
+  } catch (e) { console.error('Summary load failed:', e); }
+}
 
 async function loadRadarData() {
   try {

@@ -933,6 +933,12 @@ const listMeetings = ({ status, limit = 20 } = {}) => {
 const getMeetingById = (id) =>
   q1('SELECT * FROM meetings WHERE id=$1', [id]);
 
+const getRecentMeeting = ({ hours = 24 } = {}) =>
+  q1(`SELECT * FROM meetings
+      WHERE created_at > now() - ($1::int * interval '1 hour')
+      ORDER BY created_at DESC
+      LIMIT 1`, [Math.min(Math.max(+hours || 24, 1), 168)]);
+
 const updateMeetingBriefing = (id, department, data) =>
   q1(`UPDATE meetings SET briefings = jsonb_set(briefings, ARRAY[$2], $3::jsonb, true) WHERE id=$1 RETURNING *`,
     [id, department, JSON.stringify(data)]);
@@ -983,6 +989,6 @@ module.exports = {
   getAgentHealthSummary, logAuditEvent, getAuditLog,
   createEscalation,
   countActiveThreats,
-  createMeeting, listMeetings, getMeetingById, updateMeetingBriefing,
+  createMeeting, listMeetings, getMeetingById, getRecentMeeting, updateMeetingBriefing,
   createActionItem, listActionItems, patchActionItem,
 };

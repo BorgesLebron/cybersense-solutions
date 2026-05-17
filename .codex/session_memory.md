@@ -420,3 +420,143 @@ Boundaries:
   - article preview rows: 1
   - briefing preview rows: 0
 - Note: `getAgentHealthSummary()` only reports agents with task history. Endpoint also reports configured fleet count from `AGENT_PERMISSIONS`.
+
+## 2026-05-16 (Gwen - EOD Memory Save)
+
+### Completed Today
+- Reviewed daily brief, shared engineering onboarding, and Gwen onboarding.
+- Participated in cross-engineer sync through Hector.
+- Captured source-linkage and complementary artifact pipeline decisions:
+  - Intel Articles and Awareness Newsletters must be complementary products.
+  - Shared lineage is anchored by `intel_repository.id`.
+  - Kirby/Mario/Training artifact path uses `training_modules.source_id`.
+  - Ruth/Awareness path uses `briefings.threat_item_ids`.
+  - Peter is the first convergence point for complementary content verification.
+- Validated one Intel Article through E2E:
+  - James -> Jason -> Rob -> Jeff -> Maya -> HITL/Laura -> public.
+  - Published article:
+    `Verifiable Credentials Need Operational Trust, Not Just Wallet Support`
+  - Public route:
+    `/intel/article.html?slug=verifiable-credentials-need-operational-trust-not-just-wallet-support`
+- Fixed article QA timestamp behavior:
+  - `advanceArticleStatus()` now sets `qa_passed_at` when article reaches `qa`.
+  - This unblocked `qa -> maya` validation and matches the briefing pipeline pattern.
+- Added Command Center backend MVP support:
+  - `getRepositorySummary()`
+  - `listPipelineEvents({ content_type, content_id, agent_name, limit })`
+  - `GET /api/admin/command-center/summary`
+
+### Commits Pushed
+- `8b58508` - `[GWEN-007] Validate article release path (Gwen)`
+- `160dbaf` - `[GWEN-008] Add command center summary backend (Gwen)`
+- Both pushed to `feature/phase1-0514-cleanup`.
+
+### Verification Today
+- Article E2E DB validation completed successfully.
+- Public article slug resolution confirmed.
+- Published Innovation article appears in published article data.
+- Free tier gating and Monthly full-body access verified.
+- `node --check db/queries.js` passed.
+- `node --check routes/all-routes.js` passed.
+- `git diff --check` passed.
+- `npm.cmd test` runs but Jest has no configured tests; this remains a P2 hardening gap.
+
+### Current Branch / Worktree Notes
+- Branch: `feature/phase1-0514-cleanup`.
+- Latest observed remote branch also includes Alan commit:
+  - `f478d27` - `[ALAN-005] Add barbara_runtime.js - threat and intel normalization into intel_repository (Alan)`
+- Untracked files observed after Gwen push:
+  - `CyberSense_Engineering_Onboarding_v1_5.md`
+  - `api_layer/.env`
+  - `api_layer/db/migrations/010_conference_room_upgrade.sql`
+- Gwen did not touch the untracked migration; treat as non-Gwen until Hector assigns ownership.
+- `api_layer/.env` remains local-only and must never be committed.
+
+### Important Boundary Reminder
+- `api_layer/services/scheduler.js` is restricted.
+- Any work touching `scheduler.js` requires specific Hector permission before reading/modifying operational behavior.
+- Scheduler changes must preserve Nora monitoring and the locked newsletter production/distribution timing.
+
+### Next Gwen Candidates
+- Wire the Command Center summary endpoint into the Ops UI when Hector directs UI work.
+- Continue remaining growth article E2E validation:
+  - `AI-Driven Vulnerability Discovery Raises the Bar for Platform Skills`
+  - Status: `draft`
+  - Section: `growth`
+- Support Alan when `intelligence.html` article card wiring is approved.
+
+## 2026-05-17 (Gwen - Growth Article Backlog Closure)
+
+### Scope
+- Closed the remaining staged Growth Intel Article backlog item.
+- Article:
+  - Title: `AI-Driven Vulnerability Discovery Raises the Bar for Platform Skills`
+  - ID: `747b530a-8bd9-45a6-9336-e7d15d05377a`
+  - Section: `growth`
+  - Slug: `ai-driven-vulnerability-discovery-raises-the-bar-for-platform-skills`
+
+### Pipeline Result
+- Advanced the article through the established E2E validation chain:
+  - `draft -> dev_edit` by Jason
+  - `dev_edit -> eic_review` by Rob
+  - `eic_review -> qa` by Jeff
+  - `qa -> maya` by Maya
+  - `maya -> approved` by Maya
+  - `approved -> published` by Laura/HITL release
+- Final status: `published`
+- Published timestamp: `2026-05-17T17:18:43.025Z`
+
+### Validation
+- Confirmed public article lookup resolves by slug.
+- Confirmed `section='growth'` published list includes the article.
+- Confirmed article has `access_tier='monthly'` and `body_md` present.
+- Confirmed Preview Articles is empty after release.
+- Confirmed both linked `intel_items` still reference the article:
+  - `1637423b-5aa7-4768-a807-75fb2563cc15`
+  - `a9c4704c-66fb-4e25-80e8-90713f12b95b`
+
+### Notes
+- No code files were changed for this closure.
+- Existing unrelated worktree changes were left untouched.
+- Next Gwen candidate: Command Center UI wiring for `GET /api/admin/command-center/summary`.
+
+## 2026-05-17 (Gwen - Command Center UI Wiring)
+
+### Scope
+- Wired the Ops Command Center overview panel to `GET /api/admin/command-center/summary`.
+- Files changed:
+  - `api_layer/db/queries.js`
+  - `api_layer/routes/all-routes.js`
+  - `api_layer/public/admin.html`
+
+### Backend
+- Added `getRecentMeeting({ hours })` in `db/queries.js`.
+- Updated `/api/admin/command-center/summary` to return `meeting` as its own field.
+- Preserved `pipeline.recent_events` as the pipeline event array instead of mixing meeting data into that slot.
+
+### Frontend
+- Command Center now renders live summary data for:
+  - Header metrics
+  - Pipeline status bars
+  - Activity feed
+  - Content queue
+  - War Room status
+  - Agent health
+- Replaced the static Command Center content queue placeholders with live article/newsletter/repository counts.
+
+### Validation
+- `node --check db/queries.js` passed.
+- `node --check routes/all-routes.js` passed.
+- Parsed inline scripts from `api_layer/public/admin.html` with `new Function`; passed.
+- Read-only DB smoke confirmed:
+  - `pipeline.recent_events` is an array.
+  - `meeting` is not an array.
+  - repository total is populated.
+  - agent reporting count is populated.
+- `git diff --check -- api_layer/db/queries.js api_layer/routes/all-routes.js api_layer/public/admin.html` passed.
+- `npm.cmd test -- --passWithNoTests` passed, but Jest still reports no configured tests.
+
+### Notes
+- No commit was made.
+- Existing unrelated worktree changes remain present and were not reverted.
+- Jest test coverage remains a P2 hardening item.
