@@ -1065,7 +1065,8 @@ async function triggerPipeline(endpoint, btnId, label) {
       btn.textContent = label;
       btn.classList.remove('success');
       loadPipelineControlStatus();
-    }, 3000);
+      loadNewsletterStatus();
+    }, 5000);
   } catch (e) {
     btn.textContent = 'Failed';
     btn.classList.remove('loading');

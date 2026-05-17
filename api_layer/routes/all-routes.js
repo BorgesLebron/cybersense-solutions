@@ -957,6 +957,7 @@ adminRouter.get('/pipeline/controls-status', requireAdminToken(), async (req, re
         LIMIT 1
       `).then(r => r.rows[0] || null),
     ]);
+    res.set('Cache-Control', 'no-store');
     res.json({ training_byte: trainingByte, briefing, barbara_queue: barbaraQueue, pending_distribution: pendingDistribution });
   } catch (e) { next(e); }
 });
