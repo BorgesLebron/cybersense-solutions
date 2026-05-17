@@ -910,6 +910,57 @@ adminRouter.post('/trigger/ruth-cycle', requireAdminToken(['gm']), async (req, r
   } catch (e) { next(e); }
 });
 
+adminRouter.post('/trigger/barbara-batch', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    const { pollBarbaraTasks } = require('../services/scheduler');
+    await pollBarbaraTasks();
+    res.json({ triggered: true, agent: 'Barbara', message: 'Barbara normalization batch polled. Queued threat and intel records will be processed.' });
+  } catch (e) { next(e); }
+});
+
+adminRouter.post('/trigger/briefing-distribution', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    const { runDailyBriefingEmailDistribution } = require('../services/scheduler');
+    await runDailyBriefingEmailDistribution();
+    res.json({ triggered: true, job: 'briefing_distribution', message: 'Distribution triggered. Approved edition will be sent to subscribers if HITL authorization is confirmed.' });
+  } catch (e) { next(e); }
+});
+
+adminRouter.get('/pipeline/controls-status', requireAdminToken(), async (req, res, next) => {
+  try {
+    const [trainingByte, briefing, barbaraQueue, pendingDistribution] = await Promise.all([
+      db.pool.query(`
+        SELECT id, title, published_at
+        FROM training_modules
+        WHERE type = 'training_byte'
+          AND pipeline_status = 'published'
+          AND (created_at AT TIME ZONE 'America/Chicago')::date = (now() AT TIME ZONE 'America/Chicago')::date
+        ORDER BY created_at DESC LIMIT 1
+      `).then(r => r.rows[0] || null),
+      db.pool.query(`
+        SELECT id, edition_number, edition_date, pipeline_status, subject_line
+        FROM briefings
+        WHERE edition_date = ((now() AT TIME ZONE 'America/Chicago')::date + 1)
+        LIMIT 1
+      `).then(r => r.rows[0] || null),
+      db.pool.query(`
+        SELECT COUNT(*) AS count FROM agent_tasks
+        WHERE agent_name = 'Barbara'
+          AND task_type IN ('normalize_threat', 'normalize_intel')
+          AND status = 'queued'
+      `).then(r => parseInt(r.rows[0]?.count || 0)),
+      db.pool.query(`
+        SELECT id, edition_number, edition_date, pipeline_status
+        FROM briefings
+        WHERE pipeline_status = 'approved'
+          AND edition_date = (now() AT TIME ZONE 'America/Chicago')::date
+        LIMIT 1
+      `).then(r => r.rows[0] || null),
+    ]);
+    res.json({ training_byte: trainingByte, briefing, barbara_queue: barbaraQueue, pending_distribution: pendingDistribution });
+  } catch (e) { next(e); }
+});
+
 adminRouter.get('/newsletter/status', requireAdminToken(), async (req, res, next) => {
   try {
     const [current, recentPublished, deliveries] = await Promise.all([
