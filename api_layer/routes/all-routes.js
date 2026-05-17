@@ -690,6 +690,98 @@ adminRouter.get('/metrics', requireAdminToken(), async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+adminRouter.get('/command-center/summary', requireAdminToken(), async (req, res, next) => {
+  try {
+    const [
+      snapshot,
+      live,
+      pipeline,
+      activity,
+      agents,
+      repository,
+      articlePreview,
+      briefingPreview,
+      recentEvents,
+    ] = await Promise.all([
+      db.getLatestSnapshot(),
+      db.getLiveMetricsDelta(),
+      db.getPipelineStatus(),
+      db.getActivityFeed(10),
+      db.getAgentHealthSummary(),
+      db.getRepositorySummary(),
+      db.listArticlesForPreview(),
+      db.listApprovedBriefingPreviews(),
+      db.listPipelineEvents({ limit: 20 }),
+    ]);
+
+    const countBy = (rows, key) => rows.reduce((acc, row) => {
+      const value = row[key] || 'unknown';
+      acc[value] = (acc[value] || 0) + 1;
+      return acc;
+    }, {});
+    const configuredAgentCount = Object.keys(AGENT_PERMISSIONS).length;
+    const activeAgents = agents.filter(a => +(a.active_queue || 0) > 0);
+    const failedAgents = agents.filter(a => +(a.failed_today || 0) > 0);
+
+    res.json({
+      generated_at: new Date().toISOString(),
+      snapshot,
+      live,
+      repository: {
+        by_source_type: repository,
+        totals: repository.reduce((acc, row) => {
+          acc.total += +(row.total || 0);
+          acc.ready_for_intel += +(row.ready_for_intel || 0);
+          acc.ready_for_awareness += +(row.ready_for_awareness || 0);
+          acc.ready_for_article += +(row.ready_for_article || 0);
+          acc.ready_for_newsletter += +(row.ready_for_newsletter || 0);
+          acc.article_linked += +(row.article_linked || 0);
+          acc.used_in_briefing += +(row.used_in_briefing || 0);
+          return acc;
+        }, {
+          total: 0,
+          ready_for_intel: 0,
+          ready_for_awareness: 0,
+          ready_for_article: 0,
+          ready_for_newsletter: 0,
+          article_linked: 0,
+          used_in_briefing: 0,
+        }),
+      },
+      pipeline: {
+        status_counts: pipeline,
+        recent_activity: activity,
+        recent_events: recentEvents,
+      },
+      articles: {
+        preview_count: articlePreview.length,
+        by_stage: countBy(articlePreview, 'stage'),
+        by_section: countBy(articlePreview, 'type'),
+        preview: articlePreview.slice(0, 10),
+      },
+      newsletter: {
+        preview_count: briefingPreview.length,
+        approved_for_hitl: briefingPreview.filter(b => b.pipeline_status === 'approved').length,
+        authorized_for_distribution: briefingPreview.filter(b => b.authorized_for_distribution).length,
+        preview: briefingPreview.slice(0, 5),
+      },
+      agents: {
+        configured_count: configuredAgentCount,
+        reporting_count: agents.length,
+        active_count: activeAgents.length,
+        failed_today_count: failedAgents.length,
+        active: activeAgents,
+        failed_today: failedAgents,
+        health: agents,
+      },
+      financial: {
+        jim_validated: false,
+        note: 'Financial metrics are present in live/snapshot data but require Jim validation before display as authoritative.',
+      },
+    });
+  } catch (e) { next(e); }
+});
+
 adminRouter.get('/me', requireAdminToken(), async (req, res, next) => {
   try {
     const { password_hash, ...safe } = req.user;

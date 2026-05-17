@@ -98,6 +98,11 @@ Boundaries:
 - **Alan:** Confirmed KEV items and CISA data fields are best for educational value.
 - **Hector:** Approved "Thematic Alignment" strategy to link news directly to curriculum.
 
+### SOP Updates (Editorial Sync Coordination)
+- **PR-TRN-001 (Kirby):** Updated to v1.1. Removed dual delivery to Ruth. Kirby now delivers to Mario only.
+- **PR-TRN-002 (Mario):** Updated to v1.1. Added Step 5a: Forward staged Training Byte and `source_id` to Peter by 0545 CT for complementary content verification.
+- **Traceability:** Aligned all training SOPs with Alan's Editorial v1.2 updates.
+
 ### Next Steps
 - Verify LLM output quality in production-like environment.
 - Scaffold Mario (Coordinator) to manage agent handoffs.
@@ -269,3 +274,122 @@ Boundaries:
 ### Verification
 - Ran `git diff --check` successfully.
 - Ran `npm.cmd test`; Jest executed but found no configured tests.
+
+## 2026-05-16 (Gemma - Training SOP Updates)
+
+### SOP Updates
+- GEMMA-004 completed Training SOP updates.
+- `PR-TRN-001` Kirby updated to v1.1:
+  - Removed requirement for Kirby to deliver directly to Ruth.
+  - Kirby now delivers the Daily Training Byte to Mario only.
+  - Validation checklist and daily operating log updated for the single-recipient model.
+- `PR-TRN-002` Mario updated to v1.1:
+  - Added Step 5a delivery obligation.
+  - Mario must forward staged Training Byte text and `source_id` to Peter via the Editorial Sync channel by 0545 CT.
+  - This enables Peter's Complementary Content Verification before newsletter release.
+  - Mario daily operating checklist updated to include Peter handoff.
+
+### Coordination / Traceability
+- Training SOPs now formalize the Source Linkage protocol.
+- Training Byte from Kirby/Mario and Newsletter from Ruth should be traceable by Peter to the same `intel_repository.id`.
+- This aligns Training SOPs with Editorial SOP source-linkage discipline.
+
+### Open Question From Gemma
+- SOP files under `.cybersense-sop(privateLibrary)` are currently ignored by git.
+- Gemma asked whether these SOP updates should be force-added/committed or managed through a separate system.
+
+## 2026-05-16 (Alan - Gwen E2E Validation Assessment)
+
+### Branch / SOP State
+- Alan confirmed his working tree is clean after pulling GEMMA-001/002/003 and GWEN-007.
+- SOP files under `.cybersense-sop(privateLibrary)` are gitignored by design.
+- Alan confirmed SOPs are trade secrets, not versioned repo artifacts.
+- Alan's ED-AWR-001 / ED-AWR-002 edits are saved locally and effective immediately; no git action needed.
+
+### Alan Domain Confirmation
+- `intel/article.html` slug routing contract validated:
+  - `?slug=<slug>` resolves correctly.
+  - No changes needed from Alan.
+- Source linkage confirmed:
+  - Alan's relevant traceability chain is `intel_repository -> intel_items -> article_id`.
+  - This is intact for the published Gwen validation article.
+- `intelligence.html` note clarified:
+  - Gwen validated the published article data path and slug route.
+  - Actual `intelligence.html` article card wiring is still on hold per ALAN-004 direction.
+  - Alan will wire those cards when Hector gives the go.
+
+### GWEN-007 Assessment
+- Alan reviewed the `qa_passed_at` fix in `api_layer/db/queries.js`.
+- Assessment: fix is correct and matches the briefing pipeline pattern.
+- Alan will pull before future `queries.js` work.
+
+### Remaining Article Backlog
+- Second staged article remains:
+  - `AI-Driven Vulnerability Discovery Raises the Bar for Platform Skills`
+  - Status: `draft`
+  - Section: `growth`
+- Once cleared, there will be one published article in `innovation` and one in `growth` ready for future public card wiring.
+
+### Test Coverage Gap
+- Jest has no configured tests.
+- Alan flagged this as a P2 hardening gap, not a current blocker.
+
+## 2026-05-16 (Gwen - Command Center Backend MVP)
+
+### Scope
+- Implemented the backend side of the Command Center inventory recommendation.
+- Goal: support a Phase 1 Ops Command Center MVP using existing data first, without new schema.
+
+### Query Helpers Added
+- File: `api_layer/db/queries.js`
+- Added `getRepositorySummary()`:
+  - Summarizes `intel_repository` by `source_type`.
+  - Returns totals for:
+    - total records
+    - ready for intel
+    - ready for awareness
+    - used in briefing
+    - article linked
+    - ready for article
+    - ready for newsletter
+    - oldest/newest processed timestamps
+- Added `listPipelineEvents({ content_type, content_id, agent_name, limit })`:
+  - Generic event timeline query.
+  - Joins articles, briefings, and training modules to return `content_title`.
+  - Supports Command Center timelines and future detail panels.
+
+### Endpoint Added
+- File: `api_layer/routes/all-routes.js`
+- Added `GET /api/admin/command-center/summary`.
+- Reuses existing query functions:
+  - `getLatestSnapshot()`
+  - `getLiveMetricsDelta()`
+  - `getPipelineStatus()`
+  - `getActivityFeed(10)`
+  - `getAgentHealthSummary()`
+  - `listArticlesForPreview()`
+  - `listApprovedBriefingPreviews()`
+  - `listPipelineEvents({ limit: 20 })`
+- Response includes:
+  - snapshot/live metrics
+  - repository totals and source-type breakdown
+  - pipeline counts, recent activity, recent events
+  - article preview counts by stage/section
+  - newsletter preview/HITL counts
+  - agent health, active agents, failed-today agents
+  - financial metadata flagged `jim_validated: false`
+
+### Validation
+- Ran syntax checks:
+  - `node --check db/queries.js`
+  - `node --check routes/all-routes.js`
+- Ran read-only DB smoke test for new helpers.
+- Smoke test returned:
+  - repository summary rows: 3
+  - pipeline event rows: 3
+  - pipeline status rows: 2
+  - activity rows: 3
+  - agent health rows: 20
+  - article preview rows: 1
+  - briefing preview rows: 0
+- Note: `getAgentHealthSummary()` only reports agents with task history. Endpoint also reports configured fleet count from `AGENT_PERMISSIONS`.

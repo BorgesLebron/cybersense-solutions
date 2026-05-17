@@ -217,6 +217,41 @@ const getRepositoryQueue = ({ pipeline, limit = 30 } = {}) => {
             WHERE r.${col}=true ${excludeUsed} ORDER BY r.processed_at ASC LIMIT $1`, [limit]);
 };
 
+const getRepositorySummary = () =>
+  q(`WITH base AS (
+       SELECT r.id, r.source_type, r.source_id, r.ready_for_intel, r.ready_for_awareness,
+              r.processed_at, i.article_id AS intel_article_id, t.article_id AS threat_article_id,
+              EXISTS (
+                SELECT 1
+                FROM briefings b
+                WHERE r.source_id = ANY(b.threat_item_ids)
+                   OR r.source_id = ANY(b.innovation_item_ids)
+                   OR r.source_id = b.growth_item_id
+              ) AS used_in_briefing
+       FROM intel_repository r
+       LEFT JOIN intel_items i ON i.id = r.source_id AND r.source_type IN ('innovation','growth','policy')
+       LEFT JOIN threat_records t ON t.id = r.source_id AND r.source_type = 'threat'
+     )
+     SELECT source_type,
+            COUNT(*)::int AS total,
+            COUNT(*) FILTER (WHERE ready_for_intel)::int AS ready_for_intel,
+            COUNT(*) FILTER (WHERE ready_for_awareness)::int AS ready_for_awareness,
+            COUNT(*) FILTER (WHERE used_in_briefing)::int AS used_in_briefing,
+            COUNT(*) FILTER (WHERE COALESCE(intel_article_id, threat_article_id) IS NOT NULL)::int AS article_linked,
+            COUNT(*) FILTER (
+              WHERE ready_for_intel
+                AND COALESCE(intel_article_id, threat_article_id) IS NULL
+            )::int AS ready_for_article,
+            COUNT(*) FILTER (
+              WHERE ready_for_awareness
+                AND NOT used_in_briefing
+            )::int AS ready_for_newsletter,
+            MIN(processed_at) AS oldest_processed_at,
+            MAX(processed_at) AS newest_processed_at
+      FROM base
+      GROUP BY source_type
+      ORDER BY source_type`);
+
 const listApprovedBriefingPreviews = () =>
   q(`SELECT b.id, b.edition_number, b.edition_date, b.subject_line, b.file_path,
             b.maya_approved_at, b.pipeline_status,
@@ -771,6 +806,28 @@ const countAgentRejections24h = (pipeline_agents) =>
       WHERE to_status='draft' AND agent_name=ANY($1) AND created_at > now()-interval '24 hours'`,
     [pipeline_agents]);
 
+const listPipelineEvents = ({ content_type, content_id, agent_name, limit = 50 } = {}) => {
+  const conds = ['1=1'];
+  const params = [];
+  if (content_type) { params.push(content_type); conds.push(`pe.content_type=$${params.length}`); }
+  if (content_id) { params.push(content_id); conds.push(`pe.content_id=$${params.length}`); }
+  if (agent_name) { params.push(agent_name); conds.push(`pe.agent_name=$${params.length}`); }
+  params.push(Math.min(Math.max(+limit || 50, 1), 200));
+  return q(`SELECT pe.*,
+              CASE pe.content_type
+                WHEN 'article' THEN a.title
+                WHEN 'briefing' THEN b.subject_line
+                ELSE tm.title
+              END AS content_title
+            FROM pipeline_events pe
+            LEFT JOIN articles a ON a.id=pe.content_id AND pe.content_type='article'
+            LEFT JOIN briefings b ON b.id=pe.content_id AND pe.content_type='briefing'
+            LEFT JOIN training_modules tm ON tm.id=pe.content_id AND pe.content_type='training'
+            WHERE ${conds.join(' AND ')}
+            ORDER BY pe.created_at DESC
+            LIMIT $${params.length}`, params);
+};
+
 // ── RISK REGISTER ──────────────────────────────────────────────────────────────
 
 const createRisk = ({ domain, title, description, severity, score, owner_agent, raised_by, due_date }) =>
@@ -902,10 +959,10 @@ module.exports = {
   getAgentToken, rotateAgentToken,
   createThreatRecord, getThreatRecords, getThreatById, linkThreatToArticle,
   createIntelItem, getIntelItems, getIntelRadarItems,
-  processIntoRepository, getRepositoryQueue, listApprovedBriefingPreviews, getRepositoryItemDetail, getApprovedContentReferences,
+  processIntoRepository, getRepositoryQueue, getRepositorySummary, listApprovedBriefingPreviews, getRepositoryItemDetail, getApprovedContentReferences,
   createArticle, getArticle, getArticleById, listArticles, listArticlesForPreview, advanceArticleStatus, incrementArticleViews,
   createBriefing, getBriefingByDate, getBriefingById, listBriefings, advanceBriefingStatus, revertBriefingForRevision,
-  logPipelineEvent, countRejections, countAgentRejections24h,
+  logPipelineEvent, countRejections, countAgentRejections24h, listPipelineEvents,
   createSocialPost, updateSocialMetrics, listSocialPosts, getSocialPerformance,
   createTrainingModule, listTrainingModules, getTrainingModule, advanceModuleStatus,
   recordCompletion, getUserCompletions, getOrgCompletions, getOrgCompletionSummary,
