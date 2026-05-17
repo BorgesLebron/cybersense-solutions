@@ -15,6 +15,7 @@ const crypto = require('crypto');
 const jwt    = require('jsonwebtoken');
 const db     = require('../db/queries');
 const { notifyAgents } = require('./agents');
+const { postAgentStatusToActiveMeeting } = require('./meetings');
 
 const API_BASE = () =>
   process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
@@ -180,6 +181,18 @@ async function executeRuthDailyCycle(task) {
       missing: missing.length > 0 ? missing : null,
     }));
 
+    // If the only missing item is the training_byte and Kirby's 5:30 CT SLA
+    // hasn't passed yet, re-queue so the next poll retries after Kirby produces.
+    if (!trainingByte && missing.length === 1 && missing[0].startsWith('training_byte')) {
+      const ctNow = new Date().toLocaleString('en-US', { timeZone: 'America/Chicago', hour: '2-digit', minute: '2-digit', hour12: false });
+      const [h, m] = ctNow.split(':').map(Number);
+      if (h < 5 || (h === 5 && m < 45)) {
+        await db.updateTask(task.id, { status: 'queued' });
+        console.log(JSON.stringify({ ts, runtime: 'ruth', event: 'AWAITING_TRAINING_BYTE', edition_date: editionDate, retry_after: 'next poll' }));
+        return;
+      }
+    }
+
     if (missing.length > 0) {
       const error_message = `Incomplete repository: ${missing.join('; ')}`;
       await db.updateTask(task.id, { status: 'failed', error_message });
@@ -210,6 +223,17 @@ async function executeRuthDailyCycle(task) {
     });
 
     await db.updateTask(task.id, { status: 'complete' });
+
+    // Post to meeting (Gemma task)
+    await postAgentStatusToActiveMeeting('Ruth', 'awareness', {
+      event: 'BRIEFING_SUBMITTED',
+      edition_date: editionDate,
+      briefing_id: result.id,
+      threats: threats.length,
+      innovations: innovations.length,
+      growth: !!growthItem,
+      training_byte: !!trainingByte
+    });
 
     console.log(JSON.stringify({
       ts, runtime: 'ruth', event: 'BRIEFING_SUBMITTED',

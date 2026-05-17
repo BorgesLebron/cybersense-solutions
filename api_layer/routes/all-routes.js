@@ -703,6 +703,7 @@ adminRouter.get('/command-center/summary', requireAdminToken(), async (req, res,
       articlePreview,
       briefingPreview,
       recentEvents,
+      recentMeeting,
     ] = await Promise.all([
       db.getLatestSnapshot(),
       db.getLiveMetricsDelta(),
@@ -713,6 +714,7 @@ adminRouter.get('/command-center/summary', requireAdminToken(), async (req, res,
       db.listArticlesForPreview(),
       db.listApprovedBriefingPreviews(),
       db.listPipelineEvents({ limit: 20 }),
+      db.getRecentMeeting({ hours: 24 }),
     ]);
 
     const countBy = (rows, key) => rows.reduce((acc, row) => {
@@ -766,6 +768,7 @@ adminRouter.get('/command-center/summary', requireAdminToken(), async (req, res,
         authorized_for_distribution: briefingPreview.filter(b => b.authorized_for_distribution).length,
         preview: briefingPreview.slice(0, 5),
       },
+      meeting: recentMeeting,
       agents: {
         configured_count: configuredAgentCount,
         reporting_count: agents.length,
@@ -881,6 +884,29 @@ adminRouter.post('/briefings/:id/send-test', requireAdminToken(['gm']), async (r
 
     await sendBriefingEmail([{ email, name: 'Test Recipient' }], briefing);
     res.json({ sent: true, to: email, briefing_id: briefing.id, edition: briefing.edition_number });
+  } catch (e) { next(e); }
+});
+
+// ── Pipeline trigger endpoints (GM only) ──────────────────────────────────────
+// Manual override for when the production cron window was missed. Creates the
+// correct task type and immediately runs the poller so execution happens
+// in-process rather than waiting for the next scheduled poll tick.
+
+adminRouter.post('/trigger/kirby-cycle', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    const { runKirbyDailyCycle, pollKirbyTasks } = require('../services/scheduler');
+    await runKirbyDailyCycle();
+    await pollKirbyTasks();
+    res.json({ triggered: true, agent: 'Kirby', message: 'Kirby daily cycle queued and polled. Training byte will be produced.' });
+  } catch (e) { next(e); }
+});
+
+adminRouter.post('/trigger/ruth-cycle', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    const { runRuthDailyCycle, pollRuthTasks } = require('../services/scheduler');
+    await runRuthDailyCycle();
+    await pollRuthTasks();
+    res.json({ triggered: true, agent: 'Ruth', message: 'Ruth daily cycle queued and polled. Briefing composition will run if training byte is available.' });
   } catch (e) { next(e); }
 });
 

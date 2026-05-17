@@ -13,6 +13,7 @@ const { pollEdTasks }           = require('./ed_runtime');
 const { pollRickTasks }         = require('./rick_runtime');
 const { pollIvanCharlieTasks }  = require('./ivan_charlie_runtime');
 const { pollBarbaraTasks }      = require('./barbara_runtime');
+const { pollKirbyTasks }        = require('./kirby_runtime');
 const { pollMayaTasks }         = require('./maya_runtime');
 const { sendBriefingEmail }     = require('./sendgrid');
 const sgMail = require('@sendgrid/mail');
@@ -353,18 +354,49 @@ async function runLeadQualificationCheck() {
   }
 }
 
-// ── Training: Kirby daily cycle initiation (T1 — fires at 05:00 CT) ──────────
+// ── Training: Kirby daily cycle initiation (T1 — fires at 04:00 CT, Sun–Thu) ──
+// Creates a production/training_byte task so pollKirbyTasks can pick it up and
+// run produceDailyTrainingByte. Fires 30 min before Ruth's 04:30 CT trigger so
+// the byte is ready when Ruth first polls for composition items.
 async function runKirbyDailyCycle() {
+  const triggerDate = currentCtDate();
   try {
-    await notifyAgents(['Kirby'], {
-      type: 'DAILY_CYCLE_TRIGGER',
-      pipeline: 'training',
-      deadline: '05:30 CT',
-      message: 'Begin training byte production. Deliver to Ruth and Mario by 0530 CT (T1).',
+    const existing = await db.pool.query(
+      `SELECT id FROM agent_tasks
+       WHERE agent_name    = 'Kirby'
+         AND task_type     = 'production'
+         AND content_type  = 'training_byte'
+         AND started_at   >= (($1::date)::timestamp AT TIME ZONE 'America/Chicago')
+         AND started_at   <  (($1::date + interval '1 day')::timestamp AT TIME ZONE 'America/Chicago')
+       LIMIT 1`,
+      [triggerDate]
+    ).then(r => r.rows[0] || null);
+
+    if (existing) {
+      console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'kirby_daily_cycle', status: 'skipped', reason: 'task_exists', task_id: existing.id }));
+      return;
+    }
+
+    const sla = new Date();
+    sla.setHours(5, 30, 0, 0);
+
+    const task = await db.createTask({
+      agent_name:   'Kirby',
+      task_type:    'production',
+      content_type: 'training_byte',
+      content_id:   '00000000-0000-0000-0000-000000000000',
+      sla_deadline: sla,
     });
-    console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'kirby_daily_cycle', status: 'triggered' }));
+
+    console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'kirby_daily_cycle', status: 'triggered', task_id: task.id }));
   } catch (e) {
-    console.error(JSON.stringify({ ts: new Date().toISOString(), job: 'kirby_daily_cycle', error: e.message }));
+    const ts = new Date().toISOString();
+    console.error(JSON.stringify({ ts, job: 'kirby_daily_cycle', status: 'error', error: e.message }));
+    await notifyAgents(['Barret'], {
+      type: 'KIRBY_TRIGGER_FAILED',
+      error: e.message,
+      message: `Kirby daily cycle trigger failed for ${triggerDate}. Training byte may not be produced. Ruth's 0430 CT composition is at risk.`,
+    });
   }
 }
 
@@ -851,8 +883,9 @@ function startScheduler() {
     cron.schedule('0 */4 * * *',    runRedTeamBatchCycle,          { timezone: 'America/Chicago' });
     cron.schedule('45 5 * * *',     runIvanCharlieRuthReminder,    { timezone: 'America/Chicago' });
     cron.schedule('5 6 * * *',      runAcquisitionDeliveryCheck,   { timezone: 'America/Chicago' });
-    // Training + Sales
-    cron.schedule('0 5 * * *',      runKirbyDailyCycle,            { timezone: 'America/Chicago' });
+    // Training + Sales — Kirby fires at 04:00 CT (30 min before Ruth) on production nights
+    cron.schedule('0 4 * * 0-4',    runKirbyDailyCycle,            { timezone: 'America/Chicago' });
+    cron.schedule('*/2 4-6 * * 0-4', pollKirbyTasks,               { timezone: 'America/Chicago' });
     cron.schedule('0 8 * * *',      runRenewalOutreach,            { timezone: 'America/Chicago' });
     cron.schedule('30 8 * * *',     runAccountHealthCheck,         { timezone: 'America/Chicago' });
     cron.schedule('0 9 * * *',      runLeadQualificationCheck,     { timezone: 'America/Chicago' });
@@ -871,7 +904,7 @@ function startScheduler() {
     cron.schedule('0 */4 * * *',     pollRickTasks,                 { timezone: 'America/Chicago' });
     cron.schedule('30 */4 * * *',    pollBarbaraTasks,              { timezone: 'America/Chicago' });
     cron.schedule('45 5 * * *',      pollIvanCharlieTasks,          { timezone: 'America/Chicago' });
-    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SCHEDULER_STARTED', jobs: 24 }));
+    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SCHEDULER_STARTED', jobs: 27 }));
   } catch (e) {
     console.warn('node-cron not installed — scheduler disabled. Install with: npm install node-cron');
   }
@@ -903,5 +936,6 @@ module.exports = {
   pollMayaTasks,
   pollRickTasks,
   pollBarbaraTasks,
+  pollKirbyTasks,
   pollIvanCharlieTasks,
 };

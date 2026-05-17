@@ -13,10 +13,11 @@
 
 const crypto = require('crypto');
 const jwt    = require('jsonwebtoken');
-const { google } = require('@ai-sdk/google');
+const { createGoogleGenerativeAI } = require('@ai-sdk/google');
 const { generateText } = require('ai');
 const db     = require('../db/queries');
 const { notifyAgents } = require('./agents');
+const { postAgentStatusToActiveMeeting } = require('./meetings');
 
 const API_BASE = () =>
   process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
@@ -26,10 +27,11 @@ const POLL_WINDOW_HOURS = 12;
 // ── LLM Configuration ────────────────────────────────────────────────────────
 
 function getKirbyBrain() {
-  if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
-    throw new Error('MISSING_GOOGLE_API_KEY: Kirby cannot function without his LLM brain.');
+  if (!process.env.KIRBY_BRAIN_API_KEY) {
+    throw new Error('MISSING_KIRBY_BRAIN_API_KEY: Kirby cannot function without his LLM brain.');
   }
-  return google('gemini-1.5-flash');
+  const googleAI = createGoogleGenerativeAI({ apiKey: process.env.KIRBY_BRAIN_API_KEY });
+  return googleAI('gemini-1.5-flash');
 }
 
 const KIRBY_SYSTEM_PROMPT = `
@@ -175,7 +177,7 @@ async function produceDailyTrainingByte(task) {
     const byte = await db.createTrainingModule({
       title,
       type: 'training_byte',
-      phase: 'awareness',
+      phase: 'library',
       zt_module: 'threat_defense',
       access_tier: 'free',
       duration_min: 5,
@@ -187,6 +189,15 @@ async function produceDailyTrainingByte(task) {
     // 4. Update status and notify
     await db.advanceModuleStatus(byte.id, 'published');
     
+    // 5. Post to meeting (Gemma task)
+    await postAgentStatusToActiveMeeting('Kirby', 'training', {
+      event: 'TRAINING_BYTE_PUBLISHED',
+      title: title,
+      byte_id: byte.id,
+      source_id: sourceIntel.id,
+      alignment: briefing ? 'thematic' : 'fallback'
+    });
+
     // Explicit lineage tracking for Peter and downstream audit
     await db.updateTask(task.id, { 
       status: 'complete', 
