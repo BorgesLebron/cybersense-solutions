@@ -183,9 +183,18 @@ const getRepositoryQueue = ({ pipeline, limit = 30 } = {}) => {
     ? `AND NOT EXISTS (
          SELECT 1
          FROM briefings b
-         WHERE r.source_id = ANY(b.threat_item_ids)
-            OR r.source_id = ANY(b.innovation_item_ids)
-            OR r.source_id = b.growth_item_id
+         WHERE (r.source_id = ANY(b.threat_item_ids)
+             OR r.source_id = ANY(b.innovation_item_ids)
+             OR r.source_id = b.growth_item_id)
+           AND b.edition_date >= COALESCE((
+             SELECT MIN(sub.edition_date) FROM (
+               SELECT edition_date FROM briefings
+               WHERE pipeline_status != 'draft'
+                 AND edition_date <= (now() AT TIME ZONE 'America/Chicago')::date
+               ORDER BY edition_date DESC
+               LIMIT 5
+             ) sub
+           ), '1900-01-01'::date)
        )`
     : '';
   if (pipeline === 'awareness') {
