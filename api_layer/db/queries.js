@@ -917,10 +917,10 @@ const createEscalation = ({ from_agent, to_agent, reason, content_id, severity }
 const countActiveThreats = () =>
   q1("SELECT COUNT(*) AS count FROM threat_records");
 
-const createMeeting = ({ title, type, convener, initiated_by, agenda }) =>
-  q1(`INSERT INTO meetings (id,title,type,convener,initiated_by,agenda)
-      VALUES (gen_random_uuid(),$1,$2,$3,$4,$5) RETURNING *`,
-    [title, type, convener, initiated_by, agenda || null]);
+const createMeeting = ({ title, type, convener, initiated_by, agenda, lead, decision_maker, records_agent }) =>
+  q1(`INSERT INTO meetings (id,title,type,convener,initiated_by,agenda,lead,decision_maker,records_agent)
+      VALUES (gen_random_uuid(),$1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+    [title, type, convener, initiated_by, agenda || null, lead || null, decision_maker || null, records_agent || null]);
 
 const listMeetings = ({ status, limit = 20 } = {}) => {
   const conds = ['1=1'];
@@ -933,16 +933,20 @@ const listMeetings = ({ status, limit = 20 } = {}) => {
 const getMeetingById = (id) =>
   q1('SELECT * FROM meetings WHERE id=$1', [id]);
 
-const createActionItem = ({ meeting_id, title, owner_agent }) =>
-  q1(`INSERT INTO meeting_action_items (id,meeting_id,title,owner_agent)
-      VALUES (gen_random_uuid(),$1,$2,$3) RETURNING *`,
-    [meeting_id, title, owner_agent || null]);
+const updateMeetingBriefing = (id, department, data) =>
+  q1(`UPDATE meetings SET briefings = jsonb_set(briefings, ARRAY[$2], $3::jsonb, true) WHERE id=$1 RETURNING *`,
+    [id, department, JSON.stringify(data)]);
+
+const createActionItem = ({ meeting_id, title, owner_agent, department, priority }) =>
+  q1(`INSERT INTO meeting_action_items (id,meeting_id,title,owner_agent,department,priority)
+      VALUES (gen_random_uuid(),$1,$2,$3,$4,$5) RETURNING *`,
+    [meeting_id, title, owner_agent || null, department || null, priority || 'medium']);
 
 const listActionItems = (meeting_id) =>
   q('SELECT * FROM meeting_action_items WHERE meeting_id=$1 ORDER BY created_at ASC', [meeting_id]);
 
 const patchActionItem = (id, fields) => {
-  const allowed = ['status', 'owner_agent', 'resolved_at'];
+  const allowed = ['status', 'owner_agent', 'resolved_at', 'department', 'priority'];
   const safe = Object.fromEntries(Object.entries(fields).filter(([k]) => allowed.includes(k)));
   if (safe.status === 'resolved' && !safe.resolved_at) safe.resolved_at = new Date().toISOString();
   const sets = Object.keys(safe).map((k, i) => `${k}=$${i + 2}`).join(',');
@@ -979,6 +983,6 @@ module.exports = {
   getAgentHealthSummary, logAuditEvent, getAuditLog,
   createEscalation,
   countActiveThreats,
-  createMeeting, listMeetings, getMeetingById,
+  createMeeting, listMeetings, getMeetingById, updateMeetingBriefing,
   createActionItem, listActionItems, patchActionItem,
 };

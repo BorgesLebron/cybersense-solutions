@@ -103,10 +103,37 @@ Boundaries:
 - **PR-TRN-002 (Mario):** Updated to v1.1. Added Step 5a: Forward staged Training Byte and `source_id` to Peter by 0545 CT for complementary content verification.
 - **Traceability:** Aligned all training SOPs with Alan's Editorial v1.2 updates.
 
+## 2026-05-16 (Gemma - Conference Room Upgrade)
+
+### Strategic Alignment
+- **Concept:** Transitioned "Meetings" from a simple chat into a structured project management system.
+- **Workflow:** Implemented "Meetings as Accountability Objects" where agents/departments POST status updates into an active meeting "War Room."
+
+### Phase 1: Infrastructure & Schema
+- **Migration 010:** Upgraded `meetings` table with formal roles (`lead`, `decision_maker`, `records_agent`) and a structured `briefings` (JSONB) column.
+- **Action Items:** Enhanced `meeting_action_items` with `department` and `priority` metadata.
+- **Query Layer:** Updated `queries.js` with `updateMeetingBriefing` to support atomic JSONB merges for departmental updates.
+
+### Phase 2: Service & Logic
+- **Meeting Service:** Created `api_layer/services/meetings.js` with formal standing templates:
+  - **Sync (Mon):** Lead: Barret | Records: Laura.
+  - **Security (Tue):** Lead: Cy | Records: Paige.
+  - **Training (Thu):** Lead: Barret | Records: Mario.
+  - **EOW (Fri):** Lead: Laura | Records: Valerie.
+- **API Enhancements:** Upgraded `POST /api/admin/meetings` to support `template_type` and implemented `PATCH /briefing` for departmental check-ins.
+
+### Phase 3: UI Implementation
+- **Conference UI:** Refactored `conference.html` into a professional briefing room.
+- **Features:** 
+  - Templated meeting initiation (one-click "Sync" or "Security" starts).
+  - Visual **Briefing Cards** for each department.
+  - Post-briefing checklist with departmental categorization.
+  - Persistent record-keeping with roles and agendas displayed prominently.
+
 ### Next Steps
-- Verify LLM output quality in production-like environment.
-- Scaffold Mario (Coordinator) to manage agent handoffs.
-- Update `training.html` to display the "Daily Training Byte" published by Kirby.
+- Update agent runtimes to automatically POST their weekly status into the active meeting during their briefing window.
+- Implement the "Agent Status" War Room visualizer on the main Command Center dashboard.
+- Verify Kirby's output quality in live polling tests.
 
 ## 2026-05-16 (Gemma - Source Linkage & Editorial Sync)
 
