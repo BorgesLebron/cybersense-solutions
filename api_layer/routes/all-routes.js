@@ -138,6 +138,7 @@ usersRouter.patch('/:id/tier', requireAdminToken(['gm']), async (req, res, next)
 const tasksRouter = express.Router();
 const { requireAgentToken } = require('../middleware/auth');
 const { notifyAgents } = require('../services/agents');
+const meetingService = require('../services/meetings');
 
 tasksRouter.post('/', requireAgentToken([]), async (req, res, next) => {
   try {
@@ -690,6 +691,98 @@ adminRouter.get('/metrics', requireAdminToken(), async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+adminRouter.get('/command-center/summary', requireAdminToken(), async (req, res, next) => {
+  try {
+    const [
+      snapshot,
+      live,
+      pipeline,
+      activity,
+      agents,
+      repository,
+      articlePreview,
+      briefingPreview,
+      recentEvents,
+    ] = await Promise.all([
+      db.getLatestSnapshot(),
+      db.getLiveMetricsDelta(),
+      db.getPipelineStatus(),
+      db.getActivityFeed(10),
+      db.getAgentHealthSummary(),
+      db.getRepositorySummary(),
+      db.listArticlesForPreview(),
+      db.listApprovedBriefingPreviews(),
+      db.listPipelineEvents({ limit: 20 }),
+    ]);
+
+    const countBy = (rows, key) => rows.reduce((acc, row) => {
+      const value = row[key] || 'unknown';
+      acc[value] = (acc[value] || 0) + 1;
+      return acc;
+    }, {});
+    const configuredAgentCount = Object.keys(AGENT_PERMISSIONS).length;
+    const activeAgents = agents.filter(a => +(a.active_queue || 0) > 0);
+    const failedAgents = agents.filter(a => +(a.failed_today || 0) > 0);
+
+    res.json({
+      generated_at: new Date().toISOString(),
+      snapshot,
+      live,
+      repository: {
+        by_source_type: repository,
+        totals: repository.reduce((acc, row) => {
+          acc.total += +(row.total || 0);
+          acc.ready_for_intel += +(row.ready_for_intel || 0);
+          acc.ready_for_awareness += +(row.ready_for_awareness || 0);
+          acc.ready_for_article += +(row.ready_for_article || 0);
+          acc.ready_for_newsletter += +(row.ready_for_newsletter || 0);
+          acc.article_linked += +(row.article_linked || 0);
+          acc.used_in_briefing += +(row.used_in_briefing || 0);
+          return acc;
+        }, {
+          total: 0,
+          ready_for_intel: 0,
+          ready_for_awareness: 0,
+          ready_for_article: 0,
+          ready_for_newsletter: 0,
+          article_linked: 0,
+          used_in_briefing: 0,
+        }),
+      },
+      pipeline: {
+        status_counts: pipeline,
+        recent_activity: activity,
+        recent_events: recentEvents,
+      },
+      articles: {
+        preview_count: articlePreview.length,
+        by_stage: countBy(articlePreview, 'stage'),
+        by_section: countBy(articlePreview, 'type'),
+        preview: articlePreview.slice(0, 10),
+      },
+      newsletter: {
+        preview_count: briefingPreview.length,
+        approved_for_hitl: briefingPreview.filter(b => b.pipeline_status === 'approved').length,
+        authorized_for_distribution: briefingPreview.filter(b => b.authorized_for_distribution).length,
+        preview: briefingPreview.slice(0, 5),
+      },
+      agents: {
+        configured_count: configuredAgentCount,
+        reporting_count: agents.length,
+        active_count: activeAgents.length,
+        failed_today_count: failedAgents.length,
+        active: activeAgents,
+        failed_today: failedAgents,
+        health: agents,
+      },
+      financial: {
+        jim_validated: false,
+        note: 'Financial metrics are present in live/snapshot data but require Jim validation before display as authoritative.',
+      },
+    });
+  } catch (e) { next(e); }
+});
+
 adminRouter.get('/me', requireAdminToken(), async (req, res, next) => {
   try {
     const { password_hash, ...safe } = req.user;
@@ -1207,33 +1300,53 @@ adminRouter.get('/meetings', requireAdminToken(), async (req, res, next) => {
 
 adminRouter.post('/meetings', requireAdminToken(), async (req, res, next) => {
   try {
-    const { title, type, agenda } = req.body;
-    const validTypes = ['operational', 'security', 'editorial', 'training'];
-    if (!title || !type) return res.status(400).json(err('MISSING_FIELDS', 'title and type are required'));
-    if (!validTypes.includes(type)) return res.status(400).json(err('INVALID_TYPE', `type must be one of: ${validTypes.join(', ')}`));
+    const { title, type, agenda, template_type, lead, decision_maker, records_agent } = req.body;
+    
+    let meeting;
+    if (template_type) {
+      meeting = await meetingService.createMeetingFromTemplate(template_type, req.user.id);
+    } else {
+      const validTypes = ['operational', 'security', 'editorial', 'training'];
+      if (!title || !type) return res.status(400).json(err('MISSING_FIELDS', 'title and type are required'));
+      if (!validTypes.includes(type)) return res.status(400).json(err('INVALID_TYPE', `type must be one of: ${validTypes.join(', ')}`));
 
-    const convener = type === 'security' ? 'Cy' : 'Henry';
-
-    const meeting = await db.createMeeting({ title, type, convener, initiated_by: req.user.id, agenda });
+      const convener = type === 'security' ? 'Cy' : 'Henry';
+      meeting = await db.createMeeting({ 
+        title, type, convener, initiated_by: req.user.id, agenda,
+        lead: lead || convener,
+        decision_maker: decision_maker || 'Henry',
+        records_agent: records_agent || 'Laura'
+      });
+    }
 
     await db.logAuditEvent({
       actor: req.user.id,
       action: 'meeting_created',
-      target_agent: convener,
-      reason: `${type} meeting initiated: ${title}`,
+      target_agent: meeting.convener,
+      reason: `${meeting.type} meeting initiated: ${meeting.title}`,
       affected_content_id: meeting.id,
     });
 
-    await notifyAgents([convener], {
+    await notifyAgents([meeting.convener], {
       type: 'MEETING_INITIATED',
       meeting_id: meeting.id,
-      meeting_type: type,
-      title,
-      agenda: agenda || null,
-      message: `New ${type} meeting initiated: "${title}". You are the convener.`,
+      meeting_type: meeting.type,
+      title: meeting.title,
+      agenda: meeting.agenda || null,
+      message: `New ${meeting.type} meeting initiated: "${meeting.title}". You are the convener.`,
     });
 
     res.status(201).json(meeting);
+  } catch (e) { next(e); }
+});
+
+adminRouter.patch('/meetings/:id/briefing', requireAdminToken(), async (req, res, next) => {
+  try {
+    const { department, data } = req.body;
+    if (!department || !data) return res.status(400).json(err('MISSING_FIELDS', 'department and data are required'));
+    const meeting = await db.updateMeetingBriefing(req.params.id, department, data);
+    if (!meeting) return res.status(404).json(err('NOT_FOUND', 'Meeting not found'));
+    res.json(meeting);
   } catch (e) { next(e); }
 });
 
@@ -1246,18 +1359,18 @@ adminRouter.get('/meetings/:id/action-items', requireAdminToken(), async (req, r
 
 adminRouter.post('/meetings/:id/action-items', requireAdminToken(['gm']), async (req, res, next) => {
   try {
-    const { title, owner_agent } = req.body;
+    const { title, owner_agent, department, priority } = req.body;
     if (!title) return res.status(400).json(err('MISSING_FIELDS', 'title is required'));
     const meeting = await db.getMeetingById(req.params.id);
     if (!meeting) return res.status(404).json(err('NOT_FOUND', 'Meeting not found'));
-    const item = await db.createActionItem({ meeting_id: req.params.id, title, owner_agent });
+    const item = await db.createActionItem({ meeting_id: req.params.id, title, owner_agent, department, priority });
     res.status(201).json(item);
   } catch (e) { next(e); }
 });
 
 adminRouter.patch('/meetings/:id/action-items/:aid', requireAdminToken(['gm']), async (req, res, next) => {
   try {
-    const allowed = ['status', 'owner_agent'];
+    const allowed = ['status', 'owner_agent', 'department', 'priority'];
     const updates = Object.fromEntries(Object.entries(req.body).filter(([k]) => allowed.includes(k)));
     const item = await db.patchActionItem(req.params.aid, updates);
     if (!item) return res.status(404).json(err('NOT_FOUND', 'Action item not found'));

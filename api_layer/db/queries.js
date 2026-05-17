@@ -217,6 +217,41 @@ const getRepositoryQueue = ({ pipeline, limit = 30 } = {}) => {
             WHERE r.${col}=true ${excludeUsed} ORDER BY r.processed_at ASC LIMIT $1`, [limit]);
 };
 
+const getRepositorySummary = () =>
+  q(`WITH base AS (
+       SELECT r.id, r.source_type, r.source_id, r.ready_for_intel, r.ready_for_awareness,
+              r.processed_at, i.article_id AS intel_article_id, t.article_id AS threat_article_id,
+              EXISTS (
+                SELECT 1
+                FROM briefings b
+                WHERE r.source_id = ANY(b.threat_item_ids)
+                   OR r.source_id = ANY(b.innovation_item_ids)
+                   OR r.source_id = b.growth_item_id
+              ) AS used_in_briefing
+       FROM intel_repository r
+       LEFT JOIN intel_items i ON i.id = r.source_id AND r.source_type IN ('innovation','growth','policy')
+       LEFT JOIN threat_records t ON t.id = r.source_id AND r.source_type = 'threat'
+     )
+     SELECT source_type,
+            COUNT(*)::int AS total,
+            COUNT(*) FILTER (WHERE ready_for_intel)::int AS ready_for_intel,
+            COUNT(*) FILTER (WHERE ready_for_awareness)::int AS ready_for_awareness,
+            COUNT(*) FILTER (WHERE used_in_briefing)::int AS used_in_briefing,
+            COUNT(*) FILTER (WHERE COALESCE(intel_article_id, threat_article_id) IS NOT NULL)::int AS article_linked,
+            COUNT(*) FILTER (
+              WHERE ready_for_intel
+                AND COALESCE(intel_article_id, threat_article_id) IS NULL
+            )::int AS ready_for_article,
+            COUNT(*) FILTER (
+              WHERE ready_for_awareness
+                AND NOT used_in_briefing
+            )::int AS ready_for_newsletter,
+            MIN(processed_at) AS oldest_processed_at,
+            MAX(processed_at) AS newest_processed_at
+      FROM base
+      GROUP BY source_type
+      ORDER BY source_type`);
+
 const listApprovedBriefingPreviews = () =>
   q(`SELECT b.id, b.edition_number, b.edition_date, b.subject_line, b.file_path,
             b.maya_approved_at, b.pipeline_status,
@@ -771,6 +806,28 @@ const countAgentRejections24h = (pipeline_agents) =>
       WHERE to_status='draft' AND agent_name=ANY($1) AND created_at > now()-interval '24 hours'`,
     [pipeline_agents]);
 
+const listPipelineEvents = ({ content_type, content_id, agent_name, limit = 50 } = {}) => {
+  const conds = ['1=1'];
+  const params = [];
+  if (content_type) { params.push(content_type); conds.push(`pe.content_type=$${params.length}`); }
+  if (content_id) { params.push(content_id); conds.push(`pe.content_id=$${params.length}`); }
+  if (agent_name) { params.push(agent_name); conds.push(`pe.agent_name=$${params.length}`); }
+  params.push(Math.min(Math.max(+limit || 50, 1), 200));
+  return q(`SELECT pe.*,
+              CASE pe.content_type
+                WHEN 'article' THEN a.title
+                WHEN 'briefing' THEN b.subject_line
+                ELSE tm.title
+              END AS content_title
+            FROM pipeline_events pe
+            LEFT JOIN articles a ON a.id=pe.content_id AND pe.content_type='article'
+            LEFT JOIN briefings b ON b.id=pe.content_id AND pe.content_type='briefing'
+            LEFT JOIN training_modules tm ON tm.id=pe.content_id AND pe.content_type='training'
+            WHERE ${conds.join(' AND ')}
+            ORDER BY pe.created_at DESC
+            LIMIT $${params.length}`, params);
+};
+
 // ── RISK REGISTER ──────────────────────────────────────────────────────────────
 
 const createRisk = ({ domain, title, description, severity, score, owner_agent, raised_by, due_date }) =>
@@ -860,10 +917,10 @@ const createEscalation = ({ from_agent, to_agent, reason, content_id, severity }
 const countActiveThreats = () =>
   q1("SELECT COUNT(*) AS count FROM threat_records");
 
-const createMeeting = ({ title, type, convener, initiated_by, agenda }) =>
-  q1(`INSERT INTO meetings (id,title,type,convener,initiated_by,agenda)
-      VALUES (gen_random_uuid(),$1,$2,$3,$4,$5) RETURNING *`,
-    [title, type, convener, initiated_by, agenda || null]);
+const createMeeting = ({ title, type, convener, initiated_by, agenda, lead, decision_maker, records_agent }) =>
+  q1(`INSERT INTO meetings (id,title,type,convener,initiated_by,agenda,lead,decision_maker,records_agent)
+      VALUES (gen_random_uuid(),$1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+    [title, type, convener, initiated_by, agenda || null, lead || null, decision_maker || null, records_agent || null]);
 
 const listMeetings = ({ status, limit = 20 } = {}) => {
   const conds = ['1=1'];
@@ -876,16 +933,20 @@ const listMeetings = ({ status, limit = 20 } = {}) => {
 const getMeetingById = (id) =>
   q1('SELECT * FROM meetings WHERE id=$1', [id]);
 
-const createActionItem = ({ meeting_id, title, owner_agent }) =>
-  q1(`INSERT INTO meeting_action_items (id,meeting_id,title,owner_agent)
-      VALUES (gen_random_uuid(),$1,$2,$3) RETURNING *`,
-    [meeting_id, title, owner_agent || null]);
+const updateMeetingBriefing = (id, department, data) =>
+  q1(`UPDATE meetings SET briefings = jsonb_set(briefings, ARRAY[$2], $3::jsonb, true) WHERE id=$1 RETURNING *`,
+    [id, department, JSON.stringify(data)]);
+
+const createActionItem = ({ meeting_id, title, owner_agent, department, priority }) =>
+  q1(`INSERT INTO meeting_action_items (id,meeting_id,title,owner_agent,department,priority)
+      VALUES (gen_random_uuid(),$1,$2,$3,$4,$5) RETURNING *`,
+    [meeting_id, title, owner_agent || null, department || null, priority || 'medium']);
 
 const listActionItems = (meeting_id) =>
   q('SELECT * FROM meeting_action_items WHERE meeting_id=$1 ORDER BY created_at ASC', [meeting_id]);
 
 const patchActionItem = (id, fields) => {
-  const allowed = ['status', 'owner_agent', 'resolved_at'];
+  const allowed = ['status', 'owner_agent', 'resolved_at', 'department', 'priority'];
   const safe = Object.fromEntries(Object.entries(fields).filter(([k]) => allowed.includes(k)));
   if (safe.status === 'resolved' && !safe.resolved_at) safe.resolved_at = new Date().toISOString();
   const sets = Object.keys(safe).map((k, i) => `${k}=$${i + 2}`).join(',');
@@ -902,10 +963,10 @@ module.exports = {
   getAgentToken, rotateAgentToken,
   createThreatRecord, getThreatRecords, getThreatById, linkThreatToArticle,
   createIntelItem, getIntelItems, getIntelRadarItems,
-  processIntoRepository, getRepositoryQueue, listApprovedBriefingPreviews, getRepositoryItemDetail, getApprovedContentReferences,
+  processIntoRepository, getRepositoryQueue, getRepositorySummary, listApprovedBriefingPreviews, getRepositoryItemDetail, getApprovedContentReferences,
   createArticle, getArticle, getArticleById, listArticles, listArticlesForPreview, advanceArticleStatus, incrementArticleViews,
   createBriefing, getBriefingByDate, getBriefingById, listBriefings, advanceBriefingStatus, revertBriefingForRevision,
-  logPipelineEvent, countRejections, countAgentRejections24h,
+  logPipelineEvent, countRejections, countAgentRejections24h, listPipelineEvents,
   createSocialPost, updateSocialMetrics, listSocialPosts, getSocialPerformance,
   createTrainingModule, listTrainingModules, getTrainingModule, advanceModuleStatus,
   recordCompletion, getUserCompletions, getOrgCompletions, getOrgCompletionSummary,
@@ -922,6 +983,6 @@ module.exports = {
   getAgentHealthSummary, logAuditEvent, getAuditLog,
   createEscalation,
   countActiveThreats,
-  createMeeting, listMeetings, getMeetingById,
+  createMeeting, listMeetings, getMeetingById, updateMeetingBriefing,
   createActionItem, listActionItems, patchActionItem,
 };

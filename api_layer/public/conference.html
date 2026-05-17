@@ -169,11 +169,11 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
     <!-- Meeting list -->
     <div class="conf-list">
       <div class="conf-list-header">
-        <span class="conf-list-title">Meetings</span>
-        <button class="new-meeting-btn" onclick="showNewMeetingForm()">+ New meeting</button>
+        <span class="conf-list-title">Formal Briefings</span>
+        <button class="new-meeting-btn" onclick="showNewMeetingForm()">+ New</button>
       </div>
       <div id="meeting-list" style="overflow-y:auto;flex:1;">
-        <div style="padding:20px 14px;text-align:center;color:var(--color-text-tertiary);font-size:12px;">Loading meetings…</div>
+        <div style="padding:20px 14px;text-align:center;color:var(--color-text-tertiary);font-size:12px;">Loading briefings…</div>
       </div>
     </div>
 
@@ -181,7 +181,7 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
     <div class="conf-detail" id="conf-detail">
       <div class="cd-empty" id="cd-empty">
         <svg width="40" height="40" viewBox="0 0 40 40" fill="none" style="opacity:.3;"><rect x="4" y="8" width="32" height="26" rx="3" stroke="currentColor" stroke-width="2"/><path d="M14 8V6M26 8V6M4 16h32" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        <span style="font-size:13px;">Select a meeting or create a new one</span>
+        <span style="font-size:13px;">Select a formal briefing or initiate a new session</span>
       </div>
     </div>
   </div>
@@ -190,17 +190,23 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
 
 <script>
 const MGMT_AGENTS = [
+  { id:'barret',  name:'Barret',  color:'#1D9E75', role:'Coordination (Lead)' },
   { id:'henry',   name:'Henry',   color:'#185FA5', role:'General Manager' },
-  { id:'valerie', name:'Valerie', color:'#7F77DD', role:'Strategy' },
-  { id:'victor',  name:'Victor',  color:'#E24B4A', role:'Risk' },
-  { id:'barret',  name:'Barret',  color:'#1D9E75', role:'Coordination' },
-  { id:'maya',    name:'Maya',    color:'#185FA5', role:'Managing Editor' },
   { id:'cy',      name:'Cy',      color:'#E24B4A', role:'CISO' },
+  { id:'laura',   name:'Laura',   color:'#BA7517', role:'Records' },
+  { id:'valerie', name:'Valerie', color:'#7F77DD', role:'Strategy' },
+  { id:'maya',    name:'Maya',    color:'#185FA5', role:'Managing Editor' },
+];
+
+const TEMPLATES = [
+  { id: 'sync', title: 'Weekly Sync', icon: '🔄', desc: 'Mon @ 1000 — Status & Goals' },
+  { id: 'security', title: 'Security Brief', icon: '🛡️', desc: 'Tue @ 1300 — Health & Vulns' },
+  { id: 'training', title: 'Training Sync', icon: '🎓', desc: 'Thu @ 1400 — Content & Reach' },
+  { id: 'eow', title: 'End of Week', icon: '🏁', desc: 'Fri @ 1400 — Results & Risk' },
 ];
 
 let meetings = [];
 let activeMeetingId = null;
-let newMeetingParticipants = [];
 
 function initials(name) {
   return name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
@@ -219,283 +225,175 @@ function timeStr(ts) {
 
 async function loadMeetings() {
   try {
-    const data = await CS.Auth.apiFetch('/api/ops/meetings');
-    meetings = data.data || data || [];
-  } catch (e) {
-    meetings = getSampleMeetings();
-  }
-  renderMeetingList();
-}
-
-function getSampleMeetings() {
-  return [
-    {
-      id: 'mtg-001',
-      title: 'Weekly Operational Review',
-      initiated_by: 'executive',
-      status: 'completed',
-      created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
-      participants: ['henry','valerie','barret'],
-      transcript: [
-        { speaker:'executive', name:'Executive', color:'#185FA5', ts: new Date(Date.now()-86400000*2+600000).toISOString(), text:'Good morning. Let\'s review the pipeline status and open risk items before the week begins.' },
-        { speaker:'henry', name:'Henry', color:'#185FA5', ts: new Date(Date.now()-86400000*2+660000).toISOString(), text:'Good morning. Pipeline is running at 94% on-time rate this week. The awareness briefing has delivered on schedule for 6 consecutive editions. Two risk items require your attention: the NovaTech renewal risk (45 days out) and the training completion SLA for two enterprise clients.' },
-        { speaker:'barret', name:'Barret', color:'#1D9E75', ts: new Date(Date.now()-86400000*2+720000).toISOString(), text:'Pipeline handoff metrics are clean across intel and awareness. The only SLA concern is training — Alex is aware and has a remediation plan in place for the two affected clients.' },
-        { speaker:'valerie', name:'Valerie', color:'#7F77DD', ts: new Date(Date.now()-86400000*2+780000).toISOString(), text:'The FinServ negotiation is progressing. I\'d recommend a decision point by end of week on the NovaTech account — Joe has context and should brief you directly.' },
-        { speaker:'executive', name:'Executive', color:'#185FA5', ts: new Date(Date.now()-86400000*2+840000).toISOString(), text:'Understood. Henry, confirm: NovaTech gets a priority retention outreach this week. Valerie, keep FinServ moving. Barret, confirm training SLA remediation is logged as an open ticket.' },
-      ],
-      action_items: [
-        { id:'ai-001', text:'NovaTech priority retention outreach — Joe to lead, William to support', owner:'henry', due:'May 7', done:false },
-        { id:'ai-002', text:'Training SLA remediation plan logged as open ticket in Agent Status', owner:'barret', due:'May 5', done:true },
-        { id:'ai-003', text:'FinServ negotiation decision point by EOW', owner:'valerie', due:'May 8', done:false },
-      ],
-    },
-    {
-      id: 'mtg-002',
-      title: 'Security Posture Review — CSDP',
-      initiated_by: 'cy',
-      status: 'completed',
-      created_at: new Date(Date.now() - 86400000).toISOString(),
-      participants: ['henry','cy','owen'],
-      transcript: [
-        { speaker:'cy', name:'Cy', color:'#E24B4A', ts: new Date(Date.now()-86400000+300000).toISOString(), text:'Escalating to CSDP. CVE-2026-41940 in cPanel affects our hosting infrastructure. Exploitation was confirmed in the wild before disclosure. Owen has patch readiness assessment.' },
-        { speaker:'owen', name:'Owen', color:'#BA7517', ts: new Date(Date.now()-86400000+360000).toISOString(), text:'Our cPanel instance is on an affected branch. Patch is available. Estimated deployment: 2 hours with 15-minute maintenance window. No current indicators of compromise on our instance — Quinn has reviewed credential logs.' },
-        { speaker:'henry', name:'Henry', color:'#185FA5', ts: new Date(Date.now()-86400000+420000).toISOString(), text:'Authorize the patch deployment. Schedule the maintenance window tonight at 0200 CT. Cy, confirm once complete and update the CSDP log.' },
-        { speaker:'cy', name:'Cy', color:'#E24B4A', ts: new Date(Date.now()-86400000+480000).toISOString(), text:'Acknowledged. CSDP decision logged. Owen will execute tonight. I will confirm completion and update the open risk register. Note: this CVE appears in our edition 116 published today — brand integrity is preserved, patch will be complete before next cycle.' },
-      ],
-      action_items: [
-        { id:'ai-004', text:'Deploy cPanel CVE-2026-41940 patch at 0200 CT tonight', owner:'owen', due:'May 4', done:true },
-        { id:'ai-005', text:'CSDP completion log entry by Cy after deployment', owner:'cy', due:'May 4', done:false },
-        { id:'ai-006', text:'Close CVE-2026-41940 open risk item after patch confirmation', owner:'cy', due:'May 5', done:false },
-      ],
-    },
-  ];
+    const data = await CS.Auth.apiFetch('/api/admin/meetings');
+    meetings = data.data || [];
+    renderMeetingList();
+  } catch (e) { console.error('Load error:', e); }
 }
 
 function renderMeetingList() {
   const container = document.getElementById('meeting-list');
   if (!meetings.length) {
-    container.innerHTML = '<div style="padding:20px 14px;text-align:center;color:var(--color-text-tertiary);font-size:12px;">No meetings yet. Create one to begin.</div>';
+    container.innerHTML = '<div style="padding:20px 14px;text-align:center;color:var(--color-text-tertiary);font-size:12px;">No briefings found.</div>';
     return;
   }
   container.innerHTML = meetings.map(m => {
-    const initiatorLabel = m.initiated_by === 'executive' ? 'Executive' :
-      (MGMT_AGENTS.find(a => a.id === m.initiated_by)?.name || m.initiated_by);
     const statusBadge = m.status === 'active'
       ? '<span style="font-size:10px;padding:1px 6px;border-radius:4px;background:#EAF3DE;color:#3B6D11;font-weight:600;">LIVE</span>'
-      : '<span style="font-size:10px;color:var(--color-text-tertiary);">Completed</span>';
-    const chips = (m.participants || []).slice(0,4).map(p => {
-      const agent = MGMT_AGENTS.find(a => a.id === p);
-      return agent ? `<span class="mi-agent-chip">${agent.name}</span>` : '';
-    }).join('');
-    const openItems = (m.action_items || []).filter(a => !a.done).length;
+      : '<span style="font-size:10px;color:var(--color-text-tertiary);">Archived</span>';
+    
     return `
       <div class="meeting-item ${activeMeetingId === m.id ? 'active' : ''}" onclick="selectMeeting('${m.id}')">
         <div class="mi-title">${escHtml(m.title)}</div>
-        <div class="mi-meta">${timeStr(m.created_at)} · ${statusBadge} ${openItems ? `· <span style="color:#BA7517;">${openItems} open item${openItems>1?'s':''}</span>` : ''}</div>
-        <div class="mi-meta" style="margin-top:2px;">Initiated by ${escHtml(initiatorLabel)}</div>
-        <div class="mi-agents" style="margin-top:6px;">${chips}</div>
+        <div class="mi-meta">${timeStr(m.created_at)} · ${statusBadge}</div>
+        <div class="mi-meta" style="margin-top:2px;">Lead: ${m.lead || '—'} · Records: ${m.records_agent || '—'}</div>
       </div>`;
   }).join('');
 }
 
-function selectMeeting(id) {
+async function selectMeeting(id) {
   activeMeetingId = id;
   renderMeetingList();
-  const m = meetings.find(x => x.id === id);
-  if (!m) return;
-  renderMeetingDetail(m);
+  try {
+    const m = await CS.Auth.apiFetch('/api/admin/meetings/' + id);
+    const actionItems = await CS.Auth.apiFetch('/api/admin/meetings/' + id + '/action-items');
+    m.action_items = actionItems.data || [];
+    renderMeetingDetail(m);
+  } catch (e) { console.error('Select error:', e); }
 }
 
 function renderMeetingDetail(m) {
   const detail = document.getElementById('conf-detail');
-  const openItems = (m.action_items || []).filter(a => !a.done);
-  const allItems = m.action_items || [];
+  const briefings = m.briefings || {};
+  const departments = Object.keys(briefings);
 
-  const transcriptHtml = (m.transcript || []).map(msg => {
-    const isExec = msg.speaker === 'executive';
+  const briefingsHtml = departments.map(dept => {
+    const data = briefings[dept];
     return `
-      <div class="transcript-msg">
-        <div class="tm-avatar" style="background:${msg.color || '#94a3b8'};">${initials(msg.name)}</div>
-        <div class="tm-content">
-          <div class="tm-header">
-            <span class="tm-name">${escHtml(msg.name)}</span>
-            <span class="tm-time">${timeStr(msg.ts)}</span>
-          </div>
-          <div class="tm-text${isExec ? ' executive' : ''}">${escHtml(msg.text)}</div>
+      <div class="card" style="padding:16px;margin-bottom:16px;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <span class="badge b-blue" style="text-transform:uppercase;letter-spacing:0.05em;">${dept}</span>
+          <span style="font-size:11px;color:var(--color-text-tertiary);">Status: Healthy</span>
         </div>
+        <div style="font-size:12px;color:var(--color-text-secondary);white-space:pre-wrap;">${escHtml(typeof data === 'string' ? data : JSON.stringify(data, null, 2))}</div>
       </div>`;
   }).join('');
 
-  const actionItemsHtml = allItems.map(item => `
+  const actionItemsHtml = (m.action_items || []).map(item => `
     <div class="action-item">
-      <div class="ai-check${item.done ? ' done' : ''}" onclick="toggleActionItem('${m.id}','${item.id}')"></div>
+      <div class="ai-check${item.status === 'resolved' ? ' done' : ''}" onclick="toggleActionItem('${m.id}','${item.id}','${item.status}')"></div>
       <div class="ai-body">
-        <div class="ai-text" style="${item.done ? 'text-decoration:line-through;color:var(--color-text-tertiary);' : ''}">${escHtml(item.text)}</div>
-        <div class="ai-meta">Owner: ${escHtml(item.owner)} · Due: ${escHtml(item.due)}</div>
+        <div class="ai-text" style="${item.status === 'resolved' ? 'text-decoration:line-through;color:var(--color-text-tertiary);' : ''}">${escHtml(item.title)}</div>
+        <div class="ai-meta">
+          <span class="badge b-gray">${item.department || 'General'}</span> 
+          Owner: ${escHtml(item.owner_agent || 'Unassigned')} · Priority: ${item.priority}
+        </div>
       </div>
-      ${item.done ? '<span class="badge b-green">Done</span>' : '<span class="badge b-amber">Open</span>'}
     </div>`).join('');
-
-  const participantChips = (m.participants || []).map(p => {
-    const agent = MGMT_AGENTS.find(a => a.id === p);
-    if (!agent) return '';
-    return `<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);font-size:12px;">
-      <span style="width:8px;height:8px;border-radius:50%;background:${agent.color};display:inline-block;"></span>${agent.name}
-    </span>`;
-  }).join('');
 
   detail.innerHTML = `
     <div class="cd-header">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;">
         <div>
           <div class="cd-title">${escHtml(m.title)}</div>
-          <div class="cd-meta">${timeStr(m.created_at)} · ${m.status === 'active' ? '<span style="color:#1D9E75;font-weight:500;">Active</span>' : 'Completed'} · ${allItems.length} action item${allItems.length!==1?'s':''} (${openItems.length} open)</div>
+          <div class="cd-meta">${timeStr(m.created_at)} · Lead: <strong>${m.lead}</strong> · Decision-Maker: <strong>${m.decision_maker}</strong></div>
         </div>
-        ${m.status === 'active' ? '<button onclick="closeMeeting(\'' + m.id + '\')" style="padding:6px 14px;background:#E24B4A;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;">Close meeting</button>' : ''}
+        <button class="new-meeting-btn" style="background:var(--color-text-info);" onclick="addQuickActionItem('${m.id}')">+ Action Item</button>
       </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">${participantChips}</div>
     </div>
     <div class="cd-body">
-      ${allItems.length ? `<div class="section-hd">Action items</div>${actionItemsHtml}` : ''}
-      <div class="section-hd">Meeting record</div>
-      ${transcriptHtml || '<div style="font-size:12px;color:var(--color-text-tertiary);">No transcript available.</div>'}
+      <div style="display:grid;grid-template-columns: 1fr 300px; gap: 20px;">
+        <div>
+          <div class="section-hd">Departmental Briefings</div>
+          ${briefingsHtml || '<div style="padding:40px;text-align:center;color:var(--color-text-tertiary);background:var(--color-background-secondary);border-radius:8px;border:1px dashed var(--color-border-tertiary);">Waiting for departments to check in…</div>'}
+          
+          <div class="section-hd" style="margin-top:24px;">Agenda</div>
+          <div style="padding:16px;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:8px;font-size:12px;color:var(--color-text-secondary);white-space:pre-wrap;line-height:1.6;">${escHtml(m.agenda || 'No formal agenda defined.')}</div>
+        </div>
+        
+        <div>
+          <div class="section-hd">Post-Briefing Checklist</div>
+          ${actionItemsHtml || '<div style="font-size:11px;color:var(--color-text-tertiary);">No action items yet.</div>'}
+        </div>
+      </div>
     </div>`;
 }
 
-function toggleActionItem(meetingId, itemId) {
-  const m = meetings.find(x => x.id === meetingId);
-  if (!m) return;
-  const item = m.action_items.find(i => i.id === itemId);
-  if (item) item.done = !item.done;
-  renderMeetingDetail(m);
-  renderMeetingList();
-  // Persist via API (best-effort)
-  CS.Auth.apiFetch('/api/ops/meetings/' + meetingId + '/actions/' + itemId, {
-    method: 'PATCH',
-    body: JSON.stringify({ done: item.done }),
-  }).catch(() => {});
-}
-
-function closeMeeting(meetingId) {
-  const m = meetings.find(x => x.id === meetingId);
-  if (!m) return;
-  m.status = 'completed';
-  CS.Auth.apiFetch('/api/ops/meetings/' + meetingId, {
-    method: 'PATCH',
-    body: JSON.stringify({ status: 'completed' }),
-  }).catch(() => {});
-  renderMeetingList();
-  renderMeetingDetail(m);
-}
-
-function showNewMeetingForm() {
+async function showNewMeetingForm() {
   activeMeetingId = null;
-  newMeetingParticipants = [];
   renderMeetingList();
 
   const detail = document.getElementById('conf-detail');
-  const agentChips = MGMT_AGENTS.map(a => `
-    <div class="agent-chip" id="nmp-${a.id}" onclick="toggleParticipant('${a.id}',this)">
-      ${a.name} <span style="font-size:10px;color:inherit;opacity:.7;">— ${a.role}</span>
-    </div>`).join('');
+  
+  const templateCards = TEMPLATES.map(t => `
+    <div class="card" onclick="initiateTemplatedMeeting('${t.id}')" style="padding:16px;cursor:pointer;border:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);transition:all 0.12s;border-radius:8px;">
+      <div style="font-size:20px;margin-bottom:8px;">${t.icon}</div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:4px;">${t.title}</div>
+      <div style="font-size:11px;color:var(--color-text-tertiary);">${t.desc}</div>
+    </div>
+  `).join('');
 
   detail.innerHTML = `
     <div class="cd-header">
-      <div class="cd-title">New meeting</div>
-      <div class="cd-meta">Human executive-initiated · Permanent audit record</div>
+      <div class="cd-title">Initiate Formal Briefing</div>
+      <div class="cd-meta">Select a standing meeting template to begin.</div>
     </div>
     <div class="cd-body">
-      <div class="new-meeting-form">
-        <label class="form-label">Meeting title</label>
-        <input class="form-input" id="nm-title" placeholder="e.g. Weekly Operational Review" />
-
-        <label class="form-label">Agenda</label>
-        <textarea class="form-textarea" id="nm-agenda" rows="3" placeholder="Describe the meeting objective and any key items to address…"></textarea>
-
-        <label class="form-label">Participants <span style="font-weight:400;color:var(--color-text-tertiary);">(select management-layer agents)</span></label>
-        <div class="agent-selector">${agentChips}</div>
-
-        <label class="form-label">Opening statement</label>
-        <textarea class="form-textarea" id="nm-opening" rows="2" placeholder="Your opening message to the participants…"></textarea>
-
-        <div>
-          <button class="form-btn" onclick="createMeeting()">Start meeting</button>
-          <button class="form-btn secondary" onclick="cancelNewMeeting()">Cancel</button>
-        </div>
-        <div id="nm-error" style="display:none;margin-top:10px;font-size:12px;color:var(--color-text-danger);"></div>
+      <div style="display:grid;grid-template-columns: repeat(2, 1fr); gap: 16px; max-width: 600px; margin: 0 auto; margin-top: 40px;">
+        ${templateCards}
+      </div>
+      <div style="text-align:center;margin-top:40px;">
+        <button class="form-btn secondary" onclick="cancelNewMeeting()">Cancel</button>
       </div>
     </div>`;
 }
 
-function toggleParticipant(agentId, el) {
-  const idx = newMeetingParticipants.indexOf(agentId);
-  if (idx === -1) {
-    newMeetingParticipants.push(agentId);
-    el.classList.add('selected');
-  } else {
-    newMeetingParticipants.splice(idx, 1);
-    el.classList.remove('selected');
-  }
+async function initiateTemplatedMeeting(type) {
+  try {
+    const meeting = await CS.Auth.apiFetch('/api/admin/meetings', {
+      method: 'POST',
+      body: JSON.stringify({ template_type: type }),
+    });
+    meetings.unshift(meeting);
+    selectMeeting(meeting.id);
+  } catch (e) { alert('Failed to initiate meeting: ' + e.message); }
 }
 
-async function createMeeting() {
-  const title = document.getElementById('nm-title').value.trim();
-  const agenda = document.getElementById('nm-agenda').value.trim();
-  const opening = document.getElementById('nm-opening').value.trim();
-  const errorEl = document.getElementById('nm-error');
-
-  if (!title) { errorEl.textContent = 'Meeting title is required.'; errorEl.style.display='block'; return; }
-  if (!newMeetingParticipants.length) { errorEl.textContent = 'Select at least one participant.'; errorEl.style.display='block'; return; }
-
-  errorEl.style.display = 'none';
-
+async function addQuickActionItem(meetingId) {
+  const title = prompt('Action Item Title:');
+  if (!title) return;
+  const owner = prompt('Assign to Agent:');
+  const dept = prompt('Department:');
+  
   try {
-    let newMeeting;
-    try {
-      const data = await CS.Auth.apiFetch('/api/ops/meetings', {
-        method: 'POST',
-        body: JSON.stringify({ title, agenda, participants: newMeetingParticipants, opening_message: opening }),
-      });
-      newMeeting = data.meeting || data;
-    } catch (e) {
-      // Build local meeting if API not yet available
-      newMeeting = {
-        id: 'mtg-' + Date.now(),
-        title,
-        agenda,
-        initiated_by: 'executive',
-        status: 'active',
-        created_at: new Date().toISOString(),
-        participants: newMeetingParticipants,
-        transcript: opening ? [{ speaker:'executive', name:'Executive', color:'#185FA5', ts: new Date().toISOString(), text: opening }] : [],
-        action_items: [],
-      };
-    }
+    await CS.Auth.apiFetch('/api/admin/meetings/' + meetingId + '/action-items', {
+      method: 'POST',
+      body: JSON.stringify({ title, owner_agent: owner, department: dept, priority: 'medium' }),
+    });
+    selectMeeting(meetingId);
+  } catch (e) { alert('Failed to add item: ' + e.message); }
+}
 
-    meetings.unshift(newMeeting);
-    activeMeetingId = newMeeting.id;
-    renderMeetingList();
-    renderMeetingDetail(newMeeting);
-  } catch (err) {
-    errorEl.textContent = err.message || 'Failed to create meeting.';
-    errorEl.style.display = 'block';
-  }
+async function toggleActionItem(meetingId, itemId, currentStatus) {
+  const newStatus = currentStatus === 'resolved' ? 'open' : 'resolved';
+  try {
+    await CS.Auth.apiFetch('/api/admin/meetings/' + meetingId + '/action-items/' + itemId, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: newStatus }),
+    });
+    selectMeeting(meetingId);
+  } catch (e) { console.error('Toggle error:', e); }
 }
 
 function cancelNewMeeting() {
   document.getElementById('conf-detail').innerHTML = `
     <div class="cd-empty" id="cd-empty">
       <svg width="40" height="40" viewBox="0 0 40 40" fill="none" style="opacity:.3;"><rect x="4" y="8" width="32" height="26" rx="3" stroke="currentColor" stroke-width="2"/><path d="M14 8V6M26 8V6M4 16h32" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      <span style="font-size:13px;">Select a meeting or create a new one</span>
+      <span style="font-size:13px;">Select a formal briefing or initiate a new session</span>
     </div>`;
 }
 
 document.addEventListener('cs:login', (e) => {
-  const u = e.detail;
-  const label = document.getElementById('nav-user-label');
-  if (label && u) label.textContent = (u.full_name || u.email || '') + (u.admin_role?.role ? ' — ' + u.admin_role.role.toUpperCase() : '');
-  const btn = document.getElementById('nav-logout');
-  if (btn) btn.style.display = 'inline-block';
   loadMeetings();
 });
 </script>

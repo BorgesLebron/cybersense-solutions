@@ -12,6 +12,7 @@ const { pollPeterTasks }        = require('./peter_runtime');
 const { pollEdTasks }           = require('./ed_runtime');
 const { pollRickTasks }         = require('./rick_runtime');
 const { pollIvanCharlieTasks }  = require('./ivan_charlie_runtime');
+const { pollBarbaraTasks }      = require('./barbara_runtime');
 const { pollMayaTasks }         = require('./maya_runtime');
 const { sendBriefingEmail }     = require('./sendgrid');
 const sgMail = require('@sendgrid/mail');
@@ -868,6 +869,7 @@ function startScheduler() {
     cron.schedule('*/2 4-9 * * 0-4', pollEdTasks,                  { timezone: 'America/Chicago' });
     cron.schedule('*/2 * * * *',      pollMayaTasks,                { timezone: 'America/Chicago' });
     cron.schedule('0 */4 * * *',     pollRickTasks,                 { timezone: 'America/Chicago' });
+    cron.schedule('30 */4 * * *',    pollBarbaraTasks,              { timezone: 'America/Chicago' });
     cron.schedule('45 5 * * *',      pollIvanCharlieTasks,          { timezone: 'America/Chicago' });
     console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SCHEDULER_STARTED', jobs: 24 }));
   } catch (e) {
@@ -900,5 +902,6 @@ module.exports = {
   pollEdTasks,
   pollMayaTasks,
   pollRickTasks,
+  pollBarbaraTasks,
   pollIvanCharlieTasks,
 };
