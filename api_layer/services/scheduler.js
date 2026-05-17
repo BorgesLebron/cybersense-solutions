@@ -366,6 +366,7 @@ async function runKirbyDailyCycle() {
        WHERE agent_name    = 'Kirby'
          AND task_type     = 'production'
          AND content_type  = 'training_byte'
+         AND status        IN ('queued','in_progress','complete')
          AND started_at   >= (($1::date)::timestamp AT TIME ZONE 'America/Chicago')
          AND started_at   <  (($1::date + interval '1 day')::timestamp AT TIME ZONE 'America/Chicago')
        LIMIT 1`,
@@ -713,6 +714,7 @@ async function runRuthDailyCycle() {
          FROM agent_tasks
          WHERE agent_name = 'Ruth'
            AND task_type = 'daily_cycle'
+           AND status IN ('queued','in_progress','complete')
            AND started_at >= (($1::date)::timestamp AT TIME ZONE 'America/Chicago')
            AND started_at <  (($1::date + interval '1 day')::timestamp AT TIME ZONE 'America/Chicago')
          ORDER BY started_at ASC
