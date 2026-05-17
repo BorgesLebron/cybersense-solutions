@@ -133,6 +133,20 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
 .nl-chat-send{margin-top:8px;padding:8px 12px;border:0;border-radius:8px;background:#185FA5;color:#fff;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;}
 .nl-chat-send:disabled{opacity:.55;cursor:not-allowed;}
 @media(max-width:900px){.nl-status-card{grid-template-columns:1fr}.nl-pipeline{grid-template-columns:repeat(2,1fr)}}
+.pc-trigger-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:0.5px solid var(--color-border-tertiary);}
+.pc-trigger-row:last-of-type{border-bottom:none;}
+.pc-trigger-info{flex:1;min-width:0;}
+.pc-trigger-label{font-size:12px;font-weight:600;color:var(--color-text-primary);margin-bottom:2px;}
+.pc-trigger-desc{font-size:11px;color:var(--color-text-tertiary);}
+.pc-btn{flex-shrink:0;padding:7px 14px;border:none;border-radius:7px;background:#185FA5;color:#fff;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:opacity .12s,background .12s;}
+.pc-btn:hover:not(:disabled){background:#1450a0;}
+.pc-btn:disabled{opacity:.45;cursor:not-allowed;}
+.pc-btn.loading{background:#475569;}
+.pc-btn.success{background:#16a34a;}
+.pc-btn.error{background:#dc2626;}
+.pc-log-entry{padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:12px;display:flex;gap:8px;align-items:baseline;}
+.pc-log-entry:last-child{border-bottom:none;}
+.pc-log-ts{font-size:10px;color:var(--color-text-tertiary);white-space:nowrap;}
 </style>
 </head>
 <body>
@@ -216,6 +230,10 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
       <div class="nav-item" onclick="showPanel('training',this)">
         <svg class="nav-icon" viewBox="0 0 14 14" fill="none"><path d="M7 1L1 4l6 3 6-3-6-3z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M1 7l6 3 6-3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
         Training
+      </div>
+      <div class="nav-item" onclick="showPanel('pipeline',this)">
+        <svg class="nav-icon" viewBox="0 0 14 14" fill="none"><path d="M2 4h10M2 7h7M2 10h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="11" cy="10" r="2" stroke="currentColor" stroke-width="1.2"/><path d="M11 8v-.5M11 12v.5M9 10h-.5M13 10h.5" stroke="currentColor" stroke-width="1" stroke-linecap="round"/></svg>
+        Pipeline controls
       </div>
       <div class="nav-item" onclick="showPanel('social',this)">
         <svg class="nav-icon" viewBox="0 0 14 14" fill="none"><circle cx="3.5" cy="7" r="2" stroke="currentColor" stroke-width="1.2"/><circle cx="10.5" cy="3.5" r="2" stroke="currentColor" stroke-width="1.2"/><circle cx="10.5" cy="10.5" r="2" stroke="currentColor" stroke-width="1.2"/><path d="M5.4 6l3.2-1.7M5.4 8l3.2 1.7" stroke="currentColor" stroke-width="1.2"/></svg>
@@ -414,6 +432,61 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
         <button class="ask-btn" onclick="sendPrompt('What agentic capabilities do Maya and the department heads need to diagnose and unblock newsletter production without manual DB inspection?','maya')">Define department-head agentic capabilities -></button>
       </div>
 
+      <!-- PIPELINE CONTROLS -->
+      <div class="panel" id="p-pipeline">
+        <div class="panel-title">Pipeline controls</div>
+        <div class="panel-sub">Manual triggers for missed or failed production cron windows — Kirby (04:00 CT) → Ruth (04:30 CT) → Peter → Ed → Jeff → Maya → HITL → Laura</div>
+        <div class="metric-row">
+          <div class="met"><div class="met-lbl">Training byte today</div><div class="met-val" id="pc-byte-val">—</div><div class="met-delta nt" id="pc-byte-note">Loading...</div></div>
+          <div class="met"><div class="met-lbl">Next edition stage</div><div class="met-val" id="pc-brief-val">—</div><div class="met-delta nt" id="pc-brief-note">Loading...</div></div>
+          <div class="met"><div class="met-lbl">Barbara queue</div><div class="met-val" id="pc-barb-val">—</div><div class="met-delta nt" id="pc-barb-note">Loading...</div></div>
+          <div class="met"><div class="met-lbl">Pending distribution</div><div class="met-val" id="pc-dist-val">—</div><div class="met-delta nt" id="pc-dist-note">Loading...</div></div>
+        </div>
+        <div class="grid2">
+          <div class="card">
+            <div class="card-hd">Production pipeline <span id="pc-prod-badge" class="badge b-gray">Loading</span></div>
+            <div class="pc-trigger-row">
+              <div class="pc-trigger-info">
+                <div class="pc-trigger-label">Kirby — Training Byte</div>
+                <div class="pc-trigger-desc" id="pc-kirby-desc">Checking...</div>
+              </div>
+              <button class="pc-btn" id="btn-kirby" onclick="triggerPipeline('kirby-cycle','btn-kirby','Trigger Kirby')" disabled>Trigger Kirby</button>
+            </div>
+            <div class="pc-trigger-row">
+              <div class="pc-trigger-info">
+                <div class="pc-trigger-label">Ruth — Briefing Composition</div>
+                <div class="pc-trigger-desc" id="pc-ruth-desc">Checking...</div>
+              </div>
+              <button class="pc-btn" id="btn-ruth" onclick="triggerPipeline('ruth-cycle','btn-ruth','Trigger Ruth')" disabled>Trigger Ruth</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-hd">Normalization &amp; Distribution</div>
+            <div class="pc-trigger-row">
+              <div class="pc-trigger-info">
+                <div class="pc-trigger-label">Barbara — Normalize Batch</div>
+                <div class="pc-trigger-desc" id="pc-barb-desc">Checking...</div>
+              </div>
+              <button class="pc-btn" id="btn-barbara" onclick="triggerPipeline('barbara-batch','btn-barbara','Run Barbara')" disabled>Run Barbara</button>
+            </div>
+            <div class="pc-trigger-row">
+              <div class="pc-trigger-info">
+                <div class="pc-trigger-label">Distribution — Send to Subscribers</div>
+                <div class="pc-trigger-desc" id="pc-dist-desc">Checking...</div>
+              </div>
+              <button class="pc-btn" id="btn-dist" onclick="triggerPipeline('briefing-distribution','btn-dist','Send Briefing')" disabled>Send Briefing</button>
+            </div>
+            <div style="margin-top:10px;padding:9px 10px;background:var(--color-background-tertiary);border-radius:6px;font-size:11px;color:var(--color-text-tertiary);line-height:1.5;">
+              Distribution only sends <strong>approved</strong> editions. Confirm HITL authorization in Preview &amp; Production before triggering.
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:10px;">
+          <div class="card-hd">Trigger log <button style="font-size:11px;color:var(--color-text-tertiary);background:none;border:none;cursor:pointer;padding:0;" onclick="document.getElementById('pc-log').innerHTML=''">Clear</button></div>
+          <div id="pc-log" style="font-size:12px;max-height:130px;overflow-y:auto;min-height:32px;color:var(--color-text-tertiary);">No triggers fired this session.</div>
+        </div>
+      </div>
+
       <!-- TRAINING -->
       <div class="panel" id="p-training">
         <div class="panel-title">Training report</div>
@@ -585,6 +658,7 @@ document.addEventListener('cs:login', (e) => {
   loadRadarData();
   loadInnovationRadarData();
   loadNewsletterStatus();
+  loadPipelineControlStatus();
 });
 
 function ccEscape(value) {
@@ -906,6 +980,109 @@ function renderNewsletterEvents(events) {
       <div class="feed-time">${fmtTime(ev.created_at)}${ev.notes ? ' - ' + esc(ev.notes).slice(0, 120) : ''}</div>
     </div>
   </div>`).join('');
+}
+
+async function loadPipelineControlStatus() {
+  try {
+    const data = await CS.Auth.apiFetch('/api/admin/pipeline/controls-status');
+    const { training_byte, briefing, barbara_queue, pending_distribution } = data;
+
+    // Training byte
+    const byteOk = !!training_byte;
+    document.getElementById('pc-byte-val').textContent = byteOk ? 'Produced' : 'Missing';
+    document.getElementById('pc-byte-val').className = 'met-val ' + (byteOk ? 'up' : 'dn');
+    document.getElementById('pc-byte-note').textContent = byteOk ? (training_byte.title || '').slice(0, 44) : 'Kirby has not produced today';
+    document.getElementById('pc-kirby-desc').textContent = byteOk
+      ? 'Byte produced at ' + fmtTime(training_byte.published_at)
+      : 'No training byte for today — trigger Kirby first';
+    const btnKirby = document.getElementById('btn-kirby');
+    if (!btnKirby.classList.contains('success') && !btnKirby.classList.contains('loading')) btnKirby.disabled = byteOk;
+
+    // Briefing stage
+    const stage = briefing?.pipeline_status || null;
+    document.getElementById('pc-brief-val').textContent = stage || 'Not started';
+    document.getElementById('pc-brief-val').className = 'met-val ' + (!stage ? 'dn' : stage === 'published' ? 'up' : 'nt');
+    document.getElementById('pc-brief-note').textContent = briefing ? 'Edition ' + briefing.edition_number : 'No briefing initiated yet';
+    document.getElementById('pc-prod-badge').textContent = stage || 'Not started';
+    document.getElementById('pc-prod-badge').className = 'badge ' + (!stage ? 'b-red' : stage === 'published' || stage === 'approved' ? 'b-green' : 'b-amber');
+    document.getElementById('pc-ruth-desc').textContent = briefing
+      ? 'Briefing at stage: ' + stage + ' — Edition ' + briefing.edition_number
+      : byteOk ? 'Training byte ready — trigger Ruth to compose' : 'Trigger Kirby first, then Ruth';
+    const btnRuth = document.getElementById('btn-ruth');
+    if (!btnRuth.classList.contains('success') && !btnRuth.classList.contains('loading')) btnRuth.disabled = !!briefing;
+
+    // Barbara queue
+    const q = barbara_queue || 0;
+    document.getElementById('pc-barb-val').textContent = q;
+    document.getElementById('pc-barb-val').className = 'met-val ' + (q > 0 ? 'nt' : 'up');
+    document.getElementById('pc-barb-note').textContent = q > 0 ? q + ' records awaiting normalization' : 'Queue clear';
+    document.getElementById('pc-barb-desc').textContent = q > 0
+      ? q + ' queued — run Barbara to normalize into intel_repository'
+      : 'Queue empty — no action needed';
+    const btnBarb = document.getElementById('btn-barbara');
+    if (!btnBarb.classList.contains('success') && !btnBarb.classList.contains('loading')) btnBarb.disabled = q === 0;
+
+    // Distribution
+    const distOk = !!pending_distribution;
+    document.getElementById('pc-dist-val').textContent = distOk ? 'Ready' : 'None';
+    document.getElementById('pc-dist-val').className = 'met-val ' + (distOk ? 'up' : 'nt');
+    document.getElementById('pc-dist-note').textContent = distOk
+      ? 'Edition ' + pending_distribution.edition_number + ' approved and waiting'
+      : 'No approved edition pending send';
+    document.getElementById('pc-dist-desc').textContent = distOk
+      ? 'Edition ' + pending_distribution.edition_number + ' approved — ready to distribute to subscribers'
+      : 'No approved edition for today';
+    const btnDist = document.getElementById('btn-dist');
+    if (!btnDist.classList.contains('success') && !btnDist.classList.contains('loading')) btnDist.disabled = !distOk;
+
+  } catch (e) { console.error('Pipeline controls status load failed:', e); }
+}
+
+async function triggerPipeline(endpoint, btnId, label) {
+  const btn = document.getElementById(btnId);
+  if (!btn || btn.disabled) return;
+  btn.disabled = true;
+  btn.textContent = 'Running...';
+  btn.classList.add('loading');
+
+  const log = document.getElementById('pc-log');
+  const ts = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+  try {
+    const result = await CS.Auth.apiFetch('/api/admin/trigger/' + endpoint, { method: 'POST' });
+    btn.textContent = 'Done';
+    btn.classList.remove('loading');
+    btn.classList.add('success');
+
+    const entry = document.createElement('div');
+    entry.className = 'pc-log-entry';
+    entry.innerHTML = `<span class="pc-log-ts">${esc(ts)}</span><span class="badge b-green">OK</span><span>${esc(result.message || 'Triggered successfully')}</span>`;
+    if (log.firstChild) log.insertBefore(entry, log.firstChild);
+    else log.appendChild(entry);
+    if (log.textContent.trim() === 'No triggers fired this session.') log.innerHTML = '';
+
+    setTimeout(() => {
+      btn.textContent = label;
+      btn.classList.remove('success');
+      loadPipelineControlStatus();
+    }, 3000);
+  } catch (e) {
+    btn.textContent = 'Failed';
+    btn.classList.remove('loading');
+    btn.classList.add('error');
+
+    const entry = document.createElement('div');
+    entry.className = 'pc-log-entry';
+    entry.innerHTML = `<span class="pc-log-ts">${esc(ts)}</span><span class="badge b-red">ERR</span><span>${esc(e.message || 'Trigger failed')}</span>`;
+    if (log.firstChild) log.insertBefore(entry, log.firstChild);
+    else log.appendChild(entry);
+
+    setTimeout(() => {
+      btn.textContent = label;
+      btn.classList.remove('error');
+      btn.disabled = false;
+    }, 4000);
+  }
 }
 
 function appendMayaMessage(message, role = 'system') {
