@@ -220,10 +220,41 @@ async function produceDailyTrainingByte(task) {
   }
 }
 
+/**
+ * Posts a weekly status report to the active meeting.
+ * Triggered on Mondays or when manually requested.
+ */
+async function postKirbyWeeklyStatus() {
+  const ts = new Date().toISOString();
+  try {
+    const stats = await db.getGlobalTrainingSummary();
+    await postAgentStatusToActiveMeeting('Kirby', 'training', {
+      event: 'WEEKLY_STATUS_REPORT',
+      status: 'Operational',
+      ...stats,
+      alignment_mode: 'thematic',
+      note: 'Kirby is synchronized with the day\'s top news for all Training Byte generation.'
+    });
+    console.log(JSON.stringify({ ts, runtime: 'kirby', event: 'WEEKLY_STATUS_POSTED' }));
+  } catch (e) {
+    console.warn(JSON.stringify({ ts, runtime: 'kirby', event: 'WEEKLY_STATUS_FAILED', error: e.message }));
+  }
+}
+
 // ── Poll loop ─────────────────────────────────────────────────────────────────
 
 async function pollKirbyTasks() {
   try {
+    // 1. Check for Monday weekly status (Today is Monday, May 18, 2026)
+    const now = new Date();
+    if (now.getDay() === 1 && now.getHours() >= 4 && now.getHours() <= 12) {
+      // Check if we already posted a weekly status to the most recent meeting
+      const meeting = await db.getRecentMeeting({ hours: 12 });
+      if (meeting && meeting.type === 'operational' && (!meeting.briefings?.training || meeting.briefings.training.event !== 'WEEKLY_STATUS_REPORT')) {
+        await postKirbyWeeklyStatus();
+      }
+    }
+
     const tasks = await db.pool.query(`
       SELECT * FROM agent_tasks
       WHERE agent_name = 'Kirby'
