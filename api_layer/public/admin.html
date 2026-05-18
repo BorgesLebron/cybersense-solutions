@@ -339,26 +339,16 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
         <div class="panel-title">Intel brief report</div>
         <div class="panel-sub">Pipeline managed by James → Jason → Rob → Jeff → Maya → Laura</div>
         <div class="metric-row r3">
-          <div class="met"><div class="met-lbl">Articles published (MTD)</div><div class="met-val">68</div><div class="met-delta up">+12 vs last month</div></div>
-          <div class="met"><div class="met-lbl">Avg time to publish</div><div class="met-val">4.2h</div><div class="met-delta up">Down from 6.1h</div></div>
-          <div class="met"><div class="met-lbl">Subscriber reads (avg)</div><div class="met-val">1,840</div><div class="met-delta up">+8% WoW</div></div>
+          <div class="met"><div class="met-lbl">Articles published (MTD)</div><div class="met-val" id="intel-mtd-count">-</div><div class="met-delta nt" id="intel-mtd-sub">Loading...</div></div>
+          <div class="met"><div class="met-lbl">Avg time to publish</div><div class="met-val" id="intel-avg-time">-</div><div class="met-delta nt">Published articles</div></div>
+          <div class="met"><div class="met-lbl">Avg subscriber reads</div><div class="met-val" id="intel-avg-views">-</div><div class="met-delta nt">Per article</div></div>
         </div>
         <div class="grid2">
-          <div class="card"><div class="card-hd">Articles by section</div>
-            <div class="progress-row"><span class="progress-lbl">Threat intel</span><div class="progress-bar"><div class="bar-fill" style="width:55%;background:#E24B4A;"></div></div><span class="progress-val">55%</span></div>
-            <div class="progress-row"><span class="progress-lbl">Policy updates</span><div class="progress-bar"><div class="bar-fill" style="width:18%;background:#378ADD;"></div></div><span class="progress-val">18%</span></div>
-            <div class="progress-row"><span class="progress-lbl">Innovation</span><div class="progress-bar"><div class="bar-fill" style="width:14%;background:#7F77DD;"></div></div><span class="progress-val">14%</span></div>
-            <div class="progress-row"><span class="progress-lbl">Pro growth</span><div class="progress-bar"><div class="bar-fill" style="width:8%;background:#1D9E75;"></div></div><span class="progress-val">8%</span></div>
-            <div class="progress-row"><span class="progress-lbl">Training</span><div class="progress-bar"><div class="bar-fill" style="width:5%;background:#BA7517;"></div></div><span class="progress-val">5%</span></div>
-          </div>
+          <div class="card"><div class="card-hd">Articles by section</div><div id="intel-section-bars">Loading...</div></div>
           <div class="card"><div class="card-hd">Editorial pipeline status</div>
             <table class="tbl">
-              <tr><th>Stage</th><th>Agent</th><th>Queue</th><th>Avg time</th></tr>
-              <tr><td>Acquisition</td><td>James</td><td>5 items</td><td>45 min</td></tr>
-              <tr><td>Dev edit</td><td>Jason</td><td>3 items</td><td>1.2h</td></tr>
-              <tr><td>EIC review</td><td>Rob</td><td>2 items</td><td>40 min</td></tr>
-              <tr><td>QA</td><td>Jeff</td><td>1 item</td><td>25 min</td></tr>
-              <tr><td>Final approval</td><td>Maya</td><td>1 item</td><td>15 min</td></tr>
+              <thead><tr><th>Stage</th><th>Agent</th><th>Queue</th></tr></thead>
+              <tbody id="intel-pipeline-tbody"><tr><td colspan="3" style="text-align:center;color:#666;padding:12px;">Loading...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -687,6 +677,7 @@ document.addEventListener('cs:login', (e) => {
   if (btn) btn.style.display = 'inline-block';
   loadCommandCenterSummary();
   loadRadarData();
+  loadIntelBriefData();
   loadInnovationRadarData();
   loadNewsletterStatus();
   loadPipelineControlStatus();
@@ -856,6 +847,69 @@ async function loadRadarData() {
       row.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
     });
   } catch (e) { console.error('Radar load failed:', e); }
+}
+
+async function loadIntelBriefData() {
+  const SECTION_META = [
+    { key: 'threat',     label: 'Threat intel',   color: '#E24B4A' },
+    { key: 'policy',     label: 'Policy updates',  color: '#378ADD' },
+    { key: 'innovation', label: 'Innovation',       color: '#7F77DD' },
+    { key: 'growth',     label: 'Pro growth',       color: '#1D9E75' },
+    { key: 'training',   label: 'Training',         color: '#BA7517' },
+  ];
+  const STAGE_META = [
+    { stage: 'draft',      label: 'Acquisition',     agent: 'James' },
+    { stage: 'dev_edit',   label: 'Dev edit',         agent: 'Jason' },
+    { stage: 'eic_review', label: 'EIC review',       agent: 'Rob'   },
+    { stage: 'qa',         label: 'QA',               agent: 'Jeff'  },
+    { stage: 'maya',       label: 'Final approval',   agent: 'Maya'  },
+    { stage: 'approved',   label: 'HITL pending',     agent: 'Hector'},
+  ];
+  try {
+    const { published, pipeline } = await CS.Auth.apiFetch('/api/admin/intel-brief');
+
+    const mtd   = +(published.mtd_count  || 0);
+    const total = +(published.total_published || 0);
+    const avgH  = parseFloat(published.avg_hours_to_publish) || 0;
+    const avgV  = +(published.avg_views || 0);
+
+    document.getElementById('intel-mtd-count').textContent = mtd;
+    document.getElementById('intel-mtd-sub').textContent   = total + ' total published';
+    document.getElementById('intel-avg-time').textContent  = avgH < 1
+      ? Math.round(avgH * 60) + 'm'
+      : avgH.toFixed(1) + 'h';
+    document.getElementById('intel-avg-views').textContent = avgV >= 1000
+      ? (avgV / 1000).toFixed(1) + 'k'
+      : avgV || '-';
+
+    const barsEl = document.getElementById('intel-section-bars');
+    if (total === 0) {
+      barsEl.innerHTML = '<div style="color:#666;font-size:13px;padding:8px 0;">No published articles yet</div>';
+    } else {
+      barsEl.innerHTML = SECTION_META.map(({ key, label, color }) => {
+        const count = +(published[key + '_count'] || 0);
+        const pct   = Math.round((count / total) * 100);
+        return `<div class="progress-row">
+          <span class="progress-lbl">${label}</span>
+          <div class="progress-bar"><div class="bar-fill" style="width:${pct}%;background:${color};"></div></div>
+          <span class="progress-val">${count}</span>
+        </div>`;
+      }).join('');
+    }
+
+    const queueMap = Object.fromEntries(pipeline.map(r => [r.stage, +r.queue_count]));
+    const tbody = document.getElementById('intel-pipeline-tbody');
+    const rows = STAGE_META.map(({ stage, label, agent }) => {
+      const count = queueMap[stage] || 0;
+      return `<tr><td>${label}</td><td>${agent}</td><td>${count ? count + (count === 1 ? ' item' : ' items') : '—'}</td></tr>`;
+    });
+    tbody.innerHTML = rows.join('');
+  } catch (e) {
+    console.error('Intel Brief load failed:', e);
+    document.getElementById('intel-mtd-count').textContent = 'Err';
+    const tbody = document.getElementById('intel-pipeline-tbody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#a33;padding:12px;">Unable to load intel brief data</td></tr>';
+  }
 }
 
 async function loadInnovationRadarData() {

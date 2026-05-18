@@ -483,6 +483,24 @@ const advanceArticleStatus = (id, to_status) =>
 
 const incrementArticleViews = (id) => q('UPDATE articles SET view_count=view_count+1 WHERE id=$1', [id]);
 
+const getPublishedArticleStats = () =>
+  q1(`SELECT
+    COUNT(*) FILTER (WHERE published_at >= date_trunc('month', now())) AS mtd_count,
+    ROUND(AVG(EXTRACT(EPOCH FROM (published_at - created_at)) / 3600)::numeric, 1) AS avg_hours_to_publish,
+    ROUND(AVG(view_count)::numeric, 0) AS avg_views,
+    COUNT(*) FILTER (WHERE section = 'threat')     AS threat_count,
+    COUNT(*) FILTER (WHERE section = 'policy')     AS policy_count,
+    COUNT(*) FILTER (WHERE section = 'innovation') AS innovation_count,
+    COUNT(*) FILTER (WHERE section = 'growth')     AS growth_count,
+    COUNT(*) FILTER (WHERE section = 'training')   AS training_count,
+    COUNT(*) AS total_published
+  FROM articles WHERE pipeline_status = 'published'`);
+
+const getArticlePipelineQueue = () =>
+  q(`SELECT pipeline_status::text AS stage, COUNT(*) AS queue_count
+     FROM articles WHERE pipeline_status::text != 'published'
+     GROUP BY pipeline_status::text`);
+
 // ── BRIEFINGS ──────────────────────────────────────────────────────────────────
 
 const createBriefing = ({ edition_date, edition_number, subject_line, body_md, threat_item_ids, innovation_item_ids, growth_item_id, training_byte_id, file_path, description }) =>
@@ -980,6 +998,7 @@ module.exports = {
   createIntelItem, getIntelItems, getIntelRadarItems,
   processIntoRepository, getRepositoryQueue, getRepositorySummary, listApprovedBriefingPreviews, getRepositoryItemDetail, getApprovedContentReferences,
   createArticle, getArticle, getArticleById, listArticles, listArticlesForPreview, advanceArticleStatus, incrementArticleViews,
+  getPublishedArticleStats, getArticlePipelineQueue,
   createBriefing, getBriefingByDate, getBriefingById, listBriefings, advanceBriefingStatus, revertBriefingForRevision,
   logPipelineEvent, countRejections, countAgentRejections24h, listPipelineEvents,
   createSocialPost, updateSocialMetrics, listSocialPosts, getSocialPerformance,
