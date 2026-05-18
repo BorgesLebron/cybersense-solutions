@@ -170,12 +170,12 @@ const getIntelRadarItems = ({ type, limit = 50 } = {}) => {
 
 // ── INTEL REPOSITORY ───────────────────────────────────────────────────────────
 
-const processIntoRepository = ({ source_type, source_id, normalized_data, correlation_tags, processed_by, ready_for_intel, ready_for_awareness }) =>
-  q1(`INSERT INTO intel_repository (id,source_type,source_id,normalized_data,correlation_tags,ready_for_intel,ready_for_awareness,processed_by,processed_at)
-      VALUES (gen_random_uuid(),$1,$2,$3,$4,$5,$6,$7,now())
-      ON CONFLICT (source_id) DO UPDATE SET normalized_data=$3,correlation_tags=$4,ready_for_intel=$5,ready_for_awareness=$6,processed_by=$7,processed_at=now()
+const processIntoRepository = ({ source_type, source_id, normalized_data, correlation_tags, processed_by, ready_for_intel, ready_for_awareness, source_tier = null }) =>
+  q1(`INSERT INTO intel_repository (id,source_type,source_id,normalized_data,correlation_tags,ready_for_intel,ready_for_awareness,processed_by,processed_at,source_tier)
+      VALUES (gen_random_uuid(),$1,$2,$3,$4,$5,$6,$7,now(),$8)
+      ON CONFLICT (source_id) DO UPDATE SET normalized_data=$3,correlation_tags=$4,ready_for_intel=$5,ready_for_awareness=$6,processed_by=$7,processed_at=now(),source_tier=$8
       RETURNING *`,
-    [source_type, source_id, JSON.stringify(normalized_data), correlation_tags, ready_for_intel, ready_for_awareness, processed_by]);
+    [source_type, source_id, JSON.stringify(normalized_data), correlation_tags, ready_for_intel, ready_for_awareness, processed_by, source_tier]);
 
 const getRepositoryQueue = ({ pipeline, limit = 30 } = {}) => {
   const col = pipeline === 'awareness' ? 'ready_for_awareness' : 'ready_for_intel';
@@ -482,6 +482,24 @@ const advanceArticleStatus = (id, to_status) =>
       WHERE id=$1 RETURNING *`, [id, to_status, to_status, to_status, to_status]);
 
 const incrementArticleViews = (id) => q('UPDATE articles SET view_count=view_count+1 WHERE id=$1', [id]);
+
+const getPublishedArticleStats = () =>
+  q1(`SELECT
+    COUNT(*) FILTER (WHERE published_at >= date_trunc('month', now())) AS mtd_count,
+    ROUND(AVG(EXTRACT(EPOCH FROM (published_at - created_at)) / 3600)::numeric, 1) AS avg_hours_to_publish,
+    ROUND(AVG(view_count)::numeric, 0) AS avg_views,
+    COUNT(*) FILTER (WHERE section = 'threat')     AS threat_count,
+    COUNT(*) FILTER (WHERE section = 'policy')     AS policy_count,
+    COUNT(*) FILTER (WHERE section = 'innovation') AS innovation_count,
+    COUNT(*) FILTER (WHERE section = 'growth')     AS growth_count,
+    COUNT(*) FILTER (WHERE section = 'training')   AS training_count,
+    COUNT(*) AS total_published
+  FROM articles WHERE pipeline_status = 'published'`);
+
+const getArticlePipelineQueue = () =>
+  q(`SELECT pipeline_status::text AS stage, COUNT(*) AS queue_count
+     FROM articles WHERE pipeline_status::text != 'published'
+     GROUP BY pipeline_status::text`);
 
 // ── BRIEFINGS ──────────────────────────────────────────────────────────────────
 
@@ -980,6 +998,7 @@ module.exports = {
   createIntelItem, getIntelItems, getIntelRadarItems,
   processIntoRepository, getRepositoryQueue, getRepositorySummary, listApprovedBriefingPreviews, getRepositoryItemDetail, getApprovedContentReferences,
   createArticle, getArticle, getArticleById, listArticles, listArticlesForPreview, advanceArticleStatus, incrementArticleViews,
+  getPublishedArticleStats, getArticlePipelineQueue,
   createBriefing, getBriefingByDate, getBriefingById, listBriefings, advanceBriefingStatus, revertBriefingForRevision,
   logPipelineEvent, countRejections, countAgentRejections24h, listPipelineEvents,
   createSocialPost, updateSocialMetrics, listSocialPosts, getSocialPerformance,

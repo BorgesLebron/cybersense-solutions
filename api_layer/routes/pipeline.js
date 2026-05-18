@@ -97,7 +97,7 @@ router.post('/intel-items', requireAgentToken(['Ivan/Charlie', 'Henry']), async 
 // POST /api/pipeline/repository/process  (Barbara only)
 router.post('/repository/process', requireAgentToken(['Barbara', 'Henry']), async (req, res, next) => {
   try {
-    const { source_type, source_id, normalized_data, correlation_tags, ready_for_intel, ready_for_awareness } = req.body;
+    const { source_type, source_id, normalized_data, correlation_tags, ready_for_intel, ready_for_awareness, source_tier } = req.body;
 
     if (!source_type || !source_id || !normalized_data)
       return res.status(400).json(err('MISSING_FIELDS', 'source_type, source_id, normalized_data are required'));
@@ -111,6 +111,7 @@ router.post('/repository/process', requireAgentToken(['Barbara', 'Henry']), asyn
       processed_by: 'Barbara',
       ready_for_intel: ready_for_intel ?? true,
       ready_for_awareness: ready_for_awareness ?? true,
+      source_tier: source_tier ?? null,
     });
 
     await notifyAgents(['James', 'Ruth', 'Kirby'], {
