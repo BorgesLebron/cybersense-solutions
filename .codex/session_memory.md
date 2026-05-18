@@ -671,3 +671,34 @@ Boundaries:
 - `node --check db/queries.js` passed.
 - `node --check test/editorial_brains.test.js` passed.
 - `npm.cmd test` passed: 3 suites / 14 tests.
+
+## 2026-05-18 (Gwen - Jason and Rob Intel Editorial Brains)
+
+### Scope
+- Replicated the editorial brain pattern for Intel Articles using `.notes/editorialPipelinePrompts.md` as the model.
+- Added Gwen-owned Intel Article runtimes:
+  - `api_layer/services/jason_runtime.js`
+  - `api_layer/services/rob_runtime.js`
+  - `api_layer/test/intel_editorial_brains.test.js`
+- James was not added because there is no current James runtime/task trigger for article source selection and draft creation.
+- Hector explicitly authorized `api_layer/services/scheduler.js` after the initial runtime work.
+
+### Implementation
+- Jason now has an LLM developmental editor brain for article `dev_edit` tasks.
+- Rob now has an LLM Editor-in-Chief brain for article `eic_review_article` tasks.
+- Both runtimes use Google/Vercel AI SDK with env fallback order:
+  - Agent-specific key (`JASON_BRAIN_API_KEY` / `ROB_BRAIN_API_KEY`)
+  - `INTEL_EDITORIAL_BRAIN_API_KEY`
+  - `EDITORIAL_BRAIN_API_KEY`
+  - `GOOGLE_GENERATIVE_AI_API_KEY`
+- Both runtimes reject malformed output that is too short, missing canonical Intel Article sections, or starts with conversational preamble.
+- Scheduler now imports and schedules `pollJasonTasks` and `pollRobTasks`.
+- Jason and Rob poll every 2 minutes during the same Sun-Thu 04:00-09:00 CT production window as Ruth/Peter/Ed.
+- Scheduler exported both pollers and updated the startup job count from 27 to 29.
+
+### Validation
+- `node --check services/jason_runtime.js` passed.
+- `node --check services/rob_runtime.js` passed.
+- `node --check services/scheduler.js` passed.
+- `node --check test/intel_editorial_brains.test.js` passed.
+- `npm.cmd test` passed: 5 suites / 22 tests.
