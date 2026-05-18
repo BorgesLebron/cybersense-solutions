@@ -189,14 +189,18 @@ async function produceDailyTrainingByte(task) {
     // 4. Update status and notify
     await db.advanceModuleStatus(byte.id, 'published');
     
-    // 5. Post to meeting (Gemma task)
-    await postAgentStatusToActiveMeeting('Kirby', 'training', {
-      event: 'TRAINING_BYTE_PUBLISHED',
-      title: title,
-      byte_id: byte.id,
-      source_id: sourceIntel.id,
-      alignment: briefing ? 'thematic' : 'fallback'
-    });
+    // 5. Post to meeting (Gemma task) — non-critical, must not fail the cycle
+    try {
+      await postAgentStatusToActiveMeeting('Kirby', 'training', {
+        event: 'TRAINING_BYTE_PUBLISHED',
+        title: title,
+        byte_id: byte.id,
+        source_id: sourceIntel.id,
+        alignment: briefing ? 'thematic' : 'fallback'
+      });
+    } catch (meetingErr) {
+      console.warn(JSON.stringify({ ts, runtime: 'kirby', event: 'MEETING_POST_FAILED', error: meetingErr.message }));
+    }
 
     // Explicit lineage tracking for Peter and downstream audit
     await db.updateTask(task.id, { 
