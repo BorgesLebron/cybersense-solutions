@@ -231,10 +231,6 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
         <svg class="nav-icon" viewBox="0 0 14 14" fill="none"><path d="M7 1L1 4l6 3 6-3-6-3z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M1 7l6 3 6-3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
         Training
       </div>
-      <div class="nav-item" onclick="showPanel('pipeline',this)">
-        <svg class="nav-icon" viewBox="0 0 14 14" fill="none"><path d="M2 4h10M2 7h7M2 10h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="11" cy="10" r="2" stroke="currentColor" stroke-width="1.2"/><path d="M11 8v-.5M11 12v.5M9 10h-.5M13 10h.5" stroke="currentColor" stroke-width="1" stroke-linecap="round"/></svg>
-        Pipeline controls
-      </div>
       <div class="nav-item" onclick="showPanel('social',this)">
         <svg class="nav-icon" viewBox="0 0 14 14" fill="none"><circle cx="3.5" cy="7" r="2" stroke="currentColor" stroke-width="1.2"/><circle cx="10.5" cy="3.5" r="2" stroke="currentColor" stroke-width="1.2"/><circle cx="10.5" cy="10.5" r="2" stroke="currentColor" stroke-width="1.2"/><path d="M5.4 6l3.2-1.7M5.4 8l3.2 1.7" stroke="currentColor" stroke-width="1.2"/></svg>
         Social media
@@ -423,22 +419,17 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
             </div>
           </div>
         </div>
-        <button class="ask-btn" onclick="sendPrompt('What agentic capabilities do Maya and the department heads need to diagnose and unblock newsletter production without manual DB inspection?','maya')">Define department-head agentic capabilities -></button>
-      </div>
-
-      <!-- PIPELINE CONTROLS -->
-      <div class="panel" id="p-pipeline">
-        <div class="panel-title">Pipeline controls</div>
-        <div class="panel-sub">Manual triggers for missed or failed production cron windows — Kirby (04:00 CT) → Ruth (04:30 CT) → Peter → Ed → Jeff → Maya → HITL → Laura</div>
-        <div class="metric-row">
-          <div class="met"><div class="met-lbl">Training byte today</div><div class="met-val" id="pc-byte-val">—</div><div class="met-delta nt" id="pc-byte-note">Loading...</div></div>
-          <div class="met"><div class="met-lbl">Next edition stage</div><div class="met-val" id="pc-brief-val">—</div><div class="met-delta nt" id="pc-brief-note">Loading...</div></div>
-          <div class="met"><div class="met-lbl">Barbara queue</div><div class="met-val" id="pc-barb-val">—</div><div class="met-delta nt" id="pc-barb-note">Loading...</div></div>
-          <div class="met"><div class="met-lbl">Pending distribution</div><div class="met-val" id="pc-dist-val">—</div><div class="met-delta nt" id="pc-dist-note">Loading...</div></div>
-        </div>
-        <div class="grid2">
-          <div class="card">
-            <div class="card-hd">Production pipeline <span id="pc-prod-badge" class="badge b-gray">Loading</span></div>
+        <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--color-border-tertiary);">
+          <div class="panel-sub" style="margin-bottom:10px;">Pipeline controls — Manual triggers for missed or failed cron windows — Kirby (04:00 CT) → Ruth (04:30 CT) → Peter → Ed → Jeff → Maya → HITL → Laura</div>
+          <div class="metric-row">
+            <div class="met"><div class="met-lbl">Training byte today</div><div class="met-val" id="pc-byte-val">—</div><div class="met-delta nt" id="pc-byte-note">Loading...</div></div>
+            <div class="met"><div class="met-lbl">Next edition stage</div><div class="met-val" id="pc-brief-val">—</div><div class="met-delta nt" id="pc-brief-note">Loading...</div></div>
+            <div class="met"><div class="met-lbl">Barbara queue</div><div class="met-val" id="pc-barb-val">—</div><div class="met-delta nt" id="pc-barb-note">Loading...</div></div>
+            <div class="met"><div class="met-lbl">Pending distribution</div><div class="met-val" id="pc-dist-val">—</div><div class="met-delta nt" id="pc-dist-note">Loading...</div></div>
+          </div>
+          <div class="grid2">
+            <div class="card">
+              <div class="card-hd">Production pipeline <span id="pc-prod-badge" class="badge b-gray">Loading</span></div>
             <div class="pc-trigger-row">
               <div class="pc-trigger-info">
                 <div class="pc-trigger-label">Kirby — Training Byte</div>
@@ -471,7 +462,7 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
               <button class="pc-btn" id="btn-dist" onclick="triggerPipeline('briefing-distribution','btn-dist','Send Briefing')" disabled>Send Briefing</button>
             </div>
             <div style="margin-top:10px;padding:9px 10px;background:var(--color-background-tertiary);border-radius:6px;font-size:11px;color:var(--color-text-tertiary);line-height:1.5;">
-              Distribution only sends <strong>approved</strong> editions. Confirm HITL authorization in Preview &amp; Production before triggering.
+              Distribution only sends <strong>approved</strong> editions. Authorize via the HITL action above before triggering.
             </div>
           </div>
         </div>
@@ -510,6 +501,8 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
           <div class="card-hd">Trigger log <button style="font-size:11px;color:var(--color-text-tertiary);background:none;border:none;cursor:pointer;padding:0;" onclick="document.getElementById('pc-log').innerHTML=''">Clear</button></div>
           <div id="pc-log" style="font-size:12px;max-height:130px;overflow-y:auto;min-height:32px;color:var(--color-text-tertiary);">No triggers fired this session.</div>
         </div>
+        </div>
+        <button class="ask-btn" onclick="sendPrompt('What agentic capabilities do Maya and the department heads need to diagnose and unblock newsletter production without manual DB inspection?','maya')">Define department-head agentic capabilities -></button>
       </div>
 
       <!-- TRAINING -->
