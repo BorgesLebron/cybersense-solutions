@@ -315,46 +315,54 @@ function innovationArticleShell() {
   if (!container) return null;
   container.innerHTML = `
     <div class="freemium-banner" id="innovation-banner" style="display:none;">
-      <p><strong>Latest Innovation coverage.</strong> Monthly subscribers unlock full article access and the complete archive.</p>
+      <p><strong>Live Innovation Radar.</strong> Showing normalized Innovation and Professional Growth intake from the CyberSense repository.</p>
       <a href="newsletter.html#subscribe" class="btn btn-primary btn-sm">Subscribe</a>
     </div>
     <div class="category-section">
-      <div class="category-label-bar">Latest Innovations</div>
+      <div class="category-label-bar">Innovation Radar</div>
       <div class="grid-2" id="innovation-feed">
         <div style="grid-column:span 2;text-align:center;padding:40px;color:var(--cs-gray-400);font-size:14px;" id="innovation-feed-loading">
-          Loading innovation coverage...
+          Loading innovation radar...
+        </div>
+      </div>
+    </div>
+    <div class="category-section">
+      <div class="category-label-bar">Published Innovation Articles</div>
+      <div class="grid-2" id="innovation-articles">
+        <div style="grid-column:span 2;text-align:center;padding:24px;color:var(--cs-gray-400);font-size:14px;" id="innovation-articles-loading">
+          Loading published articles...
         </div>
       </div>
     </div>`;
   return document.getElementById('innovation-feed');
 }
 
-function innovationCard(article, isLocked) {
-  const teaser = article.teaser || article.summary || 'Full analysis available to subscribers.';
-  if (isLocked) {
-    return `
-      <div class="gate-wrapper" style="border-radius:var(--radius-lg);height:100%;">
-        <div class="article-card blurred" aria-hidden="true">
-          <span class="badge badge-medium">Innovation</span>
-          <div class="card-headline">${article.title}</div>
-          <div class="card-teaser">${teaser}</div>
-          <a href="#" class="card-link">Read more -></a>
-        </div>
-        <div class="gate-overlay">
-          <div class="gate-card">
-            <h3>Subscribers only</h3>
-            <p>Unlock full innovation coverage for $9/month.</p>
-            <a href="newsletter.html#subscribe" class="btn btn-primary btn-sm">Subscribe</a>
-          </div>
-        </div>
-      </div>`;
-  }
+function esc(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[ch]));
+}
+
+function formatDate(value) {
+  if (!value) return 'Not processed';
+  return new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+}
+
+function radarCard(item) {
+  const typeLabel = item.type === 'growth' ? 'Professional Growth' : 'Innovation';
+  const status = item.has_article ? 'Article linked' : item.ready_for_intel ? 'Ready for article' : 'Intake';
   return `
     <div class="article-card">
-      <span class="badge badge-medium">Innovation</span>
-      <div class="card-headline">${article.title}</div>
-      <div class="card-teaser">${teaser}</div>
-      <a href="intel/article.html?slug=${article.slug}" class="card-link">Read more -></a>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+        <span class="badge ${item.type === 'growth' ? 'badge-published' : 'badge-medium'}">${typeLabel}</span>
+        <span style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--cs-gray-400);">${esc(status)}</span>
+      </div>
+      <div class="card-headline">${esc(item.headline)}</div>
+      <div class="card-teaser">${esc(item.summary || 'Repository item is awaiting editorial expansion.')}</div>
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:14px;font-size:12px;color:var(--cs-gray-400);">
+        <span>${esc(item.category || 'uncategorized')}</span>
+        <span>${formatDate(item.processed_at || item.ingested_at)}</span>
+      </div>
     </div>`;
 }
 
@@ -368,37 +376,53 @@ async function loadInnovationFeed() {
       <div style="grid-column:span 2;">
         <div class="gate-card" style="max-width:480px;margin:0 auto;">
           <h3>Free account required</h3>
-          <p>Create a free account to access Innovation coverage. No credit card required.</p>
+          <p>Create a free account to access the live Innovation Radar. No credit card required.</p>
           <a href="#" class="btn btn-primary btn-sm" onclick="CS.Auth.showLoginModal();return false;">Sign Up Free</a>
         </div>
       </div>`;
+    document.getElementById('innovation-articles').innerHTML = '';
     return;
   }
 
   try {
     const user = CS.Auth.getUser();
     const tierRank = TIER_RANK[user?.tier || 'free'] || 0;
-    const data = await CS.Auth.apiFetch('/api/content/articles?section=innovation&limit=24');
-    const articles = data.data || [];
+    const [radarData, articleData] = await Promise.all([
+      CS.Auth.apiFetch('/api/content/innovation-radar?limit=80'),
+      CS.Auth.apiFetch('/api/content/articles?section=innovation&limit=12'),
+    ]);
+    const items = radarData.data || [];
+    const articles = articleData.data || [];
     document.getElementById('innovation-banner').style.display = 'flex';
 
-    if (articles.length === 0) {
-      grid.innerHTML = '<div style="grid-column:span 2;text-align:center;padding:40px;color:var(--cs-gray-400);font-size:14px;">New innovation coverage is coming soon.</div>';
-      return;
-    }
+    grid.innerHTML = items.length
+      ? items.map(radarCard).join('')
+      : '<div style="grid-column:span 2;text-align:center;padding:40px;color:var(--cs-gray-400);font-size:14px;">No Innovation Radar items are available yet.</div>';
 
-    grid.innerHTML = articles.map(article => {
+    document.getElementById('innovation-articles').innerHTML = articles.length ? articles.map(article => {
       const requiredRank = TIER_RANK[article.access_tier] || 0;
-      return innovationCard(article, tierRank < requiredRank);
-    }).join('');
+      const teaser = esc(article.teaser || article.summary || 'Full analysis available to subscribers.');
+      const href = article.slug ? `intel/article.html?slug=${encodeURIComponent(article.slug)}` : '#';
+      const link = tierRank < requiredRank
+        ? '<span class="card-link" aria-disabled="true">Subscriber access required</span>'
+        : `<a href="${href}" class="card-link">Read article -></a>`;
+      return `
+        <div class="article-card">
+          <span class="badge badge-medium">Innovation</span>
+          <div class="card-headline">${esc(article.title)}</div>
+          <div class="card-teaser">${teaser}</div>
+          ${link}
+        </div>`;
+    }).join('') : '<div style="grid-column:span 2;text-align:center;padding:24px;color:var(--cs-gray-400);font-size:14px;">Published Innovation articles are coming soon.</div>';
   } catch (e) {
     console.error('Innovation feed load error:', e);
-    grid.innerHTML = '<div style="grid-column:span 2;text-align:center;padding:40px;color:var(--cs-gray-400);font-size:14px;">Innovation coverage is temporarily unavailable.</div>';
+    grid.innerHTML = '<div style="grid-column:span 2;text-align:center;padding:40px;color:var(--cs-gray-400);font-size:14px;">Innovation Radar is temporarily unavailable.</div>';
   }
 }
 
 document.addEventListener('cs:login', loadInnovationFeed);
 document.addEventListener('cs:guest', loadInnovationFeed);
+loadInnovationFeed();
 </script>
 </body>
 </html>
