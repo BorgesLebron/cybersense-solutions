@@ -598,3 +598,40 @@ Boundaries:
 ### Notes
 - Tests do not require live DB access or production credentials.
 - Existing unrelated worktree changes remain present and were not reverted.
+
+## 2026-05-18 (Gwen - Edition 126 Public and Live Article Feeds)
+
+### Scope
+- Hector confirmed Edition 126 was produced manually and needed to go live on the user-facing side.
+- Hector confirmed Alan owns Threat Radar / Intel Brief panels, while Gwen owns Innovation Radar and user-facing Innovation/Growth article feeds.
+- Hector noted Alan's uncommitted shared-file work should be left alone.
+
+### Public Newsletter
+- Updated `newsletter.html` static edition fallback list to include:
+  - Edition 126
+  - Date: `2026-05-18`
+  - File: `/newsletter/2026/May/05182026_edition126.html`
+  - Subject: `The Infrastructure Vulnerability Surge`
+- This makes the manual E126 visible in the public newsletter page even if the pipeline DB/API record is behind.
+
+### Public Article Feeds
+- Updated `intelligence.html` so Professional Growth is converted at runtime from static curated cards to live `section='growth'` article data.
+- Updated `innovation.html` to replace static placeholder categories with live published Innovation articles from `/api/content/articles?section=innovation&limit=24`.
+- Updated `growth.html` to replace static/blurred placeholder content with live published Growth articles from `/api/content/articles?section=growth&limit=24`.
+- Kept the public surfaces on `/api/content/articles` rather than admin-only `/api/admin/intel-radar`.
+
+### Editorial Brains Review
+- Reviewed `.notes/editorialPipelinePrompts.md`.
+- Current `peter_runtime.js` and `ed_runtime.js` are deterministic validators only; they do not yet use LLM editorial prompts.
+- Recommended scope split:
+  - Alan owns Ruth brain because `ruth_runtime.js` is Alan's domain.
+  - Gwen owns Peter and Ed brains because `peter_runtime.js` and `ed_runtime.js` are Gwen-owned.
+- Prompt mapping:
+  - Ruth: acquisitions outline / topic selection.
+  - Peter: Developmental & Structural Editor.
+  - Ed: Editor-in-Chief final editorial authority.
+
+### Validation
+- Parsed inline scripts for `newsletter.html`, `intelligence.html`, `innovation.html`, and `growth.html` with `new Function`; all passed.
+- Ran `git diff --check` for the four edited public pages; passed with line-ending warnings only.
+- Ran `npm.cmd test` in `api_layer`; passed 2 suites / 9 tests.
