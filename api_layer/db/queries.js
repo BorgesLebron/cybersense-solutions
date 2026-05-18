@@ -1030,7 +1030,7 @@ module.exports = {
   logPipelineEvent, countRejections, countAgentRejections24h, listPipelineEvents,
   createSocialPost, updateSocialMetrics, listSocialPosts, getSocialPerformance,
   createTrainingModule, listTrainingModules, getTrainingModule, advanceModuleStatus,
-  recordCompletion, getUserCompletions, getOrgCompletions, getOrgCompletionSummary, getGlobalTrainingSummary,
+  recordCompletion, getUserCompletions, getOrgCompletions, getOrgCompletionSummary, getGlobalTrainingSummary, getGlobalTrainingSummary,
   createSimulation, recordSimulationResult, getOrgSimulations, getSimulationResults,
   createSubscription, getSubscriptionByStripeId, updateSubscription,
   listSubscriptions, getMRRSummary, logStripeEvent,

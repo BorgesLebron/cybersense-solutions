@@ -1326,6 +1326,13 @@ adminRouter.get('/intel-brief', requireAdminToken(), async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+adminRouter.get('/articles/events', requireAdminToken(), async (req, res, next) => {
+  try {
+    const events = await db.listPipelineEvents({ content_type: 'article', limit: 25 });
+    res.json({ data: events });
+  } catch (e) { next(e); }
+});
+
 adminRouter.get('/repository/items/:id', requireAdminToken(), async (req, res, next) => {
   try {
     const item = await db.getRepositoryItemDetail(req.params.id);
