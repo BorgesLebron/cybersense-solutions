@@ -560,3 +560,41 @@ Boundaries:
 - No commit was made.
 - Existing unrelated worktree changes remain present and were not reverted.
 - Jest test coverage remains a P2 hardening item.
+
+## 2026-05-17 (Gwen - Backend Jest Foundation)
+
+### Scope
+- Started backend-only Jest configuration under `api_layer`.
+- Files changed/created:
+  - `api_layer/jest.config.js`
+  - `api_layer/test/setup-env.js`
+  - `api_layer/test/integration.test.js`
+  - `api_layer/test/auth.test.js`
+  - `api_layer/server.js`
+
+### Implementation
+- Added explicit Jest config:
+  - Node test environment.
+  - Test discovery under `api_layer/test/**/*.test.js`.
+  - Shared test environment setup file.
+- Added `test/setup-env.js` to provide non-production test defaults for JWT, agent, internal, and SendGrid env vars.
+- Preserved the server testability guard so requiring `server.js` in tests exports the Express app without opening a listener when `NODE_ENV=test`.
+- Updated the Command Center integration test to mock `db.getRecentMeeting({ hours: 24 })`, matching the current summary endpoint contract.
+- Added auth helper unit tests covering:
+  - Subscriber tier rank order.
+  - `gateContent()` full-content and teaser behavior.
+  - Article pipeline transition guard behavior.
+  - Editorial agent permission presence.
+
+### Validation
+- `npm.cmd test` passed:
+  - 2 test suites.
+  - 9 tests.
+- `node --check server.js` passed.
+- `node --check test/integration.test.js` passed.
+- `node --check test/auth.test.js` passed.
+- Scoped `git diff --check` passed for Jest-related files.
+
+### Notes
+- Tests do not require live DB access or production credentials.
+- Existing unrelated worktree changes remain present and were not reverted.

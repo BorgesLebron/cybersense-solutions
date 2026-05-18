@@ -104,14 +104,16 @@ app.get('/health', (req, res) => res.json({ status: 'ok', ts: new Date().toISOSt
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SERVER_START', port: PORT, env: process.env.NODE_ENV }));
-  // Add this line right after the SERVER_START log in server.js
-  console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'PIPELINE_VERSION', version: '2.0.1' }));
-  if (process.env.NODE_ENV === 'production') {
-    const { startScheduler } = require('./services/scheduler');
-    startScheduler();
-  }
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SERVER_START', port: PORT, env: process.env.NODE_ENV }));
+    // Add this line right after the SERVER_START log in server.js
+    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'PIPELINE_VERSION', version: '2.0.1' }));
+    if (process.env.NODE_ENV === 'production') {
+      const { startScheduler } = require('./services/scheduler');
+      startScheduler();
+    }
+  });
+}
 
 module.exports = app;

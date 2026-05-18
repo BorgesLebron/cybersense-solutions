@@ -224,16 +224,20 @@ async function executeRuthDailyCycle(task) {
 
     await db.updateTask(task.id, { status: 'complete' });
 
-    // Post to meeting (Gemma task)
-    await postAgentStatusToActiveMeeting('Ruth', 'awareness', {
-      event: 'BRIEFING_SUBMITTED',
-      edition_date: editionDate,
-      briefing_id: result.id,
-      threats: threats.length,
-      innovations: innovations.length,
-      growth: !!growthItem,
-      training_byte: !!trainingByte
-    });
+    // Post to meeting (Gemma task) — non-critical, must not fail the cycle
+    try {
+      await postAgentStatusToActiveMeeting('Ruth', 'awareness', {
+        event: 'BRIEFING_SUBMITTED',
+        edition_date: editionDate,
+        briefing_id: result.id,
+        threats: threats.length,
+        innovations: innovations.length,
+        growth: !!growthItem,
+        training_byte: !!trainingByte
+      });
+    } catch (meetingErr) {
+      console.warn(JSON.stringify({ ts, runtime: 'ruth', event: 'MEETING_POST_FAILED', error: meetingErr.message }));
+    }
 
     console.log(JSON.stringify({
       ts, runtime: 'ruth', event: 'BRIEFING_SUBMITTED',

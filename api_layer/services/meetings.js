@@ -86,7 +86,26 @@ async function createMeetingFromTemplate(template_type, initiated_by) {
   });
 }
 
+/**
+ * Helper for agents to find the current active meeting and post status.
+ */
+async function postAgentStatusToActiveMeeting(agentName, department, statusData) {
+  const meeting = await db.getRecentMeeting({ hours: 12 });
+
+  if (!meeting) {
+    console.log(`[MEETINGS] No active meeting found for ${agentName} status update.`);
+    return null;
+  }
+
+  return db.updateMeetingBriefing(meeting.id, department, {
+    agent: agentName,
+    timestamp: new Date().toISOString(),
+    ...statusData
+  });
+}
+
 module.exports = {
   MEETING_TEMPLATES,
-  createMeetingFromTemplate
+  createMeetingFromTemplate,
+  postAgentStatusToActiveMeeting
 };
