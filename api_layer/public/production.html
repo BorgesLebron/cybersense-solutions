@@ -551,7 +551,7 @@ let briefings = [];
 let distributionState = {};
 
 function transformBriefing(b) {
-  const d = new Date(b.edition_date + 'T12:00:00Z');
+  const d = new Date(b.edition_date.slice(0, 10) + 'T12:00:00Z');
   return {
     id:              b.id,
     edition:         b.edition_number ? 'Edition ' + b.edition_number : 'Latest Edition',
