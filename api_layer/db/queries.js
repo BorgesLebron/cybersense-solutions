@@ -511,6 +511,25 @@ const createBriefing = ({ edition_date, edition_number, subject_line, body_md, t
 const getBriefingByDate = (date) => q1('SELECT * FROM briefings WHERE edition_date=$1', [date]);
 const getBriefingById = (id) => q1('SELECT * FROM briefings WHERE id=$1', [id]);
 
+const updateBriefingEditorial = (id, { subject_line, body_md, description }) => {
+  const updates = [];
+  const params = [id];
+  if (subject_line !== undefined) {
+    params.push(subject_line);
+    updates.push(`subject_line=$${params.length}`);
+  }
+  if (body_md !== undefined) {
+    params.push(body_md);
+    updates.push(`body_md=$${params.length}`);
+  }
+  if (description !== undefined) {
+    params.push(description);
+    updates.push(`description=$${params.length}`);
+  }
+  if (updates.length === 0) return getBriefingById(id);
+  return q1(`UPDATE briefings SET ${updates.join(', ')} WHERE id=$1 RETURNING *`, params);
+};
+
 const listBriefings = ({ page = 1, limit = 20 } = {}) => {
   const offset = (page - 1) * limit;
   return q(`SELECT id,edition_date,edition_number,subject_line,description,file_path,pipeline_status,published_at,open_count,click_count
@@ -655,6 +674,14 @@ const getOrgCompletionSummary = (org_id) =>
             COUNT(*) AS total_assigned,
             ROUND(AVG(score) FILTER (WHERE score IS NOT NULL),1) AS avg_score
      FROM training_completions WHERE org_id=$1 GROUP BY department ORDER BY department`, [org_id]);
+
+const getGlobalTrainingSummary = () =>
+  q1(`SELECT 
+        (SELECT COUNT(*) FROM training_modules WHERE pipeline_status='published') AS total_modules,
+        (SELECT COUNT(*) FROM training_modules WHERE type='training_byte' AND pipeline_status='published') AS total_bytes,
+        (SELECT COUNT(*) FROM training_completions WHERE status='completed') AS total_completions,
+        (SELECT COUNT(DISTINCT user_id) FROM training_completions) AS active_learners
+  `);
 
 // ── SIMULATIONS ────────────────────────────────────────────────────────────────
 
@@ -999,7 +1026,7 @@ module.exports = {
   processIntoRepository, getRepositoryQueue, getRepositorySummary, listApprovedBriefingPreviews, getRepositoryItemDetail, getApprovedContentReferences,
   createArticle, getArticle, getArticleById, listArticles, listArticlesForPreview, advanceArticleStatus, incrementArticleViews,
   getPublishedArticleStats, getArticlePipelineQueue,
-  createBriefing, getBriefingByDate, getBriefingById, listBriefings, advanceBriefingStatus, revertBriefingForRevision,
+  createBriefing, getBriefingByDate, getBriefingById, updateBriefingEditorial, listBriefings, advanceBriefingStatus, revertBriefingForRevision,
   logPipelineEvent, countRejections, countAgentRejections24h, listPipelineEvents,
   createSocialPost, updateSocialMetrics, listSocialPosts, getSocialPerformance,
   createTrainingModule, listTrainingModules, getTrainingModule, advanceModuleStatus,

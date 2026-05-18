@@ -598,3 +598,76 @@ Boundaries:
 ### Notes
 - Tests do not require live DB access or production credentials.
 - Existing unrelated worktree changes remain present and were not reverted.
+
+## 2026-05-18 (Gwen - Edition 126 Public and Live Article Feeds)
+
+### Scope
+- Hector confirmed Edition 126 was produced manually and needed to go live on the user-facing side.
+- Hector confirmed Alan owns Threat Radar / Intel Brief panels, while Gwen owns Innovation Radar and user-facing Innovation/Growth article feeds.
+- Hector noted Alan's uncommitted shared-file work should be left alone.
+
+### Public Newsletter
+- Updated `newsletter.html` static edition fallback list to include:
+  - Edition 126
+  - Date: `2026-05-18`
+  - File: `/newsletter/2026/May/05182026_edition126.html`
+  - Subject: `The Infrastructure Vulnerability Surge`
+- This makes the manual E126 visible in the public newsletter page even if the pipeline DB/API record is behind.
+
+### Public Article Feeds
+- Updated `intelligence.html` so Professional Growth is converted at runtime from static curated cards to live `section='growth'` article data.
+- Updated `innovation.html` to replace static placeholder categories with live published Innovation articles from `/api/content/articles?section=innovation&limit=24`.
+- Updated `growth.html` to replace static/blurred placeholder content with live published Growth articles from `/api/content/articles?section=growth&limit=24`.
+- Kept the public surfaces on `/api/content/articles` rather than admin-only `/api/admin/intel-radar`.
+
+### Editorial Brains Review
+- Reviewed `.notes/editorialPipelinePrompts.md`.
+- Current `peter_runtime.js` and `ed_runtime.js` are deterministic validators only; they do not yet use LLM editorial prompts.
+- Recommended scope split:
+  - Alan owns Ruth brain because `ruth_runtime.js` is Alan's domain.
+  - Gwen owns Peter and Ed brains because `peter_runtime.js` and `ed_runtime.js` are Gwen-owned.
+- Prompt mapping:
+  - Ruth: acquisitions outline / topic selection.
+  - Peter: Developmental & Structural Editor.
+  - Ed: Editor-in-Chief final editorial authority.
+
+### Validation
+- Parsed inline scripts for `newsletter.html`, `intelligence.html`, `innovation.html`, and `growth.html` with `new Function`; all passed.
+- Ran `git diff --check` for the four edited public pages; passed with line-ending warnings only.
+- Ran `npm.cmd test` in `api_layer`; passed 2 suites / 9 tests.
+
+## 2026-05-18 (Gwen - Peter and Ed Editorial Brains)
+
+### Scope
+- Hector authorized starting Peter and Ed brains.
+- Ruth remains Alan's domain and was not modified.
+- Gwen-owned files changed:
+  - `api_layer/services/peter_runtime.js`
+  - `api_layer/services/ed_runtime.js`
+  - `api_layer/db/queries.js` editorial helper only
+  - `api_layer/test/editorial_brains.test.js`
+
+### Implementation
+- Added Google/Vercel AI SDK brain calls to Peter and Ed using env fallback order:
+  - Peter: `PETER_BRAIN_API_KEY`, then `EDITORIAL_BRAIN_API_KEY`, then `GOOGLE_GENERATIVE_AI_API_KEY`
+  - Ed: `ED_BRAIN_API_KEY`, then `EDITORIAL_BRAIN_API_KEY`, then `GOOGLE_GENERATIVE_AI_API_KEY`
+- Added optional model envs:
+  - `PETER_BRAIN_MODEL`
+  - `ED_BRAIN_MODEL`
+  - shared `EDITORIAL_BRAIN_MODEL`
+  - default remains `gemini-1.5-flash`
+- Peter now performs LLM developmental/structural editing after composition validation and writes the revised `body_md` before advancing to `dev_edit`.
+- Ed now performs LLM EIC final review after composition validation and writes the final `body_md` before advancing to `eic_review`.
+- Added `db.updateBriefingEditorial()` to update `subject_line`, `body_md`, and/or `description` without schema changes.
+
+### Prompt Mapping
+- Peter maps to Developmental & Structural Editor prompt from `.notes/editorialPipelinePrompts.md`.
+- Ed maps to Editor-in-Chief prompt from `.notes/editorialPipelinePrompts.md`.
+- Both runtimes reject malformed model output that is too short, missing canonical sections, or starts with conversational preamble.
+
+### Validation
+- `node --check services/peter_runtime.js` passed.
+- `node --check services/ed_runtime.js` passed.
+- `node --check db/queries.js` passed.
+- `node --check test/editorial_brains.test.js` passed.
+- `npm.cmd test` passed: 3 suites / 14 tests.

@@ -13,6 +13,8 @@
 
 const crypto = require('crypto');
 const jwt    = require('jsonwebtoken');
+const { createGoogleGenerativeAI } = require('@ai-sdk/google');
+const { generateText } = require('ai');
 const db     = require('../db/queries');
 const { notifyAgents } = require('./agents');
 
@@ -20,6 +22,77 @@ const API_BASE = () =>
   process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
 
 const POLL_WINDOW_HOURS = 12;
+
+function getEdBrain() {
+  const apiKey = process.env.ED_BRAIN_API_KEY ||
+    process.env.EDITORIAL_BRAIN_API_KEY ||
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+
+  if (!apiKey) {
+    throw new Error('MISSING_ED_BRAIN_API_KEY: Ed cannot perform EIC review without an LLM brain.');
+  }
+
+  const googleAI = createGoogleGenerativeAI({ apiKey });
+  return googleAI(process.env.ED_BRAIN_MODEL || process.env.EDITORIAL_BRAIN_MODEL || 'gemini-1.5-flash');
+}
+
+const ED_SYSTEM_PROMPT = `
+You are Ed, the Editor-in-Chief for CyberSense.Solutions' Daily Digital Awareness Brief.
+
+Your role is final editorial authority before QA. Review Peter's draft as a unified product and produce the publication-ready internal edition.
+
+Editorial priorities:
+- Enforce coherence, proportional judgment, intellectual continuity, and audience trust.
+- Resolve redundancy, tonal drift, weak transitions, and section imbalance.
+- Preserve precise terminology and avoid speculative claims.
+- Maintain a disciplined professional tone without alarmism or promotional language.
+- Apply reputational and legal risk sensitivity for breaches, regulatory actions, and government activity.
+- Do not introduce new topics unless a critical narrative gap exists.
+
+Required structure:
+- Title and date
+- Opening Brief
+- Situational Awareness
+- Training Byte
+- Career Development
+- Modernization and AI Insight
+- Final Thought
+
+Output only the final newsletter text in Markdown. Do not include meta-commentary, edit notes, explanations, or references to subordinate agents.
+`.trim();
+
+function buildEdPrompt(briefing) {
+  return `
+Edition date: ${briefing.edition_date}
+Current subject line: ${briefing.subject_line}
+Threat source IDs: ${(briefing.threat_item_ids || []).join(', ')}
+Innovation source IDs: ${(briefing.innovation_item_ids || []).join(', ')}
+Growth source ID: ${briefing.growth_item_id || 'missing'}
+Training byte ID: ${briefing.training_byte_id || 'missing'}
+
+Peter draft:
+${briefing.body_md}
+`.trim();
+}
+
+function validateFinalEdition(text) {
+  const issues = [];
+  const body = (text || '').trim();
+  if (body.length < 500) issues.push('LLM final edition too short for EIC approval');
+
+  ['Opening', 'Situational Awareness', 'Training Byte', 'Career Development', 'Modernization', 'Final Thought']
+    .forEach(section => {
+      if (!body.toLowerCase().includes(section.toLowerCase())) {
+        issues.push(`LLM final edition missing ${section} section`);
+      }
+    });
+
+  if (/^(sure|certainly|here is|below is)\b/i.test(body)) {
+    issues.push('LLM final edition contains conversational preamble');
+  }
+
+  return issues;
+}
 
 // ── Token management ─────────────────────────────────────────────────────────
 
@@ -81,7 +154,7 @@ async function getBriefingForReview(contentId) {
 
 // ── EIC review ────────────────────────────────────────────────────────────────
 
-function applyEICReview(briefing) {
+async function applyEICReview(briefing) {
   const issues = [];
 
   if (!briefing.subject_line || briefing.subject_line.trim().length === 0)
@@ -98,7 +171,19 @@ function applyEICReview(briefing) {
   if (!briefing.growth_item_id)   issues.push('growth_item_id missing');
   if (!briefing.training_byte_id) issues.push('training_byte_id missing');
 
-  return { issues };
+  if (issues.length > 0) return { issues };
+
+  const { text } = await generateText({
+    model: getEdBrain(),
+    system: ED_SYSTEM_PROMPT,
+    prompt: buildEdPrompt(briefing),
+  });
+
+  const body_md = (text || '').trim();
+  const llmIssues = validateFinalEdition(body_md);
+  if (llmIssues.length > 0) return { issues: llmIssues };
+
+  return { issues: [], body_md };
 }
 
 // ── Task execution ────────────────────────────────────────────────────────────
@@ -128,7 +213,7 @@ async function executeEdEICReview(task) {
       return;
     }
 
-    const { issues } = applyEICReview(briefing);
+    const { issues, body_md } = await applyEICReview(briefing);
 
     if (issues.length > 0) {
       const error_message = `EIC review blocked — issues: ${issues.join('; ')}`;
@@ -149,10 +234,12 @@ async function executeEdEICReview(task) {
     }
 
     // Advance briefing to eic_review — AWARENESS_DISPATCH fires Jeff's task + notification
+    await db.updateBriefingEditorial(briefing.id, { body_md });
+
     await apiCall(`/api/pipeline/briefings/${briefing.id}/status`, 'PATCH', {
       to_status:  'eic_review',
       agent_name: 'Ed',
-      notes:      `EIC review complete. Editorial standards verified: subject line, composition, source integrity.`,
+      notes:      `EIC review complete. LLM final editorial review applied; subject line, composition, and source integrity verified.`,
     });
 
     await db.updateTask(task.id, { status: 'complete' });
@@ -201,4 +288,11 @@ async function pollEdTasks() {
   }
 }
 
-module.exports = { pollEdTasks, ensureEdToken };
+module.exports = {
+  pollEdTasks,
+  ensureEdToken,
+  applyEICReview,
+  buildEdPrompt,
+  validateFinalEdition,
+  ED_SYSTEM_PROMPT,
+};

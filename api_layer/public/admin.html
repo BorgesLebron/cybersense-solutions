@@ -395,6 +395,10 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
               <span class="badge b-amber" id="nl-hold-badge" title="">Hold</span>
             </div>
             <div class="nl-summary" id="nl-summary" title="">Loading summary and approval notes...</div>
+            <div id="nl-action-row" style="display:none;margin-top:12px;padding-top:10px;border-top:1px solid var(--color-border-tertiary);">
+              <div id="nl-newsletter-link" style="margin-bottom:10px;font-size:13px;"></div>
+              <div id="nl-hitl-action"></div>
+            </div>
             <div class="nl-pipeline" id="nl-pipeline"></div>
           </div>
           <div class="card nl-chat">
@@ -764,11 +768,24 @@ async function loadCommandCenterSummary() {
       const briefings = meeting.briefings || {};
       const depts = ['acquisition', 'awareness', 'training', 'security', 'production'];
       deptsEl.innerHTML = depts.map(d => {
-        const hasData = briefings[d] && Object.keys(briefings[d]).length > 0;
-        const status = hasData ? '<span class="badge b-green">Updated</span>' : '<span class="badge b-gray">Pending</span>';
-        return `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:0.5px solid var(--color-border-tertiary);">
-          <span style="font-size:11px;color:var(--color-text-tertiary);text-transform:capitalize;">${ccEscape(d)}</span>
-          ${status}
+        const b = briefings[d];
+        const hasData = b && Object.keys(b).length > 0;
+        if (!hasData) {
+          return `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:0.5px solid var(--color-border-tertiary);">
+            <span style="font-size:11px;color:var(--color-text-tertiary);text-transform:capitalize;">${ccEscape(d)}</span>
+            <span class="badge b-gray">Pending</span>
+          </div>`;
+        }
+        const time = b.timestamp ? new Date(b.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+        const summary = b.event || b.title || b.status || (b.submitted_records ? b.submitted_records + ' submitted' : 'Active');
+        return `<div style="padding:6px 0;border-bottom:0.5px solid var(--color-border-tertiary);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+            <span style="font-size:11px;color:var(--color-text-tertiary);text-transform:capitalize;font-weight:600;">${ccEscape(d)}</span>
+            <span class="badge b-green" style="font-size:9px;">${ccEscape(time)}</span>
+          </div>
+          <div style="font-size:11px;color:var(--color-text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${ccEscape(summary)}">
+            <span style="color:var(--color-text-tertiary);">${ccEscape(b.agent || 'Agent')}:</span> ${ccEscape(summary)}
+          </div>
         </div>`;
       }).join('');
     } else {
@@ -1030,6 +1047,45 @@ function renderNewsletterStatus(data) {
 
   renderNewsletterPipeline(current.stage_index || 0);
   renderNewsletterEvents(current.events || []);
+
+  const actionRow   = document.getElementById('nl-action-row');
+  const linkEl      = document.getElementById('nl-newsletter-link');
+  const hitlEl      = document.getElementById('nl-hitl-action');
+  const appBase     = 'https://cybersense.solutions';
+  const filePath    = current.file_path ? current.file_path.replace(/^\//, '') : null;
+  const publicUrl   = filePath ? `${appBase}/${filePath}` : null;
+  const isApproved  = current.pipeline_status === 'approved';
+  const isAuthorized = (current.events || []).some(ev => ev.notes && ev.notes.startsWith('Distribution authorized for 0430 CT'));
+
+  if (!filePath && !isApproved) {
+    actionRow.style.display = 'none';
+    return;
+  }
+
+  actionRow.style.display = 'block';
+
+  linkEl.innerHTML = publicUrl
+    ? `<strong>Newsletter:</strong> <a href="${esc(publicUrl)}" target="_blank" rel="noopener" style="color:var(--color-accent);word-break:break-all;">${esc(publicUrl)}</a>`
+    : `<span style="color:var(--color-text-tertiary);">Newsletter file not yet committed — add file_path to briefing record before distributing.</span>`;
+
+  if (!isApproved) {
+    hitlEl.innerHTML = '';
+    return;
+  }
+
+  if (isAuthorized) {
+    hitlEl.innerHTML = `<span class="badge b-green" style="font-size:12px;padding:5px 10px;">&#10003; Distribution authorized for 0430 CT</span>`;
+  } else {
+    hitlEl.innerHTML = `<button id="btn-confirm-dist" onclick="confirmDistribution('${esc(current.id)}')"
+      style="padding:8px 18px;background:#185FA5;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;"
+      ${!publicUrl ? 'disabled title="Set file_path before authorizing"' : ''}>
+      Authorize for 0430 CT Distribution
+    </button>
+    <div style="margin-top:6px;font-size:11px;color:var(--color-text-tertiary);">
+      This unlocks Laura's 0430 CT send for Edition ${esc(String(current.edition_number || ''))}.
+      Review the newsletter link above before confirming.
+    </div>`;
+  }
 }
 
 function renderNewsletterPipeline(activeIndex) {
@@ -1065,6 +1121,18 @@ function renderNewsletterEvents(events) {
       <div class="feed-time">${fmtTime(ev.created_at)}${ev.notes ? ' - ' + esc(ev.notes).slice(0, 120) : ''}</div>
     </div>
   </div>`).join('');
+}
+
+async function confirmDistribution(briefingId) {
+  const btn = document.getElementById('btn-confirm-dist');
+  if (btn) { btn.disabled = true; btn.textContent = 'Authorizing...'; }
+  try {
+    await CS.Auth.apiFetch(`/api/admin/briefings/${briefingId}/confirm-distribution`, { method: 'POST' });
+    await loadNewsletterStatus();
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Authorize for 0430 CT Distribution'; }
+    alert('Authorization failed: ' + (e.message || 'Unknown error'));
+  }
 }
 
 async function loadPipelineControlStatus() {

@@ -26,7 +26,7 @@
     <li><a href="intelligence.html">Intel</a></li>
     <li><a href="newsletter.html">Newsletter</a></li>
     <li><a href="training.html">Training</a></li>
-    <li><a href="growth.html" class="disabled">Proficient</a></li>
+    <li><a href="growth.html" class="active">Proficient</a></li>
     <li><a href="innovation.html">Innovation</a></li>
     <li><a href="zerotrust.html">Zero-Trust</a></li>
     <li><a href="pricing.html">Pricing</a></li>
@@ -42,7 +42,7 @@
     <li><a href="intelligence.html">Intel</a></li>
     <li><a href="newsletter.html">Newsletter</a></li>
     <li><a href="training.html">Training</a></li>
-    <li><a href="growth.html" class="disabled">Proficient</a></li>
+    <li><a href="growth.html" class="active">Proficient</a></li>
     <li><a href="innovation.html">Innovation</a></li>
     <li><a href="zerotrust.html">Zero-Trust</a></li>
     <li><a href="pricing.html">Pricing</a></li>
@@ -166,5 +166,101 @@
 <script>window.CS_API_BASE = 'https://api.cybersense.solutions';</script>
 <script src="auth.js"></script>
 <script src="main.js"></script>
+<script>
+const TIER_RANK = { free: 0, freemium: 1, monthly: 2, enterprise: 3 };
+
+function growthArticleShell() {
+  const statusBanner = document.querySelector('body > div');
+  if (statusBanner) statusBanner.textContent = 'Professional Growth coverage now reflects the latest published Growth articles.';
+
+  const container = document.querySelector('section.section .container');
+  if (!container) return null;
+  container.innerHTML = `
+    <div class="freemium-banner" id="growth-banner" style="display:none;">
+      <p><strong>Professional Growth coverage.</strong> Monthly subscribers unlock full article access and the complete archive.</p>
+      <a href="newsletter.html#subscribe" class="btn btn-primary btn-sm">Subscribe</a>
+    </div>
+    <div class="category-section">
+      <div class="category-label-bar">Professional Growth</div>
+      <div class="grid-2" id="growth-feed">
+        <div style="grid-column:span 2;text-align:center;padding:40px;color:var(--cs-gray-400);font-size:14px;" id="growth-feed-loading">
+          Loading professional growth coverage...
+        </div>
+      </div>
+    </div>`;
+  return document.getElementById('growth-feed');
+}
+
+function growthCard(article, isLocked) {
+  const teaser = article.teaser || article.summary || 'Full analysis available to subscribers.';
+  if (isLocked) {
+    return `
+      <div class="gate-wrapper" style="border-radius:var(--radius-lg);height:100%;">
+        <div class="article-card blurred" aria-hidden="true">
+          <span class="badge badge-published">Growth</span>
+          <div class="card-headline">${article.title}</div>
+          <div class="card-teaser">${teaser}</div>
+          <a href="#" class="card-link">Read more -></a>
+        </div>
+        <div class="gate-overlay">
+          <div class="gate-card">
+            <h3>Subscribers only</h3>
+            <p>Unlock full Professional Growth coverage for $9/month.</p>
+            <a href="newsletter.html#subscribe" class="btn btn-primary btn-sm">Subscribe</a>
+          </div>
+        </div>
+      </div>`;
+  }
+  return `
+    <div class="article-card">
+      <span class="badge badge-published">Growth</span>
+      <div class="card-headline">${article.title}</div>
+      <div class="card-teaser">${teaser}</div>
+      <a href="intel/article.html?slug=${article.slug}" class="card-link">Read more -></a>
+    </div>`;
+}
+
+async function loadGrowthFeed() {
+  const grid = growthArticleShell();
+  if (!grid) return;
+
+  if (!CS.Auth.isLoggedIn()) {
+    document.getElementById('growth-banner').style.display = 'flex';
+    grid.innerHTML = `
+      <div style="grid-column:span 2;">
+        <div class="gate-card" style="max-width:480px;margin:0 auto;">
+          <h3>Free account required</h3>
+          <p>Create a free account to access Professional Growth coverage. No credit card required.</p>
+          <a href="#" class="btn btn-primary btn-sm" onclick="CS.Auth.showLoginModal();return false;">Sign Up Free</a>
+        </div>
+      </div>`;
+    return;
+  }
+
+  try {
+    const user = CS.Auth.getUser();
+    const tierRank = TIER_RANK[user?.tier || 'free'] || 0;
+    const data = await CS.Auth.apiFetch('/api/content/articles?section=growth&limit=24');
+    const articles = data.data || [];
+    document.getElementById('growth-banner').style.display = 'flex';
+
+    if (articles.length === 0) {
+      grid.innerHTML = '<div style="grid-column:span 2;text-align:center;padding:40px;color:var(--cs-gray-400);font-size:14px;">New Professional Growth coverage is coming soon.</div>';
+      return;
+    }
+
+    grid.innerHTML = articles.map(article => {
+      const requiredRank = TIER_RANK[article.access_tier] || 0;
+      return growthCard(article, tierRank < requiredRank);
+    }).join('');
+  } catch (e) {
+    console.error('Growth feed load error:', e);
+    grid.innerHTML = '<div style="grid-column:span 2;text-align:center;padding:40px;color:var(--cs-gray-400);font-size:14px;">Professional Growth coverage is temporarily unavailable.</div>';
+  }
+}
+
+document.addEventListener('cs:login', loadGrowthFeed);
+document.addEventListener('cs:guest', loadGrowthFeed);
+</script>
 </body>
 </html>

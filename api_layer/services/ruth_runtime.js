@@ -1,21 +1,26 @@
 'use strict';
 
-// services/ruth_runtime.js
-// Ruth's awareness pipeline runtime. Polls agent_tasks for DAILY_CYCLE_START
-// triggers, queries intel_repository for composition items, and submits the
-// 7-item briefing package to POST /api/pipeline/briefings.
-//
-// Token strategy: self-provisions a fresh JWT at startup and stores the hash
-// in agent_tokens so requireAgentToken middleware accepts it. Requires
-// AGENT_JWT_SECRET and API_BASE_URL (defaults to localhost:PORT) in env.
-//
-// Run within the main server process — polled by the scheduler cron.
-
-const crypto = require('crypto');
-const jwt    = require('jsonwebtoken');
-const db     = require('../db/queries');
+const crypto    = require('crypto');
+const jwt       = require('jsonwebtoken');
+const Anthropic = require('@anthropic-ai/sdk');
+const db        = require('../db/queries');
 const { notifyAgents } = require('./agents');
 const { postAgentStatusToActiveMeeting } = require('./meetings');
+
+const ACQUISITIONS_SYSTEM_PROMPT = `You are the Acquisitions Editor for CyberSense: Daily Digital Awareness Brief, a daily professional intelligence newsletter focused on workforce cyber awareness, institutional resilience, and human-centric risk. You operate upstream of writing and are responsible for identifying content that is timely, credible, and directly relevant to digital awareness and professional decision-making. Do not generate prose; only provide a structured outline suitable for editorial drafting.
+
+Use the provided Topic Selection to draft the outline for the Daily Digital Awareness Brief.
+
+Draft the training Byte that goes in accordance with the theme of the letter.
+
+Produce a complete Daily Digital Awareness Brief outline that includes:
+• A unifying daily theme supported by all selected items
+• Select the three recent, compelling, and most relevant to the them for Situational Awareness entries
+• One Training Byte explanation with vulnerability and mitigation
+• One Career Development entry meeting ROI criteria
+• Two Modernization and AI Insight entries
+
+Each selected item must be justified with a one-sentence rationale linking it to the newsletter mission.`;
 
 const API_BASE = () =>
   process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
@@ -122,7 +127,73 @@ async function selectCompositionItems() {
   return { threats, innovations, growthItem, trainingByte, missing };
 }
 
-// ── Briefing content builder ──────────────────────────────────────────────────
+// ── LLM acquisitions outline ──────────────────────────────────────────────────
+
+function formatTopicSelection(threats, innovations, growthItem, trainingByte, editionDate) {
+  const nd = item => (item && item.normalized_data) || {};
+  const lines = [
+    `Edition Date: ${editionDate}`,
+    '',
+    'SITUATIONAL AWARENESS — THREAT INTELLIGENCE:',
+    ...threats.map((t, i) => {
+      const d = nd(t);
+      return [
+        `${i + 1}. ${t.title || 'Threat Advisory'}`,
+        `   CVE: ${d.cve_id || 'N/A'} | CVSS: ${d.cvss_score || 'N/A'} | Category: ${d.category || 'threat'}`,
+        d.source_url ? `   Source: ${d.source_url}` : null,
+      ].filter(Boolean).join('\n');
+    }),
+    '',
+    'MODERNIZATION AND AI INSIGHT:',
+    ...innovations.map((item, i) => {
+      const d = nd(item);
+      return [
+        `${i + 1}. ${item.title || 'Innovation Item'}`,
+        `   Category: ${d.category || 'innovation'}`,
+        d.source_url ? `   Source: ${d.source_url}` : null,
+        d.summary   ? `   Summary: ${String(d.summary).slice(0, 250)}` : null,
+      ].filter(Boolean).join('\n');
+    }),
+    '',
+    'CAREER DEVELOPMENT / PROFESSIONAL GROWTH:',
+    growthItem ? (() => {
+      const d = nd(growthItem);
+      return [
+        `1. ${growthItem.title || 'Growth Item'}`,
+        d.source_url ? `   Source: ${d.source_url}` : null,
+        d.summary   ? `   Summary: ${String(d.summary).slice(0, 250)}` : null,
+      ].filter(Boolean).join('\n');
+    })() : '(none available)',
+    '',
+    'TRAINING BYTE CONTEXT:',
+    trainingByte ? `Theme alignment: ${trainingByte.title}` : '(select from SA threats)',
+    '',
+    '---',
+    'After your outline, append one line: SUBJECT: <concise email subject line for this edition, under 60 characters>',
+  ];
+  return lines.join('\n');
+}
+
+async function buildAcquisitionsOutline(threats, innovations, growthItem, trainingByte, editionDate) {
+  const client = new Anthropic();
+  const message = await client.messages.create({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 1500,
+    system: ACQUISITIONS_SYSTEM_PROMPT,
+    messages: [{ role: 'user', content: formatTopicSelection(threats, innovations, growthItem, trainingByte, editionDate) }],
+  });
+
+  const text = (message.content[0]?.text || '').trim();
+  const subjectMatch = text.match(/^SUBJECT:\s*(.+)$/m);
+  const subjectLine = subjectMatch
+    ? subjectMatch[1].trim().slice(0, 120)
+    : (threats[0]?.title || `Daily Awareness Brief — ${editionDate}`);
+  const body_md = text.replace(/^SUBJECT:.*$/m, '').trimEnd();
+
+  return { subjectLine, body_md };
+}
+
+// ── Briefing content builder (scaffold fallback) ──────────────────────────────
 
 function buildContent(threats, innovations, growthItem) {
   const topThreat = threats[0];
@@ -210,7 +281,14 @@ async function executeRuthDailyCycle(task) {
       return;
     }
 
-    const { subjectLine, body_md } = buildContent(threats, innovations, growthItem);
+    let subjectLine, body_md;
+    try {
+      ({ subjectLine, body_md } = await buildAcquisitionsOutline(threats, innovations, growthItem, trainingByte, editionDate));
+      console.log(JSON.stringify({ ts, runtime: 'ruth', event: 'LLM_OUTLINE_GENERATED', edition_date: editionDate }));
+    } catch (llmErr) {
+      console.warn(JSON.stringify({ ts, runtime: 'ruth', event: 'LLM_FALLBACK', edition_date: editionDate, error: llmErr.message }));
+      ({ subjectLine, body_md } = buildContent(threats, innovations, growthItem));
+    }
 
     const result = await apiCall('/api/pipeline/briefings', 'POST', {
       edition_date:       editionDate,

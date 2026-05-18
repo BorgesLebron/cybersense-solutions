@@ -26,6 +26,34 @@ contentRouter.get('/articles/:slug', requireUserToken('free'), async (req, res, 
   } catch (e) { next(e); }
 });
 
+contentRouter.get('/innovation-radar', requireUserToken('free'), async (req, res, next) => {
+  try {
+    const requestedType = req.query.type;
+    const type = ['innovation', 'growth'].includes(requestedType) ? requestedType : undefined;
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 100);
+    const items = await db.getIntelRadarItems({ type, limit });
+
+    res.json({
+      data: items.map(item => ({
+        id: item.id,
+        type: item.type,
+        category: item.category,
+        headline: item.headline,
+        summary: item.summary,
+        tags: item.tags || [],
+        priority: item.priority,
+        ingested_at: item.ingested_at,
+        used_in_briefing: !!item.used_in_briefing,
+        has_article: !!item.has_article,
+        ready_for_intel: !!item.ready_for_intel,
+        ready_for_awareness: !!item.ready_for_awareness,
+        processed_at: item.processed_at,
+      })),
+      meta: { limit, type: type || 'innovation,growth' },
+    });
+  } catch (e) { next(e); }
+});
+
 contentRouter.get('/briefings', requireUserToken('free'), async (req, res, next) => {
   try {
     const { page = 1, limit = 20 } = req.query;

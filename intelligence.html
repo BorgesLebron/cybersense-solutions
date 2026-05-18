@@ -150,6 +150,27 @@ function getSectionLabel(section) {
   return map[section] || section;
 }
 
+function ensureGrowthGrid() {
+  let grid = document.getElementById('growth-grid');
+  if (grid) return grid;
+
+  const sections = Array.from(document.querySelectorAll('.category-section'));
+  const growthSection = sections.find(section => {
+    const label = section.querySelector('.category-label-bar');
+    return label && label.textContent.trim() === 'Professional Growth';
+  });
+
+  grid = growthSection ? growthSection.querySelector('.grid-2') : null;
+  if (!grid) return null;
+
+  grid.id = 'growth-grid';
+  grid.innerHTML = `
+    <div style="grid-column:span 2;text-align:center;padding:40px;color:var(--cs-gray-400);font-size:14px;" id="growth-loading">
+      Loading professional growth...
+    </div>`;
+  return grid;
+}
+
 function articleCard(article, isLocked) {
   if (isLocked) {
     return `
@@ -177,6 +198,7 @@ function articleCard(article, isLocked) {
 }
 
 function renderGuestState() {
+  ensureGrowthGrid();
   const guestHTML = `
     <div style="grid-column:span 3;border-radius:var(--radius-lg);">
       <div class="gate-card" style="max-width:480px;margin:0 auto;">
@@ -193,9 +215,11 @@ function renderGuestState() {
   document.getElementById('threat-loading').outerHTML  = guestHTML;
   document.getElementById('policy-loading').outerHTML  = policyGuest;
   document.getElementById('innovation-loading').outerHTML = guestHTML;
+  document.getElementById('growth-loading').outerHTML = policyGuest;
 }
 
 async function loadArticles() {
+  ensureGrowthGrid();
   if (!CS.Auth.isLoggedIn()) {
     renderGuestState();
     return;
@@ -211,14 +235,16 @@ async function loadArticles() {
     const threats     = articles.filter(a => a.section === 'threat');
     const policies    = articles.filter(a => a.section === 'policy');
     const innovations = articles.filter(a => a.section === 'innovation');
+    const growth      = articles.filter(a => a.section === 'growth');
 
     renderSection('threat-grid', 'threat-loading', threats, tierRank, 3);
     renderSection('policy-grid', 'policy-loading', policies, tierRank, 2);
     renderSection('innovation-grid', 'innovation-loading', innovations, tierRank, 3);
+    renderSection('growth-grid', 'growth-loading', growth, tierRank, 2);
 
   } catch(e) {
     console.error('Intel load error:', e);
-    ['threat-loading', 'policy-loading', 'innovation-loading'].forEach(id => {
+    ['threat-loading', 'policy-loading', 'innovation-loading', 'growth-loading'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.textContent = 'Content temporarily unavailable.';
     });
