@@ -15,6 +15,7 @@ const crypto = require('crypto');
 const jwt    = require('jsonwebtoken');
 const db     = require('../db/queries');
 const { notifyAgents } = require('./agents');
+const { postAgentStatusToActiveMeeting } = require('./meetings');
 
 const API_BASE = () =>
   process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
@@ -272,6 +273,18 @@ async function executeRickThreatIngest(task) {
     }
 
     await db.updateTask(task.id, { status: 'complete' });
+
+    // Post to meeting (Gemma task) - non-critical, must not fail the cycle
+    try {
+      await postAgentStatusToActiveMeeting('Rick', 'acquisition', {
+        event: 'THREAT_INGEST_COMPLETE',
+        qualifying_records: records.length,
+        submitted_records: submitted.length,
+        top_cve: submitted[0]?.cve_id || 'none'
+      });
+    } catch (meetingErr) {
+      console.warn(JSON.stringify({ ts, runtime: 'rick', event: 'MEETING_POST_FAILED', error: meetingErr.message }));
+    }
 
     console.log(JSON.stringify({
       ts, runtime: 'rick', event: 'THREAT_INGEST_COMPLETE',
