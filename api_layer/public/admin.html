@@ -482,6 +482,37 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
           </div>
         </div>
         <div class="card" style="margin-top:10px;">
+          <div class="card-hd">Editorial pipeline <span id="pc-edit-badge" class="badge b-gray">Loading</span></div>
+          <div class="pc-trigger-row">
+            <div class="pc-trigger-info">
+              <div class="pc-trigger-label">Peter — Dev Edit</div>
+              <div class="pc-trigger-desc" id="pc-peter-desc">Checking...</div>
+            </div>
+            <button class="pc-btn" id="btn-peter" onclick="triggerPipeline('peter-edit','btn-peter','Trigger Peter')" disabled>Trigger Peter</button>
+          </div>
+          <div class="pc-trigger-row">
+            <div class="pc-trigger-info">
+              <div class="pc-trigger-label">Ed — EIC Review</div>
+              <div class="pc-trigger-desc" id="pc-ed-desc">Checking...</div>
+            </div>
+            <button class="pc-btn" id="btn-ed" onclick="triggerPipeline('ed-review','btn-ed','Trigger Ed')" disabled>Trigger Ed</button>
+          </div>
+          <div class="pc-trigger-row">
+            <div class="pc-trigger-info">
+              <div class="pc-trigger-label">Jeff — QA Review</div>
+              <div class="pc-trigger-desc" id="pc-jeff-desc">Checking...</div>
+            </div>
+            <button class="pc-btn" id="btn-jeff" onclick="triggerPipeline('jeff-qa','btn-jeff','Trigger Jeff')" disabled>Trigger Jeff</button>
+          </div>
+          <div class="pc-trigger-row">
+            <div class="pc-trigger-info">
+              <div class="pc-trigger-label">Maya — Approve</div>
+              <div class="pc-trigger-desc" id="pc-maya-desc">Checking...</div>
+            </div>
+            <button class="pc-btn" id="btn-maya" onclick="triggerPipeline('maya-approve','btn-maya','Trigger Maya')" disabled>Trigger Maya</button>
+          </div>
+        </div>
+        <div class="card" style="margin-top:10px;">
           <div class="card-hd">Trigger log <button style="font-size:11px;color:var(--color-text-tertiary);background:none;border:none;cursor:pointer;padding:0;" onclick="document.getElementById('pc-log').innerHTML=''">Clear</button></div>
           <div id="pc-log" style="font-size:12px;max-height:130px;overflow-y:auto;min-height:32px;color:var(--color-text-tertiary);">No triggers fired this session.</div>
         </div>
@@ -985,7 +1016,7 @@ function renderNewsletterEvents(events) {
 async function loadPipelineControlStatus() {
   try {
     const data = await CS.Auth.apiFetch('/api/admin/pipeline/controls-status');
-    const { training_byte, briefing, barbara_queue, pending_distribution } = data;
+    const { training_byte, briefing, barbara_queue, pending_distribution, editorial = {} } = data;
 
     // Training byte
     const byteOk = !!training_byte;
@@ -1034,6 +1065,57 @@ async function loadPipelineControlStatus() {
       : 'No approved edition for today';
     const btnDist = document.getElementById('btn-dist');
     if (!btnDist.classList.contains('success') && !btnDist.classList.contains('loading')) btnDist.disabled = !distOk;
+
+    // Editorial pipeline
+    const stage = briefing?.pipeline_status || null;
+    const editAgents = [
+      { key: 'peter', label: 'Peter', stage: 'draft',      descId: 'pc-peter-desc', btnId: 'btn-peter' },
+      { key: 'ed',    label: 'Ed',    stage: 'dev_edit',   descId: 'pc-ed-desc',    btnId: 'btn-ed'    },
+      { key: 'jeff',  label: 'Jeff',  stage: 'eic_review', descId: 'pc-jeff-desc',  btnId: 'btn-jeff'  },
+      { key: 'maya',  label: 'Maya',  stage: 'qa',         descId: 'pc-maya-desc',  btnId: 'btn-maya'  },
+    ];
+
+    let editBadgeStatus = 'idle';
+    for (const a of editAgents) {
+      const t = editorial[a.key];
+      const btn = document.getElementById(a.btnId);
+      const isActiveStage = stage === a.stage;
+      const taskStatus = t?.status || null;
+      let desc = 'Waiting for upstream stage';
+      let enableBtn = false;
+
+      if (!briefing) {
+        desc = 'No active briefing';
+      } else if (taskStatus === 'complete') {
+        desc = 'Complete';
+      } else if (taskStatus === 'in_progress') {
+        desc = 'Running...';
+        editBadgeStatus = 'running';
+      } else if (taskStatus === 'failed') {
+        desc = 'Failed — ' + (t.error || 'check task log');
+        enableBtn = true;
+        editBadgeStatus = editBadgeStatus !== 'running' ? 'error' : editBadgeStatus;
+      } else if (taskStatus === 'escalated') {
+        desc = 'Escalated (SLA missed) — manual trigger required';
+        enableBtn = true;
+        editBadgeStatus = editBadgeStatus !== 'running' ? 'error' : editBadgeStatus;
+      } else if (isActiveStage) {
+        desc = taskStatus === 'queued' ? 'Queued — next poll will process' : 'Briefing is at this stage — trigger to advance';
+        enableBtn = taskStatus !== 'queued';
+        if (editBadgeStatus === 'idle') editBadgeStatus = 'active';
+      }
+
+      document.getElementById(a.descId).textContent = desc;
+      if (btn && !btn.classList.contains('success') && !btn.classList.contains('loading')) btn.disabled = !enableBtn;
+    }
+
+    const editBadge = document.getElementById('pc-edit-badge');
+    if (editBadge) {
+      const badgeMap = { idle: ['b-gray', 'Idle'], active: ['b-amber', 'Active'], running: ['b-amber', 'Running'], error: ['b-red', 'Needs action'] };
+      const [cls, lbl] = badgeMap[editBadgeStatus] || ['b-gray', 'Idle'];
+      editBadge.className = 'badge ' + cls;
+      editBadge.textContent = lbl;
+    }
 
   } catch (e) { console.error('Pipeline controls status load failed:', e); }
 }
