@@ -13,6 +13,8 @@
 
 const crypto = require('crypto');
 const jwt    = require('jsonwebtoken');
+const { createGoogleGenerativeAI } = require('@ai-sdk/google');
+const { generateText } = require('ai');
 const db     = require('../db/queries');
 const { notifyAgents } = require('./agents');
 
@@ -20,6 +22,77 @@ const API_BASE = () =>
   process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
 
 const POLL_WINDOW_HOURS = 12;
+
+function getPeterBrain() {
+  const apiKey = process.env.PETER_BRAIN_API_KEY ||
+    process.env.EDITORIAL_BRAIN_API_KEY ||
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+
+  if (!apiKey) {
+    throw new Error('MISSING_PETER_BRAIN_API_KEY: Peter cannot perform developmental editing without an LLM brain.');
+  }
+
+  const googleAI = createGoogleGenerativeAI({ apiKey });
+  return googleAI(process.env.PETER_BRAIN_MODEL || process.env.EDITORIAL_BRAIN_MODEL || 'gemini-1.5-flash');
+}
+
+const PETER_SYSTEM_PROMPT = `
+You are Peter, the Developmental and Structural Editor for CyberSense.Solutions' Daily Digital Awareness Brief.
+
+Your job is to transform Ruth's acquisitions outline or rough draft into a coherent internal editorial draft for a professional cross-functional audience: security practitioners, technologists, executives, recruiters, and institutional leaders.
+
+Editorial priorities:
+- Preserve analytical neutrality and avoid sensational framing.
+- Calibrate technical density for informed professionals, not hobbyists.
+- Improve narrative cohesion, transitions, rhythm, and section balance.
+- Preserve the source material and do not introduce unsupported topics.
+- Use disciplined CyberSense language such as "bridging the gap", "decrypting the gap", "resilient workforce", and "threat landscape" when natural.
+- Prefer "threat actors", "cybercriminals", or "actors" over "attacker".
+
+Required structure:
+- Title and date
+- Opening Notes
+- Situational Awareness
+- Training Byte
+- Career Development
+- Modernization and AI Insight
+- Final Thought
+
+Output only the revised newsletter draft in Markdown. Do not include meta-commentary, edit notes, explanations, or references to internal workflow.
+`.trim();
+
+function buildPeterPrompt(briefing) {
+  return `
+Edition date: ${briefing.edition_date}
+Current subject line: ${briefing.subject_line}
+Threat source IDs: ${(briefing.threat_item_ids || []).join(', ')}
+Innovation source IDs: ${(briefing.innovation_item_ids || []).join(', ')}
+Growth source ID: ${briefing.growth_item_id || 'missing'}
+Training byte ID: ${briefing.training_byte_id || 'missing'}
+
+Ruth draft or outline:
+${briefing.body_md}
+`.trim();
+}
+
+function validateEditedDraft(text) {
+  const issues = [];
+  const body = (text || '').trim();
+  if (body.length < 500) issues.push('LLM draft too short for publication-quality developmental edit');
+
+  ['Opening', 'Situational Awareness', 'Training Byte', 'Career Development', 'Modernization', 'Final Thought']
+    .forEach(section => {
+      if (!body.toLowerCase().includes(section.toLowerCase())) {
+        issues.push(`LLM draft missing ${section} section`);
+      }
+    });
+
+  if (/^(sure|certainly|here is|below is)\b/i.test(body)) {
+    issues.push('LLM draft contains conversational preamble');
+  }
+
+  return issues;
+}
 
 // ── Token management ─────────────────────────────────────────────────────────
 
@@ -82,7 +155,7 @@ async function getBriefingForEditing(contentId) {
 
 // ── Developmental editing ─────────────────────────────────────────────────────
 
-function applyDevEdit(briefing) {
+async function applyDevEdit(briefing) {
   const issues = [];
 
   if (!briefing.body_md || briefing.body_md.trim().length < 50)
@@ -96,7 +169,19 @@ function applyDevEdit(briefing) {
   if (!briefing.growth_item_id)    issues.push('growth_item_id missing');
   if (!briefing.training_byte_id)  issues.push('training_byte_id missing');
 
-  return { issues };
+  if (issues.length > 0) return { issues };
+
+  const { text } = await generateText({
+    model: getPeterBrain(),
+    system: PETER_SYSTEM_PROMPT,
+    prompt: buildPeterPrompt(briefing),
+  });
+
+  const body_md = (text || '').trim();
+  const llmIssues = validateEditedDraft(body_md);
+  if (llmIssues.length > 0) return { issues: llmIssues };
+
+  return { issues: [], body_md };
 }
 
 // ── Task execution ────────────────────────────────────────────────────────────
@@ -126,7 +211,7 @@ async function executePeterDevEdit(task) {
       return;
     }
 
-    const { issues } = applyDevEdit(briefing);
+    const { issues, body_md } = await applyDevEdit(briefing);
 
     if (issues.length > 0) {
       const error_message = `Dev edit blocked — composition issues: ${issues.join('; ')}`;
@@ -147,10 +232,12 @@ async function executePeterDevEdit(task) {
     }
 
     // Advance briefing to dev_edit — AWARENESS_DISPATCH fires Ed's task + notification
+    await db.updateBriefingEditorial(briefing.id, { body_md });
+
     await apiCall(`/api/pipeline/briefings/${briefing.id}/status`, 'PATCH', {
       to_status:  'dev_edit',
       agent_name: 'Peter',
-      notes:      `Developmental editing complete. Composition verified: ${briefing.threat_item_ids.length} threats, ${briefing.innovation_item_ids.length} innovations, 1 growth, 1 training byte.`,
+      notes:      `Developmental editing complete. LLM structural edit applied and composition verified: ${briefing.threat_item_ids.length} threats, ${briefing.innovation_item_ids.length} innovations, 1 growth, 1 training byte.`,
     });
 
     await db.updateTask(task.id, { status: 'complete' });
@@ -199,4 +286,11 @@ async function pollPeterTasks() {
   }
 }
 
-module.exports = { pollPeterTasks, ensurePeterToken };
+module.exports = {
+  pollPeterTasks,
+  ensurePeterToken,
+  applyDevEdit,
+  buildPeterPrompt,
+  validateEditedDraft,
+  PETER_SYSTEM_PROMPT,
+};

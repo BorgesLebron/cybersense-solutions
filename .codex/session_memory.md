@@ -635,3 +635,39 @@ Boundaries:
 - Parsed inline scripts for `newsletter.html`, `intelligence.html`, `innovation.html`, and `growth.html` with `new Function`; all passed.
 - Ran `git diff --check` for the four edited public pages; passed with line-ending warnings only.
 - Ran `npm.cmd test` in `api_layer`; passed 2 suites / 9 tests.
+
+## 2026-05-18 (Gwen - Peter and Ed Editorial Brains)
+
+### Scope
+- Hector authorized starting Peter and Ed brains.
+- Ruth remains Alan's domain and was not modified.
+- Gwen-owned files changed:
+  - `api_layer/services/peter_runtime.js`
+  - `api_layer/services/ed_runtime.js`
+  - `api_layer/db/queries.js` editorial helper only
+  - `api_layer/test/editorial_brains.test.js`
+
+### Implementation
+- Added Google/Vercel AI SDK brain calls to Peter and Ed using env fallback order:
+  - Peter: `PETER_BRAIN_API_KEY`, then `EDITORIAL_BRAIN_API_KEY`, then `GOOGLE_GENERATIVE_AI_API_KEY`
+  - Ed: `ED_BRAIN_API_KEY`, then `EDITORIAL_BRAIN_API_KEY`, then `GOOGLE_GENERATIVE_AI_API_KEY`
+- Added optional model envs:
+  - `PETER_BRAIN_MODEL`
+  - `ED_BRAIN_MODEL`
+  - shared `EDITORIAL_BRAIN_MODEL`
+  - default remains `gemini-1.5-flash`
+- Peter now performs LLM developmental/structural editing after composition validation and writes the revised `body_md` before advancing to `dev_edit`.
+- Ed now performs LLM EIC final review after composition validation and writes the final `body_md` before advancing to `eic_review`.
+- Added `db.updateBriefingEditorial()` to update `subject_line`, `body_md`, and/or `description` without schema changes.
+
+### Prompt Mapping
+- Peter maps to Developmental & Structural Editor prompt from `.notes/editorialPipelinePrompts.md`.
+- Ed maps to Editor-in-Chief prompt from `.notes/editorialPipelinePrompts.md`.
+- Both runtimes reject malformed model output that is too short, missing canonical sections, or starts with conversational preamble.
+
+### Validation
+- `node --check services/peter_runtime.js` passed.
+- `node --check services/ed_runtime.js` passed.
+- `node --check db/queries.js` passed.
+- `node --check test/editorial_brains.test.js` passed.
+- `npm.cmd test` passed: 3 suites / 14 tests.
