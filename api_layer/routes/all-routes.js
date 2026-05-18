@@ -926,6 +926,70 @@ adminRouter.post('/trigger/briefing-distribution', requireAdminToken(['gm']), as
   } catch (e) { next(e); }
 });
 
+// ── Editorial pipeline triggers (GM only) ─────────────────────────────────────
+// Manual override for escalated editorial tasks. Resets started_at so the
+// poll window catches the task regardless of when it was originally created.
+
+adminRouter.post('/trigger/peter-edit', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    await db.pool.query(`
+      UPDATE agent_tasks SET status = 'queued', started_at = now()
+      WHERE agent_name = 'Peter'
+        AND task_type = 'dev_edit_briefing'
+        AND status = 'escalated'
+        AND started_at > now() - INTERVAL '48 hours'
+    `);
+    const { pollPeterTasks } = require('../services/peter_runtime');
+    await pollPeterTasks();
+    res.json({ triggered: true, agent: 'Peter', message: 'Peter dev edit triggered. Escalated task re-queued and polled.' });
+  } catch (e) { next(e); }
+});
+
+adminRouter.post('/trigger/ed-review', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    await db.pool.query(`
+      UPDATE agent_tasks SET status = 'queued', started_at = now()
+      WHERE agent_name = 'Ed'
+        AND task_type = 'eic_review_briefing'
+        AND status = 'escalated'
+        AND started_at > now() - INTERVAL '48 hours'
+    `);
+    const { pollEdTasks } = require('../services/ed_runtime');
+    await pollEdTasks();
+    res.json({ triggered: true, agent: 'Ed', message: 'Ed EIC review triggered. Escalated task re-queued and polled.' });
+  } catch (e) { next(e); }
+});
+
+adminRouter.post('/trigger/jeff-qa', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    await db.pool.query(`
+      UPDATE agent_tasks SET status = 'queued', started_at = now()
+      WHERE agent_name = 'Jeff'
+        AND task_type = 'qa_briefing'
+        AND status = 'escalated'
+        AND started_at > now() - INTERVAL '48 hours'
+    `);
+    const { pollJeffTasks } = require('../services/jeff_runtime');
+    await pollJeffTasks();
+    res.json({ triggered: true, agent: 'Jeff', message: 'Jeff QA triggered. Escalated task re-queued and polled.' });
+  } catch (e) { next(e); }
+});
+
+adminRouter.post('/trigger/maya-approve', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    await db.pool.query(`
+      UPDATE agent_tasks SET status = 'queued', started_at = now()
+      WHERE agent_name = 'Maya'
+        AND task_type = 'approve_briefing'
+        AND status = 'escalated'
+        AND started_at > now() - INTERVAL '48 hours'
+    `);
+    const { pollMayaTasks } = require('../services/maya_runtime');
+    await pollMayaTasks();
+    res.json({ triggered: true, agent: 'Maya', message: 'Maya approval triggered. Briefing will advance to approved stage.' });
+  } catch (e) { next(e); }
+});
+
 adminRouter.get('/pipeline/controls-status', requireAdminToken(), async (req, res, next) => {
   try {
     const [trainingByte, briefing, barbaraQueue, pendingDistribution] = await Promise.all([
@@ -957,8 +1021,34 @@ adminRouter.get('/pipeline/controls-status', requireAdminToken(), async (req, re
         LIMIT 1
       `).then(r => r.rows[0] || null),
     ]);
+
+    // Editorial pipeline task states for the active (non-published) briefing
+    const activeBriefing = await db.pool.query(`
+      SELECT id FROM briefings
+      WHERE pipeline_status NOT IN ('published')
+      ORDER BY edition_date DESC LIMIT 1
+    `).then(r => r.rows[0] || null);
+
+    let editorial = { peter: null, ed: null, jeff: null, maya: null };
+
+    if (activeBriefing) {
+      const editorialTasks = await db.pool.query(`
+        SELECT DISTINCT ON (agent_name) agent_name, task_type, status, error_message
+        FROM agent_tasks
+        WHERE agent_name IN ('Peter', 'Ed', 'Jeff', 'Maya')
+          AND task_type IN ('dev_edit_briefing', 'eic_review_briefing', 'qa_briefing', 'approve_briefing')
+          AND content_id = $1
+        ORDER BY agent_name, started_at DESC
+      `, [activeBriefing.id]).then(r => r.rows);
+
+      for (const t of editorialTasks) {
+        const key = t.agent_name.toLowerCase();
+        editorial[key] = { status: t.status, task_type: t.task_type, error: t.error_message || null };
+      }
+    }
+
     res.set('Cache-Control', 'no-store');
-    res.json({ training_byte: trainingByte, briefing, barbara_queue: barbaraQueue, pending_distribution: pendingDistribution });
+    res.json({ training_byte: trainingByte, briefing, barbara_queue: barbaraQueue, pending_distribution: pendingDistribution, editorial });
   } catch (e) { next(e); }
 });
 

@@ -1,15 +1,15 @@
 'use strict';
 
-// services/ed_runtime.js
-// Ed's awareness pipeline runtime. Polls agent_tasks for eic_review_briefing
-// tasks, performs EIC final review on the dev-edited briefing, and advances
-// the briefing to qa stage via PATCH /api/pipeline/briefings/:id/status.
+// services/jeff_runtime.js
+// Jeff's awareness pipeline runtime. Polls agent_tasks for qa_briefing
+// tasks, performs QA review on the EIC-reviewed briefing, and advances
+// the briefing to the qa stage via PATCH /api/pipeline/briefings/:id/status.
 //
 // Token strategy: mirrors ruth_runtime.js — self-provisions a fresh JWT at
 // startup, stores the hash in agent_tokens. Requires AGENT_JWT_SECRET and
 // API_BASE_URL in env.
 //
-// Run within the main server process — polled by the scheduler cron.
+// Run within the main server process — triggered manually or by scheduler.
 
 const crypto = require('crypto');
 const jwt    = require('jsonwebtoken');
@@ -23,33 +23,31 @@ const POLL_WINDOW_HOURS = 12;
 
 // ── Token management ─────────────────────────────────────────────────────────
 
-let _edToken = null;
+let _jeffToken = null;
 
-async function ensureEdToken() {
-  if (_edToken) {
+async function ensureJeffToken() {
+  if (_jeffToken) {
     try {
-      jwt.verify(_edToken, process.env.AGENT_JWT_SECRET);
-      return _edToken;
-    } catch (_) {
-      // Token expired or invalid — re-provision below
-    }
+      jwt.verify(_jeffToken, process.env.AGENT_JWT_SECRET);
+      return _jeffToken;
+    } catch (_) {}
   }
 
   const token = jwt.sign(
-    { type: 'agent', agent_name: 'Ed', agent_team: 'awareness' },
+    { type: 'agent', agent_name: 'Jeff', agent_team: 'awareness' },
     process.env.AGENT_JWT_SECRET,
     { expiresIn: '8h' }
   );
   const hash = crypto.createHash('sha256').update(token).digest('hex');
-  await db.rotateAgentToken('Ed', hash);
-  _edToken = token;
+  await db.rotateAgentToken('Jeff', hash);
+  _jeffToken = token;
   return token;
 }
 
 // ── Internal API caller ───────────────────────────────────────────────────────
 
 async function apiCall(path, method = 'GET', body = null) {
-  const token = await ensureEdToken();
+  const token = await ensureJeffToken();
   const opts = {
     method,
     headers: {
@@ -69,19 +67,18 @@ async function apiCall(path, method = 'GET', body = null) {
 
 // ── Briefing fetch ────────────────────────────────────────────────────────────
 
-async function getBriefingForReview(contentId) {
-  const row = await db.pool.query(
+async function getBriefingForQA(contentId) {
+  return db.pool.query(
     `SELECT id, edition_date, subject_line, body_md, pipeline_status,
             threat_item_ids, innovation_item_ids, growth_item_id, training_byte_id
      FROM briefings WHERE id = $1`,
     [contentId]
   ).then(r => r.rows[0] || null);
-  return row;
 }
 
-// ── EIC review ────────────────────────────────────────────────────────────────
+// ── QA review ─────────────────────────────────────────────────────────────────
 
-function applyEICReview(briefing) {
+function applyQAReview(briefing) {
   const issues = [];
 
   if (!briefing.subject_line || briefing.subject_line.trim().length === 0)
@@ -103,75 +100,74 @@ function applyEICReview(briefing) {
 
 // ── Task execution ────────────────────────────────────────────────────────────
 
-async function executeEdEICReview(task) {
+async function executeJeffQA(task) {
   const ts = new Date().toISOString();
 
   console.log(JSON.stringify({
-    ts, runtime: 'ed', event: 'EIC_REVIEW_START',
+    ts, runtime: 'jeff', event: 'QA_START',
     task_id: task.id, content_id: task.content_id,
   }));
 
   await db.updateTask(task.id, { status: 'in_progress' });
 
   try {
-    const briefing = await getBriefingForReview(task.content_id);
+    const briefing = await getBriefingForQA(task.content_id);
     if (!briefing) {
       throw new Error(`Briefing ${task.content_id} not found`);
     }
 
-    if (briefing.pipeline_status !== 'dev_edit') {
+    if (briefing.pipeline_status !== 'eic_review') {
       console.log(JSON.stringify({
-        ts, runtime: 'ed', event: 'SKIP_WRONG_STATUS',
+        ts, runtime: 'jeff', event: 'SKIP_WRONG_STATUS',
         briefing_id: briefing.id, pipeline_status: briefing.pipeline_status,
       }));
       await db.updateTask(task.id, { status: 'complete' });
       return;
     }
 
-    const { issues } = applyEICReview(briefing);
+    const { issues } = applyQAReview(briefing);
 
     if (issues.length > 0) {
-      const error_message = `EIC review blocked — issues: ${issues.join('; ')}`;
+      const error_message = `QA blocked — issues: ${issues.join('; ')}`;
       await db.updateTask(task.id, { status: 'failed', error_message });
       await notifyAgents(['Barret', 'Henry'], {
-        type: 'ED_EIC_REVIEW_BLOCKED',
+        type: 'JEFF_QA_BLOCKED',
         briefing_id: briefing.id,
         edition_date: briefing.edition_date,
         task_id: task.id,
         issues,
-        message: `Ed cannot complete EIC review for ${briefing.edition_date} — ${error_message}.`,
+        message: `Jeff cannot complete QA for ${briefing.edition_date} — ${error_message}.`,
       });
       console.warn(JSON.stringify({
-        ts, runtime: 'ed', event: 'EIC_REVIEW_BLOCKED',
+        ts, runtime: 'jeff', event: 'QA_BLOCKED',
         briefing_id: briefing.id, issues,
       }));
       return;
     }
 
-    // Advance briefing to eic_review — AWARENESS_DISPATCH fires Jeff's task + notification
     await apiCall(`/api/pipeline/briefings/${briefing.id}/status`, 'PATCH', {
-      to_status:  'eic_review',
-      agent_name: 'Ed',
-      notes:      `EIC review complete. Editorial standards verified: subject line, composition, source integrity.`,
+      to_status:  'qa',
+      agent_name: 'Jeff',
+      notes:      `QA complete. Composition verified: ${briefing.threat_item_ids.length} threats, ${briefing.innovation_item_ids.length} innovations, 1 growth, 1 training byte. Subject line and body confirmed.`,
     });
 
     await db.updateTask(task.id, { status: 'complete' });
 
     console.log(JSON.stringify({
-      ts, runtime: 'ed', event: 'EIC_REVIEW_COMPLETE',
+      ts, runtime: 'jeff', event: 'QA_COMPLETE',
       briefing_id: briefing.id, edition_date: briefing.edition_date, task_id: task.id,
     }));
 
   } catch (e) {
     await db.updateTask(task.id, { status: 'failed', error_message: e.message });
     await notifyAgents(['Barret', 'Henry'], {
-      type: 'ED_RUNTIME_ERROR',
+      type: 'JEFF_RUNTIME_ERROR',
       task_id: task.id,
       error: e.message,
-      message: `Ed runtime error: ${e.message}. Manual intervention required.`,
+      message: `Jeff runtime error: ${e.message}. Manual intervention required.`,
     });
     console.error(JSON.stringify({
-      ts, runtime: 'ed', event: 'RUNTIME_ERROR',
+      ts, runtime: 'jeff', event: 'RUNTIME_ERROR',
       task_id: task.id, error: e.message,
     }));
   }
@@ -179,12 +175,12 @@ async function executeEdEICReview(task) {
 
 // ── Poll loop ─────────────────────────────────────────────────────────────────
 
-async function pollEdTasks() {
+async function pollJeffTasks() {
   try {
     const tasks = await db.pool.query(`
       SELECT * FROM agent_tasks
-      WHERE agent_name = 'Ed'
-        AND task_type   = 'eic_review_briefing'
+      WHERE agent_name = 'Jeff'
+        AND task_type   = 'qa_briefing'
         AND status      IN ('queued', 'escalated')
         AND started_at  > now() - INTERVAL '${POLL_WINDOW_HOURS} hours'
       ORDER BY started_at ASC
@@ -192,13 +188,13 @@ async function pollEdTasks() {
     `).then(r => r.rows);
 
     for (const task of tasks) {
-      await executeEdEICReview(task);
+      await executeJeffQA(task);
     }
   } catch (e) {
     console.error(JSON.stringify({
-      ts: new Date().toISOString(), runtime: 'ed', event: 'POLL_ERROR', error: e.message,
+      ts: new Date().toISOString(), runtime: 'jeff', event: 'POLL_ERROR', error: e.message,
     }));
   }
 }
 
-module.exports = { pollEdTasks, ensureEdToken };
+module.exports = { pollJeffTasks, ensureJeffToken };

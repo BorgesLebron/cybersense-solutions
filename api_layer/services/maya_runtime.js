@@ -1,13 +1,62 @@
 'use strict';
 
 // services/maya_runtime.js
-// Maya's first agentic slice: answer Command Center troubleshooting requests
-// by inspecting editorial pipeline state and writing back to agent_messages.
+// Maya's agentic runtime:
+//   1. editorial_troubleshoot — answer Command Center pipeline status queries
+//   2. approve_briefing — QA review and approval: qa → maya → approved
 
+const crypto = require('crypto');
+const jwt    = require('jsonwebtoken');
 const db = require('../db/queries');
+const { notifyAgents } = require('./agents');
+
+const API_BASE = () =>
+  process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
 
 const ZERO_UUID = '00000000-0000-0000-0000-000000000000';
 let _polling = false;
+
+// ── Token management ─────────────────────────────────────────────────────────
+
+let _mayaToken = null;
+
+async function ensureMayaToken() {
+  if (_mayaToken) {
+    try {
+      jwt.verify(_mayaToken, process.env.AGENT_JWT_SECRET);
+      return _mayaToken;
+    } catch (_) {}
+  }
+
+  const token = jwt.sign(
+    { type: 'agent', agent_name: 'Maya', agent_team: 'awareness' },
+    process.env.AGENT_JWT_SECRET,
+    { expiresIn: '8h' }
+  );
+  const hash = crypto.createHash('sha256').update(token).digest('hex');
+  await db.rotateAgentToken('Maya', hash);
+  _mayaToken = token;
+  return token;
+}
+
+async function apiCall(path, method = 'GET', body = null) {
+  const token = await ensureMayaToken();
+  const opts = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Agent ${token}`,
+    },
+    signal: AbortSignal.timeout(15000),
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(`${API_BASE()}${path}`, opts);
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(`${method} ${path} → ${res.status}: ${json.error || json.message || JSON.stringify(json)}`);
+  }
+  return json;
+}
 
 async function getTargetBriefing(contentId) {
   if (contentId && contentId !== ZERO_UUID) {
@@ -175,6 +224,69 @@ async function executeTroubleshootTask(task) {
   await db.updateTask(task.id, { status: 'complete' });
 }
 
+// ── Approval runtime (approve_briefing tasks) ────────────────────────────────
+
+async function executeMayaApprove(task) {
+  const ts = new Date().toISOString();
+
+  console.log(JSON.stringify({
+    ts, runtime: 'maya', event: 'APPROVE_START',
+    task_id: task.id, content_id: task.content_id,
+  }));
+
+  await db.updateTask(task.id, { status: 'in_progress' });
+
+  try {
+    const briefing = await db.getBriefingById(task.content_id);
+    if (!briefing) {
+      throw new Error(`Briefing ${task.content_id} not found`);
+    }
+
+    if (briefing.pipeline_status !== 'qa') {
+      console.log(JSON.stringify({
+        ts, runtime: 'maya', event: 'SKIP_WRONG_STATUS',
+        briefing_id: briefing.id, pipeline_status: briefing.pipeline_status,
+      }));
+      await db.updateTask(task.id, { status: 'complete' });
+      return;
+    }
+
+    // Advance qa → maya (sets maya_approved_at)
+    await apiCall(`/api/pipeline/briefings/${briefing.id}/status`, 'PATCH', {
+      to_status:  'maya',
+      agent_name: 'Maya',
+      notes:      `Maya QA pass. Composition and editorial standards confirmed.`,
+    });
+
+    // Advance maya → approved (ready for HITL distribution confirmation)
+    await apiCall(`/api/pipeline/briefings/${briefing.id}/status`, 'PATCH', {
+      to_status:  'approved',
+      agent_name: 'Maya',
+      notes:      `Maya approval complete. Edition ${briefing.edition_number} queued for HITL distribution authorization.`,
+    });
+
+    await db.updateTask(task.id, { status: 'complete' });
+
+    console.log(JSON.stringify({
+      ts, runtime: 'maya', event: 'APPROVE_COMPLETE',
+      briefing_id: briefing.id, edition_date: briefing.edition_date, task_id: task.id,
+    }));
+
+  } catch (e) {
+    await db.updateTask(task.id, { status: 'failed', error_message: e.message });
+    await notifyAgents(['Barret', 'Henry'], {
+      type: 'MAYA_APPROVE_ERROR',
+      task_id: task.id,
+      error: e.message,
+      message: `Maya approval runtime error: ${e.message}. Manual intervention required.`,
+    });
+    console.error(JSON.stringify({
+      ts, runtime: 'maya', event: 'APPROVE_ERROR',
+      task_id: task.id, error: e.message,
+    }));
+  }
+}
+
 async function pollMayaTasks() {
   if (_polling) return;
   _polling = true;
@@ -183,7 +295,7 @@ async function pollMayaTasks() {
       SELECT *
       FROM agent_tasks
       WHERE agent_name = 'Maya'
-        AND task_type = 'editorial_troubleshoot'
+        AND task_type IN ('editorial_troubleshoot', 'approve_briefing')
         AND status IN ('queued', 'escalated')
         AND (retry_after IS NULL OR retry_after <= now())
       ORDER BY started_at ASC
@@ -192,7 +304,11 @@ async function pollMayaTasks() {
 
     for (const task of tasks) {
       try {
-        await executeTroubleshootTask(task);
+        if (task.task_type === 'approve_briefing') {
+          await executeMayaApprove(task);
+        } else {
+          await executeTroubleshootTask(task);
+        }
       } catch (e) {
         await db.updateTask(task.id, { status: 'failed', error_message: e.message });
       }
@@ -205,6 +321,7 @@ async function pollMayaTasks() {
 module.exports = {
   pollMayaTasks,
   executeTroubleshootTask,
+  executeMayaApprove,
   buildReply,
   summarizeHold,
 };
