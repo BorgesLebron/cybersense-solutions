@@ -104,6 +104,15 @@ function buildThreatCorrelationTags(threat, cvss, isKev, isImmediate) {
 
 // ── Normalization: intel items (innovation/growth/policy) ─────────────────────
 
+const SOURCE_TIER_MAP = { securityweek: 1, crn: 2 };
+
+function inferSourceTier(tags = []) {
+  for (const tag of tags) {
+    if (SOURCE_TIER_MAP[tag] != null) return SOURCE_TIER_MAP[tag];
+  }
+  return null;
+}
+
 function normalizeIntelItem(item) {
   const isHighPriority = item.priority === 'high';
 
@@ -122,6 +131,7 @@ function normalizeIntelItem(item) {
     correlation_tags: [...new Set([...(item.tags || []), item.type])],
     ready_for_intel:     isHighPriority,
     ready_for_awareness: true,
+    source_tier:         inferSourceTier(item.tags),
   };
 }
 

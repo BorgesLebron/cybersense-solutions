@@ -237,29 +237,6 @@ async function executeIvanCharlieIngest(task) {
         ...payload,
         summary: `${payload.summary}\n\nSource: ${source_url}\nPublished: ${published_at}`,
       });
-      await db.processIntoRepository({
-        source_type: item.type,
-        source_id: result.id,
-        normalized_data: {
-          title: item.headline,
-          summary: item.summary,
-          content: item.summary,
-          source_url,
-          published_at,
-          category: item.category,
-        },
-        correlation_tags: item.tags,
-        processed_by: 'Barbara',
-        ready_for_intel: true,
-        ready_for_awareness: true,
-      });
-      await notifyAgents(['James', 'Ruth'], {
-        type: 'REPOSITORY_UPDATE',
-        record_id: result.id,
-        source_type: item.type,
-        ready_for_intel: true,
-        ready_for_awareness: true,
-      });
       submitted.push({ type: item.type, id: result.id });
     }
 
