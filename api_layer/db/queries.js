@@ -675,6 +675,14 @@ const getOrgCompletionSummary = (org_id) =>
             ROUND(AVG(score) FILTER (WHERE score IS NOT NULL),1) AS avg_score
      FROM training_completions WHERE org_id=$1 GROUP BY department ORDER BY department`, [org_id]);
 
+const getGlobalTrainingSummary = () =>
+  q1(`SELECT 
+        (SELECT COUNT(*) FROM training_modules WHERE pipeline_status='published') AS total_modules,
+        (SELECT COUNT(*) FROM training_modules WHERE type='training_byte' AND pipeline_status='published') AS total_bytes,
+        (SELECT COUNT(*) FROM training_completions WHERE status='completed') AS total_completions,
+        (SELECT COUNT(DISTINCT user_id) FROM training_completions) AS active_learners
+  `);
+
 // ── SIMULATIONS ────────────────────────────────────────────────────────────────
 
 const createSimulation = ({ org_id, type, campaign_name, target_count }) =>
