@@ -1067,7 +1067,6 @@ async function loadPipelineControlStatus() {
     if (!btnDist.classList.contains('success') && !btnDist.classList.contains('loading')) btnDist.disabled = !distOk;
 
     // Editorial pipeline
-    const stage = briefing?.pipeline_status || null;
     const editAgents = [
       { key: 'peter', label: 'Peter', stage: 'draft',      descId: 'pc-peter-desc', btnId: 'btn-peter' },
       { key: 'ed',    label: 'Ed',    stage: 'dev_edit',   descId: 'pc-ed-desc',    btnId: 'btn-ed'    },
