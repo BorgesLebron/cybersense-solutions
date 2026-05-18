@@ -1099,8 +1099,8 @@ async function loadPipelineControlStatus() {
         enableBtn = true;
         editBadgeStatus = editBadgeStatus !== 'running' ? 'error' : editBadgeStatus;
       } else if (isActiveStage) {
-        desc = taskStatus === 'queued' ? 'Queued — next poll will process' : 'Briefing is at this stage — trigger to advance';
-        enableBtn = taskStatus !== 'queued';
+        desc = taskStatus === 'queued' ? 'Queued — trigger to run now' : 'Ready — trigger to advance';
+        enableBtn = true;
         if (editBadgeStatus === 'idle') editBadgeStatus = 'active';
       }
 
