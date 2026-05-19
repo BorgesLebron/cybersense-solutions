@@ -895,6 +895,15 @@ const listPipelineEvents = ({ content_type, content_id, agent_name, limit = 50 }
             LIMIT $${params.length}`, params);
 };
 
+const getKirbyPipelineEvents = (limit = 10) => {
+  return q(`
+    SELECT * FROM pipeline_events
+    WHERE agent_name = 'Kirby'
+    ORDER BY created_at DESC
+    LIMIT $1;
+  `, [limit]);
+};
+
 // ── RISK REGISTER ──────────────────────────────────────────────────────────────
 
 const createRisk = ({ domain, title, description, severity, score, owner_agent, raised_by, due_date }) =>
@@ -1040,7 +1049,7 @@ module.exports = {
   createArticle, getArticle, getArticleById, listArticles, listArticlesForPreview, advanceArticleStatus, incrementArticleViews,
   getPublishedArticleStats, getArticlePipelineQueue,
   createBriefing, getBriefingByDate, getBriefingById, updateBriefingEditorial, listBriefings, advanceBriefingStatus, revertBriefingForRevision,
-  logPipelineEvent, countRejections, countAgentRejections24h, listPipelineEvents,
+  logPipelineEvent, countRejections, countAgentRejections24h, listPipelineEvents, getKirbyPipelineEvents,
   createSocialPost, updateSocialMetrics, listSocialPosts, getSocialPerformance,
   createTrainingModule, getTrainingModulesByStatus, listTrainingModules, getTrainingModule, advanceModuleStatus,
   recordCompletion, getUserCompletions, getOrgCompletions, getOrgCompletionSummary, getGlobalTrainingSummary,
