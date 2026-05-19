@@ -10,6 +10,8 @@ const { checkAwarenessPipelineHealth, notifyAgents } = require('./agents');
 const { pollRuthTasks }         = require('./ruth_runtime');
 const { pollPeterTasks }        = require('./peter_runtime');
 const { pollEdTasks }           = require('./ed_runtime');
+const { pollJasonTasks }        = require('./jason_runtime');
+const { pollRobTasks }          = require('./rob_runtime');
 const { pollRickTasks }         = require('./rick_runtime');
 const { pollIvanCharlieTasks }  = require('./ivan_charlie_runtime');
 const { pollBarbaraTasks }      = require('./barbara_runtime');
@@ -902,11 +904,13 @@ function startScheduler() {
     cron.schedule('*/2 4-9 * * 0-4', pollRuthTasks,                { timezone: 'America/Chicago' });
     cron.schedule('*/2 4-9 * * 0-4', pollPeterTasks,               { timezone: 'America/Chicago' });
     cron.schedule('*/2 4-9 * * 0-4', pollEdTasks,                  { timezone: 'America/Chicago' });
+    cron.schedule('*/2 4-9 * * 0-4', pollJasonTasks,               { timezone: 'America/Chicago' });
+    cron.schedule('*/2 4-9 * * 0-4', pollRobTasks,                 { timezone: 'America/Chicago' });
     cron.schedule('*/2 * * * *',      pollMayaTasks,                { timezone: 'America/Chicago' });
     cron.schedule('0 */4 * * *',     pollRickTasks,                 { timezone: 'America/Chicago' });
     cron.schedule('30 */4 * * *',    pollBarbaraTasks,              { timezone: 'America/Chicago' });
     cron.schedule('45 5 * * *',      pollIvanCharlieTasks,          { timezone: 'America/Chicago' });
-    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SCHEDULER_STARTED', jobs: 27 }));
+    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SCHEDULER_STARTED', jobs: 29 }));
   } catch (e) {
     console.warn('node-cron not installed — scheduler disabled. Install with: npm install node-cron');
   }
@@ -935,6 +939,8 @@ module.exports = {
   pollRuthTasks,
   pollPeterTasks,
   pollEdTasks,
+  pollJasonTasks,
+  pollRobTasks,
   pollMayaTasks,
   pollRickTasks,
   pollBarbaraTasks,
