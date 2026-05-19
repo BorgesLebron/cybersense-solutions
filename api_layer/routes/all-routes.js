@@ -1669,6 +1669,32 @@ adminRouter.patch('/meetings/:id/action-items/:aid', requireAdminToken(['gm']), 
   } catch (e) { next(e); }
 });
 
+// ── LOG RECORD ────────────────────────────────────────────────────────────────
+
+const AGENT_LOG_MAP = {
+  rick:         ['Rick'],
+  ivan_charlie: ['Ivan', 'Charlie'],
+  barbara:      ['Barbara'],
+  james:        ['James'],
+  ruth:         ['Ruth'],
+};
+
+adminRouter.get('/log-record', requireAdminToken(), async (req, res, next) => {
+  try {
+    const agents = AGENT_LOG_MAP[req.query.agent];
+    if (!agents) return res.status(400).json(err('INVALID_AGENT', 'Unknown agent key'));
+    const rows = await db.pool.query(
+      `SELECT id, content_type, content_id, from_status, to_status, agent_name, notes, created_at
+       FROM pipeline_events
+       WHERE agent_name = ANY($1)
+       ORDER BY created_at DESC
+       LIMIT 50`,
+      [agents]
+    ).then(r => r.rows);
+    res.json({ data: rows });
+  } catch (e) { next(e); }
+});
+
 // ── agents (webhook receiver) ─────────────────────────────────────────────────
 // Inbound notification endpoint for the internal agent communication bus.
 // Called exclusively by notifyAgents() in services/agents.js via X-CS-Internal.
