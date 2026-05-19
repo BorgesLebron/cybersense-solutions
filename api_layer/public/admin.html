@@ -1121,14 +1121,46 @@ async function loadInnovationRadarData() {
       ? `<span class="badge b-green">${yes}</span>`
       : `<span class="badge b-gray">${no}</span>`;
 
-    tbody.innerHTML = items.map(item => `<tr>
-      <td><span class="badge ${item.type === 'growth' ? 'b-blue' : 'b-amber'}">${item.type}</span></td>
-      <td>${item.headline || 'Untitled'}</td>
-      <td>${item.category || '-'}</td>
+    tbody.innerHTML = items.map(item => `<tr class="innovation-row" style="cursor:pointer;"
+      data-headline="${esc(item.headline || 'Untitled')}"
+      data-type="${esc(item.type || 'N/A')}"
+      data-category="${esc(item.category || 'N/A')}"
+      data-summary="${esc(item.summary || 'No summary available.')}"
+      data-tags="${esc((Array.isArray(item.tags) ? item.tags : (item.tags ? [item.tags] : [])).join(', ') || 'none')}"
+      data-priority="${esc(item.priority || 'N/A')}"
+      data-ruth="${esc(item.used_in_briefing ? 'Used in briefing' : item.ready_for_awareness ? 'Ready for Ruth' : 'Not ready')}"
+      data-intel="${esc(item.ready_for_intel ? 'Ready for James' : 'Not ready')}"
+      data-article="${esc(item.has_article ? 'Article linked' : 'No article yet')}"
+      data-ingested="${esc(item.ingested_at ? new Date(item.ingested_at).toLocaleDateString('en-US') : 'N/A')}">
+      <td><span class="badge ${item.type === 'growth' ? 'b-blue' : 'b-amber'}">${esc(item.type || '-')}</span></td>
+      <td>${esc(item.headline || 'Untitled')}</td>
+      <td>${esc(item.category || '-')}</td>
       <td>${badge(item.ready_for_awareness && !item.used_in_briefing, 'Ready', item.used_in_briefing ? 'Used' : 'No')}</td>
       <td>${badge(item.ready_for_intel, 'Ready', 'No')}</td>
       <td>${badge(item.has_article, 'Linked', 'None')}</td>
     </tr>`).join('');
+
+    const tip = document.getElementById('radar-tooltip');
+    tbody.querySelectorAll('.innovation-row').forEach(row => {
+      row.addEventListener('mouseenter', () => {
+        tip.innerHTML = `<div style="font-weight:600;margin-bottom:6px;">${row.dataset.headline}</div>
+          <div style="margin-bottom:6px;color:#cbd5e1;line-height:1.5;">${row.dataset.summary}</div>
+          <div><span style="color:#aaa;">Type</span> ${row.dataset.type}</div>
+          <div><span style="color:#aaa;">Category</span> ${row.dataset.category}</div>
+          <div><span style="color:#aaa;">Tags</span> ${row.dataset.tags}</div>
+          <div><span style="color:#aaa;">Priority</span> ${row.dataset.priority}</div>
+          <div><span style="color:#aaa;">Ruth</span> ${row.dataset.ruth}</div>
+          <div><span style="color:#aaa;">Intel</span> ${row.dataset.intel}</div>
+          <div><span style="color:#aaa;">Article</span> ${row.dataset.article}</div>
+          <div><span style="color:#aaa;">Ingested</span> ${row.dataset.ingested}</div>`;
+        tip.style.display = 'block';
+      });
+      row.addEventListener('mousemove', (e) => {
+        tip.style.left = (e.clientX + 16) + 'px';
+        tip.style.top = Math.min(e.clientY - 8, window.innerHeight - 260) + 'px';
+      });
+      row.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+    });
   } catch (e) {
     console.error('Innovation radar load failed:', e);
     const tbody = document.getElementById('innovation-tbody');

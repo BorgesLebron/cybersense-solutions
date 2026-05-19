@@ -10,8 +10,10 @@ const { checkAwarenessPipelineHealth, notifyAgents } = require('./agents');
 const { pollRuthTasks }         = require('./ruth_runtime');
 const { pollPeterTasks }        = require('./peter_runtime');
 const { pollEdTasks }           = require('./ed_runtime');
+const { pollJamesTasks }        = require('./james_runtime');
 const { pollJasonTasks }        = require('./jason_runtime');
 const { pollRobTasks }          = require('./rob_runtime');
+const { pollJeffTasks }         = require('./jeff_runtime');
 const { pollRickTasks }         = require('./rick_runtime');
 const { pollIvanCharlieTasks }  = require('./ivan_charlie_runtime');
 const { pollBarbaraTasks }      = require('./barbara_runtime');
@@ -188,6 +190,76 @@ async function runRedTeamBatchCycle() {
     console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'red_team_batch_cycle', status: 'triggered' }));
   } catch (e) {
     console.error(JSON.stringify({ ts: new Date().toISOString(), job: 'red_team_batch_cycle', error: e.message }));
+  }
+}
+
+// ── Intel article cycle trigger (J1 — fires after Barbara batch normalization) ──
+// Creates one James task when ready-for-intel repository items exist and the
+// article pipeline is not already backed up. James owns source selection/draft.
+async function runJamesArticleCycle() {
+  try {
+    const activeTask = await db.pool.query(`
+      SELECT id FROM agent_tasks
+      WHERE agent_name = 'James'
+        AND task_type = 'draft_article'
+        AND status IN ('queued','in_progress')
+      LIMIT 1
+    `).then(r => r.rows[0] || null);
+
+    if (activeTask) {
+      console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'james_article_cycle', status: 'skipped', reason: 'active_task', task_id: activeTask.id }));
+      return;
+    }
+
+    const activeArticles = await db.pool.query(`
+      SELECT COUNT(*)::int AS count
+      FROM articles
+      WHERE pipeline_status::text != 'published'
+    `).then(r => r.rows[0].count);
+
+    if (activeArticles >= 3) {
+      console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'james_article_cycle', status: 'skipped', reason: 'pipeline_capacity', active_articles: activeArticles }));
+      return;
+    }
+
+    const candidate = await db.pool.query(`
+      SELECT r.id
+      FROM intel_repository r
+      LEFT JOIN intel_items i ON i.id = r.source_id AND r.source_type IN ('innovation','growth','policy')
+      LEFT JOIN threat_records t ON t.id = r.source_id AND r.source_type = 'threat'
+      WHERE r.ready_for_intel = true
+        AND r.source_type IN ('innovation','growth','policy','threat')
+        AND COALESCE(i.article_id, t.article_id) IS NULL
+      LIMIT 1
+    `).then(r => r.rows[0] || null);
+
+    if (!candidate) {
+      console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'james_article_cycle', status: 'skipped', reason: 'no_candidate' }));
+      return;
+    }
+
+    const task = await db.createTask({
+      agent_name: 'James',
+      task_type: 'draft_article',
+      content_type: 'system',
+      content_id: '00000000-0000-0000-0000-000000000000',
+      sla_deadline: null,
+    });
+
+    await notifyAgents(['James'], {
+      type: 'INTEL_ARTICLE_DRAFT_REQUESTED',
+      task_id: task.id,
+      message: 'Ready-for-intel repository content is available. Draft the next Intel article and hand it to Jason.',
+    });
+
+    console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'james_article_cycle', status: 'triggered', task_id: task.id }));
+  } catch (e) {
+    console.error(JSON.stringify({ ts: new Date().toISOString(), job: 'james_article_cycle', status: 'error', error: e.message }));
+    await notifyAgents(['Barret', 'Henry'], {
+      type: 'JAMES_TRIGGER_FAILED',
+      error: e.message,
+      message: `James article cycle trigger failed: ${e.message}. Intel articles may not draft automatically.`,
+    });
   }
 }
 
@@ -885,6 +957,7 @@ function startScheduler() {
     cron.schedule('0 7 * * *',      triggerDailyFinancialSummary,  { timezone: 'America/Chicago' });
     // Red Team acquisition cycle
     cron.schedule('0 */4 * * *',    runRedTeamBatchCycle,          { timezone: 'America/Chicago' });
+    cron.schedule('45 */4 * * *',   runJamesArticleCycle,          { timezone: 'America/Chicago' });
     cron.schedule('45 5 * * *',     runIvanCharlieRuthReminder,    { timezone: 'America/Chicago' });
     cron.schedule('5 6 * * *',      runAcquisitionDeliveryCheck,   { timezone: 'America/Chicago' });
     // Training + Sales — Kirby fires at 04:00 CT (30 min before Ruth) on production nights
@@ -904,13 +977,15 @@ function startScheduler() {
     cron.schedule('*/2 4-9 * * 0-4', pollRuthTasks,                { timezone: 'America/Chicago' });
     cron.schedule('*/2 4-9 * * 0-4', pollPeterTasks,               { timezone: 'America/Chicago' });
     cron.schedule('*/2 4-9 * * 0-4', pollEdTasks,                  { timezone: 'America/Chicago' });
+    cron.schedule('*/2 * * * *',      pollJamesTasks,               { timezone: 'America/Chicago' });
     cron.schedule('*/2 4-9 * * 0-4', pollJasonTasks,               { timezone: 'America/Chicago' });
     cron.schedule('*/2 4-9 * * 0-4', pollRobTasks,                 { timezone: 'America/Chicago' });
+    cron.schedule('*/2 * * * *',      pollJeffTasks,                { timezone: 'America/Chicago' });
     cron.schedule('*/2 * * * *',      pollMayaTasks,                { timezone: 'America/Chicago' });
     cron.schedule('0 */4 * * *',     pollRickTasks,                 { timezone: 'America/Chicago' });
     cron.schedule('30 */4 * * *',    pollBarbaraTasks,              { timezone: 'America/Chicago' });
     cron.schedule('45 5 * * *',      pollIvanCharlieTasks,          { timezone: 'America/Chicago' });
-    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SCHEDULER_STARTED', jobs: 29 }));
+    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SCHEDULER_STARTED', jobs: 32 }));
   } catch (e) {
     console.warn('node-cron not installed — scheduler disabled. Install with: npm install node-cron');
   }
@@ -924,6 +999,7 @@ module.exports = {
   runSessionCleanup,
   triggerDailyFinancialSummary,
   runRedTeamBatchCycle,
+  runJamesArticleCycle,
   runIvanCharlieRuthReminder,
   runAcquisitionDeliveryCheck,
   runKirbyDailyCycle,
@@ -939,8 +1015,10 @@ module.exports = {
   pollRuthTasks,
   pollPeterTasks,
   pollEdTasks,
+  pollJamesTasks,
   pollJasonTasks,
   pollRobTasks,
+  pollJeffTasks,
   pollMayaTasks,
   pollRickTasks,
   pollBarbaraTasks,
