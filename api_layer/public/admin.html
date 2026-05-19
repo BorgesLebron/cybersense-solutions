@@ -827,10 +827,20 @@ async function loadCommandCenterSummary() {
 
     if (data.agents) {
       const summaryEl = document.getElementById('agent-health-summary');
+      const health = data.agents.health || [];
+      const dots = health.map(a => {
+        let color = '#94a3b8'; // gray
+        if (Number(a.failed_today) > 0) color = '#E24B4A'; // red
+        else if (Number(a.active_queue) > 0) color = '#378ADD'; // blue
+        else if (Number(a.completed_today) > 0) color = '#1D9E75'; // green
+        return `<span class="agent-dot" style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${color};margin:2px;" title="${ccEscape(a.agent_name)}: ${ccNumber(a.tasks_today)} tasks today"></span>`;
+      }).join('');
+
       summaryEl.innerHTML = `
         <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary);"><span style="font-size:12px;color:var(--color-text-secondary);">Active agents</span><span class="badge b-blue">${ccNumber(data.agents.active_count)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary);"><span style="font-size:12px;color:var(--color-text-secondary);">Total reporting</span><span style="font-size:12px;font-weight:500;color:var(--color-text-primary);">${ccNumber(data.agents.reporting_count)} / ${ccNumber(data.agents.configured_count)}</span></div>
-        <div style="display:flex;justify-content:space-between;padding:5px 0;"><span style="font-size:12px;color:var(--color-text-secondary);">With errors</span><span class="badge ${data.agents.failed_today_count > 0 ? 'b-red' : 'b-gray'}">${ccNumber(data.agents.failed_today_count)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:5px 0;margin-bottom:8px;"><span style="font-size:12px;color:var(--color-text-secondary);">With errors</span><span class="badge ${data.agents.failed_today_count > 0 ? 'b-red' : 'b-gray'}">${ccNumber(data.agents.failed_today_count)}</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:1px;padding-top:8px;border-top:0.5px solid var(--color-border-tertiary);">${dots}</div>
       `;
     }
 
