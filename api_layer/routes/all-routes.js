@@ -1326,10 +1326,79 @@ adminRouter.get('/intel-brief', requireAdminToken(), async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-adminRouter.get('/articles/events', requireAdminToken(), async (req, res, next) => {
+adminRouter.get('/articles/status', requireAdminToken(), async (req, res, next) => {
   try {
-    const events = await db.listPipelineEvents({ content_type: 'article', limit: 25 });
-    res.json({ data: events });
+    const [articles, events, published] = await Promise.all([
+      db.listArticlesForPreview(),
+      db.listPipelineEvents({ content_type: 'article', limit: 20 }),
+      db.getPublishedArticleStats(),
+    ]);
+
+    const STAGE_MAP = {
+      draft:      { stage: 'Acquisition',      owner: 'James',           stage_index: 1 },
+      dev_edit:   { stage: 'Development edit', owner: 'Jason',           stage_index: 2 },
+      eic_review: { stage: 'EIC review',       owner: 'Rob',             stage_index: 3 },
+      qa:         { stage: 'QA review',        owner: 'Jeff',            stage_index: 4 },
+      maya:       { stage: 'Maya review',      owner: 'Maya',            stage_index: 5 },
+      approved:   { stage: 'HITL release',     owner: 'Human executive', stage_index: 6 },
+    };
+    const STAGE_TOTAL = 6;
+
+    let tasksByArticle = {};
+    if (articles.length) {
+      const ids = articles.map(a => a.id);
+      const tasks = await db.pool.query(`
+        SELECT DISTINCT ON (content_id)
+          content_id, agent_name, task_type, status, error_message, started_at
+        FROM agent_tasks
+        WHERE content_type = 'article' AND content_id = ANY($1)
+        ORDER BY content_id, started_at DESC
+      `, [ids]).then(r => r.rows);
+      tasks.forEach(t => { tasksByArticle[t.content_id] = t; });
+    }
+
+    const normalized = articles.map(a => {
+      const s    = STAGE_MAP[a.stage] || STAGE_MAP.draft;
+      const task = tasksByArticle[a.id];
+      const hold = task?.status === 'failed'
+        ? `Blocked by ${task.agent_name}: ${task.error_message || task.task_type + ' failed'}`
+        : task?.status === 'in_progress'
+          ? `${task.agent_name} working on ${task.task_type}`
+          : a.stage === 'approved'
+            ? 'Awaiting HITL release'
+            : `Awaiting ${s.owner}`;
+      return {
+        id:           a.id,
+        title:        a.title,
+        slug:         a.slug,
+        type:         a.type,
+        access_tier:  a.access_tier,
+        pipeline_status: a.stage,
+        stage:        s.stage,
+        owner:        s.owner,
+        stage_index:  s.stage_index,
+        stage_total:  STAGE_TOTAL,
+        progress_pct: Math.round((s.stage_index / STAGE_TOTAL) * 100),
+        hold,
+        summary:      (a.summary || '').slice(0, 200),
+        updated:      a.updated,
+      };
+    });
+
+    const stageCounts = {};
+    normalized.forEach(a => { stageCounts[a.pipeline_status] = (stageCounts[a.pipeline_status] || 0) + 1; });
+
+    res.json({
+      articles:         normalized,
+      pipeline_summary: {
+        total_in_pipeline: normalized.length,
+        blocked:           normalized.filter(a => a.hold.startsWith('Blocked')).length,
+        by_stage:          stageCounts,
+      },
+      published_stats: published,
+      events,
+      generated_at:    new Date().toISOString(),
+    });
   } catch (e) { next(e); }
 });
 

@@ -979,43 +979,42 @@ async function loadArticlesData() {
     approved:   'b-green',
   };
   try {
-    const [{ published, pipeline }, articles, { data: events }] = await Promise.all([
-      CS.Auth.apiFetch('/api/admin/intel-brief'),
-      CS.Auth.apiFetch('/api/ops/articles/preview'),
-      CS.Auth.apiFetch('/api/admin/articles/events'),
-    ]);
+    const { articles, pipeline_summary, published_stats, events } =
+      await CS.Auth.apiFetch('/api/admin/articles/status');
 
-    const mtd   = +(published.mtd_count || 0);
-    const total = +(published.total_published || 0);
-    const avgH  = parseFloat(published.avg_hours_to_publish) || 0;
-    const avgV  = +(published.avg_views || 0);
-    const inPipe = (articles || []).length;
+    const pub   = published_stats || {};
+    const mtd   = +(pub.mtd_count || 0);
+    const total = +(pub.total_published || 0);
+    const avgH  = parseFloat(pub.avg_hours_to_publish) || 0;
+    const avgV  = +(pub.avg_views || 0);
+    const inPipe = pipeline_summary?.total_in_pipeline || 0;
+    const blocked = pipeline_summary?.blocked || 0;
 
-    document.getElementById('ar-mtd-count').textContent   = mtd;
-    document.getElementById('ar-mtd-sub').textContent     = total + ' total published';
+    document.getElementById('ar-mtd-count').textContent      = mtd;
+    document.getElementById('ar-mtd-sub').textContent        = total + ' total published';
     document.getElementById('ar-pipeline-count').textContent = inPipe;
-    document.getElementById('ar-pipeline-sub').textContent  = inPipe === 1 ? '1 article in progress' : inPipe + ' articles in progress';
-    document.getElementById('ar-avg-time').textContent    = avgH < 1 ? Math.round(avgH * 60) + 'm' : avgH.toFixed(1) + 'h';
-    document.getElementById('ar-avg-views').textContent   = avgV >= 1000 ? (avgV / 1000).toFixed(1) + 'k' : avgV || '-';
+    document.getElementById('ar-pipeline-sub').textContent   = blocked ? blocked + ' blocked' : 'No blocks';
+    document.getElementById('ar-avg-time').textContent       = avgH < 1 ? Math.round(avgH * 60) + 'm' : avgH.toFixed(1) + 'h';
+    document.getElementById('ar-avg-views').textContent      = avgV >= 1000 ? (avgV / 1000).toFixed(1) + 'k' : avgV || '-';
 
-    const badge = STAGE_COLOR[pipeline[0]?.stage] || 'b-gray';
-    document.getElementById('ar-status-badge').className = 'badge ' + badge;
-    document.getElementById('ar-status-badge').textContent = inPipe + ' in pipeline';
+    document.getElementById('ar-status-badge').className   = 'badge ' + (blocked ? 'b-amber' : inPipe ? 'b-blue' : 'b-gray');
+    document.getElementById('ar-status-badge').textContent = blocked ? blocked + ' blocked' : inPipe + ' in pipeline';
 
     const listEl = document.getElementById('ar-article-list');
     if (!articles || !articles.length) {
       listEl.innerHTML = '<div style="padding:16px 0;text-align:center;color:var(--color-text-tertiary);font-size:12px;">No articles in pipeline — all published or none drafted yet.</div>';
     } else {
       listEl.innerHTML = articles.map(a => {
-        const stageClass = STAGE_COLOR[a.raw_stage] || 'b-gray';
-        const releaseBtn = a.raw_stage === 'approved'
+        const isBlocked   = a.hold.startsWith('Blocked');
+        const stageClass  = STAGE_COLOR[a.pipeline_status] || 'b-gray';
+        const releaseBtn  = a.pipeline_status === 'approved'
           ? `<button style="font-size:11px;padding:3px 10px;border-radius:4px;background:#185FA5;color:#fff;border:none;cursor:pointer;flex-shrink:0;" onclick="releaseArticle('${esc(a.id)}',this)">Release →</button>`
           : '';
         return `<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--color-border-tertiary);">
           <div style="flex:1;min-width:0;">
             <span class="badge ${stageClass}" style="font-size:10px;margin-bottom:3px;display:inline-block;">${esc(a.stage)}</span>
             <div style="font-size:13px;font-weight:500;color:var(--color-text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${esc(a.title)}">${esc(a.title)}</div>
-            <div style="font-size:11px;color:var(--color-text-tertiary);">${esc(a.agent)} · ${esc(a.type || '')}</div>
+            <div style="font-size:11px;color:${isBlocked ? 'var(--color-text-danger)' : 'var(--color-text-tertiary)'};">${esc(a.hold)}</div>
           </div>
           ${releaseBtn}
         </div>`;
@@ -1027,7 +1026,7 @@ async function loadArticlesData() {
       barsEl.innerHTML = '<div style="color:#666;font-size:13px;padding:8px 0;">No published articles yet</div>';
     } else {
       barsEl.innerHTML = SECTION_META.map(({ key, label, color }) => {
-        const count = +(published[key + '_count'] || 0);
+        const count = +(pub[key + '_count'] || 0);
         const pct   = Math.round((count / total) * 100);
         return `<div class="progress-row">
           <span class="progress-lbl">${label}</span>
