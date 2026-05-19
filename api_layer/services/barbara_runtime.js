@@ -1,19 +1,51 @@
 'use strict';
 
-// services/barbara_runtime.js
-// Barbara's normalization runtime. Polls agent_tasks for normalize_threat and
-// normalize_intel tasks queued by the pipeline routes when Rick and Ivan/Charlie
-// submit records. Fetches the source record, computes readiness flags, and
-// submits to POST /api/pipeline/repository/process — which handles downstream
-// notifications (James, Ruth, Kirby, Owen).
-//
-// Token strategy: mirrors rick_runtime.js and ruth_runtime.js.
-// Run within the main server process — polled by the scheduler cron.
-
-const crypto = require('crypto');
-const jwt    = require('jsonwebtoken');
-const db     = require('../db/queries');
+const crypto    = require('crypto');
+const jwt       = require('jsonwebtoken');
+const Anthropic = require('@anthropic-ai/sdk');
+const db        = require('../db/queries');
 const { notifyAgents } = require('./agents');
+
+const BARBARA_SYSTEM_PROMPT = `You are Barbara, Data Normalization Analyst for CyberSense Intelligence Operations. You receive raw intel items ingested from external sources and return a single structured JSON record suitable for editorial production. No prose. No markdown fences. JSON only.
+
+OUTPUT SCHEMA:
+{
+  "category":        "threat" | "innovation" | "growth",
+  "source_tier":     1 | 2 | 3 | null,
+  "source":          "<clean publisher name or domain>",
+  "confidence_score": <integer 0-100>,
+  "summary":         "<2-3 factual sentences, no marketing language>",
+  "threat_category": "<classification string or null>",
+  "cve_ids":         ["CVE-XXXX-XXXXX"],
+  "entity_names":    ["<vendor, product, or affected system>"],
+  "quality_flag":    true | false
+}
+
+CATEGORY RULES:
+- threat: vulnerabilities, exploits, malware, breaches, advisories, CVEs
+- innovation: AI/ML advances, emerging technology, research findings, product launches
+- growth: career development, certifications, training, professional events
+
+SOURCE TIER:
+- 1: NVD, CISA, US-CERT, vendor security advisories (Microsoft, Cisco, Palo Alto, Google, Apple), SecurityWeek, CRN
+- 2: BankInfoSecurity, SecurityAffairs, The Hacker News, Bleeping Computer, AFCEA, Unit 42, Check Point Research, reputable industry publications
+- 3: General news outlets, unknown publishers, uncorroborated reports
+- null: Source cannot be determined
+
+CONFIDENCE SCORE:
+- 90-100: Tier 1 source, specific technical detail, CVE or official citation present
+- 70-89:  Tier 2 source, sufficient technical content, clear attribution
+- 50-69:  Tier 3 source or thin technical content
+- 0-49:   Insufficient — set quality_flag to true
+
+THREAT CATEGORY (threats only, null for all others):
+One of: vulnerability | ransomware | phishing | APT | data_breach | supply_chain | DDoS | malware | social_engineering | insider_threat | cryptographic | other
+
+QUALITY FLAG — set to true if any of:
+- confidence_score < 50
+- category cannot be determined from the content
+- content is promotional, duplicative, or non-editorial
+- summary cannot be written due to insufficient information`;
 
 const API_BASE = () =>
   process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
@@ -65,31 +97,105 @@ async function apiCall(path, method = 'GET', body = null) {
   return json;
 }
 
+// ── LLM enrichment ───────────────────────────────────────────────────────────
+
+async function runBarbaraLLM(rawInput) {
+  const client = new Anthropic();
+  const userContent = [
+    `Title: ${rawInput.title || '(none)'}`,
+    rawInput.source_url ? `Source URL: ${rawInput.source_url}` : null,
+    rawInput.tags?.length ? `Tags: ${rawInput.tags.join(', ')}` : null,
+    rawInput.summary ? `Content: ${String(rawInput.summary).slice(0, 800)}` : null,
+  ].filter(Boolean).join('\n');
+
+  const msg = await client.messages.create({
+    model:      'claude-haiku-4-5-20251001',
+    max_tokens: 512,
+    system:     BARBARA_SYSTEM_PROMPT,
+    messages:   [{ role: 'user', content: userContent }],
+  });
+
+  const text    = (msg.content[0]?.text || '').trim();
+  const cleaned = text.replace(/^```json?\s*/i, '').replace(/\s*```$/, '').trim();
+  return JSON.parse(cleaned);
+}
+
+// ── Quality flag log ──────────────────────────────────────────────────────────
+
+async function logQualityFlag(contentType, sourceId, enriched) {
+  try {
+    await db.logPipelineEvent({
+      content_type: contentType,
+      content_id:   sourceId,
+      from_status:  'raw',
+      to_status:    'quality_flagged',
+      agent_name:   'Barbara',
+      notes: JSON.stringify({
+        confidence_score: enriched.confidence_score,
+        source:           enriched.source,
+        category:         enriched.category,
+        summary:          (enriched.summary || '').slice(0, 200),
+        reason:           'confidence_score < 50 or content failed quality threshold',
+      }),
+    });
+  } catch (e) {
+    console.warn(JSON.stringify({
+      ts: new Date().toISOString(), runtime: 'barbara',
+      event: 'QUALITY_FLAG_LOG_ERROR', source_id: sourceId, error: e.message,
+    }));
+  }
+}
+
 // ── Normalization: threat records ─────────────────────────────────────────────
 
-function normalizeThreat(threat) {
-  const cvss = parseFloat(threat.cvss_score) || 0;
-  const isKev      = threat.category === 'known_exploited_vulnerability';
+async function normalizeThreat(threat) {
+  const cvss        = parseFloat(threat.cvss_score) || 0;
+  const isKev       = threat.category === 'known_exploited_vulnerability';
   const isImmediate = threat.priority === 'immediate';
-  const hasCve     = !!threat.cve_id;
+  const hasCve      = !!threat.cve_id;
+
+  let enriched = null;
+  try {
+    enriched = await runBarbaraLLM({
+      title:      threat.threat_name,
+      source_url: threat.source_url,
+      tags:       threat.tags,
+      summary:    threat.raw_data ? JSON.stringify(threat.raw_data).slice(0, 800) : null,
+    });
+  } catch (e) {
+    console.warn(JSON.stringify({
+      ts: new Date().toISOString(), runtime: 'barbara',
+      event: 'LLM_FALLBACK', source_id: threat.id, error: e.message,
+    }));
+  }
 
   return {
     source_type: 'threat',
     source_id:   threat.id,
     normalized_data: {
-      title:       threat.threat_name,
-      cve_id:      threat.cve_id || null,
-      category:    threat.category,
-      severity:    threat.severity,
-      cvss_score:  cvss,
-      source_url:  threat.source_url || null,
-      priority:    threat.priority,
-      tags:        threat.tags || [],
-      ingested_at: threat.ingested_at,
+      title:            threat.threat_name,
+      cve_id:           threat.cve_id || null,
+      category:         threat.category,
+      severity:         threat.severity,
+      cvss_score:       cvss,
+      source_url:       threat.source_url || null,
+      priority:         threat.priority,
+      tags:             threat.tags || [],
+      ingested_at:      threat.ingested_at,
+      ...(enriched && {
+        summary:          enriched.summary,
+        threat_category:  enriched.threat_category,
+        cve_ids:          enriched.cve_ids,
+        entity_names:     enriched.entity_names,
+        source:           enriched.source,
+        confidence_score: enriched.confidence_score,
+      }),
     },
-    correlation_tags: buildThreatCorrelationTags(threat, cvss, isKev, isImmediate),
+    correlation_tags:    buildThreatCorrelationTags(threat, cvss, isKev, isImmediate),
     ready_for_intel:     isKev || isImmediate || (hasCve && cvss >= 9.0),
     ready_for_awareness: true,
+    source_tier:         enriched?.source_tier ?? null,
+    quality_flag:        enriched?.quality_flag ?? false,
   };
 }
 
@@ -113,8 +219,23 @@ function inferSourceTier(tags = []) {
   return null;
 }
 
-function normalizeIntelItem(item) {
+async function normalizeIntelItem(item) {
   const isHighPriority = item.priority === 'high';
+
+  let enriched = null;
+  try {
+    enriched = await runBarbaraLLM({
+      title:      item.headline,
+      source_url: item.source_url || null,
+      tags:       item.tags,
+      summary:    item.summary ? String(item.summary).slice(0, 800) : null,
+    });
+  } catch (e) {
+    console.warn(JSON.stringify({
+      ts: new Date().toISOString(), runtime: 'barbara',
+      event: 'LLM_FALLBACK', source_id: item.id, error: e.message,
+    }));
+  }
 
   return {
     source_type: item.type,
@@ -127,11 +248,18 @@ function normalizeIntelItem(item) {
       priority:    item.priority,
       tags:        item.tags || [],
       ingested_at: item.ingested_at,
+      ...(enriched && {
+        summary:          enriched.summary,
+        entity_names:     enriched.entity_names,
+        source:           enriched.source,
+        confidence_score: enriched.confidence_score,
+      }),
     },
     correlation_tags: [...new Set([...(item.tags || []), item.type])],
     ready_for_intel:     isHighPriority,
     ready_for_awareness: true,
-    source_tier:         inferSourceTier(item.tags),
+    source_tier:         enriched?.source_tier ?? inferSourceTier(item.tags),
+    quality_flag:        enriched?.quality_flag ?? false,
   };
 }
 
@@ -158,7 +286,7 @@ async function executeNormalizeTask(task) {
         await db.updateTask(task.id, { status: 'failed', error_message: 'Threat record not found' });
         return;
       }
-      payload = normalizeThreat(rows[0]);
+      payload = await normalizeThreat(rows[0]);
 
     } else if (task.task_type === 'normalize_intel') {
       const rows = await db.pool.query(
@@ -173,10 +301,21 @@ async function executeNormalizeTask(task) {
         await db.updateTask(task.id, { status: 'failed', error_message: 'Intel item not found' });
         return;
       }
-      payload = normalizeIntelItem(rows[0]);
+      payload = await normalizeIntelItem(rows[0]);
 
     } else {
       await db.updateTask(task.id, { status: 'failed', error_message: `Unknown task type: ${task.task_type}` });
+      return;
+    }
+
+    if (payload.quality_flag) {
+      await logQualityFlag(payload.source_type, payload.source_id, payload.normalized_data);
+      await db.updateTask(task.id, { status: 'complete' });
+      console.log(JSON.stringify({
+        ts, runtime: 'barbara', event: 'QUALITY_FLAGGED',
+        task_id: task.id, task_type: task.task_type,
+        source_type: payload.source_type, source_id: payload.source_id,
+      }));
       return;
     }
 
