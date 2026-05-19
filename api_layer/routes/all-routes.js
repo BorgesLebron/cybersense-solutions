@@ -892,6 +892,15 @@ adminRouter.post('/briefings/create-manual', requireAdminToken(['gm']), async (r
   } catch (e) { next(e); }
 });
 
+adminRouter.patch('/briefings/:id', requireAdminToken(['gm', 'editor']), async (req, res, next) => {
+  try {
+    const { subject_line, body_md, description, file_path } = req.body;
+    const updated = await db.updateBriefingEditorial(req.params.id, { subject_line, body_md, description, file_path });
+    if (!updated) return res.status(404).json(err('NOT_FOUND', 'Briefing not found'));
+    res.json(updated);
+  } catch (e) { next(e); }
+});
+
 adminRouter.delete('/briefings/:id', requireAdminToken(['gm']), async (req, res, next) => {
   try {
     await db.deleteBriefingById(req.params.id);
