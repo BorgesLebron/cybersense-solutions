@@ -8,8 +8,10 @@ jest.mock('@ai-sdk/google', () => ({
 
 const { generateText } = require('ai');
 const { createGoogleGenerativeAI } = require('@ai-sdk/google');
+const james = require('../services/james_runtime');
 const jason = require('../services/jason_runtime');
 const rob = require('../services/rob_runtime');
+const jeff = require('../services/jeff_runtime');
 
 const validArticle = `
 # Verifiable Credentials Need Operational Trust
@@ -41,7 +43,23 @@ const article = {
   body_md: 'James draft about verifiable credentials, wallet support, issuer assurance, and operational trust. '.repeat(12),
 };
 
-describe('Jason and Rob Intel editorial brains', () => {
+const repositoryItem = {
+  repository_id: 'repo-1',
+  source_id: 'source-1',
+  source_type: 'innovation',
+  section: 'innovation',
+  title: 'Verifiable Credentials Need Operational Trust',
+  category: 'digital identity',
+  priority: 'strategic',
+  tags: ['identity', 'trust'],
+  source_url: 'https://example.test/identity',
+  summary: 'Wallet support is expanding, but operational trust requires issuer assurance and lifecycle governance.',
+  normalized_data: {
+    summary: 'Credential programs require governance, verification policy, and revocation controls.',
+  },
+};
+
+describe('James, Jason, Rob, and Jeff Intel article pipeline brains', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     process.env.INTEL_EDITORIAL_BRAIN_API_KEY = 'test-intel-editorial-key';
@@ -49,6 +67,34 @@ describe('Jason and Rob Intel editorial brains', () => {
 
   afterEach(() => {
     delete process.env.INTEL_EDITORIAL_BRAIN_API_KEY;
+  });
+
+  test('James prompt carries repository source context', () => {
+    const prompt = james.buildJamesPrompt(repositoryItem);
+
+    expect(prompt).toContain('repo-1');
+    expect(prompt).toContain('source-1');
+    expect(prompt).toContain('Verifiable Credentials Need Operational Trust');
+    expect(prompt).toContain('Wallet support is expanding');
+  });
+
+  test('James blocks malformed model output', () => {
+    const issues = james.validateJamesDraft('Below is a short draft.');
+
+    expect(issues).toContain('LLM article draft too short for Intel acquisition');
+    expect(issues).toContain('LLM article draft contains conversational preamble');
+  });
+
+  test('James applies mocked article draft when repository item is valid', async () => {
+    generateText.mockResolvedValueOnce({ text: validArticle });
+
+    const result = await james.applyJamesDraft(repositoryItem);
+
+    expect(result.issues).toEqual([]);
+    expect(result.title).toBe('Verifiable Credentials Need Operational Trust');
+    expect(result.section).toBe('innovation');
+    expect(result.source_ids).toEqual(['source-1']);
+    expect(createGoogleGenerativeAI).toHaveBeenCalledWith({ apiKey: 'test-intel-editorial-key' });
   });
 
   test('Jason prompt carries article context and James draft', () => {
@@ -93,5 +139,11 @@ describe('Jason and Rob Intel editorial brains', () => {
     expect(result.issues).toEqual([]);
     expect(result.body_md).toContain('Closing Assessment');
     expect(createGoogleGenerativeAI).toHaveBeenCalledWith({ apiKey: 'test-intel-editorial-key' });
+  });
+
+  test('Jeff article QA accepts complete Intel article structure', () => {
+    const result = jeff.applyArticleQAReview({ ...article, body_md: validArticle });
+
+    expect(result.issues).toEqual([]);
   });
 });
