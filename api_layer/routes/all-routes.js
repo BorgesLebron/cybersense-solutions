@@ -892,6 +892,15 @@ adminRouter.post('/briefings/create-manual', requireAdminToken(['gm']), async (r
   } catch (e) { next(e); }
 });
 
+adminRouter.patch('/briefings/:id', requireAdminToken(['gm', 'editor']), async (req, res, next) => {
+  try {
+    const { subject_line, body_md, description, file_path } = req.body;
+    const updated = await db.updateBriefingEditorial(req.params.id, { subject_line, body_md, description, file_path });
+    if (!updated) return res.status(404).json(err('NOT_FOUND', 'Briefing not found'));
+    res.json(updated);
+  } catch (e) { next(e); }
+});
+
 adminRouter.delete('/briefings/:id', requireAdminToken(['gm']), async (req, res, next) => {
   try {
     await db.deleteBriefingById(req.params.id);
@@ -1657,6 +1666,32 @@ adminRouter.patch('/meetings/:id/action-items/:aid', requireAdminToken(['gm']), 
     const item = await db.patchActionItem(req.params.aid, updates);
     if (!item) return res.status(404).json(err('NOT_FOUND', 'Action item not found'));
     res.json(item);
+  } catch (e) { next(e); }
+});
+
+// ── LOG RECORD ────────────────────────────────────────────────────────────────
+
+const AGENT_LOG_MAP = {
+  rick:         ['Rick'],
+  ivan_charlie: ['Ivan', 'Charlie'],
+  barbara:      ['Barbara'],
+  james:        ['James'],
+  ruth:         ['Ruth'],
+};
+
+adminRouter.get('/log-record', requireAdminToken(), async (req, res, next) => {
+  try {
+    const agents = AGENT_LOG_MAP[req.query.agent];
+    if (!agents) return res.status(400).json(err('INVALID_AGENT', 'Unknown agent key'));
+    const rows = await db.pool.query(
+      `SELECT id, content_type, content_id, from_status, to_status, agent_name, notes, created_at
+       FROM pipeline_events
+       WHERE agent_name = ANY($1)
+       ORDER BY created_at DESC
+       LIMIT 50`,
+      [agents]
+    ).then(r => r.rows);
+    res.json({ data: rows });
   } catch (e) { next(e); }
 });
 

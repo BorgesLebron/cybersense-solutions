@@ -511,7 +511,7 @@ const createBriefing = ({ edition_date, edition_number, subject_line, body_md, t
 const getBriefingByDate = (date) => q1('SELECT * FROM briefings WHERE edition_date=$1', [date]);
 const getBriefingById = (id) => q1('SELECT * FROM briefings WHERE id=$1', [id]);
 
-const updateBriefingEditorial = (id, { subject_line, body_md, description }) => {
+const updateBriefingEditorial = (id, { subject_line, body_md, description, file_path }) => {
   const updates = [];
   const params = [id];
   if (subject_line !== undefined) {
@@ -525,6 +525,10 @@ const updateBriefingEditorial = (id, { subject_line, body_md, description }) => 
   if (description !== undefined) {
     params.push(description);
     updates.push(`description=$${params.length}`);
+  }
+  if (file_path !== undefined) {
+    params.push(file_path);
+    updates.push(`file_path=$${params.length}`);
   }
   if (updates.length === 0) return getBriefingById(id);
   return q1(`UPDATE briefings SET ${updates.join(', ')} WHERE id=$1 RETURNING *`, params);
@@ -599,6 +603,11 @@ const createTrainingModule = ({ title, type, phase, zt_module, access_tier, dura
       VALUES (gen_random_uuid(),$1,$2,$3,$4,$5,$6,$7,$8,'draft',$9) RETURNING *`,
     [title, type, phase, zt_module, access_tier, duration_min, content_url, body_md, created_by]);
 
+const getTrainingModulesByStatus = (status, limit = 30) => {
+  return q(`SELECT id,title,type,phase,zt_module,access_tier,duration_min,body_md,pipeline_status
+            FROM training_modules WHERE pipeline_status=$1 ORDER BY created_at ASC LIMIT $2`, [status, limit]);
+};
+
 const listTrainingModules = ({ type, phase, zt_module, page = 1, limit = 30 } = {}) => {
   const conds = ["pipeline_status='published'"];
   const params = [];
@@ -618,6 +627,10 @@ const advanceModuleStatus = (id, to_status) =>
         maya_approved_at = CASE WHEN $3='maya'      AND maya_approved_at IS NULL THEN now() ELSE maya_approved_at END,
         published_at     = CASE WHEN $3='published' AND published_at     IS NULL THEN now() ELSE published_at     END
       WHERE id=$1 RETURNING *`, [id, to_status, to_status]);
+
+const updateTrainingModuleHtmlAndStatus = (id, body_html, to_status) =>
+  q1(`UPDATE training_modules SET body_html=$2, pipeline_status=$3 WHERE id=$1 RETURNING *`,
+    [id, body_html, to_status]);
 
 // ── TRAINING GLOSSARY ──────────────────────────────────────────────────────────
 
@@ -882,6 +895,15 @@ const listPipelineEvents = ({ content_type, content_id, agent_name, limit = 50 }
             LIMIT $${params.length}`, params);
 };
 
+const getKirbyPipelineEvents = (limit = 10) => {
+  return q(`
+    SELECT * FROM pipeline_events
+    WHERE agent_name = 'Kirby'
+    ORDER BY created_at DESC
+    LIMIT $1;
+  `, [limit]);
+};
+
 // ── RISK REGISTER ──────────────────────────────────────────────────────────────
 
 const createRisk = ({ domain, title, description, severity, score, owner_agent, raised_by, due_date }) =>
@@ -1027,9 +1049,9 @@ module.exports = {
   createArticle, getArticle, getArticleById, listArticles, listArticlesForPreview, advanceArticleStatus, incrementArticleViews,
   getPublishedArticleStats, getArticlePipelineQueue,
   createBriefing, getBriefingByDate, getBriefingById, updateBriefingEditorial, listBriefings, advanceBriefingStatus, revertBriefingForRevision,
-  logPipelineEvent, countRejections, countAgentRejections24h, listPipelineEvents,
+  logPipelineEvent, countRejections, countAgentRejections24h, listPipelineEvents, getKirbyPipelineEvents,
   createSocialPost, updateSocialMetrics, listSocialPosts, getSocialPerformance,
-  createTrainingModule, listTrainingModules, getTrainingModule, advanceModuleStatus,
+  createTrainingModule, getTrainingModulesByStatus, listTrainingModules, getTrainingModule, advanceModuleStatus,
   recordCompletion, getUserCompletions, getOrgCompletions, getOrgCompletionSummary, getGlobalTrainingSummary,
   createSimulation, recordSimulationResult, getOrgSimulations, getSimulationResults,
   createSubscription, getSubscriptionByStripeId, updateSubscription,

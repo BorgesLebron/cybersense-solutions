@@ -112,6 +112,8 @@ if (process.env.NODE_ENV !== 'test') {
     if (process.env.NODE_ENV === 'production') {
       const { startScheduler } = require('./services/scheduler');
       startScheduler();
+      const marioRuntime = require('./services/mario_runtime'); // Note: not destructuring since it's default export
+      marioRuntime.init();
     }
   });
 }

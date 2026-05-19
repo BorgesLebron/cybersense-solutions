@@ -76,6 +76,46 @@ Answer: A
     rotateTokenMock.mockRestore();
   });
 
+  test('Kirby transitions training module to ready_for_html after creation', async () => {
+    const mockContent = `
+## Why This Matters:
+This is a test explanation.
+
+## What You Need to Know:
+- Point 1.
+
+## Defensive Actions:
+1. Action 1.
+
+## Knowledge Check:
+Q? A) Opt1 B) Opt2 C) Opt3 Answer: A
+    `.trim();
+
+    generateText.mockResolvedValueOnce({ text: mockContent });
+
+    // Mock DB calls needed for this flow
+    jest.spyOn(db.pool, 'query').mockImplementation((sql, params) => {
+      if (sql.includes('FROM briefings')) return Promise.resolve({ rows: [{ id: 'b1', threat_item_ids: ['t1'] }] });
+      if (sql.includes('FROM intel_repository')) return Promise.resolve({ rows: [{ id: 'r1', source_id: 't1', threat_name: 'Test Threat', severity: 'high', summary: 'Test summary' }] });
+      if (sql.includes('agent_tasks')) return Promise.resolve({ rows: [{ id: 'task-1', status: 'queued', content_type: 'training_byte' }] });
+      return Promise.resolve({ rows: [] });
+    });
+
+    const createModuleMock = jest.spyOn(db, 'createTrainingModule').mockResolvedValue({ id: 'new-byte-id' });
+    const advanceStatusMock = jest.spyOn(db, 'advanceModuleStatus').mockResolvedValue({});
+    const updateTaskMock = jest.spyOn(db, 'updateTask').mockResolvedValue({});
+    const rotateTokenMock = jest.spyOn(db, 'rotateAgentToken').mockResolvedValue({});
+
+    await kirby.pollKirbyTasks();
+
+    expect(createModuleMock).toHaveBeenCalled();
+    expect(advanceStatusMock).toHaveBeenCalledWith('new-byte-id', 'ready_for_html');
+    expect(updateTaskMock).toHaveBeenCalledWith('task-1', expect.objectContaining({ status: 'complete' }));
+
+    // Clean up mocks
+    jest.restoreAllMocks();
+  });
+
   test('Kirby posts weekly status on Monday if not already present', async () => {
     // Mock Monday, May 18, 2026 (Day 1)
     const mockDate = new Date('2026-05-18T10:00:00Z');

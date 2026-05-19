@@ -147,6 +147,9 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
 .pc-log-entry{padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:12px;display:flex;gap:8px;align-items:baseline;}
 .pc-log-entry:last-child{border-bottom:none;}
 .pc-log-ts{font-size:10px;color:var(--color-text-tertiary);white-space:nowrap;}
+.log-agent-btn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:8px 12px;border:0.5px solid var(--color-border-tertiary);border-radius:8px;background:var(--color-background-primary);color:var(--color-text-secondary);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:background .12s,border-color .12s;width:100%;text-align:left;}
+.log-agent-btn:hover{background:var(--color-background-secondary);}
+.log-agent-btn.active{border-color:#185FA5;background:var(--color-background-info);color:var(--color-text-info);}
 </style>
 </head>
 <body>
@@ -238,6 +241,10 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
       <div class="nav-item" onclick="showPanel('social',this)">
         <svg class="nav-icon" viewBox="0 0 14 14" fill="none"><circle cx="3.5" cy="7" r="2" stroke="currentColor" stroke-width="1.2"/><circle cx="10.5" cy="3.5" r="2" stroke="currentColor" stroke-width="1.2"/><circle cx="10.5" cy="10.5" r="2" stroke="currentColor" stroke-width="1.2"/><path d="M5.4 6l3.2-1.7M5.4 8l3.2 1.7" stroke="currentColor" stroke-width="1.2"/></svg>
         Social media
+      </div>
+      <div class="nav-item" onclick="showPanel('logrecord',this)">
+        <svg class="nav-icon" viewBox="0 0 14 14" fill="none"><path d="M2 4h10M2 7h7M2 10h5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        Log Record
       </div>
 
       <div class="nav-section" style="margin-top:6px;">Business</div>
@@ -596,6 +603,39 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
           </table>
         </div>
         <button class="ask-btn" onclick="sendPrompt('What content formats perform best for cybersecurity newsletters on LinkedIn and what should Oliver prioritize?','maya')">Optimize LinkedIn strategy ↗</button>
+      </div>
+
+      <!-- LOG RECORD -->
+      <div class="panel" id="p-logrecord">
+        <div class="panel-title">Log Record</div>
+        <div class="panel-sub">Pipeline events by acquisition agent — select an agent to inspect recent records</div>
+        <div style="display:grid;grid-template-columns:200px 1fr;gap:16px;min-height:480px;">
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <button class="log-agent-btn" onclick="loadLogRecord('rick',this)">
+              <span>Rick</span>
+              <span style="font-size:11px;color:var(--color-text-tertiary);font-weight:400;">Threat feed ingestion</span>
+            </button>
+            <button class="log-agent-btn" onclick="loadLogRecord('ivan_charlie',this)">
+              <span>Ivan / Charlie</span>
+              <span style="font-size:11px;color:var(--color-text-tertiary);font-weight:400;">Policy + Innovation</span>
+            </button>
+            <button class="log-agent-btn" onclick="loadLogRecord('barbara',this)">
+              <span>Barbara</span>
+              <span style="font-size:11px;color:var(--color-text-tertiary);font-weight:400;">Data normalization</span>
+            </button>
+            <button class="log-agent-btn" onclick="loadLogRecord('james',this)">
+              <span>James</span>
+              <span style="font-size:11px;color:var(--color-text-tertiary);font-weight:400;">Intel enrichment</span>
+            </button>
+            <button class="log-agent-btn" onclick="loadLogRecord('ruth',this)">
+              <span>Ruth</span>
+              <span style="font-size:11px;color:var(--color-text-tertiary);font-weight:400;">Newsletter enrichment</span>
+            </button>
+          </div>
+          <div id="log-record-detail" style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:10px;padding:16px;overflow-y:auto;font-size:12px;">
+            <div style="color:var(--color-text-tertiary);text-align:center;padding:60px 0;">Select an agent to view pipeline events</div>
+          </div>
+        </div>
       </div>
 
       <!-- FINANCIAL -->
@@ -1557,6 +1597,56 @@ async function sendMayaNewsletterMessage() {
     appendMayaMessage('Unable to notify Maya: ' + (e.message || 'Request failed'));
   } finally {
     btn.disabled = false;
+  }
+}
+
+async function loadLogRecord(agentKey, btn) {
+  document.querySelectorAll('.log-agent-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  const detail = document.getElementById('log-record-detail');
+  detail.innerHTML = '<div style="color:var(--color-text-tertiary);text-align:center;padding:40px 0;">Loading...</div>';
+
+  try {
+    const res = await CS.Auth.apiFetch(`/api/admin/log-record?agent=${agentKey}`);
+    const rows = res.data || [];
+
+    if (rows.length === 0) {
+      detail.innerHTML = '<div style="color:var(--color-text-tertiary);text-align:center;padding:40px 0;">No events found for this agent</div>';
+      return;
+    }
+
+    detail.innerHTML = rows.map(row => {
+      let extra = '';
+      if (row.agent_name === 'Barbara' && row.notes) {
+        try {
+          const n = JSON.parse(row.notes);
+          if (n.confidence_score !== undefined) {
+            extra = `<span style="color:var(--color-text-tertiary);margin-left:8px;">Confidence: <strong style="color:var(--color-text-primary);">${n.confidence_score}</strong></span>`;
+          }
+        } catch(_) {}
+      }
+      const notesText = row.notes && !extra
+        ? `<div style="margin-top:5px;color:var(--color-text-secondary);line-height:1.45;">${row.notes}</div>` : '';
+      const ts = new Date(row.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+      return `<div style="padding:10px 0;border-bottom:0.5px solid var(--color-border-tertiary);">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <span style="font-weight:600;color:var(--color-text-primary);">${row.agent_name}</span>
+            ${row.content_type ? `<span class="badge b-gray">${row.content_type}</span>` : ''}
+            <span class="badge b-blue">${row.from_status || '—'}</span>
+            <span style="color:var(--color-text-tertiary);">→</span>
+            <span class="badge b-green">${row.to_status || '—'}</span>
+            ${extra}
+          </div>
+          <span style="font-size:11px;color:var(--color-text-tertiary);white-space:nowrap;">${ts}</span>
+        </div>
+        ${notesText}
+      </div>`;
+    }).join('');
+  } catch(e) {
+    detail.innerHTML = `<div style="color:var(--color-text-tertiary);text-align:center;padding:40px 0;">Failed to load: ${e.message || 'Request error'}</div>`;
   }
 }
 </script>

@@ -56,6 +56,23 @@
 <section class="section" style="background:var(--cs-white);">
   <div class="container">
 
+    <!-- Training Bytes -->
+    <div class="category-section">
+      <div class="category-label-bar">Training Bytes</div>
+      <div class="card">
+        <video controls style="width:100%;max-width:800px;margin:0 auto;display:block;">
+          <source src="trainingProducts/videos/trainingByte20260519.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+        <h3 style="font-size:18px;font-weight:700;color:var(--cs-navy);margin-top:16px;text-align:center;">
+          CyberSense Solutions: Training Byte 20260519
+        </h3>
+        <p style="font-size:14px;color:var(--cs-gray-600);text-align:center;margin-top:8px;">
+          Your first training byte covering essential cybersecurity concepts.
+        </p>
+      </div>
+    </div>
+
     <!-- Vulnerability/Mitigation Labs -->
     <div class="category-section">
       <div class="category-label-bar">Vulnerability &amp; Mitigation Labs</div>
@@ -119,6 +136,72 @@
             <span class="badge badge-intermediate" style="margin-bottom:8px;">Intermediate</span>
             <h3 style="font-size:15px;font-weight:700;color:var(--cs-navy);margin-bottom:4px;line-height:1.3;">Cloud Security Posture Management: AWS and Azure Misconfiguration Detection</h3>
             <p style="font-size:13px;color:var(--cs-gray-400);">55 min • Series: Cloud Security</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Video Training -->
+    <div class="category-section">
+      <div class="category-label-bar">Video Training</div>
+        <div class="blurred">
+        <div class="grid-3">
+          <div class="card">
+            <div class="video-thumb" role="img" aria-label="Video: Threat Intelligence Fundamentals">
+              <div class="play-icon" aria-hidden="true">▶</div>
+            </div>
+            <span class="badge badge-beginner" style="margin-bottom:8px;">Beginner</span>
+            <h3 style="font-size:15px;font-weight:700;color:var(--cs-navy);margin-bottom:4px;line-height:1.3;">Threat Intelligence Fundamentals: The Intelligence Cycle Explained</h3>
+            <p style="font-size:13px;color:var(--cs-gray-400);">42 min • Series: Intel Foundations</p>
+          </div>
+          <div class="card">
+            <div class="video-thumb" role="img" aria-label="Video: Zero-Trust Architecture">
+              <div class="play-icon" aria-hidden="true">▶</div>
+            </div>
+            <span class="badge badge-intermediate" style="margin-bottom:8px;">Intermediate</span>
+            <h3 style="font-size:15px;font-weight:700;color:var(--cs-navy);margin-bottom:4px;line-height:1.3;">Zero-Trust Architecture: Implementing Network Microsegmentation</h3>
+            <p style="font-size:13px;color:var(--cs-gray-400);">67 min • Series: Zero-Trust</p>
+          </div>
+          <div class="card">
+            <div class="video-thumb" role="img" aria-label="Video: Cloud Security Posture Management">
+              <div class="play-icon" aria-hidden="true">▶</div>
+            </div>
+            <span class="badge badge-intermediate" style="margin-bottom:8px;">Intermediate</span>
+            <h3 style="font-size:15px;font-weight:700;color:var(--cs-navy);margin-bottom:4px;line-height:1.3;">Cloud Security Posture Management: AWS and Azure Misconfiguration Detection</h3>
+            <p style="font-size:13px;color:var(--cs-gray-400);">55 min • Series: Cloud Security</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lab Scenarios (Phase 3 Scaffold) -->
+    <div class="category-section">
+      <div class="category-label-bar">Lab Scenarios</div>
+      <div class="blurred">
+        <div class="grid-3">
+          <div class="card" style="min-height:180px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
+            <h3 style="font-size:18px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;line-height:1.3;">Beginner Scenario 1</h3>
+            <p style="font-size:14px;color:var(--cs-gray-600);line-height:1.55;margin-bottom:16px;">
+              A foundational lab for new users (Freemium, Monthly, Enterprise).
+            </p>
+            <!-- Tiering Logic Placeholder: visible to Freemium, Monthly, Enterprise -->
+            <button class="btn btn-outline btn-sm" onclick="CS.Auth.showLoginModal()">Start Lab →</button>
+          </div>
+          <div class="card" style="min-height:180px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
+            <h3 style="font-size:18px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;line-height:1.3;">Intermediate Scenario A</h3>
+            <p style="font-size:14px;color:var(--cs-gray-600);line-height:1.55;margin-bottom:16px;">
+              A deeper dive for experienced users (Monthly, Enterprise).
+            </p>
+            <!-- Tiering Logic Placeholder: visible to Monthly, Enterprise -->
+            <button class="btn btn-locked btn-sm" disabled>🔒 Subscribers Only</button>
+          </div>
+          <div class="card" style="min-height:180px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
+            <h3 style="font-size:18px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;line-height:1.3;">Advanced Scenario X</h3>
+            <p style="font-size:14px;color:var(--cs-gray-600);line-height:1.55;margin-bottom:16px;">
+              Complex challenges for expert users (Enterprise only).
+            </p>
+            <!-- Tiering Logic Placeholder: visible to Enterprise only -->
+            <button class="btn btn-locked btn-sm" disabled>🔒 Enterprise Only</button>
           </div>
         </div>
       </div>

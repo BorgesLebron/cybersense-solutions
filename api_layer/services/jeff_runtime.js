@@ -218,7 +218,7 @@ async function executeJeffArticleQA(task) {
       throw new Error(`Article ${task.content_id} not found`);
     }
 
-    if (article.pipeline_status !== 'eic_review') {
+    if (article.pipeline_status !== 'qa') {
       console.log(JSON.stringify({
         ts, runtime: 'jeff', event: 'SKIP_WRONG_ARTICLE_STATUS',
         article_id: article.id, pipeline_status: article.pipeline_status,
@@ -248,7 +248,7 @@ async function executeJeffArticleQA(task) {
     }
 
     await apiCall(`/api/pipeline/articles/${article.id}/status`, 'PATCH', {
-      to_status:  'qa',
+      to_status:  'maya',
       agent_name: 'Jeff',
       notes:      'Article QA complete. Required Intel article sections, title, section, and body depth verified.',
     });

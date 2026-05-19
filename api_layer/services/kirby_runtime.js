@@ -187,7 +187,7 @@ async function produceDailyTrainingByte(task) {
     });
 
     // 4. Update status and notify
-    await db.advanceModuleStatus(byte.id, 'published');
+    await db.advanceModuleStatus(byte.id, 'ready_for_html');
     
     // 5. Post to meeting (Gemma task) — non-critical, must not fail the cycle
     try {
