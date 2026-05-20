@@ -238,6 +238,14 @@ async function executeIvanCharlieIngest(task) {
         summary: `${payload.summary}\n\nSource: ${source_url}\nPublished: ${published_at}`,
       });
       submitted.push({ type: item.type, id: result.id });
+      await db.logPipelineEvent({
+        content_type: 'intel_item',
+        content_id:   result.id,
+        from_status:  null,
+        to_status:    'ingested',
+        agent_name:   'Ivan/Charlie',
+        notes: `type: ${item.type} | ${item.headline.slice(0, 100)}`,
+      });
     }
 
     await db.updateTask(task.id, { status: 'complete' });

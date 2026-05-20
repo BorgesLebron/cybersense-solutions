@@ -39,14 +39,11 @@ function markdownToHtml(markdown) {
   html = html.replace(/^##\s*(.*)$/gm, '<h2>$1</h2>');
   // Convert bullet points to <ul><li>
   html = html.replace(/^\*\s*(.*)$/gm, '<li>$1</li>');
-  html = html.replace(/(<li>.*<\/li>(
-<li>.*<\/li>)*)/gs, '<ul>$1</ul>');
+  html = html.replace(/((?:<li>.*?<\/li>\s*)+)/gs, '<ul>$1</ul>');
   // Convert text within backticks to <code>
   html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
   // Convert newlines to <br> where appropriate (simple paragraphs)
-  html = html.replace(/
-
-/g, '</p><p>');
+  html = html.replace(/\n\s*\n/g, '</p><p>');
   html = `<p>${html}</p>`; // Wrap the whole thing in a paragraph.
   return html;
 }

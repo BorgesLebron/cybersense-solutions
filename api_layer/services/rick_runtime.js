@@ -267,6 +267,14 @@ async function executeRickThreatIngest(task) {
       try {
         const result = await apiCall('/api/pipeline/threat-records', 'POST', record);
         submitted.push({ cve_id: record.cve_id, id: result.id });
+        await db.logPipelineEvent({
+          content_type: 'threat_record',
+          content_id:   result.id,
+          from_status:  null,
+          to_status:    'ingested',
+          agent_name:   'Rick',
+          notes: `CVE: ${record.cve_id || 'none'} | severity: ${record.severity} | cvss: ${record.cvss_score}`,
+        });
       } catch (e) {
         if (!String(e.message).includes('409')) throw e;
       }

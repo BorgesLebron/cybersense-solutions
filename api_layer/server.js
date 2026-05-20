@@ -112,8 +112,22 @@ if (process.env.NODE_ENV !== 'test') {
     if (process.env.NODE_ENV === 'production') {
       const { startScheduler } = require('./services/scheduler');
       startScheduler();
-      const marioRuntime = require('./services/mario_runtime'); // Note: not destructuring since it's default export
-      marioRuntime.init();
+      try {
+        const marioRuntime = require('./services/mario_runtime');
+        Promise.resolve(marioRuntime.init()).catch(e => {
+          console.error(JSON.stringify({
+            ts: new Date().toISOString(),
+            event: 'MARIO_RUNTIME_DISABLED',
+            error: e.message,
+          }));
+        });
+      } catch (e) {
+        console.error(JSON.stringify({
+          ts: new Date().toISOString(),
+          event: 'MARIO_RUNTIME_DISABLED',
+          error: e.message,
+        }));
+      }
     }
   });
 }

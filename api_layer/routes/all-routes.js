@@ -227,6 +227,20 @@ trainingRouter.get('/modules/:id', requireUserToken('free'), async (req, res, ne
   } catch (e) { next(e); }
 });
 
+trainingRouter.get('/kirby-output/:moduleId', requireAdminToken(), async (req, res, next) => {
+  try {
+    const module = await db.getTrainingModule(req.params.moduleId);
+    if (!module) return res.status(404).json(err('NOT_FOUND', 'Training module not found'));
+    res.json({
+      id: module.id,
+      title: module.title,
+      body_md: module.body_md,
+      body_html: module.body_html,
+      pipeline_status: module.pipeline_status,
+    });
+  } catch (e) { next(e); }
+});
+
 trainingRouter.get('/glossary', requireUserToken('free'), async (req, res, next) => {
   try {
     const { category, search, page = 1, limit = 100 } = req.query;
@@ -1673,7 +1687,7 @@ adminRouter.patch('/meetings/:id/action-items/:aid', requireAdminToken(['gm']), 
 
 const AGENT_LOG_MAP = {
   rick:         ['Rick'],
-  ivan_charlie: ['Ivan', 'Charlie'],
+  ivan_charlie: ['Ivan/Charlie'],
   barbara:      ['Barbara'],
   james:        ['James'],
   ruth:         ['Ruth'],
