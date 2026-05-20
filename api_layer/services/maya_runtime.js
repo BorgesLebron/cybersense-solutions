@@ -5,10 +5,25 @@
 //   1. editorial_troubleshoot — answer Command Center pipeline status queries
 //   2. approve_briefing — QA review and approval: qa → maya → approved
 
-const crypto = require('crypto');
-const jwt    = require('jsonwebtoken');
-const db = require('../db/queries');
+const crypto    = require('crypto');
+const jwt       = require('jsonwebtoken');
+const Anthropic  = require('@anthropic-ai/sdk');
+const db        = require('../db/queries');
 const { notifyAgents } = require('./agents');
+
+const MAYA_SYSTEM_PROMPT = `You are Maya, Editorial Director of CyberSense Intelligence Operations. You receive a structured pipeline status brief and an operator's question. Respond with a clear, direct status assessment and next action.
+
+RESPONSE FORMAT — three short paragraphs, no headers, no bullets:
+1. Current state: lead with the most important fact — what is the hold, who owns it.
+2. Root cause: what specifically failed or is pending, naming the agent and task type.
+3. Next action: tell the operator exactly what to do. Operationally concrete — not "investigate" but "rerun the Peter task" or "approve in Preview Briefing now."
+
+WRITING STANDARDS:
+- Punchy and direct. Brief an executive who has ten seconds.
+- Lead with the verdict, not the background.
+- Answer "so what?" — what breaks if this is not resolved today?
+- No idioms, no hedging, no filler. Every sentence carries information.
+- 100 words maximum.`;
 
 const API_BASE = () =>
   process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
@@ -56,6 +71,33 @@ async function apiCall(path, method = 'GET', body = null) {
     throw new Error(`${method} ${path} → ${res.status}: ${json.error || json.message || JSON.stringify(json)}`);
   }
   return json;
+}
+
+async function runMayaLLM(briefing, context, operatorMessage, diagnosis) {
+  const client = new Anthropic();
+  const pipelineContext = [
+    briefing
+      ? `Edition ${briefing.edition_number} | Stage: ${briefing.pipeline_status} | Date: ${briefing.edition_date}`
+      : 'No active briefing in pipeline.',
+    `Hold: ${diagnosis.issue}`,
+    `Owner: ${diagnosis.owner}`,
+    `Recommended next: ${diagnosis.next}`,
+    context.tasks.slice(0, 3).map(t =>
+      `Task — ${t.agent_name}/${t.task_type}: ${t.status}${t.error_message ? ` (${t.error_message})` : ''}`
+    ).join('\n'),
+    context.events.slice(0, 3).map(e =>
+      `Event — ${e.agent_name}: ${e.from_status || 'new'} → ${e.to_status}`
+    ).join('\n'),
+    operatorMessage ? `Operator note: "${operatorMessage.slice(0, 200)}"` : '',
+  ].filter(Boolean).join('\n');
+
+  const msg = await client.messages.create({
+    model:      'claude-haiku-4-5-20251001',
+    max_tokens: 256,
+    system:     MAYA_SYSTEM_PROMPT,
+    messages:   [{ role: 'user', content: pipelineContext }],
+  });
+  return (msg.content[0]?.text || '').trim();
 }
 
 async function getTargetBriefing(contentId) {
@@ -206,7 +248,17 @@ async function executeTroubleshootTask(task) {
   const latestUserMessage = [...messages].reverse().find(m => m.from_role === 'user')?.message || '';
   const briefing = await getTargetBriefing(task.content_id);
   const context = briefing ? await getBriefingContext(briefing.id) : { tasks: [], events: [] };
-  const reply = buildReply(briefing, context, latestUserMessage);
+  const diagnosis = briefing
+    ? summarizeHold(briefing, context.tasks, context.events)
+    : { issue: 'No active briefing found.', owner: 'Unknown', next: 'Check Ruth production queue or trigger a daily_cycle task.' };
+
+  let reply;
+  try {
+    reply = await runMayaLLM(briefing, context, latestUserMessage, diagnosis);
+  } catch (e) {
+    console.warn(JSON.stringify({ ts: new Date().toISOString(), runtime: 'maya', event: 'LLM_FALLBACK', error: e.message }));
+    reply = buildReply(briefing, context, latestUserMessage);
+  }
 
   if (threadId) {
     await db.createAgentMessage({
