@@ -45,7 +45,15 @@ QUALITY FLAG — set to true if any of:
 - confidence_score < 50
 - category cannot be determined from the content
 - content is promotional, duplicative, or non-editorial
-- summary cannot be written due to insufficient information`;
+- summary cannot be written due to insufficient information
+
+SUMMARY WRITING STANDARDS — applied to every summary field:
+- Lead with the most important fact. Give the verdict first — the reader skims.
+- Punchy and direct. Brief a colleague over coffee, not a press release audience.
+- Scope tight: one threat or development, one consequence, one "so what?" for defenders. Do not try to cover everything.
+- Answer the defender's question: what does this mean for their organization? Frame the risk operationally.
+- No idioms, clichés, or filler. Every word must carry information.
+- Three sentences maximum: fact → impact → urgency or action context.`;
 
 const API_BASE = () =>
   process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
@@ -319,7 +327,26 @@ async function executeNormalizeTask(task) {
       return;
     }
 
-    await apiCall('/api/pipeline/repository/process', 'POST', payload);
+    const result = await apiCall('/api/pipeline/repository/process', 'POST', payload);
+    try {
+      await db.logPipelineEvent({
+        content_type: 'intel_repository',
+        content_id:   result.id,
+        from_status:  'normalized',
+        to_status:    'enrichment_complete',
+        agent_name:   'Barbara',
+        notes: JSON.stringify({
+          confidence_score: payload.normalized_data?.confidence_score ?? null,
+          source:           payload.normalized_data?.source ?? null,
+          category:         payload.normalized_data?.category ?? null,
+          ready_for_intel:  payload.ready_for_intel,
+        }),
+      });
+    } catch (e) {
+      console.warn(JSON.stringify({
+        ts, runtime: 'barbara', event: 'ENRICH_LOG_ERROR', error: e.message,
+      }));
+    }
     await db.updateTask(task.id, { status: 'complete' });
 
     console.log(JSON.stringify({

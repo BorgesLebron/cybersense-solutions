@@ -1351,28 +1351,40 @@ adminRouter.get('/intel-brief', requireAdminToken(), async (req, res, next) => {
 
 adminRouter.get('/articles/status', requireAdminToken(), async (req, res, next) => {
   try {
-    const [articles, events, published] = await Promise.all([
+    const [articles, published] = await Promise.all([
       db.listArticlesForPreview(),
-      db.listPipelineEvents({ content_type: 'article', limit: 20 }),
       db.getPublishedArticleStats(),
     ]);
 
+    const events = await db.pool.query(`
+      SELECT pe.content_id,
+             COALESCE(a.title, 'unknown') AS content_title,
+             pe.from_status, pe.to_status, pe.agent_name, pe.notes,
+             pe.created_at
+      FROM pipeline_events pe
+      LEFT JOIN articles a ON a.id = pe.content_id AND pe.content_type = 'article'
+      WHERE pe.content_type = 'article'
+      ORDER BY pe.created_at DESC
+      LIMIT 20
+    `).then(r => r.rows);
+
     const STAGE_MAP = {
-      draft:      { stage: 'Acquisition',      owner: 'James',           stage_index: 1 },
-      dev_edit:   { stage: 'Development edit', owner: 'Jason',           stage_index: 2 },
-      eic_review: { stage: 'EIC review',       owner: 'Rob',             stage_index: 3 },
-      qa:         { stage: 'QA review',        owner: 'Jeff',            stage_index: 4 },
-      maya:       { stage: 'Maya review',      owner: 'Maya',            stage_index: 5 },
-      approved:   { stage: 'HITL release',     owner: 'Human executive', stage_index: 6 },
+      draft:      { stage: 'James draft',      owner: 'James', next_owner: 'Jason', stage_index: 1 },
+      dev_edit:   { stage: 'Development edit', owner: 'Jason', next_owner: 'Rob',   stage_index: 2 },
+      eic_review: { stage: 'EIC review',       owner: 'Rob',   next_owner: 'Jeff',  stage_index: 3 },
+      qa:         { stage: 'QA review',        owner: 'Jeff',  next_owner: 'Maya',  stage_index: 4 },
+      maya:       { stage: 'Maya review',      owner: 'Maya',  next_owner: 'HITL',  stage_index: 5 },
+      approved:   { stage: 'HITL release',     owner: 'HITL',  next_owner: 'Laura', stage_index: 6 },
+      published:  { stage: 'Published',        owner: 'Laura', next_owner: null,    stage_index: 7 },
     };
-    const STAGE_TOTAL = 6;
+    const STAGE_TOTAL = 7;
 
     let tasksByArticle = {};
     if (articles.length) {
       const ids = articles.map(a => a.id);
       const tasks = await db.pool.query(`
         SELECT DISTINCT ON (content_id)
-          content_id, agent_name, task_type, status, error_message, started_at
+          content_id, agent_name, task_type, status, error_message, started_at, completed_at
         FROM agent_tasks
         WHERE content_type = 'article' AND content_id = ANY($1)
         ORDER BY content_id, started_at DESC
@@ -1383,44 +1395,86 @@ adminRouter.get('/articles/status', requireAdminToken(), async (req, res, next) 
     const normalized = articles.map(a => {
       const s    = STAGE_MAP[a.stage] || STAGE_MAP.draft;
       const task = tasksByArticle[a.id];
-      const hold = task?.status === 'failed'
+      const statusLabel = a.stage === 'approved'
+        ? 'Ready for HITL release'
+        : task?.status === 'failed'
+          ? 'Blocked'
+          : 'In production';
+      const error_message = task?.status === 'failed'
         ? `Blocked by ${task.agent_name}: ${task.error_message || task.task_type + ' failed'}`
-        : task?.status === 'in_progress'
-          ? `${task.agent_name} working on ${task.task_type}`
-          : a.stage === 'approved'
-            ? 'Awaiting HITL release'
-            : `Awaiting ${s.owner}`;
+        : null;
+      const updatedAt = a.updated || task?.completed_at || task?.started_at || null;
+      const dateTimeGroup = updatedAt
+        ? new Date(updatedAt).toISOString().replace(/\D/g, '').slice(0, 12)
+        : null;
       return {
-        id:           a.id,
-        title:        a.title,
-        slug:         a.slug,
-        type:         a.type,
-        access_tier:  a.access_tier,
+        id:              a.id,
+        title:           a.title,
+        section:         a.type,
         pipeline_status: a.stage,
-        stage:        s.stage,
-        owner:        s.owner,
-        stage_index:  s.stage_index,
-        stage_total:  STAGE_TOTAL,
-        progress_pct: Math.round((s.stage_index / STAGE_TOTAL) * 100),
-        hold,
-        summary:      (a.summary || '').slice(0, 200),
-        updated:      a.updated,
+        stage:           s.stage,
+        owner:           s.owner,
+        next_owner:      s.next_owner || null,
+        stage_index:     s.stage_index,
+        stage_total:     STAGE_TOTAL,
+        progress_pct:    Math.round((s.stage_index / STAGE_TOTAL) * 100),
+        status_label:    statusLabel,
+        summary:         (a.summary || '').slice(0, 200),
+        error_message,
+        current_task:    task ? {
+          agent_name:    task.agent_name,
+          task_type:     task.task_type,
+          status:        task.status,
+          error_message: task.error_message || null,
+          started_at:    task.started_at || null,
+          completed_at:  task.completed_at || null,
+        } : null,
+        updated_at:      updatedAt,
+        datetime_group:  dateTimeGroup,
+        public_url:      `/intel/article.html?slug=${a.slug}`,
       };
     });
 
-    const stageCounts = {};
-    normalized.forEach(a => { stageCounts[a.pipeline_status] = (stageCounts[a.pipeline_status] || 0) + 1; });
+    const byStage = { draft: 0, dev_edit: 0, eic_review: 0, qa: 0, maya: 0, approved: 0 };
+    normalized.forEach(a => { if (a.pipeline_status in byStage) byStage[a.pipeline_status]++; });
+    const blocked = normalized.filter(a => a.error_message).length;
+    const inProduction = normalized.filter(a => !['approved', 'published'].includes(a.pipeline_status)).length;
+    const publishedTotal = +published.total_published || 0;
+    const avgPublishHours = Number.parseFloat(published.avg_publish_hours);
+    const avgViews = Number.parseFloat(published.avg_views);
 
     res.json({
-      articles:         normalized,
+      articles: normalized,
       pipeline_summary: {
         total_in_pipeline: normalized.length,
-        blocked:           normalized.filter(a => a.hold.startsWith('Blocked')).length,
-        by_stage:          stageCounts,
+        in_production: inProduction,
+        blocked,
+        ready_for_hitl: byStage.approved,
+        by_stage: byStage,
       },
-      published_stats: published,
-      events,
-      generated_at:    new Date().toISOString(),
+      published_stats: {
+        total: publishedTotal,
+        month_to_date: +published.month_to_date || publishedTotal,
+        avg_publish_hours: Number.isFinite(avgPublishHours) ? avgPublishHours : 0,
+        avg_views: Number.isFinite(avgViews) ? avgViews : 0,
+        by_section: {
+          threat:     +published.threat_count     || 0,
+          policy:     +published.policy_count     || 0,
+          innovation: +published.innovation_count || 0,
+          growth:     +published.growth_count     || 0,
+          training:   +published.training_count   || 0,
+        },
+      },
+      events: events.map(e => ({
+        content_id:    e.content_id,
+        content_title: e.content_title,
+        from_status:   e.from_status,
+        to_status:     e.to_status,
+        agent_name:    e.agent_name,
+        notes:         e.notes || null,
+        created_at:    e.created_at,
+      })),
+      generated_at: new Date().toISOString(),
     });
   } catch (e) { next(e); }
 });
