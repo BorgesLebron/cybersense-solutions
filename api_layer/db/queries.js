@@ -485,8 +485,8 @@ const incrementArticleViews = (id) => q('UPDATE articles SET view_count=view_cou
 
 const getPublishedArticleStats = () =>
   q1(`SELECT
-    COUNT(*) FILTER (WHERE published_at >= date_trunc('month', now())) AS mtd_count,
-    ROUND(AVG(EXTRACT(EPOCH FROM (published_at - created_at)) / 3600)::numeric, 1) AS avg_hours_to_publish,
+    COUNT(*) FILTER (WHERE published_at >= date_trunc('month', now())) AS month_to_date,
+    ROUND(AVG(EXTRACT(EPOCH FROM (published_at - created_at)) / 3600)::numeric, 1) AS avg_publish_hours,
     ROUND(AVG(view_count)::numeric, 0) AS avg_views,
     COUNT(*) FILTER (WHERE section = 'threat')     AS threat_count,
     COUNT(*) FILTER (WHERE section = 'policy')     AS policy_count,

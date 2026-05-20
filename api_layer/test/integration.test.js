@@ -19,6 +19,10 @@ jest.mock('../db/queries', () => ({
   getRecentMeeting: jest.fn(),
   getAdminRole: jest.fn(),
   getUserById: jest.fn(),
+  getPublishedArticleStats: jest.fn(),
+  pool: {
+    query: jest.fn(),
+  },
   // Removed pool.query mock from here to prevent conflicts
 }));
 
@@ -52,6 +56,19 @@ describe('Agent Status and Command Center Integration', () => {
     db.listApprovedBriefingPreviews.mockResolvedValue([]);
     db.listPipelineEvents.mockResolvedValue([]);
     db.getRecentMeeting.mockResolvedValue(null);
+    db.listArticlesForPreview.mockResolvedValue([]);
+    db.getPublishedArticleStats.mockResolvedValue({
+      total_published: 0,
+      month_to_date: 0,
+      avg_publish_hours: 0,
+      avg_views: 0,
+      threat_count: 0,
+      policy_count: 0,
+      innovation_count: 0,
+      growth_count: 0,
+      training_count: 0,
+    });
+    db.pool.query.mockResolvedValue({ rows: [] });
   });
 
   // Test case for postAgentStatusToActiveMeeting
@@ -108,5 +125,97 @@ describe('Agent Status and Command Center Integration', () => {
     expect(res.body.meeting.id).toEqual('meeting-789');
     expect(res.body.meeting.title).toEqual('Executive Briefing');
     expect(res.body.meeting.briefings.acquisition.agent).toEqual('Rick');
+  });
+
+  test('GET /api/admin/articles/status returns the Articles Report contract', async () => {
+    db.listArticlesForPreview.mockResolvedValueOnce([
+      {
+        id: 'article-1',
+        title: 'Ivanti Endpoint Manager Mobile Improper Input Validation',
+        slug: 'ivanti-epmm-improper-input-validation',
+        type: 'threat',
+        stage: 'qa',
+        summary: 'Ivanti EPMM has a high-impact validation issue requiring operational attention.',
+        updated: '2026-05-19T09:07:30.000Z',
+      },
+    ]);
+    db.getPublishedArticleStats.mockResolvedValueOnce({
+      total_published: 10,
+      month_to_date: 4,
+      avg_publish_hours: 2.5,
+      avg_views: 18,
+      threat_count: 6,
+      policy_count: 1,
+      innovation_count: 2,
+      growth_count: 1,
+      training_count: 0,
+    });
+    db.pool.query
+      .mockResolvedValueOnce({
+        rows: [{
+          content_id: 'article-1',
+          content_title: 'Ivanti Endpoint Manager Mobile Improper Input Validation',
+          from_status: 'eic_review',
+          to_status: 'qa',
+          agent_name: 'Rob',
+          notes: 'EIC review complete',
+          created_at: '2026-05-19T09:07:30.000Z',
+        }],
+      })
+      .mockResolvedValueOnce({
+        rows: [{
+          content_id: 'article-1',
+          agent_name: 'Jeff',
+          task_type: 'qa_article',
+          status: 'queued',
+          error_message: null,
+          started_at: '2026-05-19T09:07:30.000Z',
+          completed_at: null,
+        }],
+      });
+
+    const res = await request(app)
+      .get('/api/admin/articles/status')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.pipeline_summary).toMatchObject({
+      total_in_pipeline: 1,
+      in_production: 1,
+      blocked: 0,
+      ready_for_hitl: 0,
+      by_stage: expect.objectContaining({ qa: 1 }),
+    });
+    expect(res.body.published_stats).toMatchObject({
+      total: 10,
+      month_to_date: 4,
+      avg_publish_hours: 2.5,
+      avg_views: 18,
+    });
+    expect(res.body.articles[0]).toMatchObject({
+      id: 'article-1',
+      section: 'threat',
+      pipeline_status: 'qa',
+      stage: 'QA review',
+      owner: 'Jeff',
+      next_owner: 'Maya',
+      stage_index: 4,
+      stage_total: 7,
+      progress_pct: 57,
+      status_label: 'In production',
+      datetime_group: '202605190907',
+      public_url: '/intel/article.html?slug=ivanti-epmm-improper-input-validation',
+      current_task: expect.objectContaining({
+        agent_name: 'Jeff',
+        task_type: 'qa_article',
+        status: 'queued',
+      }),
+    });
+    expect(res.body.events[0]).toMatchObject({
+      content_id: 'article-1',
+      to_status: 'qa',
+      agent_name: 'Rob',
+    });
+    expect(res.body.generated_at).toEqual(expect.any(String));
   });
 });
