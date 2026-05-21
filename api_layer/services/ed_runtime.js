@@ -22,6 +22,7 @@ const API_BASE = () =>
   process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
 
 const POLL_WINDOW_HOURS = 12;
+const DEFAULT_BRAIN_MODEL = 'gemini-2.5-flash';
 
 function getEdBrain() {
   const apiKey = process.env.ED_BRAIN_API_KEY ||
@@ -33,7 +34,7 @@ function getEdBrain() {
   }
 
   const googleAI = createGoogleGenerativeAI({ apiKey });
-  return googleAI(process.env.ED_BRAIN_MODEL || process.env.EDITORIAL_BRAIN_MODEL || 'gemini-1.5-flash');
+  return googleAI(process.env.ED_BRAIN_MODEL || process.env.EDITORIAL_BRAIN_MODEL || DEFAULT_BRAIN_MODEL);
 }
 
 const ED_SYSTEM_PROMPT = `

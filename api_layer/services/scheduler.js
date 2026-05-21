@@ -24,6 +24,15 @@ const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const OPS_ALERT_EMAIL = 'hjborges@gmail.com';
+const DEFAULT_ARTICLE_PIPELINE_CAPACITY = 5;
+const ACTIVE_ARTICLE_STATUSES = ['draft', 'dev_edit', 'eic_review', 'qa', 'maya'];
+
+function getArticlePipelineCapacityLimit() {
+  const configured = Number.parseInt(process.env.ARTICLE_PIPELINE_CAPACITY_LIMIT, 10);
+  return Number.isFinite(configured) && configured > 0
+    ? configured
+    : DEFAULT_ARTICLE_PIPELINE_CAPACITY;
+}
 
 function nextCtDate(daysAhead = 1) {
   const d = new Date();
@@ -214,11 +223,26 @@ async function runJamesArticleCycle() {
     const activeArticles = await db.pool.query(`
       SELECT COUNT(*)::int AS count
       FROM articles
-      WHERE pipeline_status::text != 'published'
+      WHERE pipeline_status::text = ANY($1)
+    `, [ACTIVE_ARTICLE_STATUSES]).then(r => r.rows[0].count);
+
+    const approvedBacklog = await db.pool.query(`
+      SELECT COUNT(*)::int AS count
+      FROM articles
+      WHERE pipeline_status::text = 'approved'
     `).then(r => r.rows[0].count);
 
-    if (activeArticles >= 3) {
-      console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'james_article_cycle', status: 'skipped', reason: 'pipeline_capacity', active_articles: activeArticles }));
+    const capacityLimit = getArticlePipelineCapacityLimit();
+    if (activeArticles >= capacityLimit) {
+      console.log(JSON.stringify({
+        ts: new Date().toISOString(),
+        job: 'james_article_cycle',
+        status: 'skipped',
+        reason: 'pipeline_capacity',
+        active_articles: activeArticles,
+        approved_backlog: approvedBacklog,
+        capacity_limit: capacityLimit,
+      }));
       return;
     }
 
@@ -252,7 +276,15 @@ async function runJamesArticleCycle() {
       message: 'Ready-for-intel repository content is available. Draft the next Intel article and hand it to Jason.',
     });
 
-    console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'james_article_cycle', status: 'triggered', task_id: task.id }));
+    console.log(JSON.stringify({
+      ts: new Date().toISOString(),
+      job: 'james_article_cycle',
+      status: 'triggered',
+      task_id: task.id,
+      active_articles: activeArticles,
+      approved_backlog: approvedBacklog,
+      capacity_limit: capacityLimit,
+    }));
   } catch (e) {
     console.error(JSON.stringify({ ts: new Date().toISOString(), job: 'james_article_cycle', status: 'error', error: e.message }));
     await notifyAgents(['Barret', 'Henry'], {
@@ -1024,4 +1056,6 @@ module.exports = {
   pollBarbaraTasks,
   pollKirbyTasks,
   pollIvanCharlieTasks,
+  getArticlePipelineCapacityLimit,
+  ACTIVE_ARTICLE_STATUSES,
 };

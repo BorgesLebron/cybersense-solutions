@@ -2,7 +2,7 @@
 
 // services/rob_runtime.js
 // Rob's Intel Article EIC runtime. Polls eic_review_article tasks, performs
-// final editorial review, updates the article body, and advances to eic_review
+// final editorial review, updates the article body, and advances to qa
 // so Jeff can QA the article.
 
 const crypto = require('crypto');
@@ -16,6 +16,7 @@ const API_BASE = () =>
   process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
 
 const POLL_WINDOW_HOURS = 24;
+const DEFAULT_BRAIN_MODEL = 'gemini-2.5-flash';
 
 function getRobBrain() {
   const apiKey = process.env.ROB_BRAIN_API_KEY ||
@@ -28,7 +29,7 @@ function getRobBrain() {
   }
 
   const googleAI = createGoogleGenerativeAI({ apiKey });
-  return googleAI(process.env.ROB_BRAIN_MODEL || process.env.INTEL_EDITORIAL_BRAIN_MODEL || process.env.EDITORIAL_BRAIN_MODEL || 'gemini-1.5-flash');
+  return googleAI(process.env.ROB_BRAIN_MODEL || process.env.INTEL_EDITORIAL_BRAIN_MODEL || process.env.EDITORIAL_BRAIN_MODEL || DEFAULT_BRAIN_MODEL);
 }
 
 const ROB_SYSTEM_PROMPT = `
@@ -194,7 +195,7 @@ async function executeRobEICReview(task) {
 
     await updateArticleBody(article.id, body_md);
     await apiCall(`/api/pipeline/articles/${article.id}/status`, 'PATCH', {
-      to_status: 'eic_review',
+      to_status: 'qa',
       agent_name: 'Rob',
       notes: 'Intel EIC review complete. LLM final editorial review applied and article passed Rob review.',
     });
@@ -237,6 +238,7 @@ async function pollRobTasks() {
 module.exports = {
   pollRobTasks,
   ensureRobToken,
+  executeRobEICReview,
   applyRobReview,
   buildRobPrompt,
   validateFinalIntelArticle,
