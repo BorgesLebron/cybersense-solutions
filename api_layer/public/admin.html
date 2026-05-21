@@ -1307,6 +1307,21 @@ function renderNewsletterStatus(data) {
   const isApproved  = current.pipeline_status === 'approved';
   const isAuthorized = (current.events || []).some(ev => ev.notes && ev.notes.startsWith('Distribution authorized for 0430 CT'));
 
+  // Build newsletter URL from edition_date + edition_number when file_path is not yet set
+  function buildNewsletterUrl(edition_date, edition_number) {
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const d = new Date(edition_date);
+    const month = months[d.getUTCMonth()];
+    const year  = d.getUTCFullYear();
+    const mm    = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const dd    = String(d.getUTCDate()).padStart(2, '0');
+    return `${appBase}/newsletter/${year}/${month}/${mm}${dd}${year}_edition${edition_number}.html`;
+  }
+
+  const viewUrl = publicUrl || (current.edition_date && current.edition_number
+    ? buildNewsletterUrl(current.edition_date, current.edition_number)
+    : null);
+
   if (!filePath && !isApproved) {
     actionRow.style.display = 'none';
     return;
@@ -1314,8 +1329,8 @@ function renderNewsletterStatus(data) {
 
   actionRow.style.display = 'block';
 
-  linkEl.innerHTML = publicUrl
-    ? `<strong>Newsletter:</strong> <a href="${esc(publicUrl)}" target="_blank" rel="noopener" style="color:var(--color-accent);word-break:break-all;">${esc(publicUrl)}</a>`
+  linkEl.innerHTML = viewUrl
+    ? `<strong>Newsletter:</strong> <a href="${esc(viewUrl)}" target="_blank" rel="noopener" style="color:var(--color-accent);word-break:break-all;">${esc(viewUrl)}</a>`
     : `<span style="color:var(--color-text-tertiary);">Newsletter file not yet committed — add file_path to briefing record before distributing.</span>`;
 
   if (!isApproved) {
@@ -1323,18 +1338,33 @@ function renderNewsletterStatus(data) {
     return;
   }
 
+  const viewBtn = viewUrl
+    ? `<a href="${esc(viewUrl)}" target="_blank" rel="noopener"
+         style="padding:8px 14px;background:#1e293b;color:#cbd5e1;border:1px solid #334155;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block;">
+         View Newsletter
+       </a>`
+    : '';
+
   if (isAuthorized) {
-    hitlEl.innerHTML = `<span class="badge b-green" style="font-size:12px;padding:5px 10px;">&#10003; Distribution authorized for 0430 CT</span>`;
+    hitlEl.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span class="badge b-green" style="font-size:12px;padding:5px 10px;">&#10003; Distribution authorized for 0430 CT</span>
+        ${viewBtn}
+      </div>`;
   } else {
-    hitlEl.innerHTML = `<button id="btn-confirm-dist" onclick="confirmDistribution('${esc(current.id)}')"
-      style="padding:8px 18px;background:#185FA5;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;"
-      ${!publicUrl ? 'disabled title="Set file_path before authorizing"' : ''}>
-      Authorize for 0430 CT Distribution
-    </button>
-    <div style="margin-top:6px;font-size:11px;color:var(--color-text-tertiary);">
-      This unlocks Laura's 0430 CT send for Edition ${esc(String(current.edition_number || ''))}.
-      Review the newsletter link above before confirming.
-    </div>`;
+    hitlEl.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <button id="btn-confirm-dist" onclick="confirmDistribution('${esc(current.id)}')"
+          style="padding:8px 18px;background:#185FA5;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;"
+          ${!viewUrl ? 'disabled title="Edition date required to authorize"' : ''}>
+          Authorize for 0430 CT Distribution
+        </button>
+        ${viewBtn}
+      </div>
+      <div style="margin-top:6px;font-size:11px;color:var(--color-text-tertiary);">
+        This unlocks Laura's 0430 CT send for Edition ${esc(String(current.edition_number || ''))}.
+        Review the newsletter before confirming.
+      </div>`;
   }
 }
 
