@@ -375,7 +375,7 @@ async function pollBarbaraTasks() {
       SELECT * FROM agent_tasks
       WHERE agent_name  = 'Barbara'
         AND task_type   IN ('normalize_threat', 'normalize_intel')
-        AND status      = 'queued'
+        AND status      IN ('queued', 'escalated')
         AND started_at  > now() - INTERVAL '${POLL_WINDOW_HRS} hours'
       ORDER BY started_at ASC
       LIMIT $1
