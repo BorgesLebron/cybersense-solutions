@@ -702,3 +702,107 @@ Boundaries:
 - `node --check services/scheduler.js` passed.
 - `node --check test/intel_editorial_brains.test.js` passed.
 - `npm.cmd test` passed: 5 suites / 22 tests.
+
+## 2026-05-19 (Gwen - Edition 128 Recovery, Article Pipeline, Railway Hotfix)
+
+### Sprint Context
+- Daily sync completed with Hector. Confirmed:
+  - Peter/Ed prompt wiring was complete and mapped to `.notes/editorialPipelinePrompts.md`.
+  - Alan owns Edition 126 DB metadata update and Threat Radar implementation.
+  - Gwen owns Intel Article pipeline, public article feeds, Articles Report `/status` contract, and Gwen-owned publication agents.
+- Railway later had a provider-side major outage affecting dashboard/API/edge. Do not treat Railway 404s during that window as app-only failures.
+
+### Edition 128 / Gemini Model Recovery
+- Root blocker: Peter failed on Edition 128 because `gemini-1.5-flash` was no longer supported for the configured Gemini API path.
+- Updated Gwen-owned publication-agent fallback defaults to `gemini-2.5-flash` while preserving env overrides:
+  - `api_layer/services/peter_runtime.js`
+  - `api_layer/services/ed_runtime.js`
+  - `api_layer/services/james_runtime.js`
+  - `api_layer/services/jason_runtime.js`
+  - `api_layer/services/rob_runtime.js`
+- Verified `gemini-2.5-flash` with local `.env` `EDITORIAL_BRAIN_API_KEY` via a minimal model call.
+- Recovered Edition 128 DB state through:
+  - Peter dev edit
+  - Ed EIC review
+  - Jeff QA
+  - Maya approval
+- Final observed Edition 128 state:
+  - `edition_number=128`
+  - `pipeline_status='approved'`
+  - `published_at=null`
+  - waiting for HITL/distribution authorization.
+- Note: Gemma-owned `api_layer/services/kirby_runtime.js` still had `gemini-1.5-flash` at the time of Gwen inspection and was flagged conceptually for Gemma.
+
+### Rob Article Pipeline Bug
+- Fixed `api_layer/services/rob_runtime.js` so Rob advances EIC-reviewed articles to `qa`, not back to `eic_review`.
+- Reason:
+  - `INTEL_DISPATCH.qa` creates Jeff's `qa_article` task.
+  - Rob using `to_status='eic_review'` prevented Jeff handoff and stalled articles after EIC review.
+- Exported `executeRobEICReview` for targeted regression coverage.
+- Added regression coverage in `api_layer/test/intel_editorial_brains.test.js` verifying Rob PATCHes `to_status:"qa"`.
+
+### Article Pipeline Capacity
+- Updated `api_layer/services/scheduler.js` `runJamesArticleCycle()`.
+- Previous behavior counted all non-published articles against capacity, so HITL-approved backlog could block James from drafting.
+- New behavior:
+  - Active capacity counts only `draft`, `dev_edit`, `eic_review`, `qa`, `maya`.
+  - `approved` backlog is logged separately as `approved_backlog`.
+  - Default capacity is `5`.
+  - Optional override: `ARTICLE_PIPELINE_CAPACITY_LIMIT`.
+- Added `api_layer/test/article_capacity.test.js`.
+- Full backend suite passed after change.
+
+### Articles Report `/status` Contract
+- Updated `GET /api/admin/articles/status` in `api_layer/routes/all-routes.js`.
+- Endpoint now returns stable Alan-facing contract:
+  - `articles[]` with stage/owner/next_owner/progress/current_task/datetime_group/public_url.
+  - `pipeline_summary` with `total_in_pipeline`, `in_production`, `blocked`, `ready_for_hitl`, `by_stage`.
+  - `published_stats` with totals, month-to-date, averages, and section counts.
+  - `events[]` normalized from `pipeline_events`.
+- Added integration coverage in `api_layer/test/integration.test.js`.
+- This block can be built against by Alan without Railway access.
+
+### Railway / Ops Boot Hotfix
+- Investigated site outage report:
+  - Public GitHub Pages site returned 200.
+  - Railway-backed API/Ops endpoints failed during broader Railway outage.
+  - Local production boot also revealed an app-side risk.
+- Found `api_layer/services/mario_runtime.js` syntax error in `markdownToHtml()` regex.
+- Found `server.js` production startup called async `marioRuntime.init()` without catching rejection, allowing Mario startup/DB failure to crash the whole process.
+- Hotfix:
+  - Fixed Mario regex/newline replacement.
+  - Wrapped Mario startup in sync and async catch in `api_layer/server.js`.
+  - Failure now logs `MARIO_RUNTIME_DISABLED` instead of crashing the API.
+- Validated local production boot:
+  - `NODE_ENV=production ADMIN_ONLY=true` root returned 200.
+  - `/health` returned OK.
+- Committed and pushed hotfix only:
+  - Commit `b15dc5c` - `[GWEN-HOTFIX] Prevent Mario startup crash`
+  - Branch `feature/phase1-0514-cleanup`
+
+### Validation
+- Full backend tests passed after latest Articles Report contract update:
+  - 6 suites / 32 tests.
+- Syntax checks passed for modified route/test files.
+- `git diff --check` passed with line-ending warnings only.
+
+### Current Worktree Notes
+- Hotfix commit `b15dc5c` is pushed.
+- Several sprint changes remain local/uncommitted as of memory update:
+  - publication model fallback updates
+  - Rob `qa` handoff fix
+  - article capacity update/test
+  - Articles Report `/status` contract/test
+- Existing unrelated/untracked files remain and should not be swept into Gwen commits without review:
+  - `api_layer/.env`
+  - `AGENTS.md`
+  - `trainingProducts/`
+
+### Pending / Next Blocks
+- Public intelligence article population on `intelligence.html`.
+- Article-writing guidance from `.notes/tipsForWritingArticles.md` into Gwen-owned publication prompts/tests.
+- Railway live validation once provider outage resolves:
+  - `https://api.cybersense.solutions/health`
+  - `https://ops.cybersense.solutions/health`
+  - Ops root
+  - James -> Jason -> Rob -> Jeff -> Maya live article production.
