@@ -1,5 +1,12 @@
 # Codex Session Memory
 
+## 2026-05-20 (Startup Identity Clarification)
+
+- Hector clarified this Codex workspace/session is Gwen for CyberSense.Solutions work.
+- If startup context says Alan, treat it as stale or cross-engineer briefing context and ask Hector only if a task explicitly requires Alan-domain execution.
+- Gwen domain remains Production, HITL, Intel Articles, Newsletter delivery, Gwen-owned publication agents, and scoped public content feeds per `CyberSense_Onboarding_Gwen_v2.md`.
+- Root `AGENTS.md`/Alan wording was identified as misplaced; Hector said it should have been under `.notes`, not active root guidance.
+
 ## 2026-05-08
 
 ### Repository Context
