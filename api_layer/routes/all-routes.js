@@ -987,12 +987,12 @@ adminRouter.post('/trigger/peter-edit', requireAdminToken(['gm']), async (req, r
       UPDATE agent_tasks SET status = 'queued', started_at = now()
       WHERE agent_name = 'Peter'
         AND task_type = 'dev_edit_briefing'
-        AND status = 'escalated'
+        AND status IN ('escalated', 'failed')
         AND started_at > now() - INTERVAL '48 hours'
     `);
     const { pollPeterTasks } = require('../services/peter_runtime');
     await pollPeterTasks();
-    res.json({ triggered: true, agent: 'Peter', message: 'Peter dev edit triggered. Escalated task re-queued and polled.' });
+    res.json({ triggered: true, agent: 'Peter', message: 'Peter dev edit triggered. Failed/escalated task re-queued and polled.' });
   } catch (e) { next(e); }
 });
 
@@ -1002,12 +1002,12 @@ adminRouter.post('/trigger/ed-review', requireAdminToken(['gm']), async (req, re
       UPDATE agent_tasks SET status = 'queued', started_at = now()
       WHERE agent_name = 'Ed'
         AND task_type = 'eic_review_briefing'
-        AND status = 'escalated'
+        AND status IN ('escalated', 'failed')
         AND started_at > now() - INTERVAL '48 hours'
     `);
     const { pollEdTasks } = require('../services/ed_runtime');
     await pollEdTasks();
-    res.json({ triggered: true, agent: 'Ed', message: 'Ed EIC review triggered. Escalated task re-queued and polled.' });
+    res.json({ triggered: true, agent: 'Ed', message: 'Ed EIC review triggered. Failed/escalated task re-queued and polled.' });
   } catch (e) { next(e); }
 });
 
@@ -1017,12 +1017,12 @@ adminRouter.post('/trigger/jeff-qa', requireAdminToken(['gm']), async (req, res,
       UPDATE agent_tasks SET status = 'queued', started_at = now()
       WHERE agent_name = 'Jeff'
         AND task_type = 'qa_briefing'
-        AND status = 'escalated'
+        AND status IN ('escalated', 'failed')
         AND started_at > now() - INTERVAL '48 hours'
     `);
     const { pollJeffTasks } = require('../services/jeff_runtime');
     await pollJeffTasks();
-    res.json({ triggered: true, agent: 'Jeff', message: 'Jeff QA triggered. Escalated task re-queued and polled.' });
+    res.json({ triggered: true, agent: 'Jeff', message: 'Jeff QA triggered. Failed/escalated task re-queued and polled.' });
   } catch (e) { next(e); }
 });
 
@@ -1032,12 +1032,12 @@ adminRouter.post('/trigger/maya-approve', requireAdminToken(['gm']), async (req,
       UPDATE agent_tasks SET status = 'queued', started_at = now()
       WHERE agent_name = 'Maya'
         AND task_type = 'approve_briefing'
-        AND status = 'escalated'
+        AND status IN ('escalated', 'failed')
         AND started_at > now() - INTERVAL '48 hours'
     `);
     const { pollMayaTasks } = require('../services/maya_runtime');
     await pollMayaTasks();
-    res.json({ triggered: true, agent: 'Maya', message: 'Maya approval triggered. Briefing will advance to approved stage.' });
+    res.json({ triggered: true, agent: 'Maya', message: 'Maya approval triggered. Failed/escalated briefing will advance to approved stage.' });
   } catch (e) { next(e); }
 });
 
