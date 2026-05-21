@@ -8,10 +8,26 @@ jest.mock('@ai-sdk/google', () => ({
 
 const { generateText } = require('ai');
 const { createGoogleGenerativeAI } = require('@ai-sdk/google');
+const db = require('../db/queries');
 const james = require('../services/james_runtime');
 const jason = require('../services/jason_runtime');
 const rob = require('../services/rob_runtime');
 const jeff = require('../services/jeff_runtime');
+
+jest.mock('../db/queries', () => ({
+  getArticleById: jest.fn(),
+  rotateAgentToken: jest.fn(),
+  updateTask: jest.fn(),
+  pool: {
+    query: jest.fn(),
+  },
+}));
+
+jest.mock('../services/agents', () => ({
+  notifyAgents: jest.fn(),
+}));
+
+global.fetch = jest.fn();
 
 const validArticle = `
 # Verifiable Credentials Need Operational Trust
@@ -63,10 +79,12 @@ describe('James, Jason, Rob, and Jeff Intel article pipeline brains', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     process.env.INTEL_EDITORIAL_BRAIN_API_KEY = 'test-intel-editorial-key';
+    process.env.AGENT_JWT_SECRET = 'a'.repeat(64);
   });
 
   afterEach(() => {
     delete process.env.INTEL_EDITORIAL_BRAIN_API_KEY;
+    delete process.env.AGENT_JWT_SECRET;
   });
 
   test('James prompt carries repository source context', () => {
@@ -139,6 +157,30 @@ describe('James, Jason, Rob, and Jeff Intel article pipeline brains', () => {
     expect(result.issues).toEqual([]);
     expect(result.body_md).toContain('Closing Assessment');
     expect(createGoogleGenerativeAI).toHaveBeenCalledWith({ apiKey: 'test-intel-editorial-key' });
+  });
+
+  test('Rob advances EIC-reviewed articles to qa so Jeff dispatch fires', async () => {
+    generateText.mockResolvedValueOnce({ text: validArticle });
+    db.getArticleById.mockResolvedValueOnce({ ...article, pipeline_status: 'dev_edit' });
+    db.updateTask.mockResolvedValue({});
+    db.pool.query.mockResolvedValue({ rows: [{ ...article, body_md: validArticle }] });
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ id: article.id, from_status: 'dev_edit', to_status: 'qa' }),
+    });
+
+    await rob.executeRobEICReview({
+      id: 'task-rob',
+      content_id: article.id,
+    });
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(`/api/pipeline/articles/${article.id}/status`),
+      expect.objectContaining({
+        method: 'PATCH',
+        body: expect.stringContaining('"to_status":"qa"'),
+      })
+    );
   });
 
   test('Jeff article QA accepts complete Intel article structure', () => {
