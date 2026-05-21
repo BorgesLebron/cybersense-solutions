@@ -27,6 +27,7 @@ const DEFAULT_BRAIN_MODEL = 'gemini-2.5-flash';
 function getPeterBrain() {
   const apiKey = process.env.PETER_BRAIN_API_KEY ||
     process.env.EDITORIAL_BRAIN_API_KEY ||
+    process.env.KIRBY_BRAIN_API_KEY ||
     process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
   if (!apiKey) {
