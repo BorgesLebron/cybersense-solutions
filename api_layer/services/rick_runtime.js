@@ -268,7 +268,7 @@ async function executeRickThreatIngest(task) {
         const result = await apiCall('/api/pipeline/threat-records', 'POST', record);
         submitted.push({ cve_id: record.cve_id, id: result.id });
         await db.logPipelineEvent({
-          content_type: 'threat_record',
+          content_type: 'system',
           content_id:   result.id,
           from_status:  null,
           to_status:    'ingested',

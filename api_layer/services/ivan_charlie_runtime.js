@@ -239,7 +239,7 @@ async function executeIvanCharlieIngest(task) {
       });
       submitted.push({ type: item.type, id: result.id });
       await db.logPipelineEvent({
-        content_type: 'intel_item',
+        content_type: 'system',
         content_id:   result.id,
         from_status:  null,
         to_status:    'ingested',
