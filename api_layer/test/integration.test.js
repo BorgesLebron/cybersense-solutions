@@ -3,6 +3,7 @@ const app = require('../server'); // Assuming your express app is exported from 
 const db = require('../db/queries');
 const { postAgentStatusToActiveMeeting } = require('../services/meetings');
 const jwt = require('jsonwebtoken'); // Import jsonwebtoken
+const crypto = require('crypto');
 
 jest.mock('../db/queries', () => ({
   ...jest.requireActual('../db/queries'),
@@ -19,11 +20,21 @@ jest.mock('../db/queries', () => ({
   getRecentMeeting: jest.fn(),
   getAdminRole: jest.fn(),
   getUserById: jest.fn(),
+  getAgentToken: jest.fn(),
+  getArticleById: jest.fn(),
+  advanceArticleStatus: jest.fn(),
+  logPipelineEvent: jest.fn(),
+  createTask: jest.fn(),
   getPublishedArticleStats: jest.fn(),
   pool: {
     query: jest.fn(),
   },
   // Removed pool.query mock from here to prevent conflicts
+}));
+
+jest.mock('../services/agents', () => ({
+  notifyAgents: jest.fn(),
+  triggerEscalationCheck: jest.fn(),
 }));
 
 describe('Agent Status and Command Center Integration', () => {
@@ -217,5 +228,47 @@ describe('Agent Status and Command Center Integration', () => {
       agent_name: 'Rob',
     });
     expect(res.body.generated_at).toEqual(expect.any(String));
+  });
+
+  test('PATCH /api/pipeline/articles/:id/status dispatches Rob after Jason reaches dev_edit', async () => {
+    const agentToken = jwt.sign(
+      { type: 'agent', agent_name: 'Jason', agent_team: 'intel' },
+      process.env.AGENT_JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+    db.getAgentToken.mockResolvedValueOnce({
+      token_hash: crypto.createHash('sha256').update(agentToken).digest('hex'),
+    });
+    db.getArticleById.mockResolvedValueOnce({
+      id: 'article-1',
+      title: 'GlassWorm Campaign',
+      pipeline_status: 'draft',
+      qa_passed_at: null,
+      maya_approved_at: null,
+    });
+    db.advanceArticleStatus.mockResolvedValueOnce({
+      id: 'article-1',
+      pipeline_status: 'dev_edit',
+      updated_at: '2026-05-21T23:00:00.000Z',
+    });
+    db.logPipelineEvent.mockResolvedValueOnce({});
+    db.createTask.mockResolvedValueOnce({ id: 'task-rob' });
+
+    const res = await request(app)
+      .patch('/api/pipeline/articles/article-1/status')
+      .set('Authorization', `Agent ${agentToken}`)
+      .send({
+        to_status: 'dev_edit',
+        agent_name: 'Jason',
+        notes: 'Developmental edit complete.',
+      });
+
+    expect(res.statusCode).toEqual(200);
+    expect(db.createTask).toHaveBeenCalledWith(expect.objectContaining({
+      agent_name: 'Rob',
+      task_type: 'eic_review_article',
+      content_type: 'article',
+      content_id: 'article-1',
+    }));
   });
 });

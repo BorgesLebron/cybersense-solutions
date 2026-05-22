@@ -13,6 +13,7 @@ const james = require('../services/james_runtime');
 const jason = require('../services/jason_runtime');
 const rob = require('../services/rob_runtime');
 const jeff = require('../services/jeff_runtime');
+const maya = require('../services/maya_runtime');
 
 jest.mock('../db/queries', () => ({
   getArticleById: jest.fn(),
@@ -115,6 +116,29 @@ describe('James, Jason, Rob, and Jeff Intel article pipeline brains', () => {
     expect(createGoogleGenerativeAI).toHaveBeenCalledWith({ apiKey: 'test-intel-editorial-key' });
   });
 
+  test('James candidate query casts mixed priority enums to text', async () => {
+    db.pool.query.mockResolvedValueOnce({
+      rows: [{
+        repository_id: 'repo-threat',
+        source_id: 'source-threat',
+        source_type: 'threat',
+        normalized_data: {},
+        title: 'Threat priority candidate',
+        category: 'vulnerability',
+        summary: 'Threat summary',
+        priority: 'immediate',
+        source_data: {},
+      }],
+    });
+
+    const result = await james.getNextIntelArticleCandidate();
+    const [sql] = db.pool.query.mock.calls[0];
+
+    expect(sql).toContain('THEN t.priority::text');
+    expect(sql).toContain('ELSE i.priority::text');
+    expect(result.priority).toBe('immediate');
+  });
+
   test('Jason prompt carries article context and James draft', () => {
     const prompt = jason.buildJasonPrompt(article);
 
@@ -159,18 +183,46 @@ describe('James, Jason, Rob, and Jeff Intel article pipeline brains', () => {
     expect(createGoogleGenerativeAI).toHaveBeenCalledWith({ apiKey: 'test-intel-editorial-key' });
   });
 
-  test('Rob advances EIC-reviewed articles to qa so Jeff dispatch fires', async () => {
+  test('Rob advances EIC-reviewed articles to eic_review so Jeff dispatch fires', async () => {
     generateText.mockResolvedValueOnce({ text: validArticle });
     db.getArticleById.mockResolvedValueOnce({ ...article, pipeline_status: 'dev_edit' });
     db.updateTask.mockResolvedValue({});
     db.pool.query.mockResolvedValue({ rows: [{ ...article, body_md: validArticle }] });
     fetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ id: article.id, from_status: 'dev_edit', to_status: 'qa' }),
+      json: async () => ({ id: article.id, from_status: 'dev_edit', to_status: 'eic_review' }),
     });
 
     await rob.executeRobEICReview({
       id: 'task-rob',
+      content_id: article.id,
+    });
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(`/api/pipeline/articles/${article.id}/status`),
+      expect.objectContaining({
+        method: 'PATCH',
+        body: expect.stringContaining('"to_status":"eic_review"'),
+      })
+    );
+  });
+
+  test('Jeff article QA accepts complete Intel article structure', () => {
+    const result = jeff.applyArticleQAReview({ ...article, body_md: validArticle });
+
+    expect(result.issues).toEqual([]);
+  });
+
+  test('Jeff advances articles from eic_review to qa after QA pass', async () => {
+    db.updateTask.mockResolvedValue({});
+    db.pool.query.mockResolvedValueOnce({ rows: [{ ...article, pipeline_status: 'eic_review', body_md: validArticle }] });
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ id: article.id, from_status: 'eic_review', to_status: 'qa' }),
+    });
+
+    await jeff.executeJeffArticleQA({
+      id: 'task-jeff',
       content_id: article.id,
     });
 
@@ -183,9 +235,39 @@ describe('James, Jason, Rob, and Jeff Intel article pipeline brains', () => {
     );
   });
 
-  test('Jeff article QA accepts complete Intel article structure', () => {
-    const result = jeff.applyArticleQAReview({ ...article, body_md: validArticle });
+  test('Maya approves articles from qa stage after Jeff handoff', async () => {
+    db.getArticleById.mockResolvedValueOnce({ ...article, pipeline_status: 'qa' });
+    db.updateTask.mockResolvedValue({});
+    fetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: article.id, from_status: 'qa', to_status: 'maya' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: article.id, from_status: 'maya', to_status: 'approved' }),
+      });
 
-    expect(result.issues).toEqual([]);
+    await maya.executeMayaApproveArticle({
+      id: 'task-maya',
+      content_id: article.id,
+    });
+
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(fetch).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining(`/api/pipeline/articles/${article.id}/status`),
+      expect.objectContaining({
+        method: 'PATCH',
+        body: expect.stringContaining('"to_status":"maya"'),
+      })
+    );
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(`/api/pipeline/articles/${article.id}/status`),
+      expect.objectContaining({
+        method: 'PATCH',
+        body: expect.stringContaining('"to_status":"approved"'),
+      })
+    );
   });
 });

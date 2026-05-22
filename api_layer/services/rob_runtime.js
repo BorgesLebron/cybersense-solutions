@@ -195,7 +195,7 @@ async function executeRobEICReview(task) {
 
     await updateArticleBody(article.id, body_md);
     await apiCall(`/api/pipeline/articles/${article.id}/status`, 'PATCH', {
-      to_status: 'qa',
+      to_status: 'eic_review',
       agent_name: 'Rob',
       notes: 'Intel EIC review complete. LLM final editorial review applied and article passed Rob review.',
     });
