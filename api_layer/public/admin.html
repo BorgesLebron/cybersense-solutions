@@ -1017,9 +1017,9 @@ async function loadIntelBriefData() {
   try {
     const { published, pipeline } = await CS.Auth.apiFetch('/api/admin/intel-brief');
 
-    const mtd   = +(published.mtd_count  || 0);
+    const mtd   = +(published.month_to_date  || 0);
     const total = +(published.total_published || 0);
-    const avgH  = parseFloat(published.avg_hours_to_publish) || 0;
+    const avgH  = parseFloat(published.avg_publish_hours) || 0;
     const avgV  = +(published.avg_views || 0);
 
     document.getElementById('intel-mtd-count').textContent = mtd;
