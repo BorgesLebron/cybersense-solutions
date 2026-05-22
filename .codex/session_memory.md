@@ -1,5 +1,118 @@
 # Codex Session Memory
 
+## 2026-05-21 (Gwen - Live Intel Article Pipeline Validation)
+
+### Scope
+- Hector directed Gwen to start a new branch and handle pipeline validation before public article surface validation.
+- Created branch `feature/gwen-0521-pipeline` from `origin/main`.
+- Followed up on the GWEN-022 rebase note:
+  - `origin/feature/gwen-022-public-articles` is already an ancestor of `origin/main`.
+  - No rebase work remains for that branch before today's Gwen work.
+
+### Live Health
+- `https://api.cybersense.solutions/health` returned 200.
+- `https://ops.cybersense.solutions` returned 200.
+
+### Findings
+- Live James article tasks were failing before draft creation with:
+  - `CASE/WHEN could not convert type threat_priority to intel_priority`
+- Root cause:
+  - `james_runtime.js` candidate SQL mixed `threat_records.priority` and `intel_items.priority` enum types in a single `CASE`.
+- Live validation then exposed article handoff drift:
+  - James created a draft and Jason completed `draft -> dev_edit`.
+  - No Rob task was dispatched because `INTEL_DISPATCH` was keyed to `eic_review` instead of `dev_edit`.
+  - Runtime/status contract needed to align to:
+    `draft -> dev_edit -> eic_review -> qa -> maya -> approved`.
+
+### Fixes Implemented
+- `api_layer/services/james_runtime.js`
+  - Cast mixed priority enum branches to text in James candidate SQL.
+- `api_layer/routes/pipeline.js`
+  - Corrected Intel article dispatch:
+    - `dev_edit -> Rob/eic_review_article`
+    - `eic_review -> Jeff/qa_article`
+    - `qa -> Maya/approve_article`
+- `api_layer/services/rob_runtime.js`
+  - Rob now advances articles from `dev_edit` to `eic_review`.
+- `api_layer/services/jeff_runtime.js`
+  - Jeff article QA now runs from `eic_review` and advances to `qa`.
+  - Exported `executeJeffArticleQA` for focused regression coverage.
+- `api_layer/services/maya_runtime.js`
+  - Maya article approval remains `qa -> maya -> approved`.
+- Tests updated:
+  - `api_layer/test/intel_editorial_brains.test.js`
+  - `api_layer/test/integration.test.js`
+
+### Live Validation Result
+- Created and processed validation article:
+  - ID: `9882d7d8-aaec-4e64-b185-4ab188476812`
+  - Title: `GlassWorm Campaign: Malicious Extensions Compromise Developer Integrated Development Environments`
+  - Slug: `glassworm-campaign-malicious-extensions-compromise-developer-integrated-development-environments`
+  - Section: `innovation`
+- Advanced through:
+  - James draft complete.
+  - Jason `draft -> dev_edit` complete.
+  - Rob `dev_edit -> eic_review` complete.
+  - Jeff `eic_review -> qa` complete.
+  - Maya `qa -> maya -> approved` complete.
+- Final live state:
+  - `pipeline_status='approved'`
+  - `maya_approved_at='2026-05-21T23:37:18.194Z'`
+  - `published_at=null`
+- The article was not released/published.
+- Closed one duplicate queued Rob validation task created by live Railway's old dispatch behavior after the article reached approved.
+
+### Verification
+- `node --check` passed for changed runtime/route/test files.
+- `npm.cmd test -- --runTestsByPath test\\intel_editorial_brains.test.js` passed.
+- `npm.cmd test -- --runTestsByPath test\\integration.test.js` passed.
+- Full `npm.cmd test` passed:
+  - 7 suites
+  - 40 tests
+
+## 2026-05-21 (Gwen - Public Article Surface Validation)
+
+### Scope
+- Completed the carry-forward validation for public article surfaces after the live pipeline sprint.
+- Validated:
+  - `https://cybersense.solutions/intelligence.html`
+  - `https://cybersense.solutions/innovation.html`
+  - `https://cybersense.solutions/growth.html`
+
+### Page Reachability
+- `intelligence.html` returned 200.
+- `innovation.html` returned 200.
+- `growth.html` returned 200.
+
+### Live API Validation
+- The public content APIs require a subscriber token even for free-tier access.
+- Used the existing live freemium user:
+  - `hector@cybersense.solutions`
+- `GET /api/content/articles?limit=20` returned 8 published articles.
+- `GET /api/content/articles?section=innovation&limit=24` returned 2 Innovation articles:
+  - `Small-Business Cybersecurity Has to Be Operable Before It Can Be Mature`
+  - `Verifiable Credentials Need Operational Trust, Not Just Wallet Support`
+- `GET /api/content/articles?section=growth&limit=24` returned 2 Growth articles:
+  - `Human Skills Are Becoming the Security Career Multiplier`
+  - `AI-Driven Vulnerability Discovery Raises the Bar for Platform Skills`
+- `GET /api/content/articles?section=policy&limit=10` returned 1 Policy article:
+  - `NIST CSF 2.0 Makes Governance a Daily Cybersecurity Control`
+- Sample article slug lookup succeeded:
+  - `small-business-cybersecurity-has-to-be-operable-before-it-can-be-mature`
+  - Status 200, full body available to freemium user.
+- Growth monthly article correctly returned as blurred for the freemium user.
+
+### Innovation Radar Validation
+- `GET /api/content/innovation-radar?limit=80` returned 25 items:
+  - Growth: 7
+  - Innovation: 18
+- Items include article-link readiness metadata (`has_article`, `ready_for_intel`) used by the live Innovation page.
+
+### Notes
+- Guest users see the page-level free-account gate; authenticated users receive live article/radar data.
+- Validation article is approved and awaiting HITL/release decision; do not publish without Hector direction.
+- No code changes were required for public article surfaces during this validation sprint.
+
 ## 2026-05-20 (Startup Identity Clarification)
 
 - Hector clarified this Codex workspace/session is Gwen for CyberSense.Solutions work.

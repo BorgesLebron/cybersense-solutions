@@ -192,8 +192,8 @@ async function getNextIntelArticleCandidate() {
              ELSE i.tags
            END AS tags,
            CASE r.source_type
-             WHEN 'threat' THEN t.priority
-             ELSE i.priority
+             WHEN 'threat' THEN t.priority::text
+             ELSE i.priority::text
            END AS priority,
            jsonb_build_object(
              'headline', i.headline,

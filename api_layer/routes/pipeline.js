@@ -20,9 +20,9 @@ const AWARENESS_DISPATCH = {
 };
 
 const INTEL_DISPATCH = {
-  eic_review: { agent: 'Rob',   task_type: 'eic_review_article' },
-  qa:         { agent: 'Jeff',  task_type: 'qa_article' },
-  maya:       { agent: 'Maya',  task_type: 'approve_article' },
+  dev_edit:   { agent: 'Rob',   task_type: 'eic_review_article' },
+  eic_review: { agent: 'Jeff',  task_type: 'qa_article' },
+  qa:         { agent: 'Maya',  task_type: 'approve_article' },
 };
 
 // POST /api/pipeline/threat-records  (Rick only)
