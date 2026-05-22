@@ -1,5 +1,43 @@
 # Codex Session Memory
 
+## 2026-05-21 (Gwen - Innovation Radar Console Visual Update)
+
+### Scope
+- Reviewed `.notes/visualChanges/innovationRadar.png`.
+- Implemented the referenced Innovation Radar console treatment in `api_layer/public/admin.html`.
+- Stayed within Gwen's Innovation Radar / public content lane.
+- Did not touch Gemma-owned training video files or `api_layer/.env`.
+
+### Implementation
+- Updated the Ops Innovation Radar panel to match the reference console structure:
+  - KPI strip remains live.
+  - Added theme availability health block.
+  - Reworked live intake into a dense console card with sticky table headers.
+  - Added bottom database dock with three controls:
+    - Innovation database: filters table to `type='innovation'`.
+    - Growth database: filters table to `type='growth'`.
+    - Articles database: opens the Articles panel and refreshes article data.
+- Added dynamic table filters:
+  - All.
+  - Available for Ruth.
+  - Used themes.
+- Added dynamic theme availability calculation from live radar data:
+  - Counts unused Ruth inputs.
+  - Counts unused categories.
+  - Counts categories already used in briefings.
+  - Shows warning state when the available theme pool is thin.
+- No static theme list was introduced; theme/category availability is derived from `/api/admin/intel-radar`.
+
+### Validation
+- Parsed admin inline scripts with `new Function`; passed.
+- `git diff --check -- api_layer/public/admin.html` passed with line-ending warnings only.
+- Full backend suite passed:
+  - 7 suites.
+  - 40 tests.
+
+### Notes
+- The design intentionally surfaces theme scarcity so Ivan/Charlie do not keep feeding only a handful of already-used themes, preserving newsletter theme availability.
+
 ## 2026-05-21 (Gwen - Live Intel Article Pipeline Validation)
 
 ### Scope

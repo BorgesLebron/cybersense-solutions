@@ -150,6 +150,28 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
 .log-agent-btn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:8px 12px;border:0.5px solid var(--color-border-tertiary);border-radius:8px;background:var(--color-background-primary);color:var(--color-text-secondary);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:background .12s,border-color .12s;width:100%;text-align:left;}
 .log-agent-btn:hover{background:var(--color-background-secondary);}
 .log-agent-btn.active{border-color:#185FA5;background:var(--color-background-info);color:var(--color-text-info);}
+.innovation-console-card{padding:0;overflow:hidden;border-radius:10px;}
+.innovation-console-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-bottom:0.5px solid var(--color-border-tertiary);}
+.innovation-console-title{font-size:12px;font-weight:700;color:var(--color-text-primary);}
+.innovation-console-tools{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.innovation-filter-btn{border:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);color:var(--color-text-secondary);border-radius:6px;padding:5px 9px;font:inherit;font-size:11px;font-weight:600;cursor:pointer;}
+.innovation-filter-btn.active{border-color:#378ADD;background:var(--color-background-info);color:var(--color-text-info);}
+.innovation-table-wrap{max-height:440px;overflow:auto;}
+.innovation-table-wrap .tbl th{position:sticky;top:0;background:var(--color-background-primary);z-index:1;}
+.innovation-row[data-stale="true"] td{opacity:.72;}
+.theme-health{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:10px 0 12px;padding:10px 12px;border:0.5px solid var(--color-border-tertiary);border-radius:8px;background:var(--color-background-primary);}
+.theme-health-main{font-size:12px;color:var(--color-text-primary);font-weight:600;}
+.theme-health-sub{font-size:11px;color:var(--color-text-tertiary);margin-top:2px;}
+.theme-health strong{color:var(--color-text-success);}
+.theme-health.warn strong{color:#BA7517;}
+.db-dock{display:flex;justify-content:flex-end;gap:48px;padding:18px 24px 14px;border-top:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);}
+.db-link{display:flex;flex-direction:column;align-items:center;gap:7px;background:none;border:none;color:var(--color-text-secondary);font:inherit;font-size:18px;font-weight:700;cursor:pointer;min-width:92px;}
+.db-link:hover,.db-link.active{color:var(--db-color);}
+.db-cylinder{position:relative;width:42px;height:38px;background:var(--db-color);border-radius:50%/13%;box-shadow:inset 0 -4px 0 rgba(0,0,0,.22);}
+.db-cylinder:before{content:"";position:absolute;left:0;top:-6px;width:42px;height:13px;background:var(--db-color);border-radius:50%;box-shadow:inset 0 3px 0 rgba(255,255,255,.2), inset 0 -3px 0 rgba(0,0,0,.28);}
+.db-cylinder:after{content:"";position:absolute;left:0;right:0;top:12px;height:1px;background:rgba(0,0,0,.35);box-shadow:0 11px 0 rgba(0,0,0,.35),0 22px 0 rgba(0,0,0,.35);}
+.db-link-label{font-size:18px;line-height:1;}
+@media(max-width:900px){.db-dock{justify-content:center;gap:20px;flex-wrap:wrap}.innovation-console-head{align-items:flex-start;flex-direction:column}.theme-health{align-items:flex-start;flex-direction:column}}
 </style>
 </head>
 <body>
@@ -372,12 +394,39 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
           <div class="met"><div class="met-lbl">Ready for Ruth</div><div class="met-val" id="innovation-ready-awareness">-</div><div class="met-delta nt">Awareness inputs</div></div>
           <div class="met"><div class="met-lbl">Unused for Ruth</div><div class="met-val" id="innovation-unused">-</div><div class="met-delta up">Next production buffer</div></div>
         </div>
-        <div class="card">
-          <div class="card-hd">Live innovation and growth intake</div>
-          <table class="tbl">
-            <thead><tr><th>Type</th><th>Headline</th><th>Category</th><th>Ruth</th><th>Intel</th><th>Article</th></tr></thead>
-            <tbody id="innovation-tbody"><tr><td colspan="6" style="text-align:center;color:#666;padding:12px;">Loading innovation and growth data...</td></tr></tbody>
-          </table>
+        <div class="theme-health" id="innovation-theme-health">
+          <div>
+            <div class="theme-health-main">Theme availability loading...</div>
+            <div class="theme-health-sub">The newsletter needs a broad set of unused Ruth themes.</div>
+          </div>
+          <span class="badge b-gray" id="innovation-theme-badge">Loading</span>
+        </div>
+        <div class="card innovation-console-card">
+          <div class="innovation-console-head">
+            <div class="innovation-console-title">Live innovation and growth intake</div>
+            <div class="innovation-console-tools">
+              <button class="innovation-filter-btn active" id="innovation-filter-all" onclick="setInnovationRadarView('all')">All</button>
+              <button class="innovation-filter-btn" id="innovation-filter-available" onclick="setInnovationRadarView('available')">Available for Ruth</button>
+              <button class="innovation-filter-btn" id="innovation-filter-used" onclick="setInnovationRadarView('used')">Used themes</button>
+            </div>
+          </div>
+          <div class="innovation-table-wrap">
+            <table class="tbl">
+              <thead><tr><th>Type</th><th>Headline</th><th>Category</th><th>Ruth</th><th>Intel</th><th>Article</th></tr></thead>
+              <tbody id="innovation-tbody"><tr><td colspan="6" style="text-align:center;color:#666;padding:12px;">Loading innovation and growth data...</td></tr></tbody>
+            </table>
+          </div>
+          <div class="db-dock">
+            <button class="db-link" id="db-link-innovation" style="--db-color:#BA7517;" onclick="setInnovationRadarView('innovation')">
+              <span class="db-cylinder" aria-hidden="true"></span><span class="db-link-label">Innovation</span>
+            </button>
+            <button class="db-link" id="db-link-growth" style="--db-color:#185FA5;" onclick="setInnovationRadarView('growth')">
+              <span class="db-cylinder" aria-hidden="true"></span><span class="db-link-label">Growth</span>
+            </button>
+            <button class="db-link" id="db-link-articles" style="--db-color:#3B6D11;" onclick="openArticlesDatabase()">
+              <span class="db-cylinder" aria-hidden="true"></span><span class="db-link-label">Articles</span>
+            </button>
+          </div>
         </div>
         <button class="ask-btn" onclick="sendPrompt('How should Ivan/Charlie structure the innovation intelligence intake process to feed both the daily briefing and long-form articles efficiently?','henry')">Design intake workflow ↗</button>
       </div>
@@ -1147,70 +1196,130 @@ async function sendMayaArticleMessage() {
   log.scrollTop = log.scrollHeight;
 }
 
+let innovationRadarItems = [];
+let innovationRadarView = 'all';
+
+function setInnovationRadarView(view) {
+  innovationRadarView = view;
+  renderInnovationRadar();
+}
+
+function openArticlesDatabase() {
+  const navItem = Array.from(document.querySelectorAll('.nav-item'))
+    .find(item => item.getAttribute('onclick')?.includes("'articles'"));
+  if (navItem) showPanel('articles', navItem);
+  if (typeof loadArticlesData === 'function') loadArticlesData();
+}
+
+function getInnovationRadarItemsForView() {
+  if (innovationRadarView === 'innovation') return innovationRadarItems.filter(item => item.type === 'innovation');
+  if (innovationRadarView === 'growth') return innovationRadarItems.filter(item => item.type === 'growth');
+  if (innovationRadarView === 'available') return innovationRadarItems.filter(item => item.ready_for_awareness && !item.used_in_briefing);
+  if (innovationRadarView === 'used') return innovationRadarItems.filter(item => item.used_in_briefing);
+  return innovationRadarItems;
+}
+
+function renderInnovationControls() {
+  document.querySelectorAll('.innovation-filter-btn,.db-link').forEach(el => el.classList.remove('active'));
+  const filter = document.getElementById('innovation-filter-' + innovationRadarView);
+  if (filter) filter.classList.add('active');
+  const db = document.getElementById('db-link-' + innovationRadarView);
+  if (db) db.classList.add('active');
+}
+
+function renderThemeAvailability(items) {
+  const available = items.filter(item => item.ready_for_awareness && !item.used_in_briefing);
+  const availableThemes = new Set(available.map(item => item.category).filter(Boolean));
+  const usedThemes = new Set(items.filter(item => item.used_in_briefing).map(item => item.category).filter(Boolean));
+  const health = document.getElementById('innovation-theme-health');
+  const badge = document.getElementById('innovation-theme-badge');
+  if (!health || !badge) return;
+
+  const ratio = items.length ? Math.round((availableThemes.size / items.length) * 100) : 0;
+  const thin = availableThemes.size < 8 || available.length < 6;
+  health.classList.toggle('warn', thin);
+  health.querySelector('.theme-health-main').innerHTML = thin
+    ? `Theme pool is thin: <strong>${availableThemes.size}</strong> unused categories available`
+    : `Theme pool healthy: <strong>${availableThemes.size}</strong> unused categories available`;
+  health.querySelector('.theme-health-sub').textContent =
+    `${available.length} unused Ruth inputs across ${availableThemes.size} categories; ${usedThemes.size} categories already used. Diversity ratio: ${ratio}%.`;
+  badge.className = 'badge ' + (thin ? 'b-amber' : 'b-green');
+  badge.textContent = thin ? 'Needs intake variety' : 'Theme diversity OK';
+}
+
+function renderInnovationRadar() {
+  renderInnovationControls();
+
+  const categories = new Set(innovationRadarItems.map(i => i.category).filter(Boolean));
+  const readyIntel = innovationRadarItems.filter(i => i.ready_for_intel).length;
+  const readyAwareness = innovationRadarItems.filter(i => i.ready_for_awareness).length;
+  const unused = innovationRadarItems.filter(i => i.ready_for_awareness && !i.used_in_briefing).length;
+
+  document.getElementById('innovation-total').textContent = innovationRadarItems.length;
+  document.getElementById('innovation-categories').textContent = categories.size + ' categories';
+  document.getElementById('innovation-ready-intel').textContent = readyIntel;
+  document.getElementById('innovation-ready-awareness').textContent = readyAwareness;
+  document.getElementById('innovation-unused').textContent = unused;
+  renderThemeAvailability(innovationRadarItems);
+
+  const tbody = document.getElementById('innovation-tbody');
+  const items = getInnovationRadarItemsForView();
+  if (!items.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#666;padding:12px;">No records match this database view</td></tr>';
+    return;
+  }
+
+  const badge = (ok, yes, no) => ok
+    ? `<span class="badge b-green">${yes}</span>`
+    : `<span class="badge b-gray">${no}</span>`;
+
+  tbody.innerHTML = items.map(item => `<tr class="innovation-row" style="cursor:pointer;" data-stale="${item.used_in_briefing ? 'true' : 'false'}"
+    data-headline="${esc(item.headline || 'Untitled')}"
+    data-type="${esc(item.type || 'N/A')}"
+    data-category="${esc(item.category || 'N/A')}"
+    data-summary="${esc(item.summary || 'No summary available.')}"
+    data-tags="${esc((Array.isArray(item.tags) ? item.tags : (item.tags ? [item.tags] : [])).join(', ') || 'none')}"
+    data-priority="${esc(item.priority || 'N/A')}"
+    data-ruth="${esc(item.used_in_briefing ? 'Used in briefing' : item.ready_for_awareness ? 'Ready for Ruth' : 'Not ready')}"
+    data-intel="${esc(item.ready_for_intel ? 'Ready for James' : 'Not ready')}"
+    data-article="${esc(item.has_article ? 'Article linked' : 'No article yet')}"
+    data-ingested="${esc(item.ingested_at ? new Date(item.ingested_at).toLocaleDateString('en-US') : 'N/A')}">
+    <td><span class="badge ${item.type === 'growth' ? 'b-blue' : 'b-amber'}">${esc(item.type || '-')}</span></td>
+    <td>${esc(item.headline || 'Untitled')}</td>
+    <td>${esc(item.category || '-')}</td>
+    <td>${badge(item.ready_for_awareness && !item.used_in_briefing, 'Ready', item.used_in_briefing ? 'Used' : 'No')}</td>
+    <td>${badge(item.ready_for_intel, 'Ready', 'No')}</td>
+    <td>${badge(item.has_article, 'Linked', 'None')}</td>
+  </tr>`).join('');
+
+  const tip = document.getElementById('radar-tooltip');
+  tbody.querySelectorAll('.innovation-row').forEach(row => {
+    row.addEventListener('mouseenter', () => {
+      tip.innerHTML = `<div style="font-weight:600;margin-bottom:6px;">${row.dataset.headline}</div>
+        <div style="margin-bottom:6px;color:#cbd5e1;line-height:1.5;">${row.dataset.summary}</div>
+        <div><span style="color:#aaa;">Type</span> ${row.dataset.type}</div>
+        <div><span style="color:#aaa;">Category</span> ${row.dataset.category}</div>
+        <div><span style="color:#aaa;">Tags</span> ${row.dataset.tags}</div>
+        <div><span style="color:#aaa;">Priority</span> ${row.dataset.priority}</div>
+        <div><span style="color:#aaa;">Ruth</span> ${row.dataset.ruth}</div>
+        <div><span style="color:#aaa;">Intel</span> ${row.dataset.intel}</div>
+        <div><span style="color:#aaa;">Article</span> ${row.dataset.article}</div>
+        <div><span style="color:#aaa;">Ingested</span> ${row.dataset.ingested}</div>`;
+      tip.style.display = 'block';
+    });
+    row.addEventListener('mousemove', (e) => {
+      tip.style.left = (e.clientX + 16) + 'px';
+      tip.style.top = Math.min(e.clientY - 8, window.innerHeight - 260) + 'px';
+    });
+    row.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+  });
+}
+
 async function loadInnovationRadarData() {
   try {
     const { data: items } = await CS.Auth.apiFetch('/api/admin/intel-radar?limit=80');
-    const categories = new Set(items.map(i => i.category).filter(Boolean));
-    const readyIntel = items.filter(i => i.ready_for_intel).length;
-    const readyAwareness = items.filter(i => i.ready_for_awareness).length;
-    const unused = items.filter(i => i.ready_for_awareness && !i.used_in_briefing).length;
-
-    document.getElementById('innovation-total').textContent = items.length;
-    document.getElementById('innovation-categories').textContent = categories.size + ' categories';
-    document.getElementById('innovation-ready-intel').textContent = readyIntel;
-    document.getElementById('innovation-ready-awareness').textContent = readyAwareness;
-    document.getElementById('innovation-unused').textContent = unused;
-
-    const tbody = document.getElementById('innovation-tbody');
-    if (!items.length) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#666;padding:12px;">No innovation or growth items in repository</td></tr>';
-      return;
-    }
-
-    const badge = (ok, yes, no) => ok
-      ? `<span class="badge b-green">${yes}</span>`
-      : `<span class="badge b-gray">${no}</span>`;
-
-    tbody.innerHTML = items.map(item => `<tr class="innovation-row" style="cursor:pointer;"
-      data-headline="${esc(item.headline || 'Untitled')}"
-      data-type="${esc(item.type || 'N/A')}"
-      data-category="${esc(item.category || 'N/A')}"
-      data-summary="${esc(item.summary || 'No summary available.')}"
-      data-tags="${esc((Array.isArray(item.tags) ? item.tags : (item.tags ? [item.tags] : [])).join(', ') || 'none')}"
-      data-priority="${esc(item.priority || 'N/A')}"
-      data-ruth="${esc(item.used_in_briefing ? 'Used in briefing' : item.ready_for_awareness ? 'Ready for Ruth' : 'Not ready')}"
-      data-intel="${esc(item.ready_for_intel ? 'Ready for James' : 'Not ready')}"
-      data-article="${esc(item.has_article ? 'Article linked' : 'No article yet')}"
-      data-ingested="${esc(item.ingested_at ? new Date(item.ingested_at).toLocaleDateString('en-US') : 'N/A')}">
-      <td><span class="badge ${item.type === 'growth' ? 'b-blue' : 'b-amber'}">${esc(item.type || '-')}</span></td>
-      <td>${esc(item.headline || 'Untitled')}</td>
-      <td>${esc(item.category || '-')}</td>
-      <td>${badge(item.ready_for_awareness && !item.used_in_briefing, 'Ready', item.used_in_briefing ? 'Used' : 'No')}</td>
-      <td>${badge(item.ready_for_intel, 'Ready', 'No')}</td>
-      <td>${badge(item.has_article, 'Linked', 'None')}</td>
-    </tr>`).join('');
-
-    const tip = document.getElementById('radar-tooltip');
-    tbody.querySelectorAll('.innovation-row').forEach(row => {
-      row.addEventListener('mouseenter', () => {
-        tip.innerHTML = `<div style="font-weight:600;margin-bottom:6px;">${row.dataset.headline}</div>
-          <div style="margin-bottom:6px;color:#cbd5e1;line-height:1.5;">${row.dataset.summary}</div>
-          <div><span style="color:#aaa;">Type</span> ${row.dataset.type}</div>
-          <div><span style="color:#aaa;">Category</span> ${row.dataset.category}</div>
-          <div><span style="color:#aaa;">Tags</span> ${row.dataset.tags}</div>
-          <div><span style="color:#aaa;">Priority</span> ${row.dataset.priority}</div>
-          <div><span style="color:#aaa;">Ruth</span> ${row.dataset.ruth}</div>
-          <div><span style="color:#aaa;">Intel</span> ${row.dataset.intel}</div>
-          <div><span style="color:#aaa;">Article</span> ${row.dataset.article}</div>
-          <div><span style="color:#aaa;">Ingested</span> ${row.dataset.ingested}</div>`;
-        tip.style.display = 'block';
-      });
-      row.addEventListener('mousemove', (e) => {
-        tip.style.left = (e.clientX + 16) + 'px';
-        tip.style.top = Math.min(e.clientY - 8, window.innerHeight - 260) + 'px';
-      });
-      row.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
-    });
+    innovationRadarItems = Array.isArray(items) ? items : [];
+    renderInnovationRadar();
   } catch (e) {
     console.error('Innovation radar load failed:', e);
     const tbody = document.getElementById('innovation-tbody');
