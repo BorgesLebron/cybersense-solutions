@@ -438,13 +438,18 @@ const createArticle = async ({ title, section, body_md, access_tier, source_ids,
 const getArticle = (slug) => q1('SELECT * FROM articles WHERE slug=$1', [slug]);
 const getArticleById = (id) => q1('SELECT * FROM articles WHERE id=$1', [id]);
 
-const listArticles = ({ section, access_tier, status = 'published', page = 1, limit = 20 } = {}) => {
+const listArticles = ({ section, access_tier, status = 'published', page = 1, limit = 20, min_body_length = 1000 } = {}) => {
   const conds = [`pipeline_status=$1`];
   const params = [status];
   if (section) { params.push(section); conds.push(`section=$${params.length}`); }
   if (access_tier) { params.push(access_tier); conds.push(`access_tier=$${params.length}`); }
+  if (status === 'published' && min_body_length) {
+    params.push(min_body_length);
+    conds.push(`length(coalesce(body_md,'')) >= $${params.length}`);
+  }
   params.push(limit, (page - 1) * limit);
-  return q(`SELECT id,title,slug,section,access_tier,pipeline_status,published_at,view_count,read_time_min
+  return q(`SELECT id,title,slug,section,access_tier,pipeline_status,published_at,view_count,read_time_min,
+                   LEFT(regexp_replace(coalesce(body_md,''), E'[#*_>\\n\\r-]+', ' ', 'g'), 240) AS teaser
             FROM articles WHERE ${conds.join(' AND ')} ORDER BY published_at DESC NULLS LAST LIMIT $${params.length - 1} OFFSET $${params.length}`, params);
 };
 

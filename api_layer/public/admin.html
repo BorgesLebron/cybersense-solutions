@@ -405,9 +405,10 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
           <div class="innovation-console-head">
             <div class="innovation-console-title">Live innovation and growth intake</div>
             <div class="innovation-console-tools">
-              <button class="innovation-filter-btn active" id="innovation-filter-all" onclick="setInnovationRadarView('all')">All</button>
-              <button class="innovation-filter-btn" id="innovation-filter-available" onclick="setInnovationRadarView('available')">Available for Ruth</button>
-              <button class="innovation-filter-btn" id="innovation-filter-used" onclick="setInnovationRadarView('used')">Used themes</button>
+              <button class="innovation-filter-btn" id="innovation-filter-all" onclick="setInnovationRadarView('all')">All</button>
+              <button class="innovation-filter-btn active" id="innovation-filter-available" onclick="setInnovationRadarView('available')">Unused</button>
+              <button class="innovation-filter-btn" id="innovation-filter-ready" onclick="setInnovationRadarView('ready')">Ready</button>
+              <button class="innovation-filter-btn" id="innovation-filter-used" onclick="setInnovationRadarView('used')">Used</button>
             </div>
           </div>
           <div class="innovation-table-wrap">
@@ -1197,7 +1198,7 @@ async function sendMayaArticleMessage() {
 }
 
 let innovationRadarItems = [];
-let innovationRadarView = 'all';
+let innovationRadarView = 'available';
 
 function setInnovationRadarView(view) {
   innovationRadarView = view;
@@ -1215,6 +1216,7 @@ function getInnovationRadarItemsForView() {
   if (innovationRadarView === 'innovation') return innovationRadarItems.filter(item => item.type === 'innovation');
   if (innovationRadarView === 'growth') return innovationRadarItems.filter(item => item.type === 'growth');
   if (innovationRadarView === 'available') return innovationRadarItems.filter(item => item.ready_for_awareness && !item.used_in_briefing);
+  if (innovationRadarView === 'ready') return innovationRadarItems.filter(item => item.ready_for_awareness || item.ready_for_intel);
   if (innovationRadarView === 'used') return innovationRadarItems.filter(item => item.used_in_briefing);
   return innovationRadarItems;
 }

@@ -9,6 +9,67 @@
 <meta name="description" content="In-depth cybersecurity intelligence briefs — threat analysis, policy updates, and innovation coverage.">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="auth.css">
+<style>
+  .intel-board {
+    background: #0f172a;
+    border: 1px solid rgba(0, 212, 255, .14);
+    border-radius: 8px;
+    padding: 28px 32px 36px;
+  }
+  .intel-board .category-label-bar {
+    border-bottom: 0;
+    padding-bottom: 0;
+    margin-bottom: 18px;
+  }
+  .intel-board .category-label-bar::after {
+    display: none;
+  }
+  .intel-board .article-card {
+    background: #1f416b;
+    border-color: rgba(148, 163, 184, .18);
+    border-radius: 18px;
+    color: #e5f2ff;
+    min-height: 142px;
+    padding: 16px;
+  }
+  .intel-board .article-card:hover {
+    box-shadow: 0 14px 28px rgba(2, 6, 23, .24);
+  }
+  .intel-board .card-topline {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .intel-board .article-card .badge {
+    color: #fff;
+    border: 0;
+    box-shadow: inset 0 1px 6px rgba(255, 255, 255, .25);
+  }
+  .intel-board .article-card .card-date {
+    color: #f8fafc;
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .intel-board .article-card .card-headline {
+    color: #fff;
+    font-size: 14px;
+  }
+  .intel-board .article-card .card-teaser {
+    color: #d8e6f6;
+    font-size: 11px;
+    line-height: 1.45;
+  }
+  .intel-board .article-card .card-link {
+    align-self: flex-end;
+  }
+  @media (max-width: 768px) {
+    .intel-board {
+      padding: 22px 18px;
+    }
+  }
+</style>
 </head>
 <body>
 
@@ -48,7 +109,7 @@
 </section>
 
 <section class="section" style="background:var(--cs-gray-100);">
-  <div class="container">
+  <div class="container intel-board">
 
     <!-- Section 1: Threat Intelligence — live from API -->
     <div class="category-section">
@@ -164,6 +225,23 @@ function getSectionLabel(section) {
   return map[section] || section;
 }
 
+function esc(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[ch]));
+}
+
+function formatArticleDate(value) {
+  if (!value) return 'Date';
+  return new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+}
+
+function teaserText(article) {
+  const text = String(article.teaser || article.summary || '').replace(/\s+/g, ' ').trim();
+  if (!text) return 'Full analysis is being prepared for subscribers.';
+  return text.length > 185 ? text.slice(0, 184).trimEnd() + '...' : text;
+}
+
 function ensureGrowthGrid() {
   let grid = document.getElementById('growth-grid');
   if (grid) return grid;
@@ -186,6 +264,35 @@ function ensureGrowthGrid() {
 }
 
 function articleCard(article, isLocked) {
+  const section = esc(getSectionLabel(article.section));
+  const headline = esc(article.title);
+  const teaser = esc(teaserText(article));
+  const date = esc(formatArticleDate(article.published_at));
+  const link = article.slug
+    ? `<a href="intel/article.html?slug=${encodeURIComponent(article.slug)}" class="card-link">Read more -&gt;</a>`
+    : '<span class="card-link" aria-disabled="true">Article pending</span>';
+  const body = `
+      <div class="card-topline"><span class="badge ${getSeverityBadge(article.section)}">${section}</span><span class="card-date">${date}</span></div>
+      <div class="card-headline">${headline}</div>
+      <div class="card-teaser">${teaser}</div>
+      ${isLocked ? '<span class="card-link" aria-disabled="true">Read more -&gt;</span>' : link}`;
+  if (isLocked) {
+    return `
+      <div class="gate-wrapper" style="border-radius:var(--radius-lg);height:100%;">
+        <div class="article-card blurred" aria-hidden="true">${body}</div>
+        <div class="gate-overlay">
+          <div class="gate-card">
+            <h3>Standard subscribers get full access</h3>
+            <p>Unlock all Intel Briefs for $9/month.</p>
+            <a href="newsletter.html#subscribe" class="btn btn-primary btn-sm">Subscribe Free</a>
+          </div>
+        </div>
+      </div>`;
+  }
+  return `<div class="article-card">${body}</div>`;
+}
+
+function legacyArticleCard(article, isLocked) {
   if (isLocked) {
     return `
       <div class="gate-wrapper" style="border-radius:var(--radius-lg);height:100%;">
