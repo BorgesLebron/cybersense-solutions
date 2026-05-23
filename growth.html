@@ -184,6 +184,9 @@ function growthArticleShell() {
 
 function growthCard(article, isLocked) {
   const teaser = article.teaser || article.summary || 'Full analysis available to subscribers.';
+  const link = article.slug
+    ? `<a href="intel/article.html?slug=${encodeURIComponent(article.slug)}" class="card-link">${isLocked ? 'Read preview' : 'Read more'} -></a>`
+    : '<span class="card-link" aria-disabled="true">Article pending</span>';
   if (isLocked) {
     return `
       <div class="gate-wrapper" style="border-radius:var(--radius-lg);height:100%;">
@@ -191,12 +194,13 @@ function growthCard(article, isLocked) {
           <span class="badge badge-published">Growth</span>
           <div class="card-headline">${article.title}</div>
           <div class="card-teaser">${teaser}</div>
-          <a href="#" class="card-link">Read more -></a>
+          ${link}
         </div>
         <div class="gate-overlay">
           <div class="gate-card">
             <h3>Subscribers only</h3>
             <p>Unlock full Professional Growth coverage for $9/month.</p>
+            ${article.slug ? `<a href="intel/article.html?slug=${encodeURIComponent(article.slug)}" class="btn btn-outline btn-sm">Read preview</a>` : ''}
             <a href="newsletter.html#subscribe" class="btn btn-primary btn-sm">Subscribe</a>
           </div>
         </div>
@@ -207,7 +211,7 @@ function growthCard(article, isLocked) {
       <span class="badge badge-published">Growth</span>
       <div class="card-headline">${article.title}</div>
       <div class="card-teaser">${teaser}</div>
-      <a href="intel/article.html?slug=${article.slug}" class="card-link">Read more -></a>
+      ${link}
     </div>`;
 }
 

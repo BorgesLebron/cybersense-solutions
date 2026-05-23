@@ -42,6 +42,9 @@ contentRouter.get('/innovation-radar', requireUserToken('free'), async (req, res
         summary: item.summary,
         tags: item.tags || [],
         priority: item.priority,
+        source_url: item.source_url || null,
+        source: item.source_url || item.ingested_by || null,
+        published_label: item.published_label || null,
         ingested_at: item.ingested_at,
         used_in_briefing: !!item.used_in_briefing,
         has_article: !!item.has_article,
@@ -1335,7 +1338,16 @@ adminRouter.get('/intel-radar', requireAdminToken(), async (req, res, next) => {
   try {
     const { type, limit = 50 } = req.query;
     const items = await db.getIntelRadarItems({ type, limit: parseInt(limit) || 50 });
-    res.json({ data: items });
+    res.json({ data: items.map(item => ({
+      ...item,
+      source_url: item.source_url || null,
+      source: item.source_url || item.ingested_by || null,
+      published_label: item.published_label || null,
+      used_in_briefing: !!item.used_in_briefing,
+      has_article: !!item.has_article,
+      ready_for_intel: !!item.ready_for_intel,
+      ready_for_awareness: !!item.ready_for_awareness,
+    })) });
   } catch (e) { next(e); }
 });
 

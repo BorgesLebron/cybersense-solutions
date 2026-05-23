@@ -628,9 +628,7 @@ async function loadInnovationFeed() {
       const teaser = esc(truncate(article.teaser || article.summary || 'Full analysis available to subscribers.', 220));
       const link = !article.slug
         ? '<span class="card-link" aria-disabled="true">Article pending</span>'
-        : tierRank < requiredRank
-        ? '<span class="card-link" aria-disabled="true">Subscriber access required</span>'
-        : `<a href="intel/article.html?slug=${encodeURIComponent(article.slug)}" class="card-link">Read article -></a>`;
+        : `<a href="intel/article.html?slug=${encodeURIComponent(article.slug)}" class="card-link">${tierRank < requiredRank ? 'Read preview' : 'Read article'} -></a>`;
       return `
         <div class="article-card">
           <span class="badge badge-medium">Innovation</span>

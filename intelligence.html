@@ -275,7 +275,7 @@ function articleCard(article, isLocked) {
       <div class="card-topline"><span class="badge ${getSeverityBadge(article.section)}">${section}</span><span class="card-date">${date}</span></div>
       <div class="card-headline">${headline}</div>
       <div class="card-teaser">${teaser}</div>
-      ${isLocked ? '<span class="card-link" aria-disabled="true">Read more -&gt;</span>' : link}`;
+      ${link}`;
   if (isLocked) {
     return `
       <div class="gate-wrapper" style="border-radius:var(--radius-lg);height:100%;">

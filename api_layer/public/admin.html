@@ -408,13 +408,12 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
               <button class="innovation-filter-btn" id="innovation-filter-all" onclick="setInnovationRadarView('all')">All</button>
               <button class="innovation-filter-btn active" id="innovation-filter-available" onclick="setInnovationRadarView('available')">Unused</button>
               <button class="innovation-filter-btn" id="innovation-filter-ready" onclick="setInnovationRadarView('ready')">Ready</button>
-              <button class="innovation-filter-btn" id="innovation-filter-used" onclick="setInnovationRadarView('used')">Used</button>
             </div>
           </div>
           <div class="innovation-table-wrap">
             <table class="tbl">
-              <thead><tr><th>Type</th><th>Headline</th><th>Category</th><th>Ruth</th><th>Intel</th><th>Article</th></tr></thead>
-              <tbody id="innovation-tbody"><tr><td colspan="6" style="text-align:center;color:#666;padding:12px;">Loading innovation and growth data...</td></tr></tbody>
+              <thead><tr><th>Type</th><th>Headline</th><th>Source</th><th>Published</th><th>Category</th><th>Newsletter</th><th>Article</th></tr></thead>
+              <tbody id="innovation-tbody"><tr><td colspan="7" style="text-align:center;color:#666;padding:12px;">Loading innovation and growth data...</td></tr></tbody>
             </table>
           </div>
           <div class="db-dock">
@@ -1213,12 +1212,12 @@ function openArticlesDatabase() {
 }
 
 function getInnovationRadarItemsForView() {
+  const liveItems = innovationRadarItems.filter(item => !item.used_in_briefing && !item.has_article);
   if (innovationRadarView === 'innovation') return innovationRadarItems.filter(item => item.type === 'innovation');
   if (innovationRadarView === 'growth') return innovationRadarItems.filter(item => item.type === 'growth');
-  if (innovationRadarView === 'available') return innovationRadarItems.filter(item => item.ready_for_awareness && !item.used_in_briefing);
-  if (innovationRadarView === 'ready') return innovationRadarItems.filter(item => item.ready_for_awareness || item.ready_for_intel);
-  if (innovationRadarView === 'used') return innovationRadarItems.filter(item => item.used_in_briefing);
-  return innovationRadarItems;
+  if (innovationRadarView === 'available') return liveItems.filter(item => item.ready_for_awareness);
+  if (innovationRadarView === 'ready') return liveItems.filter(item => item.ready_for_awareness || item.ready_for_intel);
+  return liveItems;
 }
 
 function renderInnovationControls() {
@@ -1230,7 +1229,7 @@ function renderInnovationControls() {
 }
 
 function renderThemeAvailability(items) {
-  const available = items.filter(item => item.ready_for_awareness && !item.used_in_briefing);
+  const available = items.filter(item => item.ready_for_awareness && !item.used_in_briefing && !item.has_article);
   const availableThemes = new Set(available.map(item => item.category).filter(Boolean));
   const usedThemes = new Set(items.filter(item => item.used_in_briefing).map(item => item.category).filter(Boolean));
   const health = document.getElementById('innovation-theme-health');
@@ -1255,7 +1254,7 @@ function renderInnovationRadar() {
   const categories = new Set(innovationRadarItems.map(i => i.category).filter(Boolean));
   const readyIntel = innovationRadarItems.filter(i => i.ready_for_intel).length;
   const readyAwareness = innovationRadarItems.filter(i => i.ready_for_awareness).length;
-  const unused = innovationRadarItems.filter(i => i.ready_for_awareness && !i.used_in_briefing).length;
+  const unused = innovationRadarItems.filter(i => i.ready_for_awareness && !i.used_in_briefing && !i.has_article).length;
 
   document.getElementById('innovation-total').textContent = innovationRadarItems.length;
   document.getElementById('innovation-categories').textContent = categories.size + ' categories';
@@ -1267,31 +1266,50 @@ function renderInnovationRadar() {
   const tbody = document.getElementById('innovation-tbody');
   const items = getInnovationRadarItemsForView();
   if (!items.length) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#666;padding:12px;">No records match this database view</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#666;padding:12px;">No unused records match this view</td></tr>';
     return;
   }
 
-  const badge = (ok, yes, no) => ok
-    ? `<span class="badge b-green">${yes}</span>`
-    : `<span class="badge b-gray">${no}</span>`;
+  const statusBadge = (state, label) => {
+    const map = { green: 'b-green', yellow: 'b-amber', red: 'b-red', gray: 'b-gray' };
+    return `<span class="badge ${map[state] || 'b-gray'}">${label}</span>`;
+  };
+  const sourceLabel = (item) => {
+    if (item.source_url) {
+      try { return new URL(item.source_url).hostname.replace(/^www\./, ''); } catch (_) {}
+    }
+    return item.ingested_by || item.source || '-';
+  };
+  const sourceCell = (item) => item.source_url
+    ? `<a href="${esc(item.source_url)}" target="_blank" rel="noopener" style="color:var(--color-text-info);">${esc(sourceLabel(item))}</a>`
+    : esc(sourceLabel(item));
+  const newsletterState = (item) => item.used_in_briefing
+    ? statusBadge('red', 'Used')
+    : item.ready_for_awareness ? statusBadge('green', 'Ready') : statusBadge('gray', 'No');
+  const articleState = (item) => item.has_article
+    ? statusBadge('red', 'Used')
+    : item.ready_for_intel ? statusBadge('yellow', 'Ready') : statusBadge('green', 'Open');
 
   tbody.innerHTML = items.map(item => `<tr class="innovation-row" style="cursor:pointer;" data-stale="${item.used_in_briefing ? 'true' : 'false'}"
     data-headline="${esc(item.headline || 'Untitled')}"
     data-type="${esc(item.type || 'N/A')}"
     data-category="${esc(item.category || 'N/A')}"
+    data-source="${esc(sourceLabel(item))}"
+    data-published="${esc(item.published_label || 'N/A')}"
     data-summary="${esc(item.summary || 'No summary available.')}"
     data-tags="${esc((Array.isArray(item.tags) ? item.tags : (item.tags ? [item.tags] : [])).join(', ') || 'none')}"
     data-priority="${esc(item.priority || 'N/A')}"
-    data-ruth="${esc(item.used_in_briefing ? 'Used in briefing' : item.ready_for_awareness ? 'Ready for Ruth' : 'Not ready')}"
+    data-ruth="${esc(item.used_in_briefing ? 'Used in newsletter' : item.ready_for_awareness ? 'Ready for newsletter' : 'Not ready')}"
     data-intel="${esc(item.ready_for_intel ? 'Ready for James' : 'Not ready')}"
-    data-article="${esc(item.has_article ? 'Article linked' : 'No article yet')}"
+    data-article="${esc(item.has_article ? 'Used in article' : item.ready_for_intel ? 'Ready for article' : 'Open')}"
     data-ingested="${esc(item.ingested_at ? new Date(item.ingested_at).toLocaleDateString('en-US') : 'N/A')}">
     <td><span class="badge ${item.type === 'growth' ? 'b-blue' : 'b-amber'}">${esc(item.type || '-')}</span></td>
     <td>${esc(item.headline || 'Untitled')}</td>
+    <td>${sourceCell(item)}</td>
+    <td>${esc(item.published_label || '-')}</td>
     <td>${esc(item.category || '-')}</td>
-    <td>${badge(item.ready_for_awareness && !item.used_in_briefing, 'Ready', item.used_in_briefing ? 'Used' : 'No')}</td>
-    <td>${badge(item.ready_for_intel, 'Ready', 'No')}</td>
-    <td>${badge(item.has_article, 'Linked', 'None')}</td>
+    <td>${newsletterState(item)}</td>
+    <td>${articleState(item)}</td>
   </tr>`).join('');
 
   const tip = document.getElementById('radar-tooltip');
@@ -1300,6 +1318,8 @@ function renderInnovationRadar() {
       tip.innerHTML = `<div style="font-weight:600;margin-bottom:6px;">${row.dataset.headline}</div>
         <div style="margin-bottom:6px;color:#cbd5e1;line-height:1.5;">${row.dataset.summary}</div>
         <div><span style="color:#aaa;">Type</span> ${row.dataset.type}</div>
+        <div><span style="color:#aaa;">Source</span> ${row.dataset.source}</div>
+        <div><span style="color:#aaa;">Published</span> ${row.dataset.published}</div>
         <div><span style="color:#aaa;">Category</span> ${row.dataset.category}</div>
         <div><span style="color:#aaa;">Tags</span> ${row.dataset.tags}</div>
         <div><span style="color:#aaa;">Priority</span> ${row.dataset.priority}</div>
