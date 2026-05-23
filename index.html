@@ -14,7 +14,7 @@
   .hero-video-col{position:relative;height:500px;}
   .hero-vid-card{position:absolute;border-radius:16px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.08);}
   .hero-vid-card video{width:100%;display:block;object-fit:cover;}
-  .hero-vid-label{position:absolute;bottom:0;left:0;right:0;padding:10px 14px;background:linear-gradient(transparent,rgba(0,0,0,0.75));color:#fff;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+  .hero-vid-label{position:absolute;top:0;left:0;right:0;padding:10px 14px;background:linear-gradient(rgba(0,0,0,0.65),transparent);color:#fff;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
   .home-split{background:#0a1628;padding:72px 24px;}
   .home-split-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;}
   .split-panel-radar .data-table thead th{background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);border-bottom:1px solid rgba(255,255,255,0.08);font-size:11px;letter-spacing:0.8px;}
@@ -88,16 +88,16 @@
       </div>
       <div class="hero-video-col">
         <div class="hero-vid-card" style="top:0;left:0;width:82%;z-index:1;">
-          <video autoplay muted loop playsinline>
+          <video controls playsinline>
             <source src="trainingProducts/videos/threatRadar.mp4" type="video/mp4">
           </video>
           <div class="hero-vid-label">Threat Radar</div>
         </div>
         <div class="hero-vid-card" style="top:190px;right:0;width:68%;z-index:2;">
-          <video autoplay muted loop playsinline style="width:100%;display:block;margin-bottom:-48px;">
+          <video controls playsinline style="width:100%;display:block;margin-top:-28px;">
             <source src="trainingProducts/videos/amyIntro.mp4" type="video/mp4">
           </video>
-          <div class="hero-vid-label">Meet Amy — Daily Briefing</div>
+          <div class="hero-vid-label">Welcome to the Force</div>
         </div>
       </div>
     </div>
