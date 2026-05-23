@@ -267,9 +267,11 @@ Each engineer audits a peer's component once per week. The audit has two lenses:
 
 **Client-service:** Does what was built actually serve what CyberSense.Solutions needs operationally? Does it match the relevant agent SOPs? Would the client agents be able to operate this after handover?
 
-**Rotation:** Alan audits Gemma → Gemma audits Gwen → Gwen audits Alan *(counterclockwise)*
+**Rotation:** Alan audits Gwen → Gwen audits Alan. *(Gemma has moved to Digital Media Production and is no longer in the engineering audit rotation.)*
 
-Audit findings go in the EOD report under the auditing engineer's section. Hector decides what action to take. Audits are not peer corrections — they are contractor quality checks in service of the client.
+**Protocol:** Audits are read-only. No changes are made during the audit session. Findings go in the auditing engineer's EOD under "Cross-Audit Notes." Corrections are made by the building agent in the next session. Hector decides if escalation is needed.
+
+Audits are not peer corrections — they are contractor quality checks in service of the client.
 
 ---
 
@@ -320,7 +322,7 @@ Never merge to main without Hector's review. Never commit `.env`.
 | admin.html | Gwen (interim) | 🟡 Partial | Threat Radar wired, Command Center placeholder |
 | index.html | Alan | 🟢 Live | Radar + Today's Brief rendering |
 | newsletter.html | Gwen | 🟢 Live | Latest Edition correct |
-| Training / Labs | Gemma | 🔴 Not started | |
+| Digital Media Production | Gemma | 🟡 Repositioned | Gemma moved to separate media production pipeline. Training backend (kirby_runtime.js, training routes) — owner TBD, flag to Hector. |
 | Public nav | — | 🟢 Cleaned | Unfinished sections hidden |
 
 ---
