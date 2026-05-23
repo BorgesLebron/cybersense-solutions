@@ -152,7 +152,14 @@ const getIntelRadarItems = ({ type, limit = 50 } = {}) => {
   params.push(limit);
   const where = conds.length ? `WHERE ${conds.join(' AND ')}` : '';
   return q(`SELECT i.id, i.type, i.category, i.headline, i.summary, i.tags, i.priority,
-                   i.ingested_at,
+                   i.ingested_by, i.ingested_at,
+                   r.normalized_data->>'source_url' AS source_url,
+                   COALESCE(
+                     r.normalized_data->>'published_date',
+                     r.normalized_data->>'published_at',
+                     r.normalized_data->>'date_published',
+                     to_char(i.ingested_at, 'YYYYMMDD')
+                   ) AS published_label,
                    EXISTS (
                      SELECT 1
                      FROM briefings b
