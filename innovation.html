@@ -625,7 +625,7 @@ async function loadInnovationFeed() {
 
     document.getElementById('innovation-articles').innerHTML = articles.length ? articles.map(article => {
       const requiredRank = TIER_RANK[article.access_tier] || 0;
-      const teaser = esc(article.teaser || article.summary || 'Full analysis available to subscribers.');
+      const teaser = esc(truncate(article.teaser || article.summary || 'Full analysis available to subscribers.', 220));
       const link = !article.slug
         ? '<span class="card-link" aria-disabled="true">Article pending</span>'
         : tierRank < requiredRank
