@@ -9,6 +9,105 @@
 <meta name="description" content="Live threat tracking — active vulnerabilities, CVEs, and adversary campaigns.">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="auth.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-geo@4.3.0/build/index.umd.min.js"></script>
+<style>
+/* ── Stats Bar ─────────────────────────────────── */
+.rdr-stats{background:#060f1e;padding:20px 24px;border-bottom:1px solid rgba(0,212,255,0.08);}
+.rdr-stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;max-width:1400px;margin:0 auto;}
+.rdr-stat{background:#0d1e3a;border:1px solid rgba(0,212,255,0.1);border-radius:12px;padding:18px 22px;}
+.rdr-stat-crit{border-color:rgba(255,59,59,0.3);}
+.rdr-stat-high{border-color:rgba(255,140,0,0.3);}
+.rdr-stat-label{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:8px;}
+.rdr-stat-val{font-size:34px;font-weight:800;color:#fff;line-height:1;}
+.rdr-stat-sm{font-size:17px;padding-top:6px;}
+.rdr-stat-crit .rdr-stat-val{color:#ff6b6b;}
+.rdr-stat-high .rdr-stat-val{color:#ff9940;}
+
+/* ── Dashboard shell ───────────────────────────── */
+.rdr-dash{background:#060f1e;padding:18px 24px 56px;}
+.rdr-container{max-width:1400px;margin:0 auto;}
+.rdr-top-grid{display:grid;grid-template-columns:260px 1fr 300px;gap:14px;margin-bottom:14px;}
+.rdr-bottom-grid{display:grid;grid-template-columns:1fr 300px;gap:14px;}
+
+/* ── Panels ────────────────────────────────────── */
+.rdr-panel{background:#0d1e3a;border:1px solid rgba(0,212,255,0.1);border-radius:14px;overflow:hidden;}
+.rdr-panel-flex{display:flex;flex-direction:column;height:560px;}
+.rdr-panel-hdr{padding:13px 18px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:10px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;color:rgba(255,255,255,0.45);display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.rdr-panel-body{padding:16px;flex:1;overflow:hidden;display:flex;flex-direction:column;}
+
+/* ── Charts column ─────────────────────────────── */
+.rdr-charts-col{display:flex;flex-direction:column;gap:14px;}
+.rdr-chart-wrap{position:relative;}
+
+/* ── Map ───────────────────────────────────────── */
+.rdr-map-body{flex:1;display:flex;align-items:center;justify-content:center;padding:8px;position:relative;}
+.rdr-map-body canvas{width:100%!important;height:100%!important;}
+.rdr-map-unavail{display:flex;align-items:center;justify-content:center;height:100%;color:rgba(255,255,255,0.25);font-size:13px;}
+
+/* ── Feed ──────────────────────────────────────── */
+.rdr-feed-filters{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;gap:8px;flex-shrink:0;}
+.rdr-select{background:#060f1e;border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:rgba(255,255,255,0.65);padding:7px 10px;font-size:12px;outline:none;}
+.rdr-search{background:#060f1e;border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:rgba(255,255,255,0.65);padding:7px 10px;font-size:12px;flex:1;outline:none;}
+.rdr-search::placeholder{color:rgba(255,255,255,0.2);}
+.rdr-feed-scroll{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(0,212,255,0.2) transparent;}
+.rdr-feed-scroll::-webkit-scrollbar{width:3px;}
+.rdr-feed-scroll::-webkit-scrollbar-thumb{background:rgba(0,212,255,0.25);border-radius:2px;}
+.rdr-tbl{width:100%;border-collapse:collapse;}
+.rdr-tbl th{padding:9px 11px;font-size:10px;letter-spacing:0.8px;font-weight:700;text-transform:uppercase;color:rgba(255,255,255,0.28);border-bottom:1px solid rgba(255,255,255,0.05);text-align:left;position:sticky;top:0;background:#0d1e3a;z-index:1;}
+.rdr-tbl td{padding:9px 11px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle;}
+.rdr-tbl tr:hover td{background:rgba(0,212,255,0.04);}
+.rdr-cell-name{font-weight:600;color:rgba(255,255,255,0.85);font-size:12px;max-width:130px;}
+.rdr-cell-cve{font-size:10px;color:rgba(255,255,255,0.28);font-family:monospace;margin-top:1px;}
+.rdr-cell-cvss{color:rgba(255,255,255,0.55);font-size:12px;font-family:monospace;}
+.rdr-link{font-size:11px;color:#00d4ff;font-weight:600;text-decoration:none;white-space:nowrap;}
+.rdr-link:hover{text-decoration:underline;}
+.rdr-pending{font-size:11px;color:rgba(255,255,255,0.18);}
+.rdr-empty{text-align:center;padding:36px 16px;color:rgba(255,255,255,0.25);font-size:13px;}
+.rdr-meta{padding:9px 14px;font-size:10px;color:rgba(255,255,255,0.2);border-top:1px solid rgba(255,255,255,0.04);flex-shrink:0;line-height:1.5;}
+
+/* ── CISA KEV ──────────────────────────────────── */
+.rdr-kev-scroll{overflow-y:auto;max-height:216px;scrollbar-width:thin;scrollbar-color:rgba(0,212,255,0.15) transparent;}
+.kev-entry{padding:11px 18px;border-bottom:1px solid rgba(255,255,255,0.04);position:relative;}
+.kev-entry:hover{background:rgba(0,212,255,0.04);}
+.kev-row-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:3px;}
+.kev-cve{font-family:monospace;font-size:12px;color:#00d4ff;font-weight:700;}
+.kev-vendor{font-size:11px;color:rgba(255,255,255,0.6);margin-top:1px;}
+.kev-badge{display:inline-flex;align-items:center;background:rgba(255,59,59,0.12);border:1px solid rgba(255,59,59,0.3);color:#ff6b6b;font-size:9px;font-weight:800;padding:2px 7px;border-radius:20px;letter-spacing:0.8px;white-space:nowrap;flex-shrink:0;}
+.kev-row-bot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;}
+.kev-attack{font-size:11px;color:rgba(255,255,255,0.38);}
+.kev-dates{font-size:10px;color:rgba(255,255,255,0.22);}
+.kev-tip{display:none;position:absolute;bottom:calc(100% + 4px);left:0;background:#060f1e;border:1px solid rgba(0,212,255,0.22);border-radius:10px;padding:13px 15px;width:240px;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,0.65);pointer-events:none;}
+.kev-entry:hover .kev-tip{display:block;}
+.kev-tr{display:flex;justify-content:space-between;gap:10px;margin-bottom:6px;font-size:11px;}
+.kev-tr:last-child{margin-bottom:0;}
+.kev-tl{color:rgba(255,255,255,0.32);white-space:nowrap;}
+.kev-tv{color:#fff;font-weight:600;text-align:right;}
+
+/* ── Industries ────────────────────────────────── */
+.rdr-ind-body{display:flex;align-items:center;gap:20px;padding:20px;}
+.rdr-ind-body canvas{flex-shrink:0;max-width:150px;max-height:150px;}
+.rdr-ind-legend{display:flex;flex-direction:column;gap:9px;flex:1;}
+.ind-row{display:flex;align-items:center;gap:8px;font-size:12px;}
+.ind-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.ind-lbl{color:rgba(255,255,255,0.65);flex:1;}
+.ind-pct{color:#fff;font-weight:700;}
+
+/* ── Responsive ────────────────────────────────── */
+@media(max-width:1100px){
+  .rdr-top-grid{grid-template-columns:1fr 1fr;}
+  .rdr-charts-col{grid-column:1;grid-row:1;}
+  .rdr-map-col{grid-column:2;grid-row:1;}
+  .rdr-feed-col{grid-column:1/-1;grid-row:2;}
+  .rdr-panel-flex{height:420px;}
+}
+@media(max-width:768px){
+  .rdr-top-grid,.rdr-bottom-grid{grid-template-columns:1fr;}
+  .rdr-stats-grid{grid-template-columns:repeat(2,1fr);}
+  .rdr-panel-flex{height:360px;}
+  .rdr-ind-body{flex-direction:column;}
+}
+</style>
 </head>
 <body>
 
@@ -39,6 +138,7 @@
   <a href="#" class="drawer-login" onclick="CS.Auth.showLoginModal();return false;">Login</a>
 </div>
 
+<!-- ═══ HERO ═══ -->
 <section class="hero-dark section" style="padding:64px 24px 56px;">
   <div class="container" style="position:relative;z-index:1;">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
@@ -50,62 +150,145 @@
   </div>
 </section>
 
-<section class="section" style="background:var(--cs-white);">
-  <div class="container">
-
-    <!-- Filter Bar -->
-    <div class="filter-bar">
-      <select class="filter-select" id="severity-filter" aria-label="Filter by severity">
-        <option value="">All Severities</option>
-        <option value="critical">Critical</option>
-        <option value="high">High</option>
-        <option value="medium">Medium</option>
-        <option value="low">Low</option>
-      </select>
-      <input class="search-input" type="text" id="threat-search" placeholder="Search threats, CVE IDs, vendors..." aria-label="Search threats">
+<!-- ═══ STATS BAR ═══ -->
+<div class="rdr-stats">
+  <div class="rdr-stats-grid">
+    <div class="rdr-stat">
+      <div class="rdr-stat-label">Tracked Threats</div>
+      <div class="rdr-stat-val" id="stat-total">—</div>
     </div>
-
-    <!-- Radar Table -->
-    <div class="table-wrap" id="radar-wrap">
-      <table class="data-table" aria-label="Threat radar">
-        <thead>
-          <tr>
-            <th>Severity</th>
-            <th>Threat Name</th>
-            <th>CVE</th>
-            <th>CVSS</th>
-            <th>Category</th>
-            <th>Intel Article</th>
-          </tr>
-        </thead>
-        <tbody id="radar-body">
-          <tr>
-            <td colspan="6" style="text-align:center;padding:40px;color:var(--cs-gray-400);">Loading threat data...</td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="rdr-stat rdr-stat-crit">
+      <div class="rdr-stat-label">Critical</div>
+      <div class="rdr-stat-val" id="stat-crit">—</div>
     </div>
+    <div class="rdr-stat rdr-stat-high">
+      <div class="rdr-stat-label">High</div>
+      <div class="rdr-stat-val" id="stat-high">—</div>
+    </div>
+    <div class="rdr-stat">
+      <div class="rdr-stat-label">Last Updated</div>
+      <div class="rdr-stat-val rdr-stat-sm" id="stat-updated">—</div>
+    </div>
+  </div>
+</div>
 
-    <!-- Gate for non-subscribers — rendered dynamically -->
-    <div class="gate-wrapper" id="radar-gate" style="display:none;border-radius:var(--radius-lg);margin-top:-4px;">
-      <div class="blurred" aria-hidden="true" id="blurred-rows-wrap">
-        <table class="data-table">
-          <tbody id="blurred-rows"></tbody>
-        </table>
-      </div>
-      <div class="gate-overlay">
-        <div class="gate-card">
-          <h3>Subscribe to unlock full radar</h3>
-          <p>All tracked threats plus real-time alerts when new critical CVEs are published. Free to start.</p>
-          <a href="newsletter.html#subscribe" class="btn btn-primary">Subscribe Free</a>
+<!-- ═══ DASHBOARD ═══ -->
+<div class="rdr-dash">
+  <div class="rdr-container">
+
+    <!-- Top 3-column grid -->
+    <div class="rdr-top-grid">
+
+      <!-- Col A: Severity + Attack Type charts -->
+      <div class="rdr-charts-col">
+        <div class="rdr-panel">
+          <div class="rdr-panel-hdr">Threat Level Distribution</div>
+          <div class="rdr-panel-body" style="padding:14px 16px;">
+            <div class="rdr-chart-wrap" style="flex:1;min-height:140px;">
+              <canvas id="chart-severity"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="rdr-panel">
+          <div class="rdr-panel-hdr">Attack by Type</div>
+          <div class="rdr-panel-body" style="padding:14px 16px;">
+            <div class="rdr-chart-wrap" style="flex:1;min-height:160px;">
+              <canvas id="chart-type"></canvas>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <p style="margin-top:20px;font-size:13px;color:var(--cs-gray-400);" id="radar-meta"></p>
+      <!-- Col B: World Map -->
+      <div class="rdr-map-col">
+        <div class="rdr-panel rdr-panel-flex">
+          <div class="rdr-panel-hdr">
+            <span class="live-dot"></span>
+            Global Attack Origins
+            <span style="margin-left:auto;font-size:10px;color:rgba(255,255,255,0.25);font-weight:400;letter-spacing:0;text-transform:none;">Hover country for details</span>
+          </div>
+          <div class="rdr-map-body" id="map-body">
+            <canvas id="chart-map"></canvas>
+          </div>
+        </div>
+      </div>
 
-  </div>
-</section>
+      <!-- Col C: Live Radar Feed -->
+      <div class="rdr-feed-col">
+        <div class="rdr-panel rdr-panel-flex">
+          <div class="rdr-panel-hdr">
+            <span class="live-dot"></span>
+            Live Radar Feed
+          </div>
+          <div class="rdr-feed-filters">
+            <select class="rdr-select" id="severity-filter" aria-label="Filter by severity">
+              <option value="">All</option>
+              <option value="critical">Critical</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+            <input class="rdr-search" type="text" id="threat-search" placeholder="Search threats, CVEs…" aria-label="Search threats">
+          </div>
+          <div class="rdr-feed-scroll" id="radar-wrap">
+            <table class="rdr-tbl" aria-label="Threat radar">
+              <thead>
+                <tr>
+                  <th>Sev</th>
+                  <th>Threat</th>
+                  <th>CVSS</th>
+                  <th>Intel</th>
+                </tr>
+              </thead>
+              <tbody id="radar-body">
+                <tr><td colspan="4" class="rdr-empty">Loading threat data…</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="gate-wrapper" id="radar-gate" style="display:none;border-radius:0 0 14px 14px;">
+            <div class="blurred" aria-hidden="true" id="blurred-rows-wrap">
+              <table class="rdr-tbl"><tbody id="blurred-rows"></tbody></table>
+            </div>
+            <div class="gate-overlay">
+              <div class="gate-card">
+                <h3>Subscribe to unlock full radar</h3>
+                <p>All tracked threats plus real-time alerts when new critical CVEs are published. Free to start.</p>
+                <a href="newsletter.html#subscribe" class="btn btn-primary">Subscribe Free</a>
+              </div>
+            </div>
+          </div>
+          <div class="rdr-meta" id="radar-meta"></div>
+        </div>
+      </div>
+
+    </div><!-- /rdr-top-grid -->
+
+    <!-- Bottom 2-column grid -->
+    <div class="rdr-bottom-grid">
+
+      <!-- CISA KEV -->
+      <div class="rdr-panel">
+        <div class="rdr-panel-hdr">
+          <span style="color:#ff6b6b;">●</span>
+          CISA KEV — Known Exploited Vulnerabilities
+          <span style="margin-left:auto;font-size:10px;color:rgba(255,255,255,0.25);font-weight:400;letter-spacing:0;text-transform:none;">Hover entry for details</span>
+        </div>
+        <div class="rdr-kev-scroll" id="kev-list"></div>
+      </div>
+
+      <!-- Industries -->
+      <div class="rdr-panel">
+        <div class="rdr-panel-hdr">Industries Targeted</div>
+        <div class="rdr-ind-body">
+          <canvas id="chart-industries" width="150" height="150"></canvas>
+          <div class="rdr-ind-legend" id="ind-legend"></div>
+        </div>
+      </div>
+
+    </div><!-- /rdr-bottom-grid -->
+
+  </div><!-- /rdr-container -->
+</div><!-- /rdr-dash -->
 
 <footer>
   <div class="footer-inner">
@@ -142,106 +325,377 @@
 <script src="auth.js"></script>
 <script src="main.js"></script>
 <script>
+/* ════════════════════════════════════════════════
+   STATIC DATASETS
+════════════════════════════════════════════════ */
+const GEO_DATA = {
+  156:{name:'China',attacks:234},
+  643:{name:'Russia',attacks:187},
+  840:{name:'United States',attacks:112},
+  364:{name:'Iran',attacks:67},
+  408:{name:'North Korea',attacks:43},
+  356:{name:'India',attacks:38},
+  76:{name:'Brazil',attacks:29},
+  804:{name:'Ukraine',attacks:24},
+  826:{name:'United Kingdom',attacks:21},
+  276:{name:'Germany',attacks:18},
+  566:{name:'Nigeria',attacks:16},
+  642:{name:'Romania',attacks:14},
+  704:{name:'Vietnam',attacks:12},
+  360:{name:'Indonesia',attacks:11},
+  586:{name:'Pakistan',attacks:9},
+  792:{name:'Turkey',attacks:8},
+  410:{name:'South Korea',attacks:7},
+  250:{name:'France',attacks:6},
+  124:{name:'Canada',attacks:5},
+  36:{name:'Australia',attacks:4}
+};
+const GEO_TOTAL = Object.values(GEO_DATA).reduce((a,b)=>a+b.attacks,0);
+
+const INDUSTRIES = [
+  {label:'Finance',pct:28,color:'#00d4ff'},
+  {label:'Healthcare',pct:22,color:'#4da6ff'},
+  {label:'Government',pct:19,color:'#7c6fff'},
+  {label:'Technology',pct:16,color:'#00c896'},
+  {label:'Energy',pct:9,color:'#ffd700'},
+  {label:'Other',pct:6,color:'#ff8c00'}
+];
+
+const CISA_KEVS = [
+  {cve:'CVE-2025-23006',vendor:'SonicWall',product:'SMA 1000 Appliances',attack:'Pre-Auth RCE',added:'Jan 23, 2025',due:'Feb 13, 2025'},
+  {cve:'CVE-2025-21590',vendor:'Juniper Networks',product:'Junos OS',attack:'Improper Isolation / Privilege Escalation',added:'Feb 12, 2025',due:'Mar 5, 2025'},
+  {cve:'CVE-2025-0282',vendor:'Ivanti',product:'Connect Secure / Policy Secure',attack:'Stack-Based Buffer Overflow',added:'Jan 8, 2025',due:'Jan 22, 2025'},
+  {cve:'CVE-2024-55591',vendor:'Fortinet',product:'FortiOS / FortiProxy',attack:'Authentication Bypass',added:'Jan 14, 2025',due:'Feb 4, 2025'},
+  {cve:'CVE-2025-0994',vendor:'Trimble',product:'Cityworks AMS',attack:'Deserialization RCE',added:'Feb 4, 2025',due:'Feb 25, 2025'},
+  {cve:'CVE-2025-1316',vendor:'Edimax',product:'IC-7100 IP Camera',attack:'OS Command Injection',added:'Mar 6, 2025',due:'Mar 27, 2025'},
+  {cve:'CVE-2024-12084',vendor:'rsync Project',product:'rsync daemon',attack:'Heap-Based Buffer Overflow',added:'Jan 21, 2025',due:'Feb 11, 2025'},
+  {cve:'CVE-2024-49415',vendor:'Samsung',product:'Mobile Devices (Android)',attack:'Remote Code Execution',added:'Jan 22, 2025',due:'Feb 12, 2025'}
+];
+
+/* ════════════════════════════════════════════════
+   RADAR STATE
+════════════════════════════════════════════════ */
 const FREE_LIMIT = 7;
 let allThreats = [];
 let currentUser = null;
 
+/* ════════════════════════════════════════════════
+   CHART GLOBALS
+════════════════════════════════════════════════ */
+Chart.defaults.color = 'rgba(255,255,255,0.5)';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
+Chart.defaults.font.size = 11;
+
+let chartSev = null, chartType = null, chartInd = null;
+
+/* ════════════════════════════════════════════════
+   RENDER HELPERS
+════════════════════════════════════════════════ */
 function severityBadge(s) {
-  const map = { critical: 'badge-critical', high: 'badge-high', medium: 'badge-medium', low: 'badge-low' };
-  return `<span class="badge ${map[s] || 'badge-low'}">${s.charAt(0).toUpperCase() + s.slice(1)}</span>`;
+  const map = {critical:'badge-critical',high:'badge-high',medium:'badge-medium',low:'badge-low'};
+  return `<span class="badge ${map[s]||'badge-low'}">${s.charAt(0).toUpperCase()+s.slice(1)}</span>`;
 }
 
 function threatRow(t) {
-  if (!t.threat_name) return `<tr><td><span class="badge badge-high">—</span></td><td style="font-weight:500;color:var(--cs-navy);">Threat Record</td><td class="mono">—</td><td class="mono">—</td><td style="font-size:13px;">—</td><td></td></tr>`;
+  if (!t.threat_name) return `<tr><td>${severityBadge('high')}</td><td class="rdr-cell-name">Threat Record</td><td class="rdr-cell-cvss">—</td><td></td></tr>`;
   const article = t.article_link
-    ? `<a href="intel/article.html?slug=${t.article_link.split('/').pop()}" style="font-size:13px;color:var(--cs-cyan);font-weight:500;">Read Intel Brief →</a>`
-    : `<span style="font-size:13px;color:var(--cs-gray-400);">Article coming soon</span>`;
-  return `
-    <tr class="threat-row" data-severity="${t.severity}" data-name="${t.threat_name.toLowerCase()}" data-cve="${(t.cve_id || '').toLowerCase()}">
-      <td>${severityBadge(t.severity)}</td>
-      <td style="font-weight:500;color:var(--cs-navy);">${t.threat_name}</td>
-      <td class="mono">${t.cve_id || '—'}</td>
-      <td class="mono">${parseFloat(t.cvss_score).toFixed(1)}</td>
-      <td style="font-size:13px;color:var(--cs-gray-600);">${t.category}</td>
-      <td>${article}</td>
-    </tr>`;
+    ? `<a href="intel/article.html?slug=${t.article_link.split('/').pop()}" class="rdr-link">Brief →</a>`
+    : `<span class="rdr-pending">Pending</span>`;
+  return `<tr class="threat-row" data-severity="${t.severity}" data-name="${t.threat_name.toLowerCase()}" data-cve="${(t.cve_id||'').toLowerCase()}">
+    <td>${severityBadge(t.severity)}</td>
+    <td class="rdr-cell-name">${t.threat_name}<div class="rdr-cell-cve">${t.cve_id||''}</div></td>
+    <td class="rdr-cell-cvss">${parseFloat(t.cvss_score).toFixed(1)}</td>
+    <td>${article}</td>
+  </tr>`;
 }
 
-function renderRadar(threats, isSubscriber) {
-  const body       = document.getElementById('radar-body');
-  const gate       = document.getElementById('radar-gate');
-  const blurred    = document.getElementById('blurred-rows');
-  const meta       = document.getElementById('radar-meta');
+/* ════════════════════════════════════════════════
+   RENDER RADAR
+════════════════════════════════════════════════ */
+function renderRadar(threats, isSub) {
+  const body    = document.getElementById('radar-body');
+  const gate    = document.getElementById('radar-gate');
+  const blurred = document.getElementById('blurred-rows');
+  const meta    = document.getElementById('radar-meta');
 
-  if (!threats || threats.length === 0) {
-    body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--cs-gray-400);">No threats tracked yet.</td></tr>';
+  if (!threats || !threats.length) {
+    body.innerHTML = '<tr><td colspan="4" class="rdr-empty">No threats tracked yet.</td></tr>';
     return;
   }
 
-  const visible  = isSubscriber ? threats : threats.slice(0, FREE_LIMIT);
-  const hidden   = isSubscriber ? [] : threats.slice(FREE_LIMIT);
+  const visible = isSub ? threats : threats.slice(0, FREE_LIMIT);
+  const hidden  = isSub ? [] : threats.slice(FREE_LIMIT);
 
   body.innerHTML = visible.map(threatRow).join('');
 
-  if (hidden.length > 0) {
-    gate.style.display = 'block';
-    blurred.innerHTML  = hidden.map(threatRow).join('');
-  } else {
-    gate.style.display = 'none';
-  }
+  gate.style.display = hidden.length ? 'block' : 'none';
+  if (hidden.length) blurred.innerHTML = hidden.map(threatRow).join('');
 
-  const now = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  const showing = isSubscriber ? threats.length : Math.min(FREE_LIMIT, threats.length);
-  meta.innerHTML = `Showing ${showing} of ${threats.length} tracked threats. Severity data sourced from NVD CVSS scores and CyberSense analyst assessment. Last updated: <strong>${now}</strong>.`;
+  // Stat cards
+  document.getElementById('stat-total').textContent = threats.length;
+  document.getElementById('stat-crit').textContent  = threats.filter(t=>t.severity==='critical').length;
+  document.getElementById('stat-high').textContent  = threats.filter(t=>t.severity==='high').length;
+  document.getElementById('stat-updated').textContent = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+
+  const showing = isSub ? threats.length : Math.min(FREE_LIMIT, threats.length);
+  meta.textContent = `Showing ${showing} of ${threats.length} threats · NVD CVSS + CyberSense analyst severity`;
+
+  updateCharts(threats);
 }
 
+/* ════════════════════════════════════════════════
+   FILTER
+════════════════════════════════════════════════ */
 function filterRadar() {
-  const severity = document.getElementById('severity-filter').value.toLowerCase();
-  const search   = document.getElementById('threat-search').value.toLowerCase();
-  const rows     = document.querySelectorAll('.threat-row');
-
-  rows.forEach(row => {
-    const matchSev  = !severity || row.dataset.severity === severity;
-    const matchText = !search || row.dataset.name.includes(search) || row.dataset.cve.includes(search);
-    row.style.display = (matchSev && matchText) ? '' : 'none';
+  const sev    = document.getElementById('severity-filter').value.toLowerCase();
+  const search = document.getElementById('threat-search').value.toLowerCase();
+  document.querySelectorAll('.threat-row').forEach(row => {
+    const ok = (!sev || row.dataset.severity === sev) &&
+               (!search || row.dataset.name.includes(search) || row.dataset.cve.includes(search));
+    row.style.display = ok ? '' : 'none';
   });
 }
 
+/* ════════════════════════════════════════════════
+   CHARTS — Severity + Attack Type (dynamic)
+════════════════════════════════════════════════ */
+function updateCharts(threats) {
+  const sevCounts = {Critical:0,High:0,Medium:0,Low:0};
+  const typeCounts = {};
+  threats.forEach(t => {
+    const s = (t.severity||'').charAt(0).toUpperCase()+(t.severity||'').slice(1);
+    if (s in sevCounts) sevCounts[s]++;
+    const cat = t.category || 'Unknown';
+    typeCounts[cat] = (typeCounts[cat]||0) + 1;
+  });
+
+  // Severity chart
+  if (chartSev) chartSev.destroy();
+  chartSev = new Chart(document.getElementById('chart-severity'), {
+    type: 'bar',
+    data: {
+      labels: ['Critical','High','Medium','Low'],
+      datasets: [{
+        data: [sevCounts.Critical, sevCounts.High, sevCounts.Medium, sevCounts.Low],
+        backgroundColor: ['#ff3b3b','#ff8c00','#ffd700','#00c896'],
+        borderRadius: 4,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {display:false},
+        tooltip: {callbacks:{label:ctx=>` ${ctx.raw} threats`}}
+      },
+      scales: {
+        x: {grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'rgba(255,255,255,0.35)',stepSize:1}},
+        y: {grid:{display:false},ticks:{color:'rgba(255,255,255,0.65)',font:{weight:'600'}}}
+      }
+    }
+  });
+
+  // Attack by Type chart
+  const labels = Object.keys(typeCounts).sort((a,b)=>typeCounts[b]-typeCounts[a]).slice(0,7);
+  const vals   = labels.map(l=>typeCounts[l]);
+  if (chartType) chartType.destroy();
+  chartType = new Chart(document.getElementById('chart-type'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data: vals,
+        backgroundColor: 'rgba(0,212,255,0.65)',
+        hoverBackgroundColor: '#00d4ff',
+        borderRadius: 4,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {display:false},
+        tooltip: {callbacks:{label:ctx=>` ${ctx.raw} threats`}}
+      },
+      scales: {
+        x: {grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'rgba(255,255,255,0.35)',stepSize:1}},
+        y: {grid:{display:false},ticks:{color:'rgba(255,255,255,0.65)'}}
+      }
+    }
+  });
+}
+
+/* ════════════════════════════════════════════════
+   INDUSTRIES DONUT (static)
+════════════════════════════════════════════════ */
+function initIndustries() {
+  chartInd = new Chart(document.getElementById('chart-industries'), {
+    type: 'doughnut',
+    data: {
+      labels: INDUSTRIES.map(i=>i.label),
+      datasets: [{
+        data: INDUSTRIES.map(i=>i.pct),
+        backgroundColor: INDUSTRIES.map(i=>i.color),
+        borderColor: '#0d1e3a',
+        borderWidth: 3,
+        hoverOffset: 8
+      }]
+    },
+    options: {
+      responsive: false,
+      cutout: '62%',
+      plugins: {
+        legend: {display:false},
+        tooltip: {callbacks:{label:ctx=>` ${ctx.label}: ${ctx.raw}% of attacks`}}
+      }
+    }
+  });
+  document.getElementById('ind-legend').innerHTML = INDUSTRIES.map(i=>
+    `<div class="ind-row"><span class="ind-dot" style="background:${i.color}"></span><span class="ind-lbl">${i.label}</span><span class="ind-pct">${i.pct}%</span></div>`
+  ).join('');
+}
+
+/* ════════════════════════════════════════════════
+   WORLD MAP (choropleth via Chart.js Geo)
+════════════════════════════════════════════════ */
+async function initMap() {
+  try {
+    const res   = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
+    const world = await res.json();
+    const countries = ChartGeo.topojson.feature(world, world.objects.countries);
+
+    new Chart(document.getElementById('chart-map'), {
+      type: 'choropleth',
+      data: {
+        labels: countries.features.map(d => GEO_DATA[d.id]?.name || d.properties?.name || ''),
+        datasets: [{
+          label: 'Attack Origins',
+          outline: countries.features,
+          data: countries.features.map(d => ({
+            feature: d,
+            value: GEO_DATA[d.id]?.attacks || 0
+          })),
+          borderColor: 'rgba(0,212,255,0.18)',
+          borderWidth: 0.5
+        }]
+      },
+      options: {
+        showOutline: false,
+        showGraticule: false,
+        plugins: {
+          legend: {display:false},
+          tooltip: {
+            callbacks: {
+              title: () => '',
+              label: ctx => {
+                const id   = ctx.raw?.feature?.id;
+                const val  = ctx.raw?.value || 0;
+                const name = GEO_DATA[id]?.name || ctx.label || 'Unknown';
+                if (!val) return `${name}: No tracked activity`;
+                const pct = ((val / GEO_TOTAL) * 100).toFixed(1);
+                return [`${name}`, `${val} tracked attacks`, `${pct}% of global total`];
+              }
+            }
+          }
+        },
+        scales: {
+          color: {
+            axis: 'color',
+            quantize: 7,
+            legend: {display:false},
+            min: 0,
+            max: 234,
+            interpolate: v => {
+              if (!v || v < 0.01) return 'rgba(6,15,30,0.85)';
+              const r = Math.round(v * 30);
+              const g = Math.round(80 + v * 132);
+              const b = Math.round(140 + v * 115);
+              return `rgba(${r},${g},${b},${0.25 + v * 0.75})`;
+            }
+          },
+          projection: {
+            axis: 'x',
+            projection: 'equalEarth'
+          }
+        }
+      }
+    });
+  } catch(e) {
+    console.warn('Map load failed:', e);
+    document.getElementById('map-body').innerHTML =
+      '<div class="rdr-map-unavail">Map data unavailable — check connection</div>';
+  }
+}
+
+/* ════════════════════════════════════════════════
+   CISA KEV (static render)
+════════════════════════════════════════════════ */
+function renderKEV() {
+  document.getElementById('kev-list').innerHTML = CISA_KEVS.map(k => `
+    <div class="kev-entry">
+      <div class="kev-row-top">
+        <div>
+          <div class="kev-cve">${k.cve}</div>
+          <div class="kev-vendor">${k.vendor} &mdash; <span style="color:rgba(255,255,255,0.4);">${k.product}</span></div>
+        </div>
+        <span class="kev-badge">KEV</span>
+      </div>
+      <div class="kev-row-bot">
+        <span class="kev-attack">${k.attack}</span>
+        <span class="kev-dates">Added ${k.added} &middot; Due ${k.due}</span>
+      </div>
+      <div class="kev-tip">
+        <div class="kev-tr"><span class="kev-tl">Vendor</span><span class="kev-tv">${k.vendor}</span></div>
+        <div class="kev-tr"><span class="kev-tl">Product</span><span class="kev-tv">${k.product}</span></div>
+        <div class="kev-tr"><span class="kev-tl">Attack Type</span><span class="kev-tv">${k.attack}</span></div>
+        <div class="kev-tr"><span class="kev-tl">Date Added</span><span class="kev-tv">${k.added}</span></div>
+        <div class="kev-tr"><span class="kev-tl">CISA Due Date</span><span class="kev-tv">${k.due}</span></div>
+      </div>
+    </div>`).join('');
+}
+
+/* ════════════════════════════════════════════════
+   LOAD RADAR (API)
+════════════════════════════════════════════════ */
 async function loadRadar(user) {
   currentUser = user;
-  const isSubscriber = user && ['monthly', 'enterprise'].includes(user.tier);
-
+  const isSub = user && ['monthly','enterprise'].includes(user.tier);
   try {
     const data = await CS.Auth.apiFetch('/api/content/radar?limit=50');
     allThreats = data.data || [];
-    renderRadar(allThreats, isSubscriber);
+    renderRadar(allThreats, isSub);
   } catch(e) {
     console.error('Radar load error:', e);
     document.getElementById('radar-body').innerHTML =
-      '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--cs-gray-400);">Content temporarily unavailable.</td></tr>';
+      '<tr><td colspan="4" class="rdr-empty">Content temporarily unavailable.</td></tr>';
   }
 }
 
 function handleGuest() {
-  // Guests still see the radar — requireUserToken('free') means any registered user
-  // Guests get login prompt
   document.getElementById('radar-body').innerHTML = `
-    <tr>
-      <td colspan="6" style="text-align:center;padding:40px;">
-        <div style="margin-bottom:12px;font-size:14px;color:var(--cs-gray-600);">Sign in to view the live threat radar.</div>
-        <a href="#" class="btn btn-primary btn-sm" onclick="CS.Auth.showLoginModal();return false;">Sign In Free</a>
-      </td>
-    </tr>`;
+    <tr><td colspan="4" class="rdr-empty">
+      <div style="margin-bottom:12px;">Sign in to view the live threat radar.</div>
+      <a href="#" class="btn btn-primary btn-sm" onclick="CS.Auth.showLoginModal();return false;">Sign In Free</a>
+    </td></tr>`;
 }
 
+/* ════════════════════════════════════════════════
+   WIRE UP
+════════════════════════════════════════════════ */
 document.getElementById('severity-filter').addEventListener('change', filterRadar);
 document.getElementById('threat-search').addEventListener('input', filterRadar);
-
-document.addEventListener('cs:login', (e) => loadRadar(e.detail));
+document.addEventListener('cs:login', e => loadRadar(e.detail));
 document.addEventListener('cs:guest', () => handleGuest());
-
-// Auto-refresh every 15 minutes for logged-in users
 setInterval(() => { if (currentUser) loadRadar(currentUser); }, 15 * 60 * 1000);
+
+// Static panels load immediately (no auth needed)
+renderKEV();
+initIndustries();
+initMap();
 </script>
 </body>
 </html>
