@@ -7,13 +7,21 @@ const db = require('../db/queries');
 const { requireUserToken, requireAdminToken, gateContent, TIER_RANK, AGENT_PERMISSIONS, err } = require('../middleware/auth');
 const { sendBriefingEmail } = require('../services/sendgrid');
 
+function unlockArticle(article) {
+  return {
+    ...article,
+    access_tier: 'free',
+    blurred: false,
+    unlocked: true,
+  };
+}
+
 contentRouter.get('/articles', requireUserToken('free'), async (req, res, next) => {
   try {
     const { section, page = 1, limit = 20 } = req.query;
     const articles = await db.listArticles({ section, page: +page, limit: +limit });
-    const gated = articles.map(a => gateContent(a, req.user.tier));
     const total = await db.pool.query('SELECT COUNT(*) FROM articles WHERE pipeline_status=$1', ['published']).then(r => +r.rows[0].count);
-    res.json({ data: gated, meta: { page: +page, limit: +limit, total, pages: Math.ceil(total / limit) } });
+    res.json({ data: articles.map(unlockArticle), meta: { page: +page, limit: +limit, total, pages: Math.ceil(total / limit) } });
   } catch (e) { next(e); }
 });
 
@@ -22,7 +30,7 @@ contentRouter.get('/articles/:slug', requireUserToken('free'), async (req, res, 
     const article = await db.getArticle(req.params.slug);
     if (!article || article.pipeline_status !== 'published') return res.status(404).json(err('NOT_FOUND', 'Article not found'));
     await db.incrementArticleViews(article.id);
-    res.json(gateContent(article, req.user.tier));
+    res.json(unlockArticle(article));
   } catch (e) { next(e); }
 });
 
