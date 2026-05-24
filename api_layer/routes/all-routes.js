@@ -1631,6 +1631,27 @@ adminRouter.post('/briefings/:id/confirm-distribution', requireAdminToken(['gm']
   } catch (e) { next(e); }
 });
 
+// Manually advance a maya-stage briefing to approved/HITL status.
+// Used when Maya's agent task completes her review but the pipeline doesn't auto-advance.
+adminRouter.post('/briefings/:id/advance-to-hitl', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    const briefing = await db.getBriefingById(req.params.id);
+    if (!briefing) return res.status(404).json(err('NOT_FOUND', 'Briefing not found'));
+    if (briefing.pipeline_status !== 'maya')
+      return res.status(422).json(err('INVALID_STATUS', 'Only maya-stage briefings can be advanced to HITL'));
+    await db.advanceBriefingStatus(briefing.id, 'approved');
+    await db.logPipelineEvent({
+      content_type: 'briefing',
+      content_id: briefing.id,
+      from_status: 'maya',
+      to_status: 'approved',
+      agent_name: 'human_executive',
+      notes: `HITL promotion — Edition ${briefing.edition_number} manually advanced from maya to approved`,
+    });
+    res.json({ promoted: true, briefing_id: briefing.id, pipeline_status: 'approved' });
+  } catch (e) { next(e); }
+});
+
 // Executive requests revision — returns briefing to Maya with a documented reason.
 // Status reverts to 'maya', maya_approved_at cleared, Maya notified.
 adminRouter.post('/briefings/:id/request-revision', requireAdminToken(['gm']), async (req, res, next) => {

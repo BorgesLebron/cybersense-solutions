@@ -118,6 +118,14 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
 .nl-headline{font-size:15px;font-weight:600;color:var(--color-text-primary);line-height:1.35;margin:4px 0 8px;}
 .nl-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
 .nl-summary{font-size:12px;color:var(--color-text-secondary);line-height:1.55;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:8px;padding:10px;}
+.nl-preview{margin-top:12px;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:8px;max-height:460px;overflow:auto;padding:14px;font-size:13px;line-height:1.6;color:var(--color-text-primary);}
+.nl-preview h2,.nl-preview h3{margin:12px 0 7px;color:var(--color-text-primary);line-height:1.25;}
+.nl-preview h2{font-size:17px;}
+.nl-preview h3{font-size:14px;}
+.nl-preview p{margin:0 0 10px;}
+.nl-preview ul{margin:0 0 12px 18px;padding:0;}
+.nl-preview li{margin:4px 0;}
+.nl-preview-empty{color:var(--color-text-tertiary);font-size:12px;background:var(--color-background-secondary);}
 .nl-pipeline{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:12px;}
 .nl-step{min-height:54px;border:0.5px solid var(--color-border-tertiary);border-radius:8px;background:var(--color-background-secondary);padding:7px 6px;}
 .nl-step.done{border-color:#1D9E75;background:#EAF3DE;}
@@ -489,6 +497,10 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
             <div id="nl-action-row" style="display:none;margin-top:12px;padding-top:10px;border-top:1px solid var(--color-border-tertiary);">
               <div id="nl-newsletter-link" style="margin-bottom:10px;font-size:13px;"></div>
               <div id="nl-hitl-action"></div>
+            </div>
+            <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--color-border-tertiary);">
+              <div class="card-hd" style="margin-bottom:8px;">Current edition preview</div>
+              <div id="nl-current-preview" class="nl-preview nl-preview-empty">Loading newsletter body...</div>
             </div>
             <div class="nl-pipeline" id="nl-pipeline"></div>
           </div>
@@ -1371,6 +1383,47 @@ function fmtTime(value) {
   return new Date(value).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Chicago' }) + ' CT';
 }
 
+function renderBriefingMarkdown(markdown) {
+  const lines = String(markdown || '').split(/\r?\n/);
+  const html = [];
+  let listOpen = false;
+
+  const closeList = () => {
+    if (listOpen) {
+      html.push('</ul>');
+      listOpen = false;
+    }
+  };
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line) {
+      closeList();
+      continue;
+    }
+
+    if (line.startsWith('## ')) {
+      closeList();
+      html.push(`<h2>${esc(line.slice(3))}</h2>`);
+    } else if (line.startsWith('### ')) {
+      closeList();
+      html.push(`<h3>${esc(line.slice(4))}</h3>`);
+    } else if (/^[-*]\s+/.test(line)) {
+      if (!listOpen) {
+        html.push('<ul>');
+        listOpen = true;
+      }
+      html.push(`<li>${esc(line.replace(/^[-*]\s+/, ''))}</li>`);
+    } else {
+      closeList();
+      html.push(`<p>${esc(line)}</p>`);
+    }
+  }
+
+  closeList();
+  return html.join('');
+}
+
 async function loadNewsletterStatus() {
   try {
     newsletterStatus = await CS.Auth.apiFetch('/api/admin/newsletter/status');
@@ -1406,6 +1459,9 @@ function renderNewsletterStatus(data) {
     document.getElementById('nl-headline').textContent = 'No active newsletter in production';
     document.getElementById('nl-summary').textContent = 'The production queue has no non-published briefing.';
     document.getElementById('nl-events').innerHTML = '<div class="feed-item"><div class="feed-dot" style="background:#94a3b8;"></div><div><div class="feed-txt">No active edition events.</div></div></div>';
+    const preview = document.getElementById('nl-current-preview');
+    preview.className = 'nl-preview nl-preview-empty';
+    preview.textContent = 'No active newsletter body is available.';
     renderNewsletterPipeline(0);
     return;
   }
@@ -1426,6 +1482,15 @@ function renderNewsletterStatus(data) {
   document.getElementById('nl-summary').textContent = current.summary || 'No issue summary or approval notes available yet.';
   document.getElementById('nl-summary').title = current.summary || '';
 
+  const preview = document.getElementById('nl-current-preview');
+  if (current.body_md && current.body_md.trim()) {
+    preview.className = 'nl-preview';
+    preview.innerHTML = renderBriefingMarkdown(current.body_md);
+  } else {
+    preview.className = 'nl-preview nl-preview-empty';
+    preview.textContent = 'This edition has no newsletter body in the briefing record yet.';
+  }
+
   renderNewsletterPipeline(current.stage_index || 0);
   renderNewsletterEvents(current.events || []);
 
@@ -1435,7 +1500,9 @@ function renderNewsletterStatus(data) {
   const appBase     = 'https://cybersense.solutions';
   const filePath    = current.file_path ? current.file_path.replace(/^\//, '') : null;
   const publicUrl   = filePath ? `${appBase}/${filePath}` : null;
-  const isApproved  = current.pipeline_status === 'approved';
+  const isApproved   = current.pipeline_status === 'approved';
+  const isMayaDone   = current.pipeline_status === 'maya';
+  const isHITLReady  = isApproved || isMayaDone;
   const isAuthorized = (current.events || []).some(ev => ev.notes && ev.notes.startsWith('Distribution authorized for 0430 CT'));
 
   // Build newsletter URL from edition_date + edition_number when file_path is not yet set
@@ -1453,7 +1520,7 @@ function renderNewsletterStatus(data) {
     ? buildNewsletterUrl(current.edition_date, current.edition_number)
     : null);
 
-  if (!filePath && !isApproved) {
+  if (!filePath && !isHITLReady) {
     actionRow.style.display = 'none';
     return;
   }
@@ -1464,7 +1531,7 @@ function renderNewsletterStatus(data) {
     ? `<strong>Newsletter:</strong> <a href="${esc(viewUrl)}" target="_blank" rel="noopener" style="color:var(--color-accent);word-break:break-all;">${esc(viewUrl)}</a>`
     : `<span style="color:var(--color-text-tertiary);">Newsletter file not yet committed — add file_path to briefing record before distributing.</span>`;
 
-  if (!isApproved) {
+  if (!isHITLReady) {
     hitlEl.innerHTML = '';
     return;
   }
@@ -1475,6 +1542,21 @@ function renderNewsletterStatus(data) {
          View Newsletter
        </a>`
     : '';
+
+  if (isMayaDone) {
+    hitlEl.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <button id="btn-promote-hitl" onclick="promoteToHITL('${esc(current.id)}')"
+          style="padding:8px 18px;background:#7C3AED;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;">
+          Promote to HITL Review
+        </button>
+        ${viewBtn}
+      </div>
+      <div style="margin-top:6px;font-size:11px;color:var(--color-text-tertiary);">
+        Maya's review is complete. Promote Edition ${esc(String(current.edition_number || ''))} to HITL status to unlock the Authorize button.
+      </div>`;
+    return;
+  }
 
   if (isAuthorized) {
     hitlEl.innerHTML = `
@@ -1543,6 +1625,18 @@ async function confirmDistribution(briefingId) {
   } catch (e) {
     if (btn) { btn.disabled = false; btn.textContent = 'Authorize for 0430 CT Distribution'; }
     alert('Authorization failed: ' + (e.message || 'Unknown error'));
+  }
+}
+
+async function promoteToHITL(briefingId) {
+  const btn = document.getElementById('btn-promote-hitl');
+  if (btn) { btn.disabled = true; btn.textContent = 'Promoting...'; }
+  try {
+    await CS.Auth.apiFetch(`/api/admin/briefings/${briefingId}/advance-to-hitl`, { method: 'POST' });
+    await loadNewsletterStatus();
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Promote to HITL Review'; }
+    alert('Promotion failed: ' + (e.message || 'Unknown error'));
   }
 }
 
