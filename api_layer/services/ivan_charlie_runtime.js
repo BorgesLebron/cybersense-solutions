@@ -24,30 +24,39 @@ const RECENCY_HOURS = 720;
 const REQUIRED_INNOVATION = 2;
 const REQUIRED_GROWTH = 1;
 
+// Tier 1-2: Standards bodies, frontier R&D (Ivan's domain — emerging tech, AI, PQC, hardware)
+// Tier 3-4: Professional development, workforce strategy (Charlie's domain — certs, training, executive alignment)
+// Source taxonomy per scoutsGuide-Innovation&Growth.md
 const FEEDS = [
   {
     type: 'innovation',
-    category: 'cybersecurity-innovation',
+    category: 'ai-security-standards',
     url: 'https://www.nist.gov/blogs/cybersecurity-insights/rss.xml',
-    tags: ['nist', 'innovation'],
+    tags: ['nist', 'standards', 'innovation', 'tier-1'],
   },
   {
     type: 'innovation',
-    category: 'security-research',
-    url: 'https://www.cisa.gov/news-events/cybersecurity-advisories.xml',
-    tags: ['cisa', 'security-research'],
+    category: 'frontier-research',
+    url: 'https://www.technologyreview.com/feed/',
+    tags: ['mit-tech-review', 'ai', 'quantum', 'innovation', 'tier-1'],
+  },
+  {
+    type: 'innovation',
+    category: 'enterprise-security-research',
+    url: 'https://feeds.arstechnica.com/arstechnica/security',
+    tags: ['ars-technica', 'research', 'innovation', 'tier-2'],
   },
   {
     type: 'growth',
-    category: 'cybersecurity-market',
+    category: 'workforce-security',
     url: 'https://www.securityweek.com/category/cybersecurity-business/feed/',
-    tags: ['securityweek', 'growth'],
+    tags: ['securityweek', 'workforce', 'growth', 'tier-4'],
   },
   {
     type: 'growth',
-    category: 'channel-growth',
-    url: 'https://www.crn.com/news/security/rss.xml',
-    tags: ['crn', 'growth'],
+    category: 'professional-development',
+    url: 'https://www.csoonline.com/feed/',
+    tags: ['cso', 'professional-development', 'growth', 'tier-3'],
   },
 ];
 
@@ -222,10 +231,36 @@ async function executeIvanCharlieIngest(task) {
 
   await db.updateTask(task.id, { status: 'in_progress' });
 
+  await db.logPipelineEvent({
+    content_type: 'system',
+    content_id:   task.id,
+    from_status:  'queued',
+    to_status:    'in_progress',
+    agent_name:   'Ivan/Charlie',
+    notes:        'Ingest cycle started — scanning innovation and growth feeds',
+  });
+
   try {
-    const selected = selectRequiredItems(await filterNewItems(await collectIntelItems()));
+    const allItems  = await collectIntelItems();
+    const newItems  = await filterNewItems(allItems);
+    const selected  = selectRequiredItems(newItems);
     const innovationCount = selected.filter(item => item.type === 'innovation').length;
-    const growthCount = selected.filter(item => item.type === 'growth').length;
+    const growthCount     = selected.filter(item => item.type === 'growth').length;
+
+    if (selected.length === 0) {
+      await db.logPipelineEvent({
+        content_type: 'system',
+        content_id:   task.id,
+        from_status:  'in_progress',
+        to_status:    'no_new_items',
+        agent_name:   'Ivan/Charlie',
+        notes:        `All ${allItems.length} feed items already ingested — deduplication complete, no submission needed`,
+      });
+      await db.updateTask(task.id, { status: 'complete' });
+      console.log(JSON.stringify({ ts, runtime: 'ivan_charlie', event: 'INTEL_INGEST_DEDUPED', task_id: task.id, allItems: allItems.length }));
+      return;
+    }
+
     if (innovationCount < REQUIRED_INNOVATION || growthCount < REQUIRED_GROWTH) {
       throw new Error(`Incomplete innovation/growth ingest: innovations=${innovationCount}/${REQUIRED_INNOVATION}, growth=${growthCount}/${REQUIRED_GROWTH}`);
     }
@@ -241,7 +276,7 @@ async function executeIvanCharlieIngest(task) {
       await db.logPipelineEvent({
         content_type: 'system',
         content_id:   result.id,
-        from_status:  null,
+        from_status:  'in_progress',
         to_status:    'ingested',
         agent_name:   'Ivan/Charlie',
         notes: `type: ${item.type} | ${item.headline.slice(0, 100)}`,
@@ -255,6 +290,14 @@ async function executeIvanCharlieIngest(task) {
       task_id: task.id, submitted,
     }));
   } catch (e) {
+    await db.logPipelineEvent({
+      content_type: 'system',
+      content_id:   task.id,
+      from_status:  'in_progress',
+      to_status:    'failed',
+      agent_name:   'Ivan/Charlie',
+      notes:        e.message.slice(0, 300),
+    });
     await db.updateTask(task.id, { status: 'failed', error_message: e.message });
     await notifyAgents(['Barret', 'Henry'], {
       type: 'IVAN_CHARLIE_RUNTIME_ERROR',
