@@ -142,6 +142,8 @@
 .kev-attack{font-size:10px;color:var(--cs-dimmer);}
 .kev-dates{font-size:9px;color:rgba(255,255,255,0.2);}
 .kev-no-results{text-align:center;padding:24px;font-size:11px;color:var(--cs-dimmer);}
+.kev-meta-bar{padding:6px 14px;font-size:9px;color:var(--cs-dimmer);border-top:1px solid rgba(255,255,255,0.04);display:flex;justify-content:space-between;flex-shrink:0;}
+.kev-live-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:#00ffa3;margin-right:4px;animation:pulse 2s infinite;}
 
 /* ── Historical DB ─────────────────────────────── */
 .hist-tabs{display:flex;border-bottom:1px solid rgba(255,255,255,0.05);flex-shrink:0;}
@@ -381,13 +383,18 @@
         <div class="rdr-panel-hdr" onclick="expandPanel('kev')">
           <span style="color:rgba(255,100,100,0.8);">●</span>
           <span>CISA KEV — Known Exploited Vulnerabilities</span>
+          <span id="kev-count" style="margin-left:6px;font-size:9px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--cs-dimmer);"></span>
           <span class="rdr-expand-btn" title="Expand">⤢</span>
         </div>
         <div class="kev-search-wrap">
           <input class="kev-search" type="text" id="kev-search" placeholder="Search CVE, vendor, product, attack type…" oninput="filterKEV(this.value)" aria-label="Search CISA KEV">
         </div>
-        <div class="kev-subtitle">CONFIRMED, WEAPONIZED VULNERABILITIES</div>
+        <div class="kev-subtitle" id="kev-subtitle">CONFIRMED, WEAPONIZED VULNERABILITIES</div>
         <div class="rdr-kev-scroll" id="kev-list"></div>
+        <div class="kev-meta-bar" id="kev-meta-bar" style="display:none;">
+          <span id="kev-meta-left"></span>
+          <span id="kev-meta-right"></span>
+        </div>
       </div>
 
       <!-- Bot Right: 10-Year Historical Database -->
@@ -493,7 +500,7 @@ const GEO_DATA = {
 };
 const GEO_MAX = Math.max(...Object.values(GEO_DATA).map(d=>d.value));
 
-const CISA_KEVS_DATA = [
+const CISA_KEVS_FALLBACK = [
   {cve:'CVE-2025-23006',vendor:'SonicWall',product:'SMA 1000 Appliances',attack:'Pre-Authentication Remote Code Execution',added:'Jan 23, 2025',due:'Feb 13, 2025'},
   {cve:'CVE-2025-21590',vendor:'Juniper Networks',product:'Junos OS',attack:'Improper Isolation / Privilege Escalation',added:'Feb 12, 2025',due:'Mar 5, 2025'},
   {cve:'CVE-2025-21418',vendor:'Microsoft',product:'Windows (Ancillary Function Driver)',attack:'Privilege Escalation',added:'Feb 5, 2025',due:'Feb 26, 2025'},
@@ -596,6 +603,8 @@ const HIST = {
    STATE
 ════════════════════════════════════════════════ */
 const FREE_LIMIT = 7;
+const KEV_PANEL_LIMIT = 50;
+const CISA_KEV_URL = 'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json';
 let allThreats = [];
 let currentUser = null;
 let charts = {};
@@ -603,6 +612,8 @@ let radarAngle = 0;
 let radarAnimId = null;
 let radarBlips = [];
 let currentHistTab = 'industry';
+let kevData = [...CISA_KEVS_FALLBACK];
+let kevLive = false;
 
 Chart.defaults.color = 'rgba(255,255,255,0.45)';
 Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
@@ -756,38 +767,97 @@ function renderVulnDist() {
 }
 
 /* ════════════════════════════════════════════════
-   CISA KEV
+   CISA KEV — Live Feed
 ════════════════════════════════════════════════ */
+function fmtDate(str) {
+  if (!str) return '—';
+  const d = new Date(str + 'T00:00:00');
+  return isNaN(d) ? str : d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+
+function kevEntryHTML(k) {
+  return `<div class="kev-entry">
+    <div class="kev-row-top">
+      <div>
+        <div class="kev-cve">${k.cve}</div>
+        <div class="kev-vendor">${k.vendor} &mdash; <span style="color:rgba(255,255,255,0.38);">${k.product}</span></div>
+      </div>
+      <span class="kev-badge">KEV</span>
+    </div>
+    <div class="kev-row-bot">
+      <span class="kev-attack">${k.attack}</span>
+      <span class="kev-dates">Added ${k.added} &middot; Due ${k.due}</span>
+    </div>
+  </div>`;
+}
+
 function renderKEV(filter='') {
   const q = filter.toLowerCase().trim();
-  const filtered = q ? CISA_KEVS_DATA.filter(k =>
+  const pool = q ? kevData.filter(k =>
     k.cve.toLowerCase().includes(q) ||
     k.vendor.toLowerCase().includes(q) ||
     k.product.toLowerCase().includes(q) ||
     k.attack.toLowerCase().includes(q)
-  ) : CISA_KEVS_DATA;
+  ) : kevData;
 
-  if (!filtered.length) {
-    document.getElementById('kev-list').innerHTML = '<div class="kev-no-results">No entries match your search.</div>';
-    return;
+  const display = q ? pool : pool.slice(0, KEV_PANEL_LIMIT);
+  const listEl  = document.getElementById('kev-list');
+  const metaBar = document.getElementById('kev-meta-bar');
+  const metaL   = document.getElementById('kev-meta-left');
+  const metaR   = document.getElementById('kev-meta-right');
+
+  if (!display.length) {
+    listEl.innerHTML = '<div class="kev-no-results">No entries match your search.</div>';
+  } else {
+    listEl.innerHTML = display.map(kevEntryHTML).join('');
   }
-  document.getElementById('kev-list').innerHTML = filtered.map(k => `
-    <div class="kev-entry">
-      <div class="kev-row-top">
-        <div>
-          <div class="kev-cve">${k.cve}</div>
-          <div class="kev-vendor">${k.vendor} &mdash; <span style="color:rgba(255,255,255,0.38);">${k.product}</span></div>
-        </div>
-        <span class="kev-badge">KEV</span>
-      </div>
-      <div class="kev-row-bot">
-        <span class="kev-attack">${k.attack}</span>
-        <span class="kev-dates">Added ${k.added} &middot; Due ${k.due}</span>
-      </div>
-    </div>`).join('');
+
+  if (metaBar) {
+    metaBar.style.display = '';
+    metaL.innerHTML = kevLive
+      ? `<span class="kev-live-dot"></span>Live — CISA catalog`
+      : 'Cached data — live fetch unavailable';
+    metaR.textContent = q
+      ? `${pool.length} match${pool.length!==1?'es':''} of ${kevData.length}`
+      : `Showing ${display.length} of ${kevData.length} total`;
+  }
 }
 
 function filterKEV(val) { renderKEV(val); }
+
+async function loadCISAKEV() {
+  const listEl = document.getElementById('kev-list');
+  if (listEl) listEl.innerHTML = '<div class="kev-no-results" style="color:rgba(255,255,255,0.25);">Loading CISA KEV catalog…</div>';
+
+  try {
+    const res  = await fetch(CISA_KEV_URL, { signal: AbortSignal.timeout(15000) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    const vulns = (json.vulnerabilities || [])
+      .sort((a,b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+
+    kevData = vulns.map(v => ({
+      cve:     v.cveID,
+      vendor:  v.vendorProject,
+      product: v.product,
+      attack:  v.vulnerabilityName,
+      added:   fmtDate(v.dateAdded),
+      due:     fmtDate(v.dueDate),
+      desc:    v.shortDescription || '',
+    }));
+    kevLive = true;
+
+    const countEl = document.getElementById('kev-count');
+    if (countEl) countEl.textContent = `(${kevData.length.toLocaleString()} entries)`;
+    const subtitleEl = document.getElementById('kev-subtitle');
+    if (subtitleEl) subtitleEl.textContent = `CONFIRMED, WEAPONIZED VULNERABILITIES · v${json.catalogVersion || ''}`;
+  } catch(e) {
+    console.warn('CISA KEV live fetch failed — using fallback:', e.message);
+    kevLive = false;
+  } finally {
+    renderKEV(document.getElementById('kev-search')?.value || '');
+  }
+}
 
 /* ════════════════════════════════════════════════
    HISTORICAL DATABASE
@@ -1074,12 +1144,13 @@ function expandPanel(type) {
 
   } else if (type === 'kev') {
     body.innerHTML = `<div style="max-width:900px;margin:0 auto;">
-      <div style="margin-bottom:14px;">
-        <input class="kev-search" type="text" placeholder="Search CVE, vendor, product, attack type…"
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+        <input class="kev-search" type="text" placeholder="Search CVE, vendor, product, vulnerability name…"
           oninput="document.querySelectorAll('.exp-kev').forEach(el=>{const q=this.value.toLowerCase();el.style.display=el.dataset.q.includes(q)?'':'none';})"
-          style="width:100%;box-sizing:border-box;">
+          style="flex:1;box-sizing:border-box;">
+        <span style="font-size:10px;color:var(--cs-dimmer);white-space:nowrap;">${kevData.length.toLocaleString()} entries${kevLive?' · <span style=\'color:#00ffa3;\'>Live</span>':' · Cached'}</span>
       </div>
-      ${CISA_KEVS_DATA.map(k=>`<div class="kev-entry exp-kev" data-q="${(k.cve+k.vendor+k.product+k.attack).toLowerCase()}" style="border:1px solid rgba(255,255,255,0.05);border-radius:8px;margin-bottom:8px;">
+      ${kevData.map(k=>`<div class="kev-entry exp-kev" data-q="${(k.cve+k.vendor+k.product+k.attack).toLowerCase()}" style="border:1px solid rgba(255,255,255,0.05);border-radius:8px;margin-bottom:8px;">
         <div class="kev-row-top"><div>
           <div class="kev-cve" style="font-size:13px;">${k.cve}</div>
           <div class="kev-vendor" style="font-size:12px;">${k.vendor} — <span style="color:rgba(255,255,255,0.45);">${k.product}</span></div>
@@ -1181,7 +1252,7 @@ window.addEventListener('resize', () => {
 });
 
 // Static panels (no auth needed)
-renderKEV();
+loadCISAKEV();   // fetches live CISA catalog; falls back to static if unavailable
 renderVulnDist();
 renderHistorical('industry');
 initMap();
