@@ -7,14 +7,131 @@
 (function () {
   'use strict';
 
+  const NAV_GROUPS = {
+    intel: [
+      {
+        title: 'Threat Intelligence',
+        href: 'intelligence.html#threat-intelligence',
+        body: 'Decrypting the active threat landscape. Access analyses of emerging vulnerability vectors, weaponized exploits, and tactical mitigation strategies designed to safeguard enterprise infrastructure and workforce assets.',
+      },
+      {
+        title: 'Professional Growth',
+        href: 'intelligence.html#professional-growth',
+        body: 'Empowering a digitally disciplined workforce. Discover data-backed insights on evolving technical certifications, cyber career trajectories, and interdisciplinary team structures designed to bridge the skills gap between practitioners and leadership.',
+      },
+      {
+        title: 'Innovation',
+        href: 'intelligence.html#innovation',
+        body: 'Anticipating the technological frontier. Explore balanced, forward-looking deconstructions of emerging breakthroughs, from autonomous agentic AI architectures to post-quantum cryptographic transitions, and their structural impacts on future enterprise strategy.',
+      },
+      {
+        title: 'Training Resources',
+        href: 'intelligence.html#training-resources',
+        body: 'Actionable pathways for continuous learning. Access a highly curated library of high-ROI webinars, instructional videos, and verified open-access courses to build systemic organizational resilience and technical mastery.',
+      },
+    ],
+    resources: [
+      {
+        title: 'Threat Intelligence',
+        href: 'intelligence.html#threat-intelligence',
+        body: 'Reference active and enduring threat analysis beyond the daily feed, organized for teams that need durable operational context.',
+      },
+      {
+        title: 'Professional Growth',
+        href: 'growth.html',
+        body: 'Career pathways, seminars, webinars, courses, and workforce guidance for building a resilient professional bench.',
+      },
+      {
+        title: 'Innovation',
+        href: 'innovation.html',
+        body: 'Emerging technology coverage with longer shelf life, from AI operations to post-quantum readiness and enterprise modernization.',
+      },
+      {
+        title: 'Training Resources',
+        href: 'training.html',
+        body: 'Practical training modules, labs, videos, and learning references grounded in current CyberSense intelligence.',
+      },
+      {
+        title: 'Glossary',
+        href: 'glossary.html',
+        body: 'A durable terminology library for acronyms, concepts, frameworks, and operational language used across CyberSense coverage.',
+        pending: true,
+      },
+    ],
+  };
+
+  function navCard(item) {
+    return `<a class="nav-mega-card${item.pending ? ' pending' : ''}" href="${item.href}">
+      <h3>${item.title}</h3>
+      <p>${item.body}</p>
+    </a>`;
+  }
+
+  function navDropdown(label, key) {
+    return `<li class="nav-menu-item" data-nav-group="${key}">
+      <button class="nav-menu-trigger" type="button" aria-haspopup="true" aria-expanded="false">
+        ${label}<span class="nav-caret" aria-hidden="true"></span>
+      </button>
+      <div class="nav-mega" role="menu" aria-label="${label} menu">
+        <div class="nav-mega-title">${label} &rarr;</div>
+        <div class="nav-mega-grid">
+          ${NAV_GROUPS[key].map(navCard).join('')}
+        </div>
+      </div>
+    </li>`;
+  }
+
+  function renderPublicNav() {
+    const navLinks = document.querySelector('.nav-links');
+    const drawerList = document.querySelector('.nav-drawer ul');
+
+    if (navLinks) {
+      navLinks.innerHTML = [
+        '<li><a href="index.html">Home</a></li>',
+        '<li><a href="about.html">About</a></li>',
+        '<li><a href="radar.html">Radar</a></li>',
+        navDropdown('Intel', 'intel'),
+        '<li><a href="newsletter.html">Newsletter</a></li>',
+        navDropdown('Resources', 'resources'),
+      ].join('');
+    }
+
+    if (drawerList) {
+      drawerList.innerHTML = [
+        '<li><a href="index.html">Home</a></li>',
+        '<li><a href="about.html">About</a></li>',
+        '<li><a href="radar.html">Radar</a></li>',
+        '<li class="drawer-group">Intel</li>',
+        ...NAV_GROUPS.intel.map(item => `<li class="drawer-sub"><a href="${item.href}">${item.title}</a></li>`),
+        '<li><a href="newsletter.html">Newsletter</a></li>',
+        '<li class="drawer-group">Resources</li>',
+        ...NAV_GROUPS.resources.map(item => `<li class="drawer-sub"><a href="${item.href}">${item.title}</a></li>`),
+      ].join('');
+    }
+  }
+
   /* ── Active nav link ────────────────────────────────────────────── */
   function setActiveNav() {
     const path = window.location.pathname.split('/').pop() || 'index.html';
+    const currentHash = window.location.hash || '';
     document.querySelectorAll('.nav-links a, .nav-drawer ul li a').forEach(function (a) {
-      const href = a.getAttribute('href');
-      if (href === path || (path === '' && href === 'index.html') ||
+      const rawHref = a.getAttribute('href') || '';
+      const parts = rawHref.split('#');
+      const href = parts[0];
+      const hash = parts[1] ? `#${parts[1]}` : '';
+      if ((hash ? href === path && hash === currentHash : href === path) || (path === '' && href === 'index.html') ||
         (path === 'index.html' && href === 'index.html')) {
         a.classList.add('active');
+      }
+    });
+
+    const activeGroups = {
+      intel: ['intelligence.html'],
+      resources: ['growth.html', 'innovation.html', 'training.html', 'glossary.html'],
+    };
+    Object.keys(activeGroups).forEach(function (group) {
+      if (activeGroups[group].includes(path)) {
+        document.querySelector(`[data-nav-group="${group}"] .nav-menu-trigger`)?.classList.add('active');
       }
     });
   }
@@ -300,6 +417,7 @@
 
   /* ── Init all ───────────────────────────────────────────────────── */
   document.addEventListener('DOMContentLoaded', function () {
+    renderPublicNav();
     setActiveNav();
     initMobileNav();
     initFadeIn();
