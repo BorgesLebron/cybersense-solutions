@@ -100,6 +100,29 @@ contentRouter.get('/radar', requireUserToken('free'), async (req, res, next) => 
   } catch (e) { next(e); }
 });
 
+// ── CISA KEV proxy — server-side fetch avoids browser CORS restriction ─────
+let _kevCache = null;
+let _kevCachedAt = 0;
+const KEV_TTL = 4 * 60 * 60 * 1000; // 4 hours
+
+contentRouter.get('/cisa-kev', async (req, res, next) => {
+  try {
+    if (_kevCache && Date.now() - _kevCachedAt < KEV_TTL) {
+      return res.json(_kevCache);
+    }
+    const upstream = await fetch(
+      'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json',
+      { headers: { Accept: 'application/json', 'User-Agent': 'CyberSense.Solutions/1.0' },
+        signal: AbortSignal.timeout(20000) }
+    );
+    if (!upstream.ok) throw new Error(`CISA upstream ${upstream.status}`);
+    const data = await upstream.json();
+    _kevCache = data;
+    _kevCachedAt = Date.now();
+    res.json(data);
+  } catch (e) { next(e); }
+});
+
 contentRouter.get('/radar/:id', requireUserToken('monthly'), async (req, res, next) => {
   try {
     const threat = await db.getThreatById(req.params.id);
