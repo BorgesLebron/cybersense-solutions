@@ -58,8 +58,8 @@ SUMMARY WRITING STANDARDS — applied to every summary field:
 const API_BASE = () =>
   process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
 
-const BATCH_LIMIT     = 10;
-const POLL_WINDOW_HRS = 72; // wider window — Barbara drains a backlog, not a 12h cycle
+const BATCH_LIMIT     = 25;
+const POLL_WINDOW_HRS = 720; // 30 days — covers historical CVE/threat backlog for radar enrichment
 
 // ── Token management ──────────────────────────────────────────────────────────
 
