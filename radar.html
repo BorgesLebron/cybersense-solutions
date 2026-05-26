@@ -1422,7 +1422,7 @@ document.addEventListener('keydown', e => { if(e.key==='Escape') closeExpand(); 
 ════════════════════════════════════════════════ */
 async function loadRadar(user) {
   currentUser = user;
-  const isSub = user && ['monthly','enterprise'].includes(user.tier);
+  const isSub = !!user;
   try {
     const data = await CS.Auth.apiFetch('/api/content/radar?limit=200');
     allThreats = data.data || [];

@@ -313,10 +313,6 @@ async function loadHomeData(user) {
         visible.length ? visible.map(radarRow).join('') :
         '<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--cs-gray-400);">No threats tracked yet.</td></tr>';
 
-      if (hidden.length > 0) {
-        document.getElementById('radar-preview-gate').style.display = 'block';
-        document.getElementById('radar-preview-blurred').innerHTML = hidden.slice(0, 2).map(radarRow).join('');
-      }
     } catch(e) {
       document.getElementById('radar-preview-body').innerHTML =
         '<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--cs-gray-400);">Radar temporarily unavailable.</td></tr>';
