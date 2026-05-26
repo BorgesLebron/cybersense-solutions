@@ -1815,6 +1815,19 @@ adminRouter.post('/briefings/:id/advance-to-hitl', requireAdminToken(['gm']), as
       agent_name: 'human_executive',
       notes: `HITL promotion — Edition ${briefing.edition_number} manually advanced from maya to approved`,
     });
+
+    const mattSla = new Date(); mattSla.setHours(7, 30, 0, 0);
+    const mattTask = await db.createTask({
+      agent_name: 'Matt', task_type: 'generate_newsletter_html',
+      content_type: 'briefing', content_id: briefing.id, sla_deadline: mattSla,
+    });
+    await notifyAgents(['Matt'], {
+      type: 'BRIEFING_HANDOFF', briefing_id: briefing.id,
+      edition_number: briefing.edition_number, edition_date: briefing.edition_date,
+      from_agent: 'human_executive', stage: 'approved', task_id: mattTask.id,
+      message: `Edition ${briefing.edition_number} manually advanced to approved. Generate newsletter HTML.`,
+    });
+
     res.json({ promoted: true, briefing_id: briefing.id, pipeline_status: 'approved' });
   } catch (e) { next(e); }
 });

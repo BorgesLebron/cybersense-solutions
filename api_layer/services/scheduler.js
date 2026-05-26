@@ -19,6 +19,7 @@ const { pollIvanCharlieTasks, DAILY_MIN_INNOVATION, DAILY_MIN_GROWTH } = require
 const { pollBarbaraTasks }      = require('./barbara_runtime');
 const { pollKirbyTasks }        = require('./kirby_runtime');
 const { pollMayaTasks }         = require('./maya_runtime');
+const { pollMattTasks }         = require('./matt_runtime');
 const { sendBriefingEmail }     = require('./sendgrid');
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -1036,9 +1037,10 @@ function startScheduler() {
     cron.schedule('*/2 4-9 * * 0-4', pollRobTasks,                 { timezone: 'America/Chicago' });
     cron.schedule('*/2 * * * *',      pollJeffTasks,                { timezone: 'America/Chicago' });
     cron.schedule('*/2 * * * *',      pollMayaTasks,                { timezone: 'America/Chicago' });
+    cron.schedule('*/2 * * * *',      pollMattTasks,                { timezone: 'America/Chicago' });
     cron.schedule('0 */4 * * *',     pollRickTasks,                 { timezone: 'America/Chicago' });
     cron.schedule('30 */4 * * *',    pollBarbaraTasks,              { timezone: 'America/Chicago' });
-    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SCHEDULER_STARTED', jobs: 33 }));
+    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SCHEDULER_STARTED', jobs: 34 }));
   } catch (e) {
     console.warn('node-cron not installed — scheduler disabled. Install with: npm install node-cron');
   }
@@ -1073,6 +1075,7 @@ module.exports = {
   pollRobTasks,
   pollJeffTasks,
   pollMayaTasks,
+  pollMattTasks,
   pollRickTasks,
   pollBarbaraTasks,
   pollKirbyTasks,
