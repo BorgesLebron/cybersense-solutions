@@ -12,28 +12,39 @@
 <style>
   .hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;}
   .hero-video-col{position:relative;}
-  .hero-media-card{position:relative;min-height:530px;padding:18px;border-radius:22px;background:rgba(5,18,38,0.72);border:1px solid rgba(255,255,255,0.1);box-shadow:0 28px 80px rgba(0,0,0,0.5);overflow:hidden;}
+  .hero-media-card{position:relative;padding:18px;border-radius:12px;background:rgba(5,18,38,0.72);border:1px solid rgba(0,212,255,0.22);box-shadow:0 28px 80px rgba(0,0,0,0.5);overflow:hidden;display:grid;grid-template-columns:1fr .58fr;gap:14px;align-items:center;}
   .hero-media-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,212,255,0.12),transparent 42%,rgba(245,158,11,0.08));pointer-events:none;}
-  .hero-vid-card{position:absolute;border-radius:16px;overflow:hidden;box-shadow:0 20px 52px rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.1);background:#061329;}
-  .hero-vid-card video{width:100%;display:block;object-fit:cover;}
+  .hero-vid-card{position:relative;z-index:1;border-radius:6px;overflow:hidden;box-shadow:0 20px 52px rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.1);background:#061329;}
+  .hero-vid-card video{width:100%;display:block;object-fit:cover;aspect-ratio:16/9;}
+  .hero-vid-card.is-portrait video{aspect-ratio:3/4;}
   .hero-vid-label{position:absolute;top:0;left:0;right:0;padding:10px 14px;background:linear-gradient(rgba(0,0,0,0.65),transparent);color:#fff;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
-  .hero-mini-radar{position:absolute;left:18px;right:18px;bottom:18px;z-index:3;display:grid;grid-template-columns:92px 1fr;align-items:center;gap:14px;text-decoration:none;border-radius:16px;background:rgba(9,26,54,0.92);border:1px solid rgba(0,212,255,0.22);padding:14px 16px;transition:transform .16s,border-color .16s,background .16s;}
-  .hero-mini-radar:hover{transform:translateY(-2px);border-color:rgba(0,212,255,0.52);background:rgba(12,35,72,0.96);}
-  .mini-radar-orb{position:relative;width:88px;aspect-ratio:1;border-radius:50%;overflow:hidden;background:radial-gradient(circle,rgba(0,212,255,0.18) 0 1px,transparent 2px),repeating-radial-gradient(circle,rgba(0,212,255,0.18) 0 1px,transparent 1px 18px),linear-gradient(90deg,transparent 49%,rgba(0,212,255,0.16) 50%,transparent 51%),linear-gradient(transparent 49%,rgba(0,212,255,0.16) 50%,transparent 51%),rgba(1,12,26,0.9);border:1px solid rgba(0,212,255,0.38);box-shadow:inset 0 0 22px rgba(0,212,255,0.12),0 0 18px rgba(0,212,255,0.1);}
-  .mini-radar-orb::before{content:'';position:absolute;left:50%;top:50%;width:44px;height:1px;transform-origin:left center;transform:rotate(-28deg);background:linear-gradient(90deg,var(--cs-cyan),transparent);box-shadow:0 0 10px var(--cs-cyan);}
+  .split-panel-radar{background:#071225;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:20px;min-height:430px;box-shadow:0 24px 70px rgba(0,0,0,0.38);cursor:pointer;transition:transform .16s,border-color .16s,box-shadow .16s;}
+  .split-panel-radar:hover{transform:translateY(-2px);border-color:rgba(0,212,255,0.42);box-shadow:0 30px 80px rgba(0,0,0,0.46);}
+  .split-panel-radar .table-wrap{display:none;}
+  .split-radar-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px;}
+  .split-radar-pill{display:inline-flex;align-items:center;gap:8px;border-radius:999px;background:rgba(0,212,255,0.18);border:1px solid rgba(0,212,255,0.32);padding:7px 12px;color:#fff;font-size:13px;font-weight:700;white-space:nowrap;}
+  .split-radar-pill i{width:9px;height:9px;border-radius:50%;background:#22c55e;box-shadow:0 0 14px rgba(34,197,94,0.9);}
+  .split-radar-dashboard{border-radius:8px;background:#030914;border:1px solid rgba(0,212,255,0.18);padding:12px;display:grid;grid-template-columns:.62fr 1fr;gap:10px;}
+  .split-radar-stats{grid-column:1/-1;display:grid;grid-template-columns:repeat(5,1fr);gap:7px;}
+  .split-radar-stat{background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.14);border-radius:4px;padding:7px 8px;}
+  .split-radar-stat strong{display:block;font-size:13px;color:var(--cs-cyan);line-height:1;}
+  .split-radar-stat span{display:block;margin-top:4px;font-size:8px;color:rgba(255,255,255,0.48);text-transform:uppercase;letter-spacing:.5px;}
+  .mini-radar-orb{position:relative;width:100%;aspect-ratio:1;border-radius:50%;overflow:hidden;background:radial-gradient(circle,rgba(0,212,255,0.18) 0 1px,transparent 2px),repeating-radial-gradient(circle,rgba(0,212,255,0.18) 0 1px,transparent 1px 18px),linear-gradient(90deg,transparent 49%,rgba(0,212,255,0.16) 50%,transparent 51%),linear-gradient(transparent 49%,rgba(0,212,255,0.16) 50%,transparent 51%),rgba(1,12,26,0.9);border:1px solid rgba(0,212,255,0.38);box-shadow:inset 0 0 22px rgba(0,212,255,0.12),0 0 18px rgba(0,212,255,0.1);}
+  .mini-radar-orb::before{content:'';position:absolute;left:50%;top:50%;width:46%;height:1px;transform-origin:left center;transform:rotate(-28deg);background:linear-gradient(90deg,var(--cs-cyan),transparent);box-shadow:0 0 10px var(--cs-cyan);}
   .mini-radar-orb i{position:absolute;width:6px;height:6px;border-radius:50%;background:#22c55e;box-shadow:0 0 10px rgba(34,197,94,0.9);}
-  .mini-radar-orb i:nth-child(1){left:26px;top:31px;}
-  .mini-radar-orb i:nth-child(2){right:20px;top:38px;background:var(--cs-amber);box-shadow:0 0 10px rgba(245,158,11,0.9);}
-  .mini-radar-orb i:nth-child(3){left:49px;bottom:22px;background:var(--cs-red);box-shadow:0 0 10px rgba(239,68,68,0.9);}
-  .mini-radar-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;}
-  .mini-radar-title{font-size:12px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--cs-cyan);}
-  .mini-radar-link{font-size:12px;font-weight:700;color:rgba(255,255,255,0.72);}
-  .mini-radar-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
-  .mini-radar-cell{border-radius:10px;background:rgba(255,255,255,0.055);border:1px solid rgba(255,255,255,0.08);padding:8px;}
-  .mini-radar-cell strong{display:block;font-size:16px;color:#fff;line-height:1;}
-  .mini-radar-cell span{display:block;margin-top:5px;font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.5px;}
-  .mini-radar-bar{height:4px;border-radius:99px;background:rgba(255,255,255,0.08);overflow:hidden;margin-top:10px;}
-  .mini-radar-bar span{display:block;height:100%;width:72%;background:linear-gradient(90deg,var(--cs-red),var(--cs-amber),var(--cs-cyan));}
+  .mini-radar-orb i:nth-child(1){left:30%;top:34%;}
+  .mini-radar-orb i:nth-child(2){right:23%;top:42%;background:var(--cs-amber);box-shadow:0 0 10px rgba(245,158,11,0.9);}
+  .mini-radar-orb i:nth-child(3){left:56%;bottom:25%;background:var(--cs-red);box-shadow:0 0 10px rgba(239,68,68,0.9);}
+  .split-radar-feed{display:grid;gap:7px;}
+  .split-radar-feed div{display:grid;grid-template-columns:42px 1fr 38px;gap:8px;align-items:center;background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.06);border-radius:4px;padding:7px;font-size:10px;color:rgba(255,255,255,0.66);}
+  .split-radar-feed strong{color:var(--cs-amber);font-size:9px;text-transform:uppercase;}
+  .split-radar-feed b{color:#fff;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .split-radar-feed span{color:rgba(255,255,255,0.36);font-family:monospace;text-align:right;}
+  .split-radar-matrix{grid-column:1/-1;display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin-top:2px;}
+  .split-radar-matrix i{height:16px;border-radius:2px;background:rgba(0,212,255,0.12);border:1px solid rgba(0,212,255,0.08);}
+  .split-radar-matrix i:nth-child(3n){background:rgba(245,158,11,0.32);}
+  .split-radar-matrix i:nth-child(5n){background:rgba(239,68,68,0.35);}
+  .split-radar-line{grid-column:1/-1;height:54px;border-radius:5px;background:linear-gradient(180deg,rgba(0,212,255,0.12),transparent),linear-gradient(160deg,transparent 45%,rgba(0,212,255,0.7) 46%,transparent 48%),linear-gradient(170deg,transparent 55%,rgba(245,158,11,0.7) 56%,transparent 58%),rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.06);}
   .home-split{background:#0a1628;padding:72px 24px;}
   .home-split-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;}
   .split-panel-radar .data-table thead th{background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);border-bottom:1px solid rgba(255,255,255,0.08);font-size:11px;letter-spacing:0.8px;}
@@ -43,11 +54,10 @@
   @media(max-width:768px){
     .hero-grid{grid-template-columns:1fr;}
     .hero-video-col{margin-top:32px;}
-    .hero-media-card{min-height:auto;padding:14px;display:grid;gap:12px;}
-    .hero-vid-card,.hero-mini-radar{position:relative;inset:auto!important;width:100%!important;}
-    .hero-mini-radar{left:auto;right:auto;bottom:auto;grid-template-columns:78px 1fr;}
-    .mini-radar-orb{width:76px;}
+    .hero-media-card{padding:14px;grid-template-columns:1fr;gap:12px;}
     .home-split-grid{grid-template-columns:1fr;}
+    .split-panel-radar{min-height:0;}
+    .split-radar-dashboard{grid-template-columns:1fr;}
   }
 </style>
 </head>
@@ -111,35 +121,18 @@
       </div>
       <div class="hero-video-col">
         <div class="hero-media-card">
-          <div class="hero-vid-card" style="top:18px;left:18px;width:78%;z-index:1;">
+          <div class="hero-vid-card">
             <video controls playsinline>
               <source src="trainingProducts/videos/threatRadar.mp4" type="video/mp4">
             </video>
             <div class="hero-vid-label">Threat Radar</div>
           </div>
-          <div class="hero-vid-card" style="top:178px;right:18px;width:62%;z-index:2;">
-            <video controls playsinline style="width:100%;display:block;margin-top:-28px;">
+          <div class="hero-vid-card is-portrait">
+            <video controls playsinline>
               <source src="trainingProducts/videos/amyIntro.mp4" type="video/mp4">
             </video>
             <div class="hero-vid-label">Welcome to the Force</div>
           </div>
-          <a class="hero-mini-radar" href="radar.html" aria-label="Open the live Threat Radar">
-            <div class="mini-radar-orb" aria-hidden="true">
-              <i></i><i></i><i></i>
-            </div>
-            <div>
-              <div class="mini-radar-head">
-                <span class="mini-radar-title">Mini Threat Radar</span>
-                <span class="mini-radar-link">Open radar -&gt;</span>
-              </div>
-              <div class="mini-radar-grid" aria-hidden="true">
-                <div class="mini-radar-cell"><strong>10</strong><span>Tracked</span></div>
-                <div class="mini-radar-cell"><strong>3</strong><span>Critical</span></div>
-                <div class="mini-radar-cell"><strong>Live</strong><span>Feed</span></div>
-              </div>
-              <div class="mini-radar-bar" aria-hidden="true"><span></span></div>
-            </div>
-          </a>
         </div>
       </div>
     </div>
@@ -152,13 +145,42 @@
     <div class="home-split-grid">
 
       <!-- Left: Radar Widget -->
-      <div class="split-panel-radar">
+      <div class="split-panel-radar" role="link" tabindex="0" onclick="window.location.href='radar.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.location.href='radar.html';}">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
           <span class="live-dot"></span>
-          <p class="section-label" style="margin:0;color:rgba(255,255,255,0.5);">Live Threat Radar</p>
+          <p class="section-label" style="margin:0;color:rgba(255,255,255,0.5);">Live Intelligence</p>
         </div>
-        <h2 style="font-size:clamp(20px,2.5vw,26px);font-weight:700;color:#fff;letter-spacing:-0.5px;margin-bottom:6px;">Active Threats &amp; Vulnerabilities</h2>
-        <p style="font-size:14px;color:rgba(255,255,255,0.45);margin-bottom:24px;line-height:1.6;">A rolling feed of tracked CVEs, active exploits, and vendor advisories. Full access for subscribers.</p>
+        <div class="split-radar-top">
+          <div>
+            <h2 style="font-size:clamp(20px,2.5vw,26px);font-weight:700;color:#fff;letter-spacing:-0.5px;margin-bottom:6px;">Threat Radar</h2>
+            <p style="font-size:13px;color:rgba(255,255,255,0.42);line-height:1.6;">Tracked vulnerabilities and active threats</p>
+          </div>
+          <span class="split-radar-pill">Live Radar <i></i></span>
+        </div>
+        <div class="split-radar-dashboard" aria-hidden="true">
+          <div class="split-radar-stats">
+            <div class="split-radar-stat"><strong>200</strong><span>Total</span></div>
+            <div class="split-radar-stat"><strong>2</strong><span>Critical</span></div>
+            <div class="split-radar-stat"><strong>5</strong><span>High</span></div>
+            <div class="split-radar-stat"><strong>0</strong><span>Medium</span></div>
+            <div class="split-radar-stat"><strong>193</strong><span>Low</span></div>
+          </div>
+          <div class="mini-radar-orb">
+            <i></i><i></i><i></i>
+          </div>
+          <div class="split-radar-feed">
+            <div><strong>High</strong><b>KEV edge device exploit</b><span>9.8</span></div>
+            <div><strong>Critical</strong><b>Remote code execution</b><span>10.0</span></div>
+            <div><strong>High</strong><b>Identity provider bypass</b><span>8.7</span></div>
+            <div><strong>Low</strong><b>Vendor advisory update</b><span>4.2</span></div>
+          </div>
+          <div class="split-radar-matrix">
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          </div>
+          <div class="split-radar-line"></div>
+        </div>
         <div class="table-wrap">
           <table class="data-table" aria-label="Threat radar preview">
             <thead>
