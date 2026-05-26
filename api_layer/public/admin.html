@@ -471,6 +471,51 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
             </div>
           </div>
         </div>
+        <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--color-border-tertiary);">
+          <div class="panel-sub" style="margin-bottom:10px;">Article controls — Manual triggers for missed or stale Intel Article windows — James → Jason → Rob → Jeff → Maya → HITL → Laura</div>
+          <div class="card">
+            <div class="card-hd">Intel Article pipeline <span id="ar-trigger-badge" class="badge b-gray">Loading</span></div>
+            <div class="pc-trigger-row">
+              <div class="pc-trigger-info">
+                <div class="pc-trigger-label">James — Draft Article</div>
+                <div class="pc-trigger-desc" id="ar-james-desc">Checking...</div>
+              </div>
+              <button class="pc-btn" id="btn-ar-james" onclick="triggerArticlePipeline('article-james','btn-ar-james','Trigger James')" disabled>Trigger James</button>
+            </div>
+            <div class="pc-trigger-row">
+              <div class="pc-trigger-info">
+                <div class="pc-trigger-label">Jason — Development Edit</div>
+                <div class="pc-trigger-desc" id="ar-jason-desc">Checking...</div>
+              </div>
+              <button class="pc-btn" id="btn-ar-jason" onclick="triggerArticlePipeline('article-jason','btn-ar-jason','Trigger Jason')" disabled>Trigger Jason</button>
+            </div>
+            <div class="pc-trigger-row">
+              <div class="pc-trigger-info">
+                <div class="pc-trigger-label">Rob — EIC Review</div>
+                <div class="pc-trigger-desc" id="ar-rob-desc">Checking...</div>
+              </div>
+              <button class="pc-btn" id="btn-ar-rob" onclick="triggerArticlePipeline('article-rob','btn-ar-rob','Trigger Rob')" disabled>Trigger Rob</button>
+            </div>
+            <div class="pc-trigger-row">
+              <div class="pc-trigger-info">
+                <div class="pc-trigger-label">Jeff — QA Review</div>
+                <div class="pc-trigger-desc" id="ar-jeff-desc">Checking...</div>
+              </div>
+              <button class="pc-btn" id="btn-ar-jeff" onclick="triggerArticlePipeline('article-jeff','btn-ar-jeff','Trigger Jeff')" disabled>Trigger Jeff</button>
+            </div>
+            <div class="pc-trigger-row">
+              <div class="pc-trigger-info">
+                <div class="pc-trigger-label">Maya — Approve</div>
+                <div class="pc-trigger-desc" id="ar-maya-desc">Checking...</div>
+              </div>
+              <button class="pc-btn" id="btn-ar-maya" onclick="triggerArticlePipeline('article-maya','btn-ar-maya','Trigger Maya')" disabled>Trigger Maya</button>
+            </div>
+          </div>
+          <div class="card" style="margin-top:10px;">
+            <div class="card-hd">Article trigger log <button style="font-size:11px;color:var(--color-text-tertiary);background:none;border:none;cursor:pointer;padding:0;" onclick="document.getElementById('ar-log').innerHTML=''">Clear</button></div>
+            <div id="ar-log" style="font-size:12px;max-height:130px;overflow-y:auto;min-height:32px;color:var(--color-text-tertiary);">No article triggers fired this session.</div>
+          </div>
+        </div>
         <button class="ask-btn" onclick="sendPrompt('What are the right quality standards and rejection criteria for Jeff and Maya to use when reviewing Intel Brief articles?','maya')">Define QA standards ↗</button>
       </div>
 
@@ -1167,11 +1212,96 @@ async function loadArticlesData() {
       }).join('');
     }
 
+    renderArticleTriggerControls(articles || [], pipeline_summary || {});
+
   } catch (e) {
     console.error('Articles data load failed:', e);
     document.getElementById('ar-mtd-count').textContent = 'Err';
     document.getElementById('ar-article-list').innerHTML = '<div style="padding:12px;color:#a33;font-size:12px;">Unable to load article pipeline data.</div>';
+    renderArticleTriggerError();
   }
+}
+
+function renderArticleTriggerError() {
+  const badge = document.getElementById('ar-trigger-badge');
+  if (badge) {
+    badge.className = 'badge b-red';
+    badge.textContent = 'Unavailable';
+  }
+  ['james', 'jason', 'rob', 'jeff', 'maya'].forEach(agent => {
+    const desc = document.getElementById('ar-' + agent + '-desc');
+    const btn = document.getElementById('btn-ar-' + agent);
+    if (desc) desc.textContent = 'Unable to load article trigger status';
+    if (btn) btn.disabled = true;
+  });
+}
+
+function renderArticleTriggerControls(articles, summary) {
+  const counts = articles.reduce((acc, article) => {
+    const key = article.pipeline_status || 'unknown';
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+  const blocked = summary.blocked || 0;
+  const active = (summary.in_production || 0) + (summary.ready_for_hitl || 0);
+  const triggerMap = [
+    {
+      agent: 'james',
+      count: null,
+      enabled: true,
+      desc: active ? 'Runs guarded draft cycle; capacity rules still apply' : 'Runs guarded draft cycle for ready-for-intel content',
+    },
+    {
+      agent: 'jason',
+      count: counts.draft || 0,
+      enabled: (counts.draft || 0) > 0,
+      desc: countDesc(counts.draft || 0, 'draft article', 'Jason'),
+    },
+    {
+      agent: 'rob',
+      count: counts.dev_edit || 0,
+      enabled: (counts.dev_edit || 0) > 0,
+      desc: countDesc(counts.dev_edit || 0, 'development-edited article', 'Rob'),
+    },
+    {
+      agent: 'jeff',
+      count: counts.eic_review || 0,
+      enabled: (counts.eic_review || 0) > 0,
+      desc: countDesc(counts.eic_review || 0, 'EIC-reviewed article', 'Jeff'),
+    },
+    {
+      agent: 'maya',
+      count: (counts.qa || 0) + (counts.maya || 0),
+      enabled: ((counts.qa || 0) + (counts.maya || 0)) > 0,
+      desc: countDesc((counts.qa || 0) + (counts.maya || 0), 'QA-passed article', 'Maya'),
+    },
+  ];
+
+  for (const item of triggerMap) {
+    const desc = document.getElementById('ar-' + item.agent + '-desc');
+    const btn = document.getElementById('btn-ar-' + item.agent);
+    if (desc) desc.textContent = item.desc;
+    if (btn && !btn.classList.contains('success') && !btn.classList.contains('loading')) btn.disabled = !item.enabled;
+  }
+
+  const badge = document.getElementById('ar-trigger-badge');
+  if (badge) {
+    if (blocked) {
+      badge.className = 'badge b-red';
+      badge.textContent = blocked + ' blocked';
+    } else if (active) {
+      badge.className = 'badge b-amber';
+      badge.textContent = active + ' active';
+    } else {
+      badge.className = 'badge b-gray';
+      badge.textContent = 'Idle';
+    }
+  }
+}
+
+function countDesc(count, label, agent) {
+  if (!count) return 'No articles currently waiting for ' + agent;
+  return count + ' ' + label + (count === 1 ? '' : 's') + ' ready or recoverable';
 }
 
 async function releaseArticle(id, btn) {
@@ -1791,6 +1921,54 @@ async function triggerPipeline(endpoint, btnId, label) {
       btn.textContent = label;
       btn.classList.remove('error');
       btn.disabled = false;
+    }, 4000);
+  }
+}
+
+async function triggerArticlePipeline(endpoint, btnId, label) {
+  const btn = document.getElementById(btnId);
+  if (!btn || btn.disabled) return;
+  btn.disabled = true;
+  btn.textContent = 'Running...';
+  btn.classList.add('loading');
+
+  const log = document.getElementById('ar-log');
+  const ts = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+  try {
+    const result = await CS.Auth.apiFetch('/api/admin/trigger/' + endpoint, { method: 'POST' });
+    btn.textContent = 'Done';
+    btn.classList.remove('loading');
+    btn.classList.add('success');
+
+    const entry = document.createElement('div');
+    entry.className = 'pc-log-entry';
+    entry.innerHTML = `<span class="pc-log-ts">${esc(ts)}</span><span class="badge b-green">OK</span><span>${esc(result.message || 'Triggered successfully')}</span>`;
+    if (log.textContent.trim() === 'No article triggers fired this session.') log.innerHTML = '';
+    if (log.firstChild) log.insertBefore(entry, log.firstChild);
+    else log.appendChild(entry);
+
+    setTimeout(() => {
+      btn.textContent = label;
+      btn.classList.remove('success');
+      loadArticlesData();
+    }, 5000);
+  } catch (e) {
+    btn.textContent = 'Failed';
+    btn.classList.remove('loading');
+    btn.classList.add('error');
+
+    const entry = document.createElement('div');
+    entry.className = 'pc-log-entry';
+    entry.innerHTML = `<span class="pc-log-ts">${esc(ts)}</span><span class="badge b-red">ERR</span><span>${esc(e.message || 'Trigger failed')}</span>`;
+    if (log.textContent.trim() === 'No article triggers fired this session.') log.innerHTML = '';
+    if (log.firstChild) log.insertBefore(entry, log.firstChild);
+    else log.appendChild(entry);
+
+    setTimeout(() => {
+      btn.textContent = label;
+      btn.classList.remove('error');
+      loadArticlesData();
     }, 4000);
   }
 }
