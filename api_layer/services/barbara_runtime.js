@@ -377,7 +377,9 @@ async function pollBarbaraTasks() {
         AND task_type   IN ('normalize_threat', 'normalize_intel')
         AND status      IN ('queued', 'escalated')
         AND started_at  > now() - INTERVAL '${POLL_WINDOW_HRS} hours'
-      ORDER BY started_at ASC
+      ORDER BY
+        CASE WHEN task_type = 'normalize_intel' THEN 0 ELSE 1 END ASC,
+        started_at ASC
       LIMIT $1
     `, [BATCH_LIMIT]).then(r => r.rows);
 

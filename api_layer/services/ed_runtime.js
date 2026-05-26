@@ -63,13 +63,15 @@ Output only the final newsletter text in Markdown. Do not include meta-commentar
 `.trim();
 
 function buildEdPrompt(briefing) {
+  const trainingByteBlock = briefing.training_byte_body_md
+    ? `Training Byte — reproduce this content exactly in the Training Byte section (title: "${briefing.training_byte_title}"):\n\n${briefing.training_byte_body_md}`
+    : `Training byte ID: ${briefing.training_byte_id || 'missing'} — write a Training Byte aligned to today's threats`;
+
   return `
 Edition date: ${briefing.edition_date}
 Current subject line: ${briefing.subject_line}
-Threat source IDs: ${(briefing.threat_item_ids || []).join(', ')}
-Innovation source IDs: ${(briefing.innovation_item_ids || []).join(', ')}
-Growth source ID: ${briefing.growth_item_id || 'missing'}
-Training byte ID: ${briefing.training_byte_id || 'missing'}
+
+${trainingByteBlock}
 
 Peter draft:
 ${briefing.body_md}
@@ -145,9 +147,12 @@ async function apiCall(path, method = 'GET', body = null) {
 
 async function getBriefingForReview(contentId) {
   const row = await db.pool.query(
-    `SELECT id, edition_date, subject_line, body_md, pipeline_status,
-            threat_item_ids, innovation_item_ids, growth_item_id, training_byte_id
-     FROM briefings WHERE id = $1`,
+    `SELECT b.id, b.edition_date, b.subject_line, b.body_md, b.pipeline_status,
+            b.threat_item_ids, b.innovation_item_ids, b.growth_item_id, b.training_byte_id,
+            t.title AS training_byte_title, t.body_md AS training_byte_body_md
+     FROM briefings b
+     LEFT JOIN training_modules t ON t.id = b.training_byte_id
+     WHERE b.id = $1`,
     [contentId]
   ).then(r => r.rows[0] || null);
   return row;
