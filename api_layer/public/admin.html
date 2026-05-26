@@ -1094,9 +1094,9 @@ async function loadArticlesData() {
       await CS.Auth.apiFetch('/api/admin/articles/status');
 
     const pub   = published_stats || {};
-    const mtd   = +(pub.mtd_count || 0);
-    const total = +(pub.total_published || 0);
-    const avgH  = parseFloat(pub.avg_hours_to_publish) || 0;
+    const mtd   = +(pub.month_to_date ?? pub.mtd_count ?? 0);
+    const total = +(pub.total ?? pub.total_published ?? 0);
+    const avgH  = parseFloat(pub.avg_publish_hours ?? pub.avg_hours_to_publish) || 0;
     const avgV  = +(pub.avg_views || 0);
     const inPipe = pipeline_summary?.total_in_pipeline || 0;
     const blocked = pipeline_summary?.blocked || 0;
@@ -1116,7 +1116,8 @@ async function loadArticlesData() {
       listEl.innerHTML = '<div style="padding:16px 0;text-align:center;color:var(--color-text-tertiary);font-size:12px;">No articles in pipeline — all published or none drafted yet.</div>';
     } else {
       listEl.innerHTML = articles.map(a => {
-        const isBlocked   = a.hold.startsWith('Blocked');
+        const statusText  = a.error_message || a.status_label || a.hold || 'In production';
+        const isBlocked   = statusText.startsWith('Blocked');
         const stageClass  = STAGE_COLOR[a.pipeline_status] || 'b-gray';
         const releaseBtn  = a.pipeline_status === 'approved'
           ? `<button style="font-size:11px;padding:3px 10px;border-radius:4px;background:#185FA5;color:#fff;border:none;cursor:pointer;flex-shrink:0;" onclick="releaseArticle('${esc(a.id)}',this)">Release →</button>`
@@ -1125,7 +1126,7 @@ async function loadArticlesData() {
           <div style="flex:1;min-width:0;">
             <span class="badge ${stageClass}" style="font-size:10px;margin-bottom:3px;display:inline-block;">${esc(a.stage)}</span>
             <div style="font-size:13px;font-weight:500;color:var(--color-text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${esc(a.title)}">${esc(a.title)}</div>
-            <div style="font-size:11px;color:${isBlocked ? 'var(--color-text-danger)' : 'var(--color-text-tertiary)'};">${esc(a.hold)}</div>
+            <div style="font-size:11px;color:${isBlocked ? 'var(--color-text-danger)' : 'var(--color-text-tertiary)'};">${esc(statusText)}</div>
           </div>
           ${releaseBtn}
         </div>`;
