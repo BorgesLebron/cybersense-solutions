@@ -9,6 +9,8 @@
 <meta name="description" content="Live threat tracking — active vulnerabilities, CVEs, and adversary campaigns.">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="auth.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-geo@4.3.0/build/index.umd.min.js"></script>
 <style>
@@ -27,42 +29,55 @@
   --cs-text:rgba(255,255,255,0.85);
   --cs-dim:rgba(255,255,255,0.32);
   --cs-dimmer:rgba(255,255,255,0.14);
+  --cs-mono:'JetBrains Mono',monospace;
 }
 
 /* ── Stats Bar ─────────────────────────────────── */
 .rdr-stats{background:var(--cs-bg);padding:16px 24px;border-bottom:1px solid var(--cs-border);}
 .rdr-stats-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:10px;max-width:1440px;margin:0 auto;}
-.rdr-stat{border-radius:10px;padding:14px 20px;display:flex;align-items:center;gap:14px;border:1px solid;position:relative;overflow:hidden;}
+.rdr-stat{clip-path:polygon(8px 0%,100% 0%,100% calc(100% - 8px),calc(100% - 8px) 100%,0% 100%,0% 8px);padding:14px 20px;display:flex;align-items:center;gap:14px;border:1px solid;position:relative;overflow:hidden;}
 .rdr-stat::before{content:'';position:absolute;inset:0;opacity:0.04;}
-.rdr-stat-total{border-color:rgba(0,212,255,0.45);background:rgba(0,212,255,0.06);}
+.rdr-stat-total{border-color:rgba(0,212,255,0.45);background:rgba(0,212,255,0.06);box-shadow:0 0 15px rgba(0,212,255,0.12);}
 .rdr-stat-total::before{background:var(--cs-cyan);}
-.rdr-stat-crit{border-color:rgba(255,59,59,0.45);background:rgba(255,59,59,0.06);}
-.rdr-stat-crit::before{background:var(--cs-red);}
-.rdr-stat-high{border-color:rgba(255,140,0,0.45);background:rgba(255,140,0,0.06);}
-.rdr-stat-high::before{background:var(--cs-orange);}
-.rdr-stat-med{border-color:rgba(255,215,0,0.45);background:rgba(255,215,0,0.06);}
-.rdr-stat-med::before{background:var(--cs-yellow);}
-.rdr-stat-low{border-color:rgba(0,255,163,0.45);background:rgba(0,255,163,0.06);}
-.rdr-stat-low::before{background:var(--cs-green);}
-.rdr-stat-label{font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--cs-dim);white-space:nowrap;}
-.rdr-stat-val{font-size:28px;font-weight:800;line-height:1;font-family:monospace;}
+.rdr-stat-crit{border-color:rgba(255,0,0,0.45);background:rgba(255,0,0,0.06);box-shadow:0 0 15px rgba(255,0,0,0.18);}
+.rdr-stat-crit::before{background:#ff0000;}
+.rdr-stat-high{border-color:rgba(255,107,0,0.45);background:rgba(255,107,0,0.06);box-shadow:0 0 15px rgba(255,107,0,0.15);}
+.rdr-stat-high::before{background:#ff6b00;}
+.rdr-stat-med{border-color:rgba(212,200,0,0.45);background:rgba(212,200,0,0.06);box-shadow:0 0 15px rgba(212,200,0,0.12);}
+.rdr-stat-med::before{background:#d4c800;}
+.rdr-stat-low{border-color:rgba(0,143,17,0.45);background:rgba(0,143,17,0.06);box-shadow:0 0 15px rgba(0,143,17,0.15);}
+.rdr-stat-low::before{background:#008f11;}
+.rdr-stat-label{font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--cs-dim);white-space:nowrap;font-family:var(--cs-mono);}
+.rdr-stat-val{font-size:28px;font-weight:800;line-height:1;font-family:var(--cs-mono);}
 .rdr-stat-total .rdr-stat-val{color:var(--cs-cyan);}
-.rdr-stat-crit .rdr-stat-val{color:#ff6b6b;}
-.rdr-stat-high .rdr-stat-val{color:#ffab45;}
-.rdr-stat-med .rdr-stat-val{color:#ffd700;}
-.rdr-stat-low .rdr-stat-val{color:var(--cs-green);}
+.rdr-stat-crit .rdr-stat-val{color:#ff4444;}
+.rdr-stat-high .rdr-stat-val{color:#ff8c40;}
+.rdr-stat-med .rdr-stat-val{color:#d4c800;}
+.rdr-stat-low .rdr-stat-val{color:#00c518;}
 
 /* ── Dashboard shell ───────────────────────────── */
 .rdr-dash{background:var(--cs-bg);padding:16px 24px 56px;}
 .rdr-container{max-width:1440px;margin:0 auto;}
-.rdr-top-grid{display:grid;grid-template-columns:280px 1fr 310px;gap:12px;margin-bottom:12px;}
-.rdr-bot-grid{display:grid;grid-template-columns:320px 1fr 380px;gap:12px;}
+/* Top row: 25% stacked left | 45% map | 30% feed */
+.rdr-top-grid{display:grid;grid-template-columns:25fr 45fr 30fr;gap:12px;margin-bottom:12px;align-items:stretch;}
+.rdr-col-a{display:flex;flex-direction:column;gap:12px;}
+/* Row 3: heatmap | kev | industries — equal thirds */
+.rdr-row3-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;}
+/* Row 4: full-width historical */
+.rdr-hist-row{margin-bottom:0;}
 
 /* ── Panels ────────────────────────────────────── */
-.rdr-panel{background:var(--cs-panel);border:1px solid var(--cs-border);border-radius:14px;overflow:hidden;box-shadow:0 0 24px rgba(0,212,255,0.03);transition:border-color .2s;}
-.rdr-panel:hover{border-color:var(--cs-border-glow);}
+.rdr-panel{
+  background:var(--cs-panel);
+  border:1px solid var(--cs-border);
+  clip-path:polygon(10px 0%,100% 0%,100% calc(100% - 10px),calc(100% - 10px) 100%,0% 100%,0% 10px);
+  overflow:hidden;
+  filter:drop-shadow(0 0 8px rgba(0,212,255,0.06));
+  transition:filter .2s,border-color .2s;
+}
+.rdr-panel:hover{border-color:var(--cs-border-glow);filter:drop-shadow(0 0 12px rgba(0,212,255,0.12));}
 .rdr-panel-flex{display:flex;flex-direction:column;}
-.rdr-panel-hdr{padding:11px 16px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:10px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;color:var(--cs-dim);display:flex;align-items:center;gap:8px;flex-shrink:0;cursor:pointer;user-select:none;}
+.rdr-panel-hdr{padding:11px 16px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:10px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;color:var(--cs-dim);display:flex;align-items:center;gap:8px;flex-shrink:0;cursor:pointer;user-select:none;font-family:var(--cs-mono);}
 .rdr-panel-hdr:hover{color:rgba(255,255,255,0.55);}
 .rdr-expand-btn{margin-left:auto;font-size:14px;color:var(--cs-dimmer);opacity:0.6;transition:opacity .2s;cursor:pointer;}
 .rdr-panel-hdr:hover .rdr-expand-btn{opacity:1;}
@@ -70,26 +85,34 @@
 /* ── Radar Centerpiece ─────────────────────────── */
 .radar-center-panel{display:flex;flex-direction:column;}
 .radar-title-row{padding:12px 20px 0;display:flex;justify-content:space-between;align-items:flex-start;}
-.radar-title{font-size:18px;font-weight:800;color:var(--cs-cyan);letter-spacing:2px;text-transform:uppercase;text-shadow:0 0 20px rgba(0,212,255,0.4);}
+.radar-title{font-size:18px;font-weight:800;color:var(--cs-cyan);letter-spacing:2px;text-transform:uppercase;text-shadow:0 0 20px rgba(0,212,255,0.4);font-family:var(--cs-mono);}
 .radar-update{text-align:right;}
-.radar-update-label{font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--cs-dim);}
-.radar-update-val{font-size:14px;font-weight:700;color:var(--cs-text);}
-.radar-wrap{position:relative;flex:1;display:flex;align-items:center;justify-content:center;padding:10px;}
-.radar-circle-container{position:relative;border-radius:50%;overflow:hidden;width:100%;aspect-ratio:1;max-width:430px;box-shadow:0 0 40px rgba(0,212,255,0.1),inset 0 0 40px rgba(0,0,0,0.4);}
+.radar-update-label{font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--cs-dim);font-family:var(--cs-mono);}
+.radar-update-val{font-size:14px;font-weight:700;color:var(--cs-text);font-family:var(--cs-mono);}
+/* wrap holds circle + vertical legend side-by-side */
+.radar-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:10px;gap:10px;}
+.radar-circle-outer{position:relative;width:100%;max-width:430px;aspect-ratio:1;}
+.radar-circle-container{position:relative;border-radius:50%;overflow:hidden;width:100%;height:100%;box-shadow:0 0 40px rgba(0,212,255,0.1),inset 0 0 40px rgba(0,0,0,0.4);}
 .radar-circle-container canvas{position:absolute;top:0;left:0;width:100%;height:100%;}
 #chart-map{z-index:1;}
 #radar-canvas{z-index:2;pointer-events:none;}
-.radar-label-max{position:absolute;top:8px;right:10px;font-size:8px;font-weight:700;letter-spacing:1px;color:rgba(0,212,255,0.5);text-transform:uppercase;z-index:3;pointer-events:none;}
-.radar-label-min{position:absolute;bottom:8px;right:10px;font-size:8px;font-weight:700;letter-spacing:1px;color:rgba(0,212,255,0.3);text-transform:uppercase;z-index:3;pointer-events:none;}
-.radar-scale-bar{padding:6px 16px 10px;display:flex;align-items:center;gap:8px;justify-content:center;}
-.radar-scale-label{font-size:9px;color:var(--cs-dimmer);letter-spacing:.8px;text-transform:uppercase;}
-.radar-scale-track{flex:1;max-width:260px;height:4px;border-radius:2px;background:linear-gradient(to right,rgba(0,30,60,0.8),rgba(0,140,180,0.6),rgba(0,212,255,0.9));position:relative;}
-.radar-scale-track::after{content:'';position:absolute;inset:0;border-radius:2px;box-shadow:0 0 6px rgba(0,212,255,0.3);}
+/* framing crosshairs at 4 corners of outer wrapper */
+.radar-circle-outer::before,.radar-circle-outer::after{content:'';position:absolute;width:12px;height:12px;z-index:10;pointer-events:none;}
+.radar-circle-outer::before{top:-4px;left:-4px;border-top:2px solid rgba(0,212,255,0.6);border-left:2px solid rgba(0,212,255,0.6);}
+.radar-circle-outer::after{bottom:-4px;right:-4px;border-bottom:2px solid rgba(0,212,255,0.6);border-right:2px solid rgba(0,212,255,0.6);}
+.radar-corner-tr,.radar-corner-bl{content:'';position:absolute;width:12px;height:12px;z-index:10;pointer-events:none;}
+.radar-corner-tr{top:-4px;right:-4px;border-top:2px solid rgba(0,212,255,0.6);border-right:2px solid rgba(0,212,255,0.6);}
+.radar-corner-bl{bottom:-4px;left:-4px;border-bottom:2px solid rgba(0,212,255,0.6);border-left:2px solid rgba(0,212,255,0.6);}
+/* vertical density legend */
+.radar-density-legend{display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0;}
+.radar-density-label{font-size:7px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(0,212,255,0.5);font-family:var(--cs-mono);writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);max-height:80px;}
+.radar-density-bar{width:8px;flex:1;min-height:120px;border-radius:4px;background:linear-gradient(to bottom,#00e5ff,rgba(0,140,180,0.6),#0b192c);box-shadow:0 0 8px rgba(0,229,255,0.2);}
+.radar-density-label-min{font-size:7px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(0,212,255,0.3);font-family:var(--cs-mono);writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);max-height:80px;}
 
 /* ── Top 10 Panel ──────────────────────────────── */
 .top10-body{padding:12px 14px;overflow-y:auto;flex:1;}
 .top10-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.03);}
-.top10-rank{font-size:10px;font-weight:800;color:var(--cs-dimmer);width:16px;flex-shrink:0;text-align:right;font-family:monospace;}
+.top10-rank{font-size:10px;font-weight:800;color:var(--cs-dimmer);width:16px;flex-shrink:0;text-align:right;font-family:var(--cs-mono);}
 .top10-name{font-size:11px;color:var(--cs-text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .top10-bar-wrap{width:90px;flex-shrink:0;}
 .top10-bar-track{height:6px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden;}
@@ -112,8 +135,8 @@
 .rdr-tbl td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle;}
 .rdr-tbl tr:hover td{background:rgba(0,212,255,0.03);}
 .rdr-cell-name{font-weight:600;color:var(--cs-text);font-size:11px;max-width:110px;}
-.rdr-cell-cve{font-size:9px;color:var(--cs-dimmer);font-family:monospace;margin-top:1px;}
-.rdr-cell-cvss{color:rgba(255,255,255,0.55);font-size:11px;font-family:monospace;}
+.rdr-cell-cve{font-size:9px;color:var(--cs-dimmer);font-family:var(--cs-mono);margin-top:1px;}
+.rdr-cell-cvss{color:rgba(255,255,255,0.55);font-size:11px;font-family:var(--cs-mono);}
 .rdr-link{font-size:10px;color:var(--cs-cyan);font-weight:600;text-decoration:none;white-space:nowrap;}
 .rdr-link:hover{text-decoration:underline;}
 .rdr-pending{font-size:10px;color:var(--cs-dimmer);}
@@ -135,7 +158,7 @@
 .kev-entry{padding:9px 14px;border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;transition:background .15s;}
 .kev-entry:hover{background:rgba(0,212,255,0.04);}
 .kev-row-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:2px;}
-.kev-cve{font-family:monospace;font-size:11px;color:var(--cs-cyan);font-weight:700;}
+.kev-cve{font-family:var(--cs-mono);font-size:11px;color:var(--cs-cyan);font-weight:700;}
 .kev-vendor{font-size:10px;color:rgba(255,255,255,0.55);margin-top:1px;}
 .kev-badge{display:inline-flex;align-items:center;background:rgba(255,59,59,0.12);border:1px solid rgba(255,59,59,0.35);color:#ff6b6b;font-size:8px;font-weight:800;padding:2px 6px;border-radius:20px;letter-spacing:.8px;white-space:nowrap;flex-shrink:0;}
 .kev-row-bot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;}
@@ -155,10 +178,10 @@
 .hist-table-wrap::-webkit-scrollbar{width:3px;}
 .hist-table-wrap::-webkit-scrollbar-thumb{background:rgba(0,212,255,0.18);border-radius:2px;}
 .hist-tbl{width:100%;border-collapse:collapse;font-size:10px;}
-.hist-tbl th{padding:6px 10px;text-align:left;color:var(--cs-dimmer);font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.05);position:sticky;top:0;background:var(--cs-panel);z-index:1;}
+.hist-tbl th{padding:6px 10px;text-align:left;color:var(--cs-dimmer);font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.05);position:sticky;top:0;background:var(--cs-panel);z-index:1;font-family:var(--cs-mono);}
 .hist-tbl td{padding:6px 10px;border-bottom:1px solid rgba(255,255,255,0.03);color:rgba(255,255,255,0.7);}
 .hist-tbl tr:hover td{background:rgba(0,212,255,0.03);}
-.hist-tbl td:last-child{color:var(--cs-cyan);font-weight:700;font-family:monospace;}
+.hist-tbl td:last-child{color:var(--cs-cyan);font-weight:700;font-family:var(--cs-mono);}
 
 /* ── Freemium gate ─────────────────────────────── */
 .gate-wrapper{position:relative;}
@@ -178,18 +201,33 @@
 .expand-close:hover{background:rgba(255,59,59,0.2);color:#fff;}
 .expand-body{flex:1;overflow:auto;padding:20px;}
 
+/* ── Heatmap Matrix ────────────────────────────── */
+.heatmap-body{padding:10px 12px;overflow:auto;flex:1;}
+.heatmap-tbl{width:100%;border-collapse:collapse;font-family:var(--cs-mono);}
+.heatmap-tbl th{padding:6px 8px;font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--cs-dimmer);text-align:center;border-bottom:1px solid rgba(255,255,255,0.05);}
+.heatmap-tbl th:first-child{text-align:left;}
+.heatmap-tbl td{padding:7px 8px;font-size:9px;text-align:center;border:1px solid rgba(255,255,255,0.04);}
+.heatmap-tbl td:first-child{text-align:left;color:rgba(255,255,255,0.6);white-space:nowrap;font-size:9px;padding-right:12px;}
+.hm-cell{display:inline-block;padding:3px 8px;border-radius:3px;font-weight:700;font-size:9px;min-width:28px;}
+
+/* ── Industries Donut ──────────────────────────── */
+.industries-body{padding:10px 14px;flex:1;display:flex;align-items:center;justify-content:center;}
+.industries-wrap{position:relative;width:100%;max-width:240px;aspect-ratio:1;}
+
 /* ── Responsive ────────────────────────────────── */
 @media(max-width:1200px){
-  .rdr-top-grid{grid-template-columns:240px 1fr 280px;}
-  .rdr-bot-grid{grid-template-columns:280px 1fr 320px;}
+  .rdr-top-grid{grid-template-columns:22fr 45fr 33fr;}
+  .rdr-row3-grid{grid-template-columns:1fr 1fr 1fr;}
 }
 @media(max-width:960px){
   .rdr-top-grid{grid-template-columns:1fr 1fr;}
-  .rdr-bot-grid{grid-template-columns:1fr 1fr;}
+  .rdr-col-a{grid-column:1/-1;flex-direction:row;}
   .radar-center-panel{grid-column:1/-1;}
+  .rdr-row3-grid{grid-template-columns:1fr 1fr;}
 }
 @media(max-width:640px){
-  .rdr-top-grid,.rdr-bot-grid{grid-template-columns:1fr;}
+  .rdr-top-grid,.rdr-row3-grid{grid-template-columns:1fr;}
+  .rdr-col-a{flex-direction:column;}
   .rdr-stats-grid{grid-template-columns:repeat(2,1fr);}
   .rdr-stat-total{grid-column:1/-1;}
 }
@@ -276,22 +314,34 @@
 <div class="rdr-dash">
   <div class="rdr-container">
 
-    <!-- TOP ROW -->
+    <!-- ── ROW 1: VulnDist+Top10 | Radar Map | Live Feed ── -->
     <div class="rdr-top-grid">
 
-      <!-- Col A: Top 10 Attack Vectors -->
-      <div class="rdr-panel rdr-panel-flex" style="height:520px;">
-        <div class="rdr-panel-hdr" onclick="expandPanel('top10')">
-          <span>Top 10 Attack Vectors — 2026 YTD</span>
-          <span class="rdr-expand-btn" title="Expand">⤢</span>
+      <!-- Col A: stacked — Vulnerability Distribution (top) + Top 10 (bottom) -->
+      <div class="rdr-col-a">
+        <div class="rdr-panel rdr-panel-flex" style="flex:0 0 210px;">
+          <div class="rdr-panel-hdr" onclick="expandPanel('vulndist')">
+            <span>Vulnerability Distribution</span>
+            <span style="margin-left:4px;font-size:9px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--cs-dimmer);">2026 YTD</span>
+            <span class="rdr-expand-btn" title="Expand">⤢</span>
+          </div>
+          <div class="vuln-chart-wrap">
+            <canvas id="chart-vulndist"></canvas>
+          </div>
         </div>
-        <div class="top10-body" id="top10-body">
-          <div class="top10-empty">Loading…</div>
+        <div class="rdr-panel rdr-panel-flex" style="flex:1;min-height:280px;">
+          <div class="rdr-panel-hdr" onclick="expandPanel('top10')">
+            <span>Top 10 Attack Vectors — 2026 YTD</span>
+            <span class="rdr-expand-btn" title="Expand">⤢</span>
+          </div>
+          <div class="top10-body" id="top10-body">
+            <div class="top10-empty">Loading…</div>
+          </div>
         </div>
       </div>
 
       <!-- Col B: Live Threat Radar -->
-      <div class="rdr-panel radar-center-panel" style="height:520px;">
+      <div class="rdr-panel radar-center-panel" style="min-height:520px;">
         <div class="radar-title-row">
           <div class="radar-title">Live Threat Radar</div>
           <div class="radar-update">
@@ -300,22 +350,25 @@
           </div>
         </div>
         <div class="radar-wrap">
-          <div class="radar-circle-container" id="radar-circle">
-            <canvas id="chart-map"></canvas>
-            <canvas id="radar-canvas"></canvas>
-            <div class="radar-label-max">MAX COMPROMISE VECTORS</div>
-            <div class="radar-label-min">MINIMAL INTEL TELEMETRY</div>
+          <div class="radar-circle-outer">
+            <div class="radar-circle-container" id="radar-circle">
+              <canvas id="chart-map"></canvas>
+              <canvas id="radar-canvas"></canvas>
+            </div>
+            <span class="radar-corner-tr"></span>
+            <span class="radar-corner-bl"></span>
           </div>
-        </div>
-        <div class="radar-scale-bar">
-          <span class="radar-scale-label">Low</span>
-          <div class="radar-scale-track"></div>
-          <span class="radar-scale-label">High Density</span>
+          <!-- Vertical density scale legend -->
+          <div class="radar-density-legend">
+            <span class="radar-density-label">MAX COMPROMISE VECTORS</span>
+            <div class="radar-density-bar"></div>
+            <span class="radar-density-label-min">MINIMAL INTEL TELEMETRY</span>
+          </div>
         </div>
       </div>
 
       <!-- Col C: Live Radar Feed -->
-      <div class="rdr-panel rdr-panel-flex" style="height:520px;">
+      <div class="rdr-panel rdr-panel-flex" style="min-height:520px;">
         <div class="rdr-panel-hdr" onclick="expandPanel('feed')">
           <span class="live-dot" style="flex-shrink:0;"></span>
           <span>Live Radar Feed</span>
@@ -333,20 +386,13 @@
         </div>
         <div class="rdr-feed-scroll" id="radar-wrap">
           <table class="rdr-tbl" aria-label="Threat radar">
-            <thead>
-              <tr>
-                <th>Sev</th>
-                <th>Threat</th>
-                <th>CVSS</th>
-                <th>Intel</th>
-              </tr>
-            </thead>
+            <thead><tr><th>Sev</th><th>Threat</th><th>CVSS</th><th>Intel</th></tr></thead>
             <tbody id="radar-body">
               <tr><td colspan="4" class="rdr-empty">Loading threat data…</td></tr>
             </tbody>
           </table>
         </div>
-        <div class="gate-wrapper" id="radar-gate" style="display:none;border-radius:0 0 14px 14px;">
+        <div class="gate-wrapper" id="radar-gate" style="display:none;">
           <div class="blurred" aria-hidden="true" id="blurred-rows-wrap">
             <table class="rdr-tbl"><tbody id="blurred-rows"></tbody></table>
           </div>
@@ -363,22 +409,20 @@
 
     </div><!-- /rdr-top-grid -->
 
-    <!-- BOTTOM ROW -->
-    <div class="rdr-bot-grid">
+    <!-- ── ROW 3: Heatmap Matrix | CISA KEV | Industries Targeted ── -->
+    <div class="rdr-row3-grid">
 
-      <!-- Bot Left: Vulnerability Distribution -->
+      <!-- Heatmap Matrix -->
       <div class="rdr-panel rdr-panel-flex" style="height:340px;">
-        <div class="rdr-panel-hdr" onclick="expandPanel('vulndist')">
-          <span>Vulnerability Distribution</span>
-          <span style="margin-left:4px;font-size:9px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--cs-dimmer);">2026 YTD by Month</span>
+        <div class="rdr-panel-hdr" onclick="expandPanel('heatmap')">
+          <span>Vulnerability Heatmap Matrix</span>
+          <span style="margin-left:4px;font-size:9px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--cs-dimmer);">CWE × System Tier</span>
           <span class="rdr-expand-btn" title="Expand">⤢</span>
         </div>
-        <div class="vuln-chart-wrap">
-          <canvas id="chart-vulndist"></canvas>
-        </div>
+        <div class="heatmap-body" id="heatmap-body"></div>
       </div>
 
-      <!-- Bot Center: CISA KEV -->
+      <!-- CISA KEV -->
       <div class="rdr-panel rdr-panel-flex" style="height:340px;">
         <div class="rdr-panel-hdr" onclick="expandPanel('kev')">
           <span style="color:rgba(255,100,100,0.8);">●</span>
@@ -397,8 +441,25 @@
         </div>
       </div>
 
-      <!-- Bot Right: 10-Year Historical Database -->
+      <!-- Industries Targeted -->
       <div class="rdr-panel rdr-panel-flex" style="height:340px;">
+        <div class="rdr-panel-hdr" onclick="expandPanel('industries')">
+          <span>Industries Targeted</span>
+          <span style="margin-left:4px;font-size:9px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--cs-dimmer);">2026 YTD</span>
+          <span class="rdr-expand-btn" title="Expand">⤢</span>
+        </div>
+        <div class="industries-body">
+          <div class="industries-wrap">
+            <canvas id="chart-industries"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /rdr-row3-grid -->
+
+    <!-- ── ROW 4: 10-Year Historical (full width) ── -->
+    <div class="rdr-hist-row">
+      <div class="rdr-panel rdr-panel-flex" style="height:420px;">
         <div class="rdr-panel-hdr" onclick="expandPanel('historical')">
           <span>10-Year Historical Database</span>
           <span class="rdr-expand-btn" title="Expand">⤢</span>
@@ -409,7 +470,7 @@
           <div class="hist-tab" onclick="switchHistTab('country',this)">By Country</div>
           <div class="hist-tab" onclick="switchHistTab('financial',this)">Total Financial Loss</div>
         </div>
-        <div class="hist-chart-wrap">
+        <div class="hist-chart-wrap" style="height:200px;">
           <canvas id="chart-hist"></canvas>
         </div>
         <div class="hist-table-wrap">
@@ -419,8 +480,7 @@
           </table>
         </div>
       </div>
-
-    </div><!-- /rdr-bot-grid -->
+    </div><!-- /rdr-hist-row -->
 
   </div><!-- /rdr-container -->
 </div><!-- /rdr-dash -->
@@ -633,6 +693,7 @@ let kevLive = false;
 Chart.defaults.color = 'rgba(255,255,255,0.45)';
 Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
 Chart.defaults.font.size = 10;
+Chart.defaults.font.family = "'JetBrains Mono', monospace";
 
 /* ════════════════════════════════════════════════
    CATEGORY FORMATTER
@@ -1077,7 +1138,7 @@ async function initMap() {
               return `rgba(${r},${g},${b},${0.2+v*0.8})`;
             }
           },
-          projection:{ axis:'x', projection:'equalEarth' }
+          projection:{ axis:'x', projection:'azimuthalEquidistant' }
         }
       }
     });
@@ -1094,6 +1155,88 @@ async function initMap() {
     initBlips();
     animateRadar();
   }
+}
+
+/* ════════════════════════════════════════════════
+   HEATMAP MATRIX — CWE Category × System Tier
+════════════════════════════════════════════════ */
+const HM_TIERS = ['Edge Devices','Cloud','OS / Kernel','Software'];
+const HM_ROWS = [
+  { name:'Injection',           vals:[3,8,5,9] },
+  { name:'Memory Corruption',   vals:[8,3,9,7] },
+  { name:'Authentication',      vals:[7,9,6,8] },
+  { name:'Cryptographic',       vals:[5,7,4,6] },
+  { name:'Misconfiguration',    vals:[9,8,5,7] },
+  { name:'Access Control',      vals:[6,9,7,8] },
+];
+function hmColor(v) {
+  // 0–10 → low navy to high cyan
+  const t = v / 10;
+  const r = Math.round(t * 20);
+  const g = Math.round(60 + t * 160);
+  const b = Math.round(120 + t * 135);
+  const a = 0.25 + t * 0.7;
+  return `rgba(${r},${g},${b},${a})`;
+}
+function buildHeatmapHTML(expanded) {
+  const cellPad = expanded ? '10px 14px' : '6px 8px';
+  return `<table class="heatmap-tbl" style="${expanded?'font-size:12px;':''}">
+    <thead><tr>
+      <th style="font-family:var(--cs-mono);">CWE Category</th>
+      ${HM_TIERS.map(t=>`<th style="font-family:var(--cs-mono);">${t}</th>`).join('')}
+    </tr></thead>
+    <tbody>${HM_ROWS.map(row=>`<tr>
+      <td style="font-family:var(--cs-mono);padding:${cellPad};color:rgba(255,255,255,0.65);">${row.name}</td>
+      ${row.vals.map(v=>`<td style="padding:${cellPad};">
+        <span class="hm-cell" style="background:${hmColor(v)};color:${v>=7?'rgba(255,255,255,0.9)':'rgba(255,255,255,0.55)'};">${v}</span>
+      </td>`).join('')}
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+function renderHeatmap() {
+  const el = document.getElementById('heatmap-body');
+  if (el) el.innerHTML = buildHeatmapHTML(false);
+}
+
+/* ════════════════════════════════════════════════
+   INDUSTRIES TARGETED — Donut Chart
+════════════════════════════════════════════════ */
+const IND_DATA = {
+  labels: ['Finance','Technology','Government','Healthcare','Energy','Manufacturing'],
+  data:   [22, 21, 16, 18, 12, 11],
+  colors: ['#00d4ff','#4da6ff','#7c6fff','#00c896','#ffd700','#ff8c40'],
+};
+let industriesChart = null;
+function renderIndustriesChart(canvas, legendFontSize) {
+  return new Chart(canvas, {
+    type:'doughnut',
+    data:{
+      labels: IND_DATA.labels,
+      datasets:[{
+        data: IND_DATA.data,
+        backgroundColor: IND_DATA.colors.map(c=>c+'aa'),
+        borderColor: IND_DATA.colors,
+        borderWidth: 1.5,
+        hoverOffset: 8,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false, cutout:'62%',
+      plugins:{
+        legend:{
+          display:true, position:'right',
+          labels:{ color:'rgba(255,255,255,0.65)', font:{size:legendFontSize||10, family:'JetBrains Mono,monospace'}, boxWidth:10, padding:10 }
+        },
+        tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw}%`}}
+      }
+    }
+  });
+}
+function renderIndustries() {
+  const canvas = document.getElementById('chart-industries');
+  if (!canvas) return;
+  if (industriesChart) { industriesChart.destroy(); industriesChart = null; }
+  industriesChart = renderIndustriesChart(canvas, 10);
 }
 
 async function loadGeoTelemetry() {
@@ -1133,6 +1276,8 @@ const EXPAND_TITLES = {
   feed:'Live Radar Feed',
   vulndist:'Vulnerability Distribution — 2026 YTD by Month',
   kev:'CISA KEV — Known Exploited Vulnerabilities',
+  heatmap:'Vulnerability Heatmap Matrix — CWE Category × System Tier',
+  industries:'Industries Targeted — 2026 YTD',
   historical:'10-Year Historical Cyber Threat Database',
 };
 
@@ -1208,6 +1353,17 @@ function expandPanel(type) {
           <span class="kev-dates" style="font-size:10px;">Added ${k.added} · Due ${k.due}</span>
         </div></div>`).join('')}
       </div>`;
+
+  } else if (type === 'heatmap') {
+    body.style.padding = '20px 24px';
+    body.innerHTML = `<div style="max-width:700px;margin:0 auto;">${buildHeatmapHTML(true)}</div>`;
+
+  } else if (type === 'industries') {
+    body.innerHTML = '<div style="max-width:400px;margin:0 auto;height:400px;"><canvas id="chart-industries-exp"></canvas></div>';
+    requestAnimationFrame(()=>{
+      const ctx = document.getElementById('chart-industries-exp');
+      if(ctx) renderIndustriesChart(ctx, 14);
+    });
 
   } else if (type === 'historical') {
     body.innerHTML = `<div style="max-width:1000px;margin:0 auto;">
@@ -1300,9 +1456,11 @@ window.addEventListener('resize', () => {
 });
 
 // Static panels (no auth needed)
-loadCISAKEV();   // fetches live CISA catalog; falls back to static if unavailable
+loadCISAKEV();
 renderVulnDist();
 renderHistorical('industry');
+renderHeatmap();
+renderIndustries();
 initMap();
 </script>
 </body>
