@@ -68,17 +68,13 @@ contentRouter.get('/innovation-radar', requireUserToken('free'), async (req, res
 contentRouter.get('/briefings', requireUserToken('free'), async (req, res, next) => {
   try {
     const { page = 1, limit = 20 } = req.query;
-    if (TIER_RANK[req.user.tier] < TIER_RANK['freemium']) {
-      const current = await db.pool.query("SELECT id,edition_date,subject_line FROM briefings WHERE pipeline_status='published' AND edition_date <= CURRENT_DATE ORDER BY edition_date DESC LIMIT 1").then(r => r.rows[0]);
-      return res.json({ data: [{ ...current, blurred: true, teaser: 'Subscribe free to read the Daily Digital Awareness Briefing.' }], meta: { page: 1, limit: 1, total: 1, pages: 1 } });
-    }
     const briefings = await db.listBriefings({ page: +page, limit: +limit });
     const total = await db.pool.query("SELECT COUNT(*) FROM briefings WHERE pipeline_status='published'").then(r => +r.rows[0].count);
     res.json({ data: briefings, meta: { page: +page, limit: +limit, total, pages: Math.ceil(total / limit) } });
   } catch (e) { next(e); }
 });
 
-contentRouter.get('/briefings/:date', requireUserToken('freemium'), async (req, res, next) => {
+contentRouter.get('/briefings/:date', requireUserToken('free'), async (req, res, next) => {
   try {
     const briefing = await db.getBriefingByDate(req.params.date);
     if (!briefing || briefing.pipeline_status !== 'published') return res.status(404).json(err('NOT_FOUND', 'Briefing not found'));
@@ -90,13 +86,8 @@ contentRouter.get('/radar', requireUserToken('free'), async (req, res, next) => 
   try {
     const { severity, page = 1, limit = 50 } = req.query;
     const threats = await db.getThreatRecords({ severity, page: +page, limit: +limit });
-    const isSubscriber = TIER_RANK[req.user.tier] >= TIER_RANK['monthly'];
-    const BLUR_AFTER = 7;
-    const gated = threats.map((t, i) => {
-      if (i >= BLUR_AFTER && !isSubscriber) return { id: t.id, blurred: true };
-      return { id: t.id, severity: t.severity, threat_name: t.threat_name, cve_id: t.cve_id, cvss_score: t.cvss_score, category: t.category, tags: t.tags, priority: t.priority, ingested_at: t.ingested_at, article_link: t.has_article ? `/intel/${t.article_id}` : null };
-    });
-    res.json({ data: gated, meta: { page: +page, limit: +limit, subscriber_view: isSubscriber } });
+    const data = threats.map(t => ({ id: t.id, severity: t.severity, threat_name: t.threat_name, cve_id: t.cve_id, cvss_score: t.cvss_score, category: t.category, tags: t.tags, priority: t.priority, ingested_at: t.ingested_at, article_link: t.has_article ? `/intel/${t.article_id}` : null }));
+    res.json({ data, meta: { page: +page, limit: +limit, subscriber_view: true } });
   } catch (e) { next(e); }
 });
 
@@ -185,7 +176,7 @@ contentRouter.get('/geo-telemetry', async (req, res, next) => {
   }
 });
 
-contentRouter.get('/radar/:id', requireUserToken('monthly'), async (req, res, next) => {
+contentRouter.get('/radar/:id', requireUserToken('free'), async (req, res, next) => {
   try {
     const threat = await db.getThreatById(req.params.id);
     if (!threat) return res.status(404).json(err('NOT_FOUND', 'Threat record not found'));
@@ -372,7 +363,7 @@ function filterGlossaryTerms(terms, { category, search, page = 1, limit = 100 } 
     .slice(offset, offset + max);
 }
 
-trainingRouter.get('/modules', requireUserToken('monthly'), async (req, res, next) => {
+trainingRouter.get('/modules', requireUserToken('free'), async (req, res, next) => {
   try {
     const { type, phase, zt_module, page = 1, limit = 30 } = req.query;
     const modules = await db.listTrainingModules({ type, phase, zt_module, page: +page, limit: +limit });
@@ -384,7 +375,6 @@ trainingRouter.get('/modules/:id', requireUserToken('free'), async (req, res, ne
   try {
     const module = await db.getTrainingModule(req.params.id);
     if (!module || module.pipeline_status !== 'published') return res.status(404).json(err('NOT_FOUND', 'Module not found'));
-    if (TIER_RANK[req.user.tier] < TIER_RANK[module.access_tier]) return res.json({ id: module.id, title: module.title, type: module.type, access_tier: module.access_tier, locked: true });
     res.json(module);
   } catch (e) { next(e); }
 });
@@ -447,7 +437,7 @@ trainingRouter.delete('/glossary/:id', requireAdminToken(['gm', 'training']), as
   } catch (e) { next(e); }
 });
 
-trainingRouter.post('/completions', requireUserToken('monthly'), async (req, res, next) => {
+trainingRouter.post('/completions', requireUserToken('free'), async (req, res, next) => {
   try {
     const { module_id, score, time_spent_min } = req.body;
     if (!module_id || score == null || !time_spent_min) return res.status(400).json(err('MISSING_FIELDS', 'module_id, score, time_spent_min are required'));
