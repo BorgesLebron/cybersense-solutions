@@ -143,14 +143,40 @@
 
     <div class="section-card p-6 rounded-xl border">
       <h2 class="text-2xl font-bold mb-4 flex items-center border-b pb-2">Career Development</h2>
-      <p class="text-gray-800 text-sm leading-relaxed italic" style="color: rgba(255,255,255,0.4) !important;">No new updates for this edition.</p>
+      <h3 class="text-xl font-semibold mb-2">Trust Nothing, Verify Everything: Three Career Competencies the Trusted Surface Era Demands</h3>
+
+      <p class="text-gray-800 mb-3 text-sm">The three incidents in today's edition are not just threat advisories — they are a map of where the security industry is hiring. The CPUID supply chain compromise, APT28's cloud-hosted C2, and Storm-2755's payroll fraud each represent a specialist discipline with growing demand and insufficient supply of qualified practitioners.</p>
+
+      <p class="text-gray-800 mb-2 text-sm font-semibold">Invest in these three competency tracks:</p>
+
+      <p class="text-gray-800 mb-1 text-sm font-semibold">1. Software Supply Chain Security</p>
+      <p class="text-gray-800 mb-3 text-sm">Trojanized software distribution is now a primary enterprise attack vector. Organizations are actively seeking professionals who can build and operate SBOM (Software Bill of Materials) programs, implement hash verification into procurement workflows, and conduct vendor security assessments. Certification paths: CSSLP (Certified Secure Software Lifecycle Professional) or SANS SEC566 (Implementing a Zero Trust Architecture). Tools to learn: Syft, Grype, Socket.dev.</p>
+
+      <p class="text-gray-800 mb-1 text-sm font-semibold">2. Cloud-Native Threat Detection</p>
+      <p class="text-gray-800 mb-3 text-sm">Detecting C2 traffic concealed in legitimate cloud service traffic — as PRISMEX demonstrates — requires behavioral analysis skills that go beyond signature-based tools. This is a premium capability gap. Study MITRE ATT&CK TA0011 (Command and Control) techniques, particularly cloud-based C2. Platform experience with CrowdStrike Falcon, Darktrace, or Microsoft Sentinel UEBA is increasingly required for senior threat analyst roles.</p>
+
+      <p class="text-gray-800 mb-1 text-sm font-semibold">3. Financial Fraud and HR System Security</p>
+      <p class="text-gray-800 mb-3 text-sm">Payroll redirect attacks like Storm-2755 bridge the gap between cybersecurity and financial fraud — a cross-functional niche with high enterprise demand and few specialists. Practitioners who can assess HR self-service portal security, design out-of-band verification workflows, and conduct BEC (Business Email Compromise) incident response command notable salaries and direct access to executive stakeholders.</p>
+
+      <p class="italic text-sky-500 text-sm">The trusted surface problem is not a temporary trend — it is the permanent condition of operating in a world where every tool, vendor, and platform is a potential compromise surface. Professionals who build these verification competencies will be indispensable.</p>
     </div>
   </div>
 
   <div class="mb-8">
     <div class="section-card p-6 rounded-xl border">
       <h2 class="text-2xl font-bold mb-4 flex items-center border-b pb-2">Modernization and AI Insight</h2>
-      <p class="text-gray-800 text-sm leading-relaxed italic" style="color: rgba(255,255,255,0.4) !important;">No new updates for this edition.</p>
+
+      <h3 class="text-xl font-semibold mb-2">AI-Augmented Software Supply Chain Integrity</h3>
+      <p class="text-gray-800 mb-4 text-sm">
+        The CPUID compromise illustrates a gap that traditional security tooling cannot close: by the time a hash mismatch check fires, users have already downloaded and often executed the payload. A new generation of AI-powered software composition analysis tools is changing the detection window. Platforms such as Socket.dev use ML models trained on dependency behavior graphs to flag anomalous package mutations — detecting when a legitimate library silently acquires new permissions, network calls, or obfuscated code — before the artifact reaches a developer's machine. GitHub's AI code scanning features now flag suspicious dependency injections at pull request time. Security teams evaluating their supply chain posture should treat AI-driven SCA as a first-line control, not a compliance checkbox. The capability gap between organizations that have operationalized these tools and those relying on manual hash verification is widening rapidly.
+      </p>
+
+      <hr>
+
+      <h3 class="text-xl font-semibold mb-2">Behavioral AI and the Cloud C2 Detection Problem</h3>
+      <p class="text-gray-800 text-sm">
+        APT28's PRISMEX campaign routes C2 traffic through trusted cloud platforms precisely because legacy network controls treat those platforms as inherently safe. This is the structural limitation that AI-driven behavioral analytics is designed to address. Signature-based detection cannot catch traffic that looks identical to legitimate cloud egress — but behavioral models can detect the timing patterns, request frequencies, payload-size anomalies, and destination clustering that characterize covert C2 channels even when the carrier platform is whitelisted. Solutions including Darktrace's AI network analysis, CrowdStrike Falcon Intelligence's cloud telemetry correlation, and Microsoft Sentinel's UEBA are increasingly capable of flagging these behavioral fingerprints in near-real time. The maturation of cloud-aware behavioral AI represents one of the most consequential shifts in enterprise detection engineering — and the organizations still relying exclusively on perimeter controls and IP blocklists are operating with a structural blind spot that state-level actors are actively exploiting.
+      </p>
     </div>
   </div>
 
