@@ -498,7 +498,22 @@ const GEO_DATA = {
   752:{name:'Sweden',value:22},
   792:{name:'Turkey',value:18}
 };
-const GEO_MAX = Math.max(...Object.values(GEO_DATA).map(d=>d.value));
+let GEO_MAX = Math.max(...Object.values(GEO_DATA).map(d=>d.value));
+let mapChart = null;
+let geoLive = false;
+
+// ISO alpha-2 → UN M.49 numeric (TopoJSON country ID)
+const A2_TO_NUM = {
+  US:840, CN:156, RU:643, DE:276, GB:826, FR:250, JP:392, IN:356,
+  BR:76,  NL:528, CA:124, KR:410, IT:380, AU:36,  SG:702, UA:804,
+  TR:792, PL:616, SE:752, ES:724, TW:158, HK:344, VN:704, ID:360,
+  IR:364, PK:586, MX:484, AR:32,  ZA:710, RO:642, BG:100, HU:348,
+  CZ:203, FI:246, EE:233, PT:620, BE:56,  CH:756, AT:40,  DK:208,
+  NO:578, MY:458, TH:764, PH:608, NG:566, EG:818, SA:682, IL:376,
+  AE:784, LT:440, LV:428, SK:703, SI:705, RS:688, BY:112, KZ:398,
+  LU:442, HR:191, GR:300, CL:152, CO:170, PE:604, DZ:12,  MA:504,
+  TZ:834, KE:404, GH:288, ET:231, SN:686, CI:384, UG:800, ZM:894
+};
 
 const CISA_KEVS_FALLBACK = [
   {cve:'CVE-2025-23006',vendor:'SonicWall',product:'SMA 1000 Appliances',attack:'Pre-Authentication Remote Code Execution',added:'Jan 23, 2025',due:'Feb 13, 2025'},
@@ -1023,7 +1038,7 @@ async function initMap() {
     mapCanvas.width  = wrap.offsetWidth;
     mapCanvas.height = wrap.offsetHeight;
 
-    new Chart(mapCanvas, {
+    mapChart = new Chart(mapCanvas, {
       type:'choropleth',
       data:{
         labels: countries.features.map(d=>GEO_DATA[d.id]?.name||d.properties?.name||''),
@@ -1046,7 +1061,10 @@ async function initMap() {
               const name=GEO_DATA[id]?.name||ctx.label||'Unknown';
               if(!val) return `${name}: No tracked activity`;
               const pct=((val/GEO_MAX)*100).toFixed(0);
-              return [`${name}`, `${val} compromised targets tracked`, `${pct}% relative density`];
+              const detail = geoLive
+                ? `${val.toFixed(1)}% of tracked attack traffic`
+                : `${val} compromised targets tracked`;
+              return [`${name}`, detail, `${pct}% relative density`];
             }
           }}
         },
@@ -1067,6 +1085,7 @@ async function initMap() {
     syncRadarCanvas();
     initBlips();
     animateRadar();
+    loadGeoTelemetry();
   } catch(e) {
     console.warn('Map load failed:',e);
     document.getElementById('radar-circle').innerHTML =
@@ -1074,6 +1093,35 @@ async function initMap() {
     syncRadarCanvas();
     initBlips();
     animateRadar();
+  }
+}
+
+async function loadGeoTelemetry() {
+  if (!mapChart) return;
+  try {
+    const resp = await fetch(`${window.CS_API_BASE}/api/content/geo-telemetry`);
+    if (!resp.ok) return;
+    const { countries } = await resp.json();
+    if (!countries || !Object.keys(countries).length) return;
+
+    // Build numeric-keyed value map from alpha-2 percentages
+    const byNum = {};
+    for (const [a2, pct] of Object.entries(countries)) {
+      const num = A2_TO_NUM[a2];
+      if (num) byNum[num] = pct;
+    }
+
+    // Update chart dataset values in-place
+    const ds = mapChart.data.datasets[0];
+    ds.data = ds.data.map(d => ({ ...d, value: byNum[d.feature.id] || 0 }));
+
+    // Update color scale to match live range (percentage domain)
+    GEO_MAX = Math.max(...Object.values(byNum), 1);
+    mapChart.options.scales.color.max = GEO_MAX;
+    geoLive = true;
+    mapChart.update('none');
+  } catch (e) {
+    console.warn('Geo-telemetry unavailable — using static data:', e.message);
   }
 }
 

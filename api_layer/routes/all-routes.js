@@ -123,6 +123,68 @@ contentRouter.get('/cisa-kev', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+// ── Geo-telemetry proxy — HoneyDB bad-hosts → GeoIP country aggregation ──────
+let _geoCache = null;
+let _geoCachedAt = 0;
+const GEO_TTL = 60 * 60 * 1000; // 1 hour
+
+contentRouter.get('/geo-telemetry', async (req, res, next) => {
+  try {
+    if (_geoCache && Date.now() - _geoCachedAt < GEO_TTL) {
+      return res.json(_geoCache);
+    }
+
+    // 1. Fetch top attacking IPs from HoneyDB
+    const honeyResp = await fetch('https://honeydb.io/api/bad-hosts', {
+      headers: {
+        'X-HoneyDb-ApiId': process.env.HONEY_DB_ID_API_KEY,
+        'X-HoneyDb-ApiKey': process.env.HONEY_DB_SECRET_API_KEY
+      },
+      signal: AbortSignal.timeout(12000)
+    });
+    if (!honeyResp.ok) throw new Error(`HoneyDB ${honeyResp.status}`);
+    const badHosts = await honeyResp.json();
+
+    // 2. Take top 40 by hit count and geolocate in parallel via ipinfo.io
+    const top = Array.isArray(badHosts) ? badHosts.slice(0, 40) : [];
+    const geoResults = await Promise.allSettled(
+      top.map(({ remote_host }) =>
+        fetch(`https://ipinfo.io/${remote_host}/country`, { signal: AbortSignal.timeout(5000) })
+          .then(r => r.text())
+          .then(t => t.trim().toUpperCase())
+      )
+    );
+
+    // 3. Aggregate hit counts by country code (skip private/unresolved IPs)
+    const countryCounts = {};
+    let worldTotal = 0;
+    geoResults.forEach((result, i) => {
+      const cc = result.status === 'fulfilled' ? result.value : '';
+      if (/^[A-Z]{2}$/.test(cc)) {
+        const count = top[i].count;
+        countryCounts[cc] = (countryCounts[cc] || 0) + count;
+        worldTotal += count;
+      }
+    });
+
+    // 4. Normalize to percentage of world total
+    const countries = {};
+    if (worldTotal > 0) {
+      for (const [cc, count] of Object.entries(countryCounts)) {
+        countries[cc] = parseFloat(((count / worldTotal) * 100).toFixed(2));
+      }
+    }
+
+    const payload = { countries, totalHits: worldTotal, source: 'live', refreshedAt: new Date().toISOString() };
+    _geoCache = payload;
+    _geoCachedAt = Date.now();
+    res.json(payload);
+  } catch (e) {
+    if (_geoCache) return res.json({ ..._geoCache, source: 'stale-cache' });
+    next(e);
+  }
+});
+
 contentRouter.get('/radar/:id', requireUserToken('monthly'), async (req, res, next) => {
   try {
     const threat = await db.getThreatById(req.params.id);
