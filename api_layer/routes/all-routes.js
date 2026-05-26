@@ -1131,7 +1131,7 @@ adminRouter.post('/trigger/rick-ingest', requireAdminToken(['gm']), async (req, 
       agent_name: 'Rick',
       task_type: 'threat_ingest',
       content_type: 'system',
-      content_id: null,
+      content_id: '00000000-0000-0000-0000-000000000000',
       sla_deadline: null,
       retry_after: null,
     });
