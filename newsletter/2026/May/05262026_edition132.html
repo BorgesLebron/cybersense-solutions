@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberSense: Daily Digital Awareness Brief | May 26, 2026</title>
+<meta property="og:title" content="Edition 132 – The Trusted Surface Problem: When the Tools You Rely On Become the Attack Vector | May 26, 2026"/>
+<meta property="og:description" content="CPUID supply chain delivers STX RAT, APT28 hides C2 in image files via PRISMEX, and Storm-2755 redirects Canadian payroll — three campaigns exploiting institutional trust."/>
+<meta property="og:image" content="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png"/>
+<meta property="og:url" content="https://cybersense.solutions/newsletter/2026/May/05262026_edition132.html"/>
+<meta property="og:type" content="article" />
+<link rel="icon" type="image/png" href="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png">
+<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+  body {
+    background-color: #111827;
+    background-image:
+      radial-gradient(circle at 10% 50%, rgba(30,60,100,0.25) 0%, rgba(30,60,100,0.0) 50%),
+      radial-gradient(circle at 90% 40%, rgba(0,150,255,0.15) 0%, rgba(0,150,255,0.0) 30%),
+      linear-gradient(0deg, transparent 24%, rgba(60,60,60,0.1) 25%, rgba(60,60,60,0.1) 26%, transparent 27%),
+      linear-gradient(90deg, transparent 24%, rgba(60,60,60,0.1) 25%, rgba(60,60,60,0.1) 26%, transparent 27%);
+    background-size: 100% 100%, 100% 100%, 50px 50px, 50px 50px;
+    background-attachment: fixed;
+    color: #e0e7ff;
+    font-family: 'Inter', sans-serif;
+  }
+  .newsletter-container { background-color: rgba(255,255,255,0.05); backdrop-filter: blur(5px); border-color: rgba(255,255,255,0.1) !important; }
+  .section-card { background-color: rgba(0,0,0,0.3) !important; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); transition: transform 0.2s, box-shadow 0.2s; height: 100%; border-color: rgba(255,255,255,0.1) !important; }
+  .section-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
+  .text-gray-900, .text-gray-800, .text-gray-700 { color: #e0e7ff !important; }
+  .border-cyan-700 { border-color: #0e7490 !important; }
+  .libutton { display: flex; flex-direction: column; justify-content: center; padding: 7px; text-align: center; outline: none; text-decoration: none !important; color: #ffffff !important; width: 300px; height: 50px; border-radius: 30px; background-color: #0A66C2; font-family: "SF Pro Text", Helvetica, sans-serif; font-weight: 500; transition: background-color 0.15s ease-in-out; }
+  .libutton:hover { background-color: #00FFFF; }
+  hr { border-top: 2px solid rgba(255,255,255,0.1) !important; margin-top: 40px !important; border-bottom: none !important; margin-bottom: 40px !important; }
+  h1 { text-align: center; color: #ffffff !important; font-family: georgia; }
+  h2 { text-align: center; color: #0080ff !important; font-family: georgia; }
+  h3 { text-align: left; color: #66B2FF !important; font-family: georgia; }
+  .edition-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid #0e7490;
+    border-radius: 99px;
+    padding: 4px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #38bdf8;
+  }
+</style>
+</head>
+<body class="p-4 sm:p-8">
+<div class="newsletter-container max-w-5xl mx-auto rounded-xl shadow-2xl p-6 sm:p-10 border">
+
+  <div class="flex justify-center items-center w-full py-0">
+    <img src="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png"
+         alt="CyberSense Newsletter Icon"
+         class="rounded-full shadow-xl w-48 h-48 object-cover"
+         onerror="this.onerror=null; this.src='https://placehold.co/192x192/4f46e5/ffffff?text=CS'">
+  </div>
+
+  <div class="flex justify-between items-center mt-4 mb-2">
+    <span class="edition-badge">Edition 132</span>
+    <span class="text-gray-700 text-base font-semibold">May 26, 2026</span>
+  </div>
+
+  <section class="mb-5 pb-6 border-b-4 border-cyan-700"></section>
+  <header class="text-center mb-4 pb-5 border-b-4 border-cyan-700">
+    <h1 class="text-4xl sm:text-5xl font-extrabold leading-tight tracking-tight">Daily Digital Awareness Brief</h1>
+  </header>
+
+  <div class="mb-8 mt-10">
+    <h2 class="text-4xl sm:text-4xl font-extrabold leading-tight tracking-tight text-center">
+      The Trusted Surface Problem: When the Tools You Rely On Become the Attack Vector
+    </h2>
+  </div>
+
+  <section class="mb-12">
+    <p class="text-base text-gray-700 mb-4 leading-relaxed">
+      Today's edition converges on a critical challenge: <strong>the weaponization of familiarity and perceived legitimacy.</strong> Threat actors are not always forcing their way in through novel zero-days. Increasingly, they are exploiting the trust we have already extended — to established software utilities, foundational security platforms, and essential employee systems. The unifying thread across today's incidents is a single, uncomfortable reality: a tool or platform that was safe yesterday may not be safe today.
+    </p>
+    <p class="text-base text-gray-700 leading-relaxed">
+      Organizations and professionals alike must evolve from an assumed trust posture to one of actively verified trust across every digital interaction. Bridging this gap is paramount for maintaining a robust security posture against an evolving threat landscape.
+    </p>
+  </section>
+
+  <div class="mb-8">
+    <div class="section-card p-6 rounded-xl border w-full">
+      <h2 class="text-3xl font-bold mb-6 flex items-center border-b pb-2">Situational Awareness</h2>
+
+      <h3 class="text-xl font-semibold mb-1">CPUID Website Compromise Delivers STX RAT</h3>
+      <p class="text-gray-800 mb-4 text-sm">
+        Threat actors successfully breached the legitimate CPUID website, a reputable source for system diagnostic tools, enabling the distribution of trojanized versions of popular utilities including CPU-Z and HWMonitor. Unsuspecting users — particularly IT professionals, hardware enthusiasts, and enterprise system administrators who routinely rely on these tools — downloaded what they believed to be legitimate software. Instead, they received the STX remote access trojan, a sophisticated payload capable of enabling remote access, harvesting credentials, and establishing persistent presence within compromised environments. This incident underscores that even trusted vendor websites can become active compromise surfaces, demanding heightened vigilance and hash verification even for routine software acquisitions.
+      </p>
+
+      <hr>
+
+      <h3 class="text-xl font-semibold mb-1">APT28 Leverages Steganography and Cloud C2 in PRISMEX Campaign</h3>
+      <p class="text-gray-800 mb-4 text-sm">
+        The persistent threat group APT28, attributed to Russian state interests, is deploying PRISMEX malware in targeted campaigns against governmental, defense, and allied organizational networks across Ukraine and NATO member states. This campaign demonstrates advanced evasion techniques, notably using steganography to conceal command-and-control communications within seemingly benign image files. PRISMEX routes its C2 traffic through legitimate cloud platforms, allowing it to blend seamlessly into normal network activity and bypass conventional network-layer defenses. This tactic exploits the inherent trust many security controls extend to cloud-origin traffic — highlighting a sophisticated approach to circumventing established security perimeters through channels organizations have deliberately left open.
+      </p>
+
+      <hr>
+
+      <h3 class="text-xl font-semibold mb-1">Storm-2755 Targets Canadian Payroll Systems for Financial Fraud</h3>
+      <p class="text-gray-800 mb-2 text-sm">
+        Cybercriminals operating as Storm-2755 are executing targeted attacks against Canadian employees by redirecting salary direct deposits. These financially motivated operations exploit trust in organizational payroll systems and HR self-service portals. The likely vector involves credential compromise or social engineering tactics targeting access to these sensitive portals, enabling actors to alter banking information. The direct impact is immediate financial harm to individual employees, while organizations face significant liability and reputational damage. Every employee with self-service HR portal access is a potential target — and because payroll changes often go undetected until payday, the response window is deliberately wide.
+      </p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+    <div class="section-card p-6 rounded-xl border">
+      <h2 class="text-2xl font-bold mb-4 flex items-center border-b pb-2">Training Byte</h2>
+      <h3 class="text-xl font-semibold mb-2">Verify Before You Trust the Control: Decrypting the Gap in Assumed Trust</h3>
+      <p class="text-gray-800 mb-3 text-sm">
+        Organizations commonly extend implicit trust to established software platforms and institutional systems. This assumed trust operates on the premise that because a source is recognized, it must be inherently safe. Threat actors specifically target this cognitive vulnerability — exploiting familiarity rather than forcing entry.
+      </p>
+      <p class="text-gray-800 mb-2 text-sm font-semibold">A Three-Layer Response:</p>
+      <p class="text-gray-800 mb-1 text-sm font-semibold">1. Verify Source Integrity, Not Just the Name</p>
+      <ul class="list-disc list-inside space-y-1 text-gray-800 mb-3 text-sm">
+        <li>Always use hash verification (SHA-256) for security or diagnostic tools downloaded from the internet.</li>
+        <li>Bookmark official vendor URLs directly — avoid search engine results for sensitive software downloads.</li>
+        <li>Consult vendor security advisories before installing updates, especially following reports of potential compromises.</li>
+      </ul>
+      <p class="text-gray-800 mb-1 text-sm font-semibold">2. Do Not Extend Unconditional Trust to Cloud Traffic or Familiar File Types</p>
+      <ul class="list-disc list-inside space-y-1 text-gray-800 mb-3 text-sm">
+        <li>Image files and documents hosted on cloud services can carry concealed payloads — steganography is not theoretical.</li>
+        <li>Implement behavioral analysis of cloud service communications, not just blocklist filtering.</li>
+        <li>Apply zero-trust principles to internal tooling, not just external-facing infrastructure.</li>
+      </ul>
+      <p class="text-gray-800 mb-1 text-sm font-semibold">3. Confirm Institutional System Changes Through a Second Channel</p>
+      <ul class="list-disc list-inside space-y-1 text-gray-800 mb-3 text-sm">
+        <li>Mandate out-of-band verification (direct phone call, in-person confirmation) for any changes to payroll or banking information.</li>
+        <li>Train employees to flag and escalate unsolicited prompts to update personal or financial information.</li>
+      </ul>
+      <p class="italic text-sky-500 text-sm">The CPUID compromise illustrates that trust in a known brand name is not the same as verified software integrity. Treat every download as untrusted until proven otherwise.</p>
+    </div>
+
+    <div class="section-card p-6 rounded-xl border">
+      <h2 class="text-2xl font-bold mb-4 flex items-center border-b pb-2">Career Development</h2>
+      <p class="text-gray-800 text-sm leading-relaxed italic" style="color: rgba(255,255,255,0.4) !important;">No new updates for this edition.</p>
+    </div>
+  </div>
+
+  <div class="mb-8">
+    <div class="section-card p-6 rounded-xl border">
+      <h2 class="text-2xl font-bold mb-4 flex items-center border-b pb-2">Modernization and AI Insight</h2>
+      <p class="text-gray-800 text-sm leading-relaxed italic" style="color: rgba(255,255,255,0.4) !important;">No new updates for this edition.</p>
+    </div>
+  </div>
+
+  <div class="mb-8">
+    <div class="section-card p-6 rounded-xl border">
+      <h2 class="text-2xl font-bold mb-4 flex items-center border-b pb-2">Final Thought</h2>
+      <p class="text-gray-800 text-sm leading-relaxed">
+        The ongoing weaponization of trust surfaces represents a significant challenge to digital security. As threat actors continue to innovate, our reliance on assumed trust becomes an increasing liability. By diligently implementing verification protocols, questioning familiar digital touchpoints, and fostering a culture of informed skepticism, organizations can begin bridging the gap between perceived security and actual resilience. The CPUID supply chain compromise, APT28's image-concealed C2 channels, and Storm-2755's payroll redirection campaigns are not isolated incidents — they are a pattern. Trust is the attack surface. Verifying it is the control.
+      </p>
+    </div>
+  </div>
+
+  <footer class="mt-12 pt-6 border-t border-gray-300 text-center">
+    <h3 class="text-lg font-base text-gray-800 text-center mb-2">Did you find this briefing useful?</h3>
+    <div class="mt-4 mb-8 flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">
+      <a class="libutton shadow-md" href="https://cybersense.solutions/newsletter.html#subscribe" target="_blank">Subscribe</a>
+      <button id="shareButton" class="inline-block px-10 py-2 bg-blue-700 text-gray-900 font-medium rounded-full hover:bg-cyan-500 transition duration-150 shadow-md">Share this Brief</button>
+    </div>
+
+    <div class="border-t pt-5 pb-4" style="background:linear-gradient(135deg,rgba(14,165,233,0.06),rgba(56,189,248,0.03));border-radius:8px;margin-bottom:16px;padding:16px 20px;">
+      <p style="font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#38bdf8;margin-bottom:6px;">Mission Advance</p>
+      <p style="font-size:13px;color:#F1F5F9;line-height:1.6;">CyberSense is moving to a dedicated platform. Our daily intelligence briefings, training modules, and threat radar will soon live at <a href="https://cybersense.solutions" style="color:#38bdf8;text-decoration:underline;">cybersense.solutions</a> — built for the teams that can't afford to be caught off guard.</p>
+    </div>
+
+    <div class="border-t pt-4 text-sm">
+      <div style="font-size:22px;font-weight:800;letter-spacing:-0.5px;color:#ffffff;margin-bottom:2px;">CyberSense<span style="color:#00D4FF;">.Solutions</span></div>
+      <p class="mb-3 text-cyan-400" style="font-size:12px;">hello@cybersense.solutions</p>
+
+      <div style="display:flex;justify-content:center;gap:10px;margin-bottom:16px;">
+        <a href="https://www.linkedin.com/company/cybersense-solutions/" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:#0f172a;color:#38bdf8;font-size:13px;font-weight:700;text-decoration:none;">in</a>
+        <a href="https://www.facebook.com/profile.php?id=61570667370162" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:#0f172a;color:#38bdf8;font-size:13px;font-weight:700;text-decoration:none;">f</a>
+        <a href="https://x.com/cybersensesec" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:#0f172a;color:#38bdf8;font-size:13px;font-weight:700;text-decoration:none;">X</a>
+        <a href="https://www.instagram.com/cybersense.solutions/" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:#0f172a;color:#38bdf8;font-size:12px;font-weight:700;text-decoration:none;">ig</a>
+        <a href="https://www.threads.com/@cybersense.solutions" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:#0f172a;color:#38bdf8;font-size:12px;font-weight:700;text-decoration:none;">tt</a>
+      </div>
+
+      <p style="font-size:11px;color:rgba(56,189,248,0.5);">
+        &copy; 2026 CyberSense.Solutions. All content provided for educational and awareness purposes.<br>
+        Veteran-Owned - <strong style="color:rgba(56,189,248,0.7);">Security awareness starts here.</strong>
+      </p>
+    </div>
+  </footer>
+</div>
+
+<script>
+  const shareButton = document.getElementById('shareButton');
+  if (shareButton) {
+    shareButton.addEventListener('click', () => {
+      if (navigator.share) {
+        navigator.share({
+          title: 'CyberSense: Daily Digital Awareness Brief — Edition 132',
+          text: 'The Trusted Surface Problem: When the Tools You Rely On Become the Attack Vector',
+          url: window.location.href
+        }).catch(() => {});
+      } else {
+        navigator.clipboard.writeText(window.location.href).then(() => {
+          shareButton.textContent = 'Link Copied!';
+          setTimeout(() => { shareButton.textContent = 'Share this Brief'; }, 2000);
+        });
+      }
+    });
+  }
+</script>
+</body>
+</html>
