@@ -104,18 +104,22 @@ const rotateAgentToken = (agent_name, token_hash) =>
 
 // ── THREAT RECORDS ─────────────────────────────────────────────────────────────
 
-const createThreatRecord = ({ cve_id, threat_name, severity, cvss_score, category, source_url, raw_data, tags, priority, ingested_by }) =>
-  q1(`INSERT INTO threat_records (id,cve_id,threat_name,severity,cvss_score,category,source_url,raw_data,tags,priority,ingested_by,ingested_at)
-      VALUES (gen_random_uuid(),$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,now()) RETURNING *`,
-    [cve_id, threat_name, severity, cvss_score, category, source_url, JSON.stringify(raw_data), tags, priority, ingested_by]);
+const createThreatRecord = ({ cve_id, threat_name, severity, cvss_score, category, source_url, raw_data, tags, priority, ingested_by, cwe_id, sector_tags }) =>
+  q1(`INSERT INTO threat_records (id,cve_id,threat_name,severity,cvss_score,category,source_url,raw_data,tags,priority,ingested_by,ingested_at,cwe_id,sector_tags)
+      VALUES (gen_random_uuid(),$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,now(),$11,$12) RETURNING *`,
+    [cve_id, threat_name, severity, cvss_score, category, source_url, JSON.stringify(raw_data), tags, priority, ingested_by, cwe_id || null, sector_tags || []]);
 
 const getThreatRecords = ({ page = 1, limit = 50, severity, blurAfter = 7 } = {}) => {
   const offset = (page - 1) * limit;
-  const where = severity ? 'WHERE severity=$3' : '';
+  const where = severity ? 'WHERE t.severity=$3' : '';
   const params = severity ? [limit, offset, severity] : [limit, offset];
-  return q(`SELECT id,threat_name,cve_id,severity,cvss_score,category,tags,priority,ingested_at,article_id,
-              CASE WHEN article_id IS NOT NULL THEN true ELSE false END AS has_article
-            FROM threat_records ${where} ORDER BY ingested_at DESC LIMIT $1 OFFSET $2`, params);
+  return q(`SELECT t.id,t.threat_name,t.cve_id,t.severity,t.cvss_score,t.category,t.tags,t.priority,
+              t.ingested_at,t.article_id,t.cwe_id,t.sector_tags,
+              CASE WHEN t.article_id IS NOT NULL THEN true ELSE false END AS has_article,
+              ir.normalized_data->>'threat_category' AS threat_category
+            FROM threat_records t
+            LEFT JOIN intel_repository ir ON ir.source_id = t.id
+            ${where} ORDER BY t.ingested_at DESC LIMIT $1 OFFSET $2`, params);
 };
 
 const getThreatById = (id) => q1('SELECT * FROM threat_records WHERE id=$1', [id]);

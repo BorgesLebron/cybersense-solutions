@@ -27,6 +27,33 @@ const CISA_KEV_URL = 'https://www.cisa.gov/sites/default/files/feeds/known_explo
 const NVD_CVE_URL = 'https://services.nvd.nist.gov/rest/json/cves/2.0';
 const US_CERT_URL = 'https://www.cisa.gov/uscert/ncas/current-activity.xml';
 
+// CWE extraction from NVD weaknesses array
+function cweFromNvd(cve = {}) {
+  for (const w of (cve.weaknesses || [])) {
+    for (const d of (w.description || [])) {
+      if (d.value && d.value.startsWith('CWE-')) return d.value;
+    }
+  }
+  return null;
+}
+
+// Sector inference from free-text fields
+const SECTOR_KEYWORDS = {
+  finance:       ['bank','financ','payment','visa','mastercard','swift','paypal','insurance','brokerage'],
+  technology:    ['microsoft','apple','google','amazon','adobe','cisco','oracle','vmware','linux','windows','android','chrome','firefox','network','web','cloud'],
+  government:    ['government','federal','state','municipal','military','defense','homeland','election','agency','department of'],
+  healthcare:    ['health','hospital','medical','pharma','clinical','patient','medic','hipaa','biotech'],
+  energy:        ['energy','power','grid','oil','gas','utilities','electric','nuclear','pipeline','turbine'],
+  manufacturing: ['manufactur','industrial','factory','production','siemens','rockwell','ics','scada','plc'],
+};
+
+function inferSectorTags(...textParts) {
+  const text = textParts.filter(Boolean).join(' ').toLowerCase();
+  return Object.entries(SECTOR_KEYWORDS)
+    .filter(([, kws]) => kws.some(kw => text.includes(kw)))
+    .map(([sector]) => sector);
+}
+
 // Token management
 
 let _rickToken = null;
@@ -148,6 +175,8 @@ function normalizeNvdRecord(item) {
     raw_data: item,
     tags: ['nvd', 'cve', severityFromCvss(score)],
     priority: score >= 9 ? 'immediate' : 'high',
+    cwe_id: cweFromNvd(cve),
+    sector_tags: inferSectorTags(description),
   };
 }
 
@@ -164,6 +193,8 @@ function normalizeKevRecord(item) {
     raw_data: item,
     tags: ['cisa-kev', 'known-exploited', item.vendorProject, item.product].filter(Boolean),
     priority: 'immediate',
+    cwe_id: null,
+    sector_tags: inferSectorTags(item.vendorProject, item.product, item.notes),
   };
 }
 
@@ -202,6 +233,8 @@ function normalizeUsCertRecords(xml) {
       raw_data: { title, link, description, pubDate },
       tags: ['us-cert', 'current-activity'].concat(cve ? ['cve'] : []),
       priority: 'high',
+      cwe_id: null,
+      sector_tags: inferSectorTags(title, description),
     };
   }).filter(Boolean);
 }

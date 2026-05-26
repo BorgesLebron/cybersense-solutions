@@ -755,7 +755,7 @@ function renderTop10(threats) {
   if (!threats.length) { body.innerHTML = '<div class="top10-empty">No threat data available.</div>'; return; }
   const counts = {};
   threats.forEach(t => {
-    const k = fmtCat(t.category);
+    const k = fmtCat(t.threat_category || t.category);
     counts[k] = (counts[k]||0) + 1;
   });
   const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,10);
@@ -1171,6 +1171,37 @@ const HM_ROWS = [
   { name:'Misconfiguration',    vals:[9,8,5,7] },
   { name:'Access Control',      vals:[6,9,7,8] },
 ];
+const CWE_CATEGORY_MAP = {
+  'CWE-89':'Injection','CWE-79':'Injection','CWE-94':'Injection','CWE-917':'Injection','CWE-77':'Injection','CWE-78':'Injection',
+  'CWE-119':'Memory Corruption','CWE-125':'Memory Corruption','CWE-787':'Memory Corruption','CWE-416':'Memory Corruption','CWE-476':'Memory Corruption','CWE-122':'Memory Corruption',
+  'CWE-287':'Authentication','CWE-306':'Authentication','CWE-307':'Authentication','CWE-798':'Authentication','CWE-521':'Authentication',
+  'CWE-326':'Cryptographic','CWE-327':'Cryptographic','CWE-338':'Cryptographic','CWE-295':'Cryptographic',
+  'CWE-16':'Misconfiguration','CWE-732':'Misconfiguration','CWE-276':'Misconfiguration','CWE-1188':'Misconfiguration',
+  'CWE-284':'Access Control','CWE-269':'Access Control','CWE-862':'Access Control','CWE-863':'Access Control','CWE-22':'Access Control',
+};
+function hmInferTier(t) {
+  const text = ((t.tags||[]).join(' ')+' '+(t.threat_name||'')).toLowerCase();
+  if(text.includes('edge')||text.includes('router')||text.includes('iot')||text.includes('firmware')) return 'Edge Devices';
+  if(text.includes('cloud')||text.includes('aws')||text.includes('azure')||text.includes('gcp')) return 'Cloud';
+  if(text.includes('kernel')||text.includes('os ')||text.includes('windows')||text.includes('linux')) return 'OS / Kernel';
+  return 'Software';
+}
+function computeHeatmapRows(threats) {
+  const cats = ['Injection','Memory Corruption','Authentication','Cryptographic','Misconfiguration','Access Control'];
+  const matrix = {};
+  cats.forEach(c=>{ matrix[c]={}; HM_TIERS.forEach(ti=>{ matrix[c][ti]=0; }); });
+  threats.forEach(t=>{
+    if(!t.cwe_id) return;
+    const cat = CWE_CATEGORY_MAP[t.cwe_id];
+    if(!cat) return;
+    matrix[cat][hmInferTier(t)]++;
+  });
+  const maxVal = Math.max(...cats.flatMap(c=>HM_TIERS.map(ti=>matrix[c][ti])),1);
+  const rows = cats.map(name=>({ name, vals:HM_TIERS.map(ti=>Math.round(matrix[name][ti]/maxVal*10)) }))
+    .filter(row=>row.vals.some(v=>v>0));
+  return rows.length ? rows : null;
+}
+let liveHmRows = null;
 function hmColor(v) {
   // 0–10 → low navy to high cyan
   const t = v / 10;
@@ -1180,14 +1211,15 @@ function hmColor(v) {
   const a = 0.25 + t * 0.7;
   return `rgba(${r},${g},${b},${a})`;
 }
-function buildHeatmapHTML(expanded) {
+function buildHeatmapHTML(expanded, rows) {
+  rows = rows || liveHmRows || HM_ROWS;
   const cellPad = expanded ? '10px 14px' : '6px 8px';
   return `<table class="heatmap-tbl" style="${expanded?'font-size:12px;':''}">
     <thead><tr>
       <th style="font-family:var(--cs-mono);">CWE Category</th>
       ${HM_TIERS.map(t=>`<th style="font-family:var(--cs-mono);">${t}</th>`).join('')}
     </tr></thead>
-    <tbody>${HM_ROWS.map(row=>`<tr>
+    <tbody>${rows.map(row=>`<tr>
       <td style="font-family:var(--cs-mono);padding:${cellPad};color:rgba(255,255,255,0.65);">${row.name}</td>
       ${row.vals.map(v=>`<td style="padding:${cellPad};">
         <span class="hm-cell" style="background:${hmColor(v)};color:${v>=7?'rgba(255,255,255,0.9)':'rgba(255,255,255,0.55)'};">${v}</span>
@@ -1195,7 +1227,11 @@ function buildHeatmapHTML(expanded) {
     </tr>`).join('')}</tbody>
   </table>`;
 }
-function renderHeatmap() {
+function renderHeatmap(threats) {
+  if(threats && threats.length) {
+    const computed = computeHeatmapRows(threats);
+    if(computed) liveHmRows = computed;
+  }
   const el = document.getElementById('heatmap-body');
   if (el) el.innerHTML = buildHeatmapHTML(false);
 }
@@ -1208,6 +1244,15 @@ const IND_DATA = {
   data:   [22, 21, 16, 18, 12, 11],
   colors: ['#00d4ff','#4da6ff','#7c6fff','#00c896','#ffd700','#ff8c40'],
 };
+const IND_SECTOR_KEYS = ['finance','technology','government','healthcare','energy','manufacturing'];
+function computeIndustriesData(threats) {
+  const counts = {};
+  IND_SECTOR_KEYS.forEach(k=>{ counts[k]=0; });
+  threats.forEach(t=>{ (t.sector_tags||[]).forEach(tag=>{ if(counts[tag]!==undefined) counts[tag]++; }); });
+  const total = Object.values(counts).reduce((a,b)=>a+b,0);
+  if(!total) return null;
+  return IND_SECTOR_KEYS.map(k=>Math.round(counts[k]/total*100));
+}
 let industriesChart = null;
 function renderIndustriesChart(canvas, legendFontSize) {
   return new Chart(canvas, {
@@ -1234,10 +1279,14 @@ function renderIndustriesChart(canvas, legendFontSize) {
     }
   });
 }
-function renderIndustries() {
+function renderIndustries(threats) {
   const canvas = document.getElementById('chart-industries');
   if (!canvas) return;
   if (industriesChart) { industriesChart.destroy(); industriesChart = null; }
+  if(threats && threats.length) {
+    const liveData = computeIndustriesData(threats);
+    if(liveData) IND_DATA.data = liveData;
+  }
   industriesChart = renderIndustriesChart(canvas, 10);
 }
 
@@ -1429,6 +1478,8 @@ async function loadRadar(user) {
     updateStats(allThreats);
     renderTop10(allThreats);
     renderFeed(allThreats, isSub);
+    renderHeatmap(allThreats);
+    renderIndustries(allThreats);
   } catch(e) {
     console.error('Radar load error:',e);
     document.getElementById('radar-body').innerHTML =
