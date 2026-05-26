@@ -11,10 +11,29 @@
 <link rel="stylesheet" href="auth.css">
 <style>
   .hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;}
-  .hero-video-col{position:relative;height:500px;}
-  .hero-vid-card{position:absolute;border-radius:16px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.08);}
+  .hero-video-col{position:relative;}
+  .hero-media-card{position:relative;min-height:530px;padding:18px;border-radius:22px;background:rgba(5,18,38,0.72);border:1px solid rgba(255,255,255,0.1);box-shadow:0 28px 80px rgba(0,0,0,0.5);overflow:hidden;}
+  .hero-media-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,212,255,0.12),transparent 42%,rgba(245,158,11,0.08));pointer-events:none;}
+  .hero-vid-card{position:absolute;border-radius:16px;overflow:hidden;box-shadow:0 20px 52px rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.1);background:#061329;}
   .hero-vid-card video{width:100%;display:block;object-fit:cover;}
   .hero-vid-label{position:absolute;top:0;left:0;right:0;padding:10px 14px;background:linear-gradient(rgba(0,0,0,0.65),transparent);color:#fff;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+  .hero-mini-radar{position:absolute;left:18px;right:18px;bottom:18px;z-index:3;display:grid;grid-template-columns:92px 1fr;align-items:center;gap:14px;text-decoration:none;border-radius:16px;background:rgba(9,26,54,0.92);border:1px solid rgba(0,212,255,0.22);padding:14px 16px;transition:transform .16s,border-color .16s,background .16s;}
+  .hero-mini-radar:hover{transform:translateY(-2px);border-color:rgba(0,212,255,0.52);background:rgba(12,35,72,0.96);}
+  .mini-radar-orb{position:relative;width:88px;aspect-ratio:1;border-radius:50%;overflow:hidden;background:radial-gradient(circle,rgba(0,212,255,0.18) 0 1px,transparent 2px),repeating-radial-gradient(circle,rgba(0,212,255,0.18) 0 1px,transparent 1px 18px),linear-gradient(90deg,transparent 49%,rgba(0,212,255,0.16) 50%,transparent 51%),linear-gradient(transparent 49%,rgba(0,212,255,0.16) 50%,transparent 51%),rgba(1,12,26,0.9);border:1px solid rgba(0,212,255,0.38);box-shadow:inset 0 0 22px rgba(0,212,255,0.12),0 0 18px rgba(0,212,255,0.1);}
+  .mini-radar-orb::before{content:'';position:absolute;left:50%;top:50%;width:44px;height:1px;transform-origin:left center;transform:rotate(-28deg);background:linear-gradient(90deg,var(--cs-cyan),transparent);box-shadow:0 0 10px var(--cs-cyan);}
+  .mini-radar-orb i{position:absolute;width:6px;height:6px;border-radius:50%;background:#22c55e;box-shadow:0 0 10px rgba(34,197,94,0.9);}
+  .mini-radar-orb i:nth-child(1){left:26px;top:31px;}
+  .mini-radar-orb i:nth-child(2){right:20px;top:38px;background:var(--cs-amber);box-shadow:0 0 10px rgba(245,158,11,0.9);}
+  .mini-radar-orb i:nth-child(3){left:49px;bottom:22px;background:var(--cs-red);box-shadow:0 0 10px rgba(239,68,68,0.9);}
+  .mini-radar-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;}
+  .mini-radar-title{font-size:12px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--cs-cyan);}
+  .mini-radar-link{font-size:12px;font-weight:700;color:rgba(255,255,255,0.72);}
+  .mini-radar-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  .mini-radar-cell{border-radius:10px;background:rgba(255,255,255,0.055);border:1px solid rgba(255,255,255,0.08);padding:8px;}
+  .mini-radar-cell strong{display:block;font-size:16px;color:#fff;line-height:1;}
+  .mini-radar-cell span{display:block;margin-top:5px;font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.5px;}
+  .mini-radar-bar{height:4px;border-radius:99px;background:rgba(255,255,255,0.08);overflow:hidden;margin-top:10px;}
+  .mini-radar-bar span{display:block;height:100%;width:72%;background:linear-gradient(90deg,var(--cs-red),var(--cs-amber),var(--cs-cyan));}
   .home-split{background:#0a1628;padding:72px 24px;}
   .home-split-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;}
   .split-panel-radar .data-table thead th{background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);border-bottom:1px solid rgba(255,255,255,0.08);font-size:11px;letter-spacing:0.8px;}
@@ -23,7 +42,11 @@
   .briefing-dark-card{background:#0f2347;border-radius:16px;padding:28px;}
   @media(max-width:768px){
     .hero-grid{grid-template-columns:1fr;}
-    .hero-video-col{height:340px;margin-top:32px;}
+    .hero-video-col{margin-top:32px;}
+    .hero-media-card{min-height:auto;padding:14px;display:grid;gap:12px;}
+    .hero-vid-card,.hero-mini-radar{position:relative;inset:auto!important;width:100%!important;}
+    .hero-mini-radar{left:auto;right:auto;bottom:auto;grid-template-columns:78px 1fr;}
+    .mini-radar-orb{width:76px;}
     .home-split-grid{grid-template-columns:1fr;}
   }
 </style>
@@ -87,17 +110,36 @@
         </div>
       </div>
       <div class="hero-video-col">
-        <div class="hero-vid-card" style="top:0;left:0;width:82%;z-index:1;">
-          <video controls playsinline>
-            <source src="trainingProducts/videos/threatRadar.mp4" type="video/mp4">
-          </video>
-          <div class="hero-vid-label">Threat Radar</div>
-        </div>
-        <div class="hero-vid-card" style="top:190px;right:0;width:68%;z-index:2;">
-          <video controls playsinline style="width:100%;display:block;margin-top:-28px;">
-            <source src="trainingProducts/videos/amyIntro.mp4" type="video/mp4">
-          </video>
-          <div class="hero-vid-label">Welcome to the Force</div>
+        <div class="hero-media-card">
+          <div class="hero-vid-card" style="top:18px;left:18px;width:78%;z-index:1;">
+            <video controls playsinline>
+              <source src="trainingProducts/videos/threatRadar.mp4" type="video/mp4">
+            </video>
+            <div class="hero-vid-label">Threat Radar</div>
+          </div>
+          <div class="hero-vid-card" style="top:178px;right:18px;width:62%;z-index:2;">
+            <video controls playsinline style="width:100%;display:block;margin-top:-28px;">
+              <source src="trainingProducts/videos/amyIntro.mp4" type="video/mp4">
+            </video>
+            <div class="hero-vid-label">Welcome to the Force</div>
+          </div>
+          <a class="hero-mini-radar" href="radar.html" aria-label="Open the live Threat Radar">
+            <div class="mini-radar-orb" aria-hidden="true">
+              <i></i><i></i><i></i>
+            </div>
+            <div>
+              <div class="mini-radar-head">
+                <span class="mini-radar-title">Mini Threat Radar</span>
+                <span class="mini-radar-link">Open radar -&gt;</span>
+              </div>
+              <div class="mini-radar-grid" aria-hidden="true">
+                <div class="mini-radar-cell"><strong>10</strong><span>Tracked</span></div>
+                <div class="mini-radar-cell"><strong>3</strong><span>Critical</span></div>
+                <div class="mini-radar-cell"><strong>Live</strong><span>Feed</span></div>
+              </div>
+              <div class="mini-radar-bar" aria-hidden="true"><span></span></div>
+            </div>
+          </a>
         </div>
       </div>
     </div>
