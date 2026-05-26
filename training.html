@@ -368,8 +368,8 @@
 
     async function initGlossary() {
       try {
-        const res = await fetch(window.CS_API_BASE + '/api/training/glossary');
-        const json = await res.json();
+        if (!window.CS?.Auth?.apiFetch) throw new Error('Authentication client unavailable');
+        const json = await CS.Auth.apiFetch('/api/training/glossary');
         const terms = (json.data || []).slice().sort((a, b) => String(a.term || '').localeCompare(String(b.term || '')));
         
         if (terms.length === 0) {
@@ -382,7 +382,10 @@
         renderGlossary();
       } catch (e) {
         console.error('Glossary load error:', e);
-        list.innerHTML = '<div class="glossary-empty" style="color:var(--cs-red);">Error loading glossary. Please refresh.</div>';
+        const message = e.code === 'SESSION_EXPIRED'
+          ? 'Sign in with a free account to load the cybersecurity glossary.'
+          : 'Error loading glossary. Please refresh.';
+        list.innerHTML = `<div class="glossary-empty" style="color:var(--cs-red);">${esc(message)}</div>`;
       }
     }
 
