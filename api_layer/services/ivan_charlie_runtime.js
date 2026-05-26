@@ -21,13 +21,21 @@ const API_BASE = () =>
 
 const POLL_WINDOW_HOURS = 12;
 const RECENCY_HOURS = 720;
-const REQUIRED_INNOVATION = 2;
-const REQUIRED_GROWTH = 1;
+
+// Daily intake targets per Hector directive 2026-05-25:
+// Innovation: 6–10 per day (double growth), Growth: 3–5 per day.
+// Each cycle submits all new qualifying items up to the MAX cap.
+// The daily minimum is enforced by runAcquisitionDeliveryCheck in scheduler.js.
+const DAILY_MIN_INNOVATION = 6;
+const DAILY_MAX_INNOVATION = 10;
+const DAILY_MIN_GROWTH     = 3;
+const DAILY_MAX_GROWTH     = 5;
 
 // Tier 1-2: Standards bodies, frontier R&D (Ivan's domain — emerging tech, AI, PQC, hardware)
 // Tier 3-4: Professional development, workforce strategy (Charlie's domain — certs, training, executive alignment)
 // Source taxonomy per scoutsGuide-Innovation&Growth.md
 const FEEDS = [
+  // ── Innovation (Tier-1) ────────────────────────────────────────────────────
   {
     type: 'innovation',
     category: 'ai-security-standards',
@@ -42,10 +50,97 @@ const FEEDS = [
   },
   {
     type: 'innovation',
+    category: 'academic-research',
+    url: 'https://news.mit.edu/rss/research',
+    tags: ['mit-news', 'academic', 'ai', 'innovation', 'tier-1'],
+  },
+  {
+    type: 'innovation',
+    category: 'academic-research',
+    url: 'https://ethz.ch/en/news-and-events/eth-news.rss',
+    tags: ['eth-zurich', 'academic', 'cryptography', 'innovation', 'tier-1'],
+  },
+  {
+    type: 'innovation',
+    category: 'quantum-computing',
+    url: 'https://quantumzeitgeist.com/feed/',
+    tags: ['quantum-zeitgeist', 'quantum', 'pqc', 'innovation', 'tier-1'],
+  },
+  // ── Innovation (Tier-2) ────────────────────────────────────────────────────
+  {
+    type: 'innovation',
     category: 'enterprise-security-research',
     url: 'https://feeds.arstechnica.com/arstechnica/security',
     tags: ['ars-technica', 'research', 'innovation', 'tier-2'],
   },
+  {
+    type: 'innovation',
+    category: 'threat-research',
+    url: 'https://krebsonsecurity.com/feed/',
+    tags: ['krebs', 'threat-research', 'innovation', 'tier-1'],
+  },
+  {
+    type: 'innovation',
+    category: 'security-news',
+    url: 'https://www.darkreading.com/rss.xml',
+    tags: ['dark-reading', 'security-news', 'innovation', 'tier-2'],
+  },
+  {
+    type: 'innovation',
+    category: 'vulnerability-research',
+    url: 'https://www.bleepingcomputer.com/feed/',
+    tags: ['bleeping-computer', 'vulnerabilities', 'innovation', 'tier-2'],
+  },
+  {
+    type: 'innovation',
+    category: 'attack-intelligence',
+    url: 'https://thehackernews.com/feeds/posts/default',
+    tags: ['hacker-news', 'attack-intel', 'innovation', 'tier-2'],
+  },
+  {
+    type: 'innovation',
+    category: 'cloud-security',
+    url: 'https://cloudblog.withgoogle.com/rss/',
+    tags: ['google-cloud', 'cloud', 'ai-security', 'innovation', 'tier-2'],
+  },
+  {
+    type: 'innovation',
+    category: 'ai-hardware',
+    url: 'https://nvidianews.nvidia.com/rss/all.rss',
+    tags: ['nvidia', 'ai-hardware', 'gpu', 'innovation', 'tier-2'],
+  },
+  {
+    type: 'innovation',
+    category: 'threat-intelligence',
+    url: 'https://research.checkpoint.com/feed/',
+    tags: ['checkpoint', 'threat-intel', 'malware', 'innovation', 'tier-2'],
+  },
+  {
+    type: 'innovation',
+    category: 'threat-intelligence',
+    // Note: talosintelligence.com/reputation is the IP lookup tool — using the blog feed instead.
+    url: 'https://blog.talosintelligence.com/feeds/posts/default',
+    tags: ['talos', 'cisco', 'threat-intel', 'innovation', 'tier-2'],
+  },
+  {
+    type: 'innovation',
+    category: 'cloud-security',
+    url: 'https://www.zscaler.com/blogs.rss',
+    tags: ['zscaler', 'zero-trust', 'cloud-security', 'innovation', 'tier-2'],
+  },
+  {
+    type: 'innovation',
+    category: 'ics-ot-security',
+    url: 'https://www.industrialdefender.com/ics-cybersecurity-blog/feed/',
+    tags: ['industrial-defender', 'ics', 'ot', 'critical-infrastructure', 'innovation', 'tier-2'],
+  },
+  {
+    type: 'innovation',
+    category: 'appsec-research',
+    url: 'https://www.aikido.dev/blog/rss.xml',
+    tags: ['aikido', 'appsec', 'devsec', 'innovation', 'tier-2'],
+  },
+  // ── Growth (Tier-3 / Tier-4) ──────────────────────────────────────────────
   {
     type: 'growth',
     category: 'workforce-security',
@@ -57,6 +152,46 @@ const FEEDS = [
     category: 'professional-development',
     url: 'https://www.csoonline.com/feed/',
     tags: ['cso', 'professional-development', 'growth', 'tier-3'],
+  },
+  {
+    type: 'growth',
+    category: 'security-careers',
+    url: 'https://www.helpnetsecurity.com/feed/',
+    tags: ['help-net-security', 'careers', 'growth', 'tier-3'],
+  },
+  {
+    type: 'growth',
+    category: 'certification-training',
+    url: 'https://blog.isc2.org/blog/rss.xml',
+    tags: ['isc2', 'certification', 'professional-development', 'growth', 'tier-3'],
+  },
+  {
+    type: 'growth',
+    category: 'online-learning',
+    // Class Central "The Report" — covers online learning, certifications, career development
+    url: 'https://www.classcentral.com/report/feed/',
+    tags: ['class-central', 'online-learning', 'mooc', 'growth', 'tier-3'],
+  },
+  {
+    type: 'growth',
+    category: 'open-learning',
+    // MIT Open Learning news — covers OCW, MicroMasters, professional programs
+    url: 'https://openlearning.mit.edu/news-insights/rss.xml',
+    tags: ['mit-open-learning', 'ocw', 'academic', 'growth', 'tier-3'],
+  },
+  {
+    type: 'growth',
+    category: 'certification-training',
+    // Cisco NetAcad blog — certifications, CCNA/CCNP, networking career content
+    url: 'https://blog.netacad.com/feed/',
+    tags: ['cisco', 'netacad', 'networking', 'certification', 'growth', 'tier-3'],
+  },
+  {
+    type: 'growth',
+    category: 'ai-training',
+    // NVIDIA Developer blog — Deep Learning Institute, AI certifications, training programs
+    url: 'https://developer.nvidia.com/blog/feed/',
+    tags: ['nvidia', 'dli', 'ai-training', 'certification', 'growth', 'tier-3'],
   },
 ];
 
@@ -186,7 +321,7 @@ async function collectIntelItems() {
     throw new Error(`All innovation/growth feeds failed or produced no recent items: ${errors.join('; ')}`);
   }
 
-  return items;
+  return { items, feedErrors: errors };
 }
 
 async function existingHeadlines(headlines) {
@@ -212,10 +347,11 @@ async function filterNewItems(items) {
   return unique.filter(item => !existing.has(item.headline));
 }
 
+// Submit all new qualifying items up to per-type daily caps.
 function selectRequiredItems(items) {
   return [
-    ...items.filter(item => item.type === 'innovation').slice(0, REQUIRED_INNOVATION),
-    ...items.filter(item => item.type === 'growth').slice(0, REQUIRED_GROWTH),
+    ...items.filter(item => item.type === 'innovation').slice(0, DAILY_MAX_INNOVATION),
+    ...items.filter(item => item.type === 'growth').slice(0, DAILY_MAX_GROWTH),
   ];
 }
 
@@ -241,7 +377,7 @@ async function executeIvanCharlieIngest(task) {
   });
 
   try {
-    const allItems  = await collectIntelItems();
+    const { items: allItems, feedErrors } = await collectIntelItems();
     const newItems  = await filterNewItems(allItems);
     const selected  = selectRequiredItems(newItems);
     const innovationCount = selected.filter(item => item.type === 'innovation').length;
@@ -259,10 +395,6 @@ async function executeIvanCharlieIngest(task) {
       await db.updateTask(task.id, { status: 'complete' });
       console.log(JSON.stringify({ ts, runtime: 'ivan_charlie', event: 'INTEL_INGEST_DEDUPED', task_id: task.id, allItems: allItems.length }));
       return;
-    }
-
-    if (innovationCount < REQUIRED_INNOVATION || growthCount < REQUIRED_GROWTH) {
-      throw new Error(`Incomplete innovation/growth ingest: innovations=${innovationCount}/${REQUIRED_INNOVATION}, growth=${growthCount}/${REQUIRED_GROWTH}`);
     }
 
     const submitted = [];
@@ -285,9 +417,27 @@ async function executeIvanCharlieIngest(task) {
 
     await db.updateTask(task.id, { status: 'complete' });
 
+    // Warn (non-fatal) when this cycle is below minimums — daily totals are
+    // validated at 06:05 CT by runAcquisitionDeliveryCheck in scheduler.js.
+    if (innovationCount < DAILY_MIN_INNOVATION || growthCount < DAILY_MIN_GROWTH) {
+      console.warn(JSON.stringify({
+        ts, runtime: 'ivan_charlie', event: 'CYCLE_BELOW_DAILY_MIN',
+        task_id: task.id,
+        innovation_this_cycle: innovationCount, innovation_min: DAILY_MIN_INNOVATION,
+        growth_this_cycle: growthCount, growth_min: DAILY_MIN_GROWTH,
+        note: 'Below minimum for this cycle — daily totals checked by delivery check at 06:05 CT',
+      }));
+    }
+
+    if (feedErrors.length > 0) {
+      console.warn(JSON.stringify({ ts, runtime: 'ivan_charlie', event: 'FEED_ERRORS', feedErrors }));
+    }
+
     console.log(JSON.stringify({
       ts, runtime: 'ivan_charlie', event: 'INTEL_INGEST_COMPLETE',
       task_id: task.id, submitted,
+      innovation_this_cycle: innovationCount,
+      growth_this_cycle: growthCount,
     }));
   } catch (e) {
     await db.logPipelineEvent({
@@ -335,4 +485,10 @@ async function pollIvanCharlieTasks() {
   }
 }
 
-module.exports = { pollIvanCharlieTasks, ensureIvanCharlieToken, executeIvanCharlieIngest };
+module.exports = {
+  pollIvanCharlieTasks,
+  ensureIvanCharlieToken,
+  executeIvanCharlieIngest,
+  DAILY_MIN_INNOVATION,
+  DAILY_MIN_GROWTH,
+};

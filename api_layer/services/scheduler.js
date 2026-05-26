@@ -15,7 +15,7 @@ const { pollJasonTasks }        = require('./jason_runtime');
 const { pollRobTasks }          = require('./rob_runtime');
 const { pollJeffTasks }         = require('./jeff_runtime');
 const { pollRickTasks }         = require('./rick_runtime');
-const { pollIvanCharlieTasks }  = require('./ivan_charlie_runtime');
+const { pollIvanCharlieTasks, DAILY_MIN_INNOVATION, DAILY_MIN_GROWTH } = require('./ivan_charlie_runtime');
 const { pollBarbaraTasks }      = require('./barbara_runtime');
 const { pollKirbyTasks }        = require('./kirby_runtime');
 const { pollMayaTasks }         = require('./maya_runtime');
@@ -317,36 +317,54 @@ async function runIvanCharlieRuthReminder() {
 // Checks for any intel items submitted by Ivan/Charlie since midnight CT.
 async function runAcquisitionDeliveryCheck() {
   try {
-    const result = await db.pool.query(`
-      SELECT COUNT(*) AS delivered
+    const counts = await db.pool.query(`
+      SELECT
+        COUNT(*) FILTER (WHERE type = 'innovation') AS innovation_count,
+        COUNT(*) FILTER (WHERE type = 'growth')     AS growth_count,
+        COUNT(*)                                    AS total
       FROM intel_items
       WHERE ingested_by = 'Ivan/Charlie'
         AND created_at >= (CURRENT_DATE::TIMESTAMPTZ AT TIME ZONE 'America/Chicago')
-    `).then(r => parseInt(r.rows[0].delivered));
+    `).then(r => ({
+      innovation: parseInt(r.rows[0].innovation_count),
+      growth:     parseInt(r.rows[0].growth_count),
+      total:      parseInt(r.rows[0].total),
+    }));
 
-    if (result === 0) {
+    const innovationShort = counts.innovation < DAILY_MIN_INNOVATION;
+    const growthShort     = counts.growth     < DAILY_MIN_GROWTH;
+
+    if (innovationShort || growthShort) {
       const ts = new Date().toISOString();
-      console.warn(JSON.stringify({ ts, job: 'acquisition_delivery_check', status: 'MISSED', agent: 'Ivan/Charlie' }));
+      const detail = `innovation=${counts.innovation}/${DAILY_MIN_INNOVATION}, growth=${counts.growth}/${DAILY_MIN_GROWTH}`;
+      console.warn(JSON.stringify({ ts, job: 'acquisition_delivery_check', status: 'BELOW_MINIMUM', ...counts, detail }));
       await notifyAgents(['Barret'], {
-        type: 'INTEL_DELIVERY_MISSED',
+        type: 'INTEL_DELIVERY_BELOW_MINIMUM',
         agent: 'Ivan/Charlie',
         deadline: '06:00 CT',
-        message: 'Ivan/Charlie has not delivered any intel items today. Ruth\'s 0615 CT assembly deadline is at risk. (IC6)',
+        innovation_submitted: counts.innovation,
+        innovation_required: DAILY_MIN_INNOVATION,
+        growth_submitted: counts.growth,
+        growth_required: DAILY_MIN_GROWTH,
+        message: `Ivan/Charlie below daily minimum at 0605 CT: ${detail}. Ruth's composition is at risk. (IC6)`,
       });
       await notifyAgents(['Henry'], {
-        type: 'INTEL_DELIVERY_MISSED',
+        type: 'INTEL_DELIVERY_BELOW_MINIMUM',
         agent: 'Ivan/Charlie',
         deadline: '06:00 CT',
-        message: 'Ivan/Charlie delivery to Ruth missed 0600 CT deadline. Barret notified. (IC6)',
+        message: `Ivan/Charlie below daily minimum: ${detail}. Barret notified. (IC6)`,
       });
       await sgMail.send({
         to: OPS_ALERT_EMAIL,
         from: { email: process.env.FROM_EMAIL || 'noreply@cybersense.solutions', name: 'CyberSense.Solutions' },
-        subject: '[OPS ALERT] Ivan/Charlie missed 06:00 CT delivery to Ruth',
-        text: `Acquisition delivery check fired at ${ts}.\n\nIvan/Charlie have not submitted any intel items today. Ruth's 0615 CT briefing assembly deadline is at risk.\n\nBarret and Henry have been notified via the agent fleet.\n\n— CyberSense Scheduler`,
+        subject: '[OPS ALERT] Ivan/Charlie below daily minimum — 06:00 CT',
+        text: `Acquisition delivery check fired at ${ts}.\n\n${detail}\n\nRequired: innovation ≥ ${DAILY_MIN_INNOVATION}, growth ≥ ${DAILY_MIN_GROWTH}.\nRuth's 0615 CT assembly deadline is at risk.\n\nBarret and Henry have been notified.\n\n— CyberSense Scheduler`,
       }).catch(e => console.error(JSON.stringify({ ts, job: 'acquisition_delivery_check', event: 'EMAIL_FAILED', error: e.message })));
     } else {
-      console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'acquisition_delivery_check', status: 'ok', items_today: result }));
+      console.log(JSON.stringify({
+        ts: new Date().toISOString(), job: 'acquisition_delivery_check', status: 'ok',
+        innovation_today: counts.innovation, growth_today: counts.growth, total: counts.total,
+      }));
     }
   } catch (e) {
     console.error(JSON.stringify({ ts: new Date().toISOString(), job: 'acquisition_delivery_check', error: e.message }));
@@ -992,6 +1010,10 @@ function startScheduler() {
     cron.schedule('45 */4 * * *',   runJamesArticleCycle,          { timezone: 'America/Chicago' });
     cron.schedule('45 5 * * *',     runIvanCharlieRuthReminder,    { timezone: 'America/Chicago' });
     cron.schedule('5 6 * * *',      runAcquisitionDeliveryCheck,   { timezone: 'America/Chicago' });
+    // Ivan/Charlie continuous feed — runs every 4 hours to build a rolling backlog.
+    // Each cycle submits all new qualifying items up to DAILY_MAX caps (10 innovation, 5 growth).
+    // Daily minimum (6 innovation, 3 growth) validated by runAcquisitionDeliveryCheck at 06:05 CT.
+    cron.schedule('50 */4 * * *',   pollIvanCharlieTasks,          { timezone: 'America/Chicago' });
     // Training + Sales — Kirby fires at 04:00 CT (30 min before Ruth) on production nights
     cron.schedule('0 4 * * 0-4',    runKirbyDailyCycle,            { timezone: 'America/Chicago' });
     cron.schedule('*/2 4-6 * * 0-4', pollKirbyTasks,               { timezone: 'America/Chicago' });
@@ -1016,8 +1038,7 @@ function startScheduler() {
     cron.schedule('*/2 * * * *',      pollMayaTasks,                { timezone: 'America/Chicago' });
     cron.schedule('0 */4 * * *',     pollRickTasks,                 { timezone: 'America/Chicago' });
     cron.schedule('30 */4 * * *',    pollBarbaraTasks,              { timezone: 'America/Chicago' });
-    cron.schedule('45 5 * * *',      pollIvanCharlieTasks,          { timezone: 'America/Chicago' });
-    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SCHEDULER_STARTED', jobs: 32 }));
+    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SCHEDULER_STARTED', jobs: 33 }));
   } catch (e) {
     console.warn('node-cron not installed — scheduler disabled. Install with: npm install node-cron');
   }
