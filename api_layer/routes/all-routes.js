@@ -1137,6 +1137,88 @@ adminRouter.post('/trigger/maya-approve', requireAdminToken(['gm']), async (req,
   } catch (e) { next(e); }
 });
 
+const ARTICLE_TRIGGER_STAGES = {
+  Jason: ['draft'],
+  Rob: ['dev_edit'],
+  Jeff: ['eic_review'],
+  Maya: ['qa', 'maya'],
+};
+
+async function refreshArticleAgentTasks(agentName, taskType) {
+  const stages = ARTICLE_TRIGGER_STAGES[agentName] || [];
+  const result = await db.pool.query(`
+    WITH candidates AS (
+      SELECT DISTINCT ON (t.content_id) t.id
+      FROM agent_tasks t
+      JOIN articles a ON a.id = t.content_id
+      WHERE t.agent_name = $1
+        AND t.task_type = $2
+        AND t.content_type = 'article'
+        AND t.status IN ('queued', 'failed', 'escalated')
+        AND a.pipeline_status::text = ANY($3)
+      ORDER BY t.content_id, t.started_at DESC NULLS LAST, t.id DESC
+    )
+    UPDATE agent_tasks t
+    SET status = 'queued',
+        started_at = now(),
+        completed_at = NULL,
+        error_message = NULL
+    WHERE t.id IN (SELECT id FROM candidates)
+    RETURNING t.id, t.content_id
+  `, [agentName, taskType, stages]);
+  return result.rowCount || result.rows.length;
+}
+
+// ── Intel article pipeline triggers (GM only) ─────────────────────────────────
+// Manual recovery controls for James -> Jason -> Rob -> Jeff -> Maya. Downstream
+// triggers re-queue the latest stale/failed/escalated task per active article,
+// then run the standard runtime poller in-process.
+
+adminRouter.post('/trigger/article-james', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    const { runJamesArticleCycle, pollJamesTasks } = require('../services/scheduler');
+    await runJamesArticleCycle();
+    await pollJamesTasks();
+    res.json({ triggered: true, agent: 'James', message: 'James article cycle triggered. Ready-for-intel content will draft if capacity allows.' });
+  } catch (e) { next(e); }
+});
+
+adminRouter.post('/trigger/article-jason', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    const refreshed = await refreshArticleAgentTasks('Jason', 'dev_edit');
+    const { pollJasonTasks } = require('../services/jason_runtime');
+    await pollJasonTasks();
+    res.json({ triggered: true, agent: 'Jason', refreshed, message: `Jason article edit triggered. ${refreshed} stale or blocked task${refreshed === 1 ? '' : 's'} refreshed.` });
+  } catch (e) { next(e); }
+});
+
+adminRouter.post('/trigger/article-rob', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    const refreshed = await refreshArticleAgentTasks('Rob', 'eic_review_article');
+    const { pollRobTasks } = require('../services/rob_runtime');
+    await pollRobTasks();
+    res.json({ triggered: true, agent: 'Rob', refreshed, message: `Rob article EIC review triggered. ${refreshed} stale or blocked task${refreshed === 1 ? '' : 's'} refreshed.` });
+  } catch (e) { next(e); }
+});
+
+adminRouter.post('/trigger/article-jeff', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    const refreshed = await refreshArticleAgentTasks('Jeff', 'qa_article');
+    const { pollJeffTasks } = require('../services/jeff_runtime');
+    await pollJeffTasks();
+    res.json({ triggered: true, agent: 'Jeff', refreshed, message: `Jeff article QA triggered. ${refreshed} stale or blocked task${refreshed === 1 ? '' : 's'} refreshed.` });
+  } catch (e) { next(e); }
+});
+
+adminRouter.post('/trigger/article-maya', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    const refreshed = await refreshArticleAgentTasks('Maya', 'approve_article');
+    const { pollMayaTasks } = require('../services/maya_runtime');
+    await pollMayaTasks();
+    res.json({ triggered: true, agent: 'Maya', refreshed, message: `Maya article approval triggered. ${refreshed} stale or blocked task${refreshed === 1 ? '' : 's'} refreshed.` });
+  } catch (e) { next(e); }
+});
+
 adminRouter.get('/pipeline/controls-status', requireAdminToken(), async (req, res, next) => {
   try {
     const [trainingByte, briefing, barbaraQueue, pendingDistribution] = await Promise.all([

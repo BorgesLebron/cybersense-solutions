@@ -37,6 +37,16 @@ jest.mock('../services/agents', () => ({
   triggerEscalationCheck: jest.fn(),
 }));
 
+jest.mock('../services/scheduler', () => ({
+  runJamesArticleCycle: jest.fn(),
+  pollJamesTasks: jest.fn(),
+}));
+
+jest.mock('../services/jason_runtime', () => ({ pollJasonTasks: jest.fn() }));
+jest.mock('../services/rob_runtime', () => ({ pollRobTasks: jest.fn() }));
+jest.mock('../services/jeff_runtime', () => ({ pollJeffTasks: jest.fn() }));
+jest.mock('../services/maya_runtime', () => ({ pollMayaTasks: jest.fn() }));
+
 describe('Agent Status and Command Center Integration', () => {
   let adminToken;
 
@@ -228,6 +238,43 @@ describe('Agent Status and Command Center Integration', () => {
       agent_name: 'Rob',
     });
     expect(res.body.generated_at).toEqual(expect.any(String));
+  });
+
+  test('POST /api/admin/trigger/article-james runs the guarded James article cycle', async () => {
+    const scheduler = require('../services/scheduler');
+    scheduler.runJamesArticleCycle.mockResolvedValueOnce();
+    scheduler.pollJamesTasks.mockResolvedValueOnce();
+
+    const res = await request(app)
+      .post('/api/admin/trigger/article-james')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.statusCode).toEqual(200);
+    expect(scheduler.runJamesArticleCycle).toHaveBeenCalledTimes(1);
+    expect(scheduler.pollJamesTasks).toHaveBeenCalledTimes(1);
+    expect(res.body).toMatchObject({
+      triggered: true,
+      agent: 'James',
+    });
+  });
+
+  test('POST /api/admin/trigger/article-jason refreshes stale article tasks before polling', async () => {
+    const { pollJasonTasks } = require('../services/jason_runtime');
+    db.pool.query.mockResolvedValueOnce({ rowCount: 2, rows: [{ id: 'task-1' }, { id: 'task-2' }] });
+    pollJasonTasks.mockResolvedValueOnce();
+
+    const res = await request(app)
+      .post('/api/admin/trigger/article-jason')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.statusCode).toEqual(200);
+    expect(db.pool.query).toHaveBeenCalledWith(expect.stringContaining("t.agent_name = $1"), ['Jason', 'dev_edit', ['draft']]);
+    expect(pollJasonTasks).toHaveBeenCalledTimes(1);
+    expect(res.body).toMatchObject({
+      triggered: true,
+      agent: 'Jason',
+      refreshed: 2,
+    });
   });
 
   test('PATCH /api/pipeline/articles/:id/status dispatches Rob after Jason reaches dev_edit', async () => {
