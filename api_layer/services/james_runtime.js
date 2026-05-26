@@ -200,11 +200,11 @@ async function getNextIntelArticleCandidate() {
       AND r.source_type IN ('innovation','growth','policy','threat')
       AND COALESCE(i.article_id, t.article_id) IS NULL
     ORDER BY CASE r.source_type
+      WHEN 'threat'     THEN 1
       WHEN 'innovation' THEN 1
-      WHEN 'growth' THEN 2
-      WHEN 'policy' THEN 3
-      WHEN 'threat' THEN 4
-      ELSE 5
+      WHEN 'growth'     THEN 1
+      WHEN 'policy'     THEN 2
+      ELSE 3
     END, r.processed_at ASC
     LIMIT 1
   `).then(r => r.rows[0] || null);
