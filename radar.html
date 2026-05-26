@@ -127,9 +127,11 @@
 .rdr-search{background:#04080f;border:1px solid rgba(255,255,255,0.10);border-radius:7px;color:rgba(255,255,255,0.65);padding:6px 9px;font-size:11px;flex:1;outline:none;}
 .rdr-search:focus{border-color:var(--cs-border-glow);}
 .rdr-search::placeholder{color:var(--cs-dimmer);}
-.rdr-feed-scroll{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(0,212,255,0.15) transparent;}
-.rdr-feed-scroll::-webkit-scrollbar{width:3px;}
-.rdr-feed-scroll::-webkit-scrollbar-thumb{background:rgba(0,212,255,0.2);border-radius:2px;}
+.rdr-feed-scroll{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(0,212,255,0.35) rgba(255,255,255,0.04);}
+.rdr-feed-scroll::-webkit-scrollbar{width:5px;}
+.rdr-feed-scroll::-webkit-scrollbar-track{background:rgba(255,255,255,0.03);border-radius:3px;}
+.rdr-feed-scroll::-webkit-scrollbar-thumb{background:rgba(0,212,255,0.35);border-radius:3px;}
+.rdr-feed-scroll::-webkit-scrollbar-thumb:hover{background:rgba(0,212,255,0.55);}
 .rdr-tbl{width:100%;border-collapse:collapse;}
 .rdr-tbl th{padding:8px 10px;font-size:9px;letter-spacing:.8px;font-weight:700;text-transform:uppercase;color:var(--cs-dimmer);border-bottom:1px solid rgba(255,255,255,0.05);text-align:left;position:sticky;top:0;background:var(--cs-panel);z-index:1;}
 .rdr-tbl td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle;}
@@ -368,7 +370,7 @@
       </div>
 
       <!-- Col C: Live Radar Feed -->
-      <div class="rdr-panel rdr-panel-flex" style="min-height:520px;">
+      <div class="rdr-panel rdr-panel-flex" style="height:520px;">
         <div class="rdr-panel-hdr" onclick="expandPanel('feed')">
           <span class="live-dot" style="flex-shrink:0;"></span>
           <span>Live Radar Feed</span>
