@@ -76,7 +76,7 @@ Answer: A
     rotateTokenMock.mockRestore();
   });
 
-  test('Kirby transitions training module to ready_for_html after creation', async () => {
+  test('Kirby transitions training module to published after creation', async () => {
     const mockContent = `
 ## Why This Matters:
 This is a test explanation.
@@ -109,7 +109,7 @@ Q? A) Opt1 B) Opt2 C) Opt3 Answer: A
     await kirby.pollKirbyTasks();
 
     expect(createModuleMock).toHaveBeenCalled();
-    expect(advanceStatusMock).toHaveBeenCalledWith('new-byte-id', 'ready_for_html');
+    expect(advanceStatusMock).toHaveBeenCalledWith('new-byte-id', 'published');
     expect(updateTaskMock).toHaveBeenCalledWith('task-1', expect.objectContaining({ status: 'complete' }));
 
     // Clean up mocks

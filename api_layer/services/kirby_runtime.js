@@ -187,7 +187,10 @@ async function produceDailyTrainingByte(task) {
     });
 
     // 4. Update status and notify
-    await db.advanceModuleStatus(byte.id, 'ready_for_html');
+    // Advance directly to 'published' so Ruth's selectCompositionItems query
+    // can find the byte. Mario's HTML rendering step (ready_for_html → html_ready)
+    // is for the training portal and runs independently — it does not gate Ruth.
+    await db.advanceModuleStatus(byte.id, 'published');
     
     // 5. Post to meeting (Gemma task) — non-critical, must not fail the cycle
     try {
