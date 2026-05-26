@@ -118,7 +118,7 @@ function parseH3Items(sectionText) {
 
 function parseBodyMd(body_md) {
   const sections = {};
-  for (const raw of body_md.split(/^##\s+/m)) {
+  for (const raw of body_md.split(/^###\s+/m)) {
     if (!raw.trim()) continue;
     const nl = raw.indexOf('\n');
     if (nl === -1) continue;
