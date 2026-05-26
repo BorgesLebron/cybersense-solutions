@@ -5,31 +5,20 @@
 // tasks, applies an LLM structural edit, updates the article body, and advances
 // the article to dev_edit so Rob can perform EIC review.
 
-const crypto = require('crypto');
-const jwt    = require('jsonwebtoken');
-const { createGoogleGenerativeAI } = require('@ai-sdk/google');
-const { generateText } = require('ai');
-const db     = require('../db/queries');
+const crypto    = require('crypto');
+const jwt       = require('jsonwebtoken');
+const Anthropic = require('@anthropic-ai/sdk');
+const db        = require('../db/queries');
 const { notifyAgents } = require('./agents');
 
 const API_BASE = () =>
   process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
 
 const POLL_WINDOW_HOURS = 24;
-const DEFAULT_BRAIN_MODEL = 'gemini-2.5-flash';
+const JASON_MODEL = process.env.JASON_BRAIN_MODEL || 'claude-haiku-4-5-20251001';
 
-function getJasonBrain() {
-  const apiKey = process.env.JASON_BRAIN_API_KEY ||
-    process.env.INTEL_EDITORIAL_BRAIN_API_KEY ||
-    process.env.EDITORIAL_BRAIN_API_KEY ||
-    process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-
-  if (!apiKey) {
-    throw new Error('MISSING_JASON_BRAIN_API_KEY: Jason cannot perform Intel developmental editing without an LLM brain.');
-  }
-
-  const googleAI = createGoogleGenerativeAI({ apiKey });
-  return googleAI(process.env.JASON_BRAIN_MODEL || process.env.INTEL_EDITORIAL_BRAIN_MODEL || process.env.EDITORIAL_BRAIN_MODEL || DEFAULT_BRAIN_MODEL);
+function getJasonClient() {
+  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 }
 
 const JASON_SYSTEM_PROMPT = `
@@ -149,11 +138,13 @@ async function applyJasonEdit(article) {
   if (!article.section) issues.push('section missing');
   if (issues.length > 0) return { issues };
 
-  const { text } = await generateText({
-    model: getJasonBrain(),
-    system: JASON_SYSTEM_PROMPT,
-    prompt: buildJasonPrompt(article),
+  const msg = await getJasonClient().messages.create({
+    model:      JASON_MODEL,
+    max_tokens: 2048,
+    system:     JASON_SYSTEM_PROMPT,
+    messages:   [{ role: 'user', content: buildJasonPrompt(article) }],
   });
+  const text = (msg.content[0]?.text || '').trim();
 
   const body_md = (text || '').trim();
   const llmIssues = validateIntelArticleDraft(body_md);

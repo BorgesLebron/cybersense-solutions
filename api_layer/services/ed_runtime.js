@@ -11,30 +11,20 @@
 //
 // Run within the main server process — polled by the scheduler cron.
 
-const crypto = require('crypto');
-const jwt    = require('jsonwebtoken');
-const { createGoogleGenerativeAI } = require('@ai-sdk/google');
-const { generateText } = require('ai');
-const db     = require('../db/queries');
+const crypto    = require('crypto');
+const jwt       = require('jsonwebtoken');
+const Anthropic = require('@anthropic-ai/sdk');
+const db        = require('../db/queries');
 const { notifyAgents } = require('./agents');
 
 const API_BASE = () =>
   process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
 
 const POLL_WINDOW_HOURS = 12;
-const DEFAULT_BRAIN_MODEL = 'gemini-2.5-flash';
+const ED_MODEL = process.env.ED_BRAIN_MODEL || 'claude-sonnet-4-6';
 
-function getEdBrain() {
-  const apiKey = process.env.ED_BRAIN_API_KEY ||
-    process.env.EDITORIAL_BRAIN_API_KEY ||
-    process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-
-  if (!apiKey) {
-    throw new Error('MISSING_ED_BRAIN_API_KEY: Ed cannot perform EIC review without an LLM brain.');
-  }
-
-  const googleAI = createGoogleGenerativeAI({ apiKey });
-  return googleAI(process.env.ED_BRAIN_MODEL || process.env.EDITORIAL_BRAIN_MODEL || DEFAULT_BRAIN_MODEL);
+function getEdClient() {
+  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 }
 
 const ED_SYSTEM_PROMPT = `
@@ -63,13 +53,15 @@ Output only the final newsletter text in Markdown. Do not include meta-commentar
 `.trim();
 
 function buildEdPrompt(briefing) {
+  const trainingByteBlock = briefing.training_byte_body_md
+    ? `Training Byte — reproduce this content exactly in the Training Byte section (title: "${briefing.training_byte_title}"):\n\n${briefing.training_byte_body_md}`
+    : `Training byte ID: ${briefing.training_byte_id || 'missing'} — write a Training Byte aligned to today's threats`;
+
   return `
 Edition date: ${briefing.edition_date}
 Current subject line: ${briefing.subject_line}
-Threat source IDs: ${(briefing.threat_item_ids || []).join(', ')}
-Innovation source IDs: ${(briefing.innovation_item_ids || []).join(', ')}
-Growth source ID: ${briefing.growth_item_id || 'missing'}
-Training byte ID: ${briefing.training_byte_id || 'missing'}
+
+${trainingByteBlock}
 
 Peter draft:
 ${briefing.body_md}
@@ -145,9 +137,12 @@ async function apiCall(path, method = 'GET', body = null) {
 
 async function getBriefingForReview(contentId) {
   const row = await db.pool.query(
-    `SELECT id, edition_date, subject_line, body_md, pipeline_status,
-            threat_item_ids, innovation_item_ids, growth_item_id, training_byte_id
-     FROM briefings WHERE id = $1`,
+    `SELECT b.id, b.edition_date, b.subject_line, b.body_md, b.pipeline_status,
+            b.threat_item_ids, b.innovation_item_ids, b.growth_item_id, b.training_byte_id,
+            t.title AS training_byte_title, t.body_md AS training_byte_body_md
+     FROM briefings b
+     LEFT JOIN training_modules t ON t.id = b.training_byte_id
+     WHERE b.id = $1`,
     [contentId]
   ).then(r => r.rows[0] || null);
   return row;
@@ -174,11 +169,13 @@ async function applyEICReview(briefing) {
 
   if (issues.length > 0) return { issues };
 
-  const { text } = await generateText({
-    model: getEdBrain(),
-    system: ED_SYSTEM_PROMPT,
-    prompt: buildEdPrompt(briefing),
+  const msg = await getEdClient().messages.create({
+    model:      ED_MODEL,
+    max_tokens: 4096,
+    system:     ED_SYSTEM_PROMPT,
+    messages:   [{ role: 'user', content: buildEdPrompt(briefing) }],
   });
+  const text = (msg.content[0]?.text || '').trim();
 
   const body_md = (text || '').trim();
   const llmIssues = validateFinalEdition(body_md);

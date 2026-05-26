@@ -5,31 +5,20 @@
 // final editorial review, updates the article body, and advances to qa
 // so Jeff can QA the article.
 
-const crypto = require('crypto');
-const jwt    = require('jsonwebtoken');
-const { createGoogleGenerativeAI } = require('@ai-sdk/google');
-const { generateText } = require('ai');
-const db     = require('../db/queries');
+const crypto    = require('crypto');
+const jwt       = require('jsonwebtoken');
+const Anthropic = require('@anthropic-ai/sdk');
+const db        = require('../db/queries');
 const { notifyAgents } = require('./agents');
 
 const API_BASE = () =>
   process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
 
 const POLL_WINDOW_HOURS = 24;
-const DEFAULT_BRAIN_MODEL = 'gemini-2.5-flash';
+const ROB_MODEL = process.env.ROB_BRAIN_MODEL || 'claude-haiku-4-5-20251001';
 
-function getRobBrain() {
-  const apiKey = process.env.ROB_BRAIN_API_KEY ||
-    process.env.INTEL_EDITORIAL_BRAIN_API_KEY ||
-    process.env.EDITORIAL_BRAIN_API_KEY ||
-    process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-
-  if (!apiKey) {
-    throw new Error('MISSING_ROB_BRAIN_API_KEY: Rob cannot perform Intel EIC review without an LLM brain.');
-  }
-
-  const googleAI = createGoogleGenerativeAI({ apiKey });
-  return googleAI(process.env.ROB_BRAIN_MODEL || process.env.INTEL_EDITORIAL_BRAIN_MODEL || process.env.EDITORIAL_BRAIN_MODEL || DEFAULT_BRAIN_MODEL);
+function getRobClient() {
+  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 }
 
 const ROB_SYSTEM_PROMPT = `
@@ -149,11 +138,13 @@ async function applyRobReview(article) {
   if (!article.section) issues.push('section missing');
   if (issues.length > 0) return { issues };
 
-  const { text } = await generateText({
-    model: getRobBrain(),
-    system: ROB_SYSTEM_PROMPT,
-    prompt: buildRobPrompt(article),
+  const msg = await getRobClient().messages.create({
+    model:      ROB_MODEL,
+    max_tokens: 2048,
+    system:     ROB_SYSTEM_PROMPT,
+    messages:   [{ role: 'user', content: buildRobPrompt(article) }],
   });
+  const text = (msg.content[0]?.text || '').trim();
 
   const body_md = (text || '').trim();
   const llmIssues = validateFinalIntelArticle(body_md);

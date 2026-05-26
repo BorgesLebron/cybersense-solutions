@@ -140,25 +140,28 @@ const FEEDS = [
     url: 'https://www.aikido.dev/blog/rss.xml',
     tags: ['aikido', 'appsec', 'devsec', 'innovation', 'tier-2'],
   },
-  // ── Growth (Tier-3 / Tier-4) ──────────────────────────────────────────────
   {
-    type: 'growth',
-    category: 'workforce-security',
-    url: 'https://www.securityweek.com/category/cybersecurity-business/feed/',
-    tags: ['securityweek', 'workforce', 'growth', 'tier-4'],
+    type: 'innovation',
+    category: 'security-news',
+    url: 'https://www.securityweek.com/feed/',
+    tags: ['securityweek', 'security-news', 'innovation', 'tier-2'],
   },
   {
-    type: 'growth',
-    category: 'professional-development',
+    type: 'innovation',
+    category: 'security-news',
     url: 'https://www.csoonline.com/feed/',
-    tags: ['cso', 'professional-development', 'growth', 'tier-3'],
+    tags: ['cso', 'security-news', 'innovation', 'tier-2'],
   },
   {
-    type: 'growth',
-    category: 'security-careers',
+    type: 'innovation',
+    category: 'security-news',
     url: 'https://www.helpnetsecurity.com/feed/',
-    tags: ['help-net-security', 'careers', 'growth', 'tier-3'],
+    tags: ['help-net-security', 'security-news', 'innovation', 'tier-2'],
   },
+  // ── Growth (Tier-3) — career development, certifications, courses, webinars ──
+  // SecurityWeek / CSO Online / HelpNetSecurity removed: they publish security news
+  // (CVEs, patches, breaches), not career development content. Those feeds belong
+  // in innovation sources, not Charlie's growth lane.
   {
     type: 'growth',
     category: 'certification-training',

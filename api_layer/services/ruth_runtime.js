@@ -92,28 +92,20 @@ async function selectCompositionItems() {
 
   // Training byte: Kirby delivers these as training_modules type='training_byte'.
   // Query directly — not routed through intel_repository.
+  // Deduplication: hard 30-day lookback — never reuse a byte used in the last 30 days
+  // regardless of pool size. Pool-size-relative exclusion caused strict 4-edition
+  // rotation when the pool was small.
   const trainingByte = await db.pool.query(`
-    WITH published AS (
-      SELECT id, title, created_at
-      FROM training_modules
-      WHERE type = 'training_byte'
-        AND pipeline_status = 'published'
-    ),
-    recent_unique AS (
-      SELECT training_byte_id, MAX(edition_date) AS last_used
-      FROM briefings
-      WHERE training_byte_id IS NOT NULL
-      GROUP BY training_byte_id
-    ),
-    exclusions AS (
-      SELECT training_byte_id
-      FROM recent_unique
-      ORDER BY last_used DESC
-      LIMIT GREATEST((SELECT COUNT(*) FROM published) - 1, 0)
-    )
-    SELECT id, title
-    FROM published
-    WHERE id NOT IN (SELECT training_byte_id FROM exclusions)
+    SELECT id, title, body_md
+    FROM training_modules
+    WHERE type = 'training_byte'
+      AND pipeline_status = 'published'
+      AND id NOT IN (
+        SELECT training_byte_id
+        FROM briefings
+        WHERE training_byte_id IS NOT NULL
+          AND edition_date >= CURRENT_DATE - INTERVAL '30 days'
+      )
     ORDER BY created_at DESC
     LIMIT 1
   `).then(r => r.rows[0] || null);
@@ -165,8 +157,10 @@ function formatTopicSelection(threats, innovations, growthItem, trainingByte, ed
       ].filter(Boolean).join('\n');
     })() : '(none available)',
     '',
-    'TRAINING BYTE CONTEXT:',
-    trainingByte ? `Theme alignment: ${trainingByte.title}` : '(select from SA threats)',
+    'TRAINING BYTE — USE THIS CONTENT VERBATIM (do not rewrite or summarize):',
+    trainingByte
+      ? `Title: ${trainingByte.title}\n\n${trainingByte.body_md}`
+      : '(no published byte available — write one aligned to the day\'s SA threats)',
     '',
     '---',
     'After your outline, append one line: SUBJECT: <concise email subject line for this edition, under 60 characters>',
