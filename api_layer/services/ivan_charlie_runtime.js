@@ -196,6 +196,93 @@ const FEEDS = [
     url: 'https://developer.nvidia.com/blog/feed/',
     tags: ['nvidia', 'dli', 'ai-training', 'certification', 'growth', 'tier-3'],
   },
+  // ── Growth additions per Hector directive 2026-05-26 ─────────────────────────
+  {
+    type: 'growth',
+    category: 'online-learning',
+    // Open Culture — curates free courses, lectures, textbooks, and MOOC roundups across disciplines
+    url: 'https://www.openculture.com/feed',
+    tags: ['open-culture', 'free-courses', 'online-learning', 'growth', 'tier-3'],
+  },
+  {
+    type: 'growth',
+    category: 'online-learning',
+    // DigitalDefynd — 96,000+ curated programs blog covering certs, online degrees, career paths
+    url: 'https://digitaldefynd.com/feed/',
+    tags: ['digitaldefynd', 'online-learning', 'programs', 'certifications', 'growth', 'tier-3'],
+  },
+  {
+    type: 'growth',
+    category: 'online-learning',
+    // LearnVern — 150+ free courses and webinars; blog covers workforce upskilling trends
+    url: 'https://www.learnvern.com/blog/feed/',
+    tags: ['learnvern', 'free-courses', 'webinars', 'online-learning', 'growth', 'tier-3'],
+  },
+  {
+    type: 'growth',
+    category: 'open-learning',
+    // OpenLearn — The Open University's free learning platform; publishes new course and learning guides
+    url: 'https://www.open.edu/openlearn/rss.xml',
+    tags: ['openlearn', 'open-university', 'free-courses', 'academic', 'growth', 'tier-3'],
+  },
+  {
+    type: 'growth',
+    category: 'developer-training',
+    // The Odin Project — full-stack developer roadmap blog covering curriculum updates and learning paths
+    url: 'https://www.theodinproject.com/blog.rss',
+    tags: ['odin-project', 'web-development', 'developer-roadmap', 'free-training', 'growth', 'tier-3'],
+  },
+  {
+    type: 'growth',
+    category: 'web-security-training',
+    // PortSwigger Research — Web Security Academy learning content, new labs, and technique write-ups
+    url: 'https://portswigger.net/research/rss',
+    tags: ['portswigger', 'web-security-academy', 'appsec-training', 'growth', 'tier-3'],
+  },
+  {
+    type: 'growth',
+    category: 'cryptography-training',
+    // CryptoHack — interactive cryptography learning platform blog; challenge releases and technique guides
+    url: 'https://blog.cryptohack.org/feed.xml',
+    tags: ['cryptohack', 'cryptography', 'security-training', 'growth', 'tier-3'],
+  },
+  {
+    type: 'growth',
+    category: 'security-training',
+    // pwn.college — binary exploitation and CTF training; blog covers new challenges and skill modules
+    url: 'https://pwn.college/blog/feed.xml',
+    tags: ['pwn-college', 'ctf', 'exploitation', 'security-training', 'growth', 'tier-3'],
+  },
+  {
+    type: 'growth',
+    category: 'certification-training',
+    // Red Hat Training blog — RHCSA/RHCE certification news, course updates, enterprise Linux career content
+    url: 'https://www.redhat.com/en/rss/blog',
+    tags: ['redhat', 'linux', 'rhcsa', 'certification', 'enterprise-training', 'growth', 'tier-3'],
+  },
+  {
+    type: 'growth',
+    category: 'certification-training',
+    // Microsoft Learn community blog — learning paths, cert prep, Azure/M365 career content
+    url: 'https://techcommunity.microsoft.com/t5/s/gxcuf89692/rss/board?board.id=MicrosoftLearnBlog',
+    tags: ['microsoft-learn', 'azure', 'certification', 'career-development', 'growth', 'tier-3'],
+  },
+  // ── Static catalog resources — no RSS feed available ─────────────────────────
+  // These are course directory/catalog pages. Charlie cannot ingest them via RSS.
+  // Integration path: add a dedicated scraper or periodic manual intake task.
+  //
+  // https://www.mindluster.com/            — 300,000 online courses catalog
+  // https://training.fema.gov/is/crslist.aspx — FEMA IS course list (risk mgmt, leadership)
+  // https://ocw.mit.edu/search/            — MIT OCW catalog (MIT news already ingested via open learning feed)
+  // https://pll.harvard.edu/catalog/free   — Harvard free course catalog
+  // https://www.redhat.com/en/services/training/all-courses-exams — Red Hat exam list (static)
+  // https://skillsbuild.org/               — IBM SkillsBuild (no public RSS)
+  // https://cloud.google.com/learn/training — Google Cloud training catalog
+  // https://quantum.cern/introduction-quantum-computing — CERN quantum intro (single static page)
+  // https://qosf.org/                      — Quantum Open Source Foundation (no active feed)
+  // https://monitsharma.github.io/Learn-Quantum-Computing-For-Free/ — GitHub resource page
+  // https://oyc.yale.edu/courses           — Yale Open Courses (static catalog)
+  // https://www.hacksplaining.com/lessons  — Hacksplaining (static lesson set, no RSS)
 ];
 
 // Token management
