@@ -598,7 +598,14 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
             </div>
           </div>
           <div class="card">
-            <div class="card-hd">Normalization &amp; Distribution</div>
+            <div class="card-hd">Acquisition &amp; Normalization</div>
+            <div class="pc-trigger-row">
+              <div class="pc-trigger-info">
+                <div class="pc-trigger-label">Rick — Threat Ingest</div>
+                <div class="pc-trigger-desc" id="pc-rick-desc">NVD + CISA KEV + US-CERT — runs every 4 hours</div>
+              </div>
+              <button class="pc-btn" id="btn-rick" onclick="triggerPipeline('rick-ingest','btn-rick','Run Rick')" disabled>Run Rick</button>
+            </div>
             <div class="pc-trigger-row">
               <div class="pc-trigger-info">
                 <div class="pc-trigger-label">Barbara — Normalize Batch</div>

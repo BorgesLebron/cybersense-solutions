@@ -1125,6 +1125,22 @@ adminRouter.post('/trigger/ruth-cycle', requireAdminToken(['gm']), async (req, r
   } catch (e) { next(e); }
 });
 
+adminRouter.post('/trigger/rick-ingest', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    const task = await db.createTask({
+      agent_name: 'Rick',
+      task_type: 'threat_ingest',
+      content_type: 'system',
+      content_id: null,
+      sla_deadline: null,
+      retry_after: null,
+    });
+    const { pollRickTasks } = require('../services/rick_runtime');
+    await pollRickTasks();
+    res.json({ triggered: true, agent: 'Rick', task_id: task.id, message: 'Rick threat ingest queued and polled. NVD + CISA KEV + US-CERT records will be ingested.' });
+  } catch (e) { next(e); }
+});
+
 adminRouter.post('/trigger/barbara-batch', requireAdminToken(['gm']), async (req, res, next) => {
   try {
     const { pollBarbaraTasks } = require('../services/scheduler');
