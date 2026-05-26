@@ -306,6 +306,72 @@ tasksRouter.get('/sla-breaches', requireAdminToken(['gm', 'analyst']), async (re
 // ── training.js ───────────────────────────────────────────────────────────────
 const trainingRouter = express.Router();
 
+const DEFAULT_TRAINING_GLOSSARY = [
+  {
+    term: 'APT (Advanced Persistent Threat)',
+    definition: 'A sophisticated threat actor that uses multiple attack vectors to gain unauthorized access and maintain long-term persistence within a target network.',
+    category: 'Threat Actors',
+  },
+  {
+    term: 'CVSS (Common Vulnerability Scoring System)',
+    definition: 'A standardized framework for rating vulnerability severity from 0.0 to 10.0 using exploitability, scope, confidentiality, integrity, and availability impact metrics.',
+    category: 'Vulnerability Management',
+  },
+  {
+    term: 'Lateral Movement',
+    definition: 'Post-exploitation techniques attackers use to move through a network from an initial access point toward higher-value systems or data.',
+    category: 'Attacker Techniques',
+  },
+  {
+    term: 'MFA Fatigue Attack',
+    definition: 'A social engineering technique where attackers repeatedly send MFA prompts to a user after obtaining credentials, hoping the user approves one out of confusion or frustration.',
+    category: 'Social Engineering',
+  },
+  {
+    term: 'MITRE ATT&CK',
+    definition: 'A knowledge base of adversary tactics and techniques based on real-world observations, used for threat modeling, detection development, and security assessment.',
+    category: 'Frameworks',
+  },
+  {
+    term: 'Pass-the-Hash',
+    definition: 'An authentication attack where an attacker uses a captured NTLM password hash to authenticate without knowing the plaintext password.',
+    category: 'Attacker Techniques',
+  },
+  {
+    term: 'Phishing',
+    definition: 'A social engineering attack that uses deceptive messages, links, or attachments to trick users into revealing credentials, sending money, or running malicious code.',
+    category: 'Social Engineering',
+  },
+  {
+    term: 'Ransomware',
+    definition: 'Malware that encrypts or otherwise denies access to systems or data and demands payment, often paired with data theft and extortion.',
+    category: 'Threat Vectors',
+  },
+  {
+    term: 'Threat Intelligence',
+    definition: 'Analyzed and contextualized knowledge about existing or emerging adversary capabilities, infrastructure, intent, and behavior that supports defensive decisions.',
+    category: 'Intelligence',
+  },
+  {
+    term: 'Zero-Day Vulnerability',
+    definition: 'A software vulnerability unknown to the vendor or without an available patch at the time it is discovered or exploited.',
+    category: 'Vulnerability Management',
+  },
+];
+
+function filterGlossaryTerms(terms, { category, search, page = 1, limit = 100 } = {}) {
+  const q = String(search || '').trim().toLowerCase();
+  const cat = String(category || '').trim().toLowerCase();
+  const offset = (Math.max(+page || 1, 1) - 1) * Math.max(+limit || 100, 1);
+  const max = Math.min(Math.max(+limit || 100, 1), 500);
+
+  return terms
+    .filter(t => !cat || String(t.category || '').toLowerCase() === cat)
+    .filter(t => !q || `${t.term || ''} ${t.definition || ''}`.toLowerCase().includes(q))
+    .sort((a, b) => String(a.term || '').localeCompare(String(b.term || '')))
+    .slice(offset, offset + max);
+}
+
 trainingRouter.get('/modules', requireUserToken('monthly'), async (req, res, next) => {
   try {
     const { type, phase, zt_module, page = 1, limit = 30 } = req.query;
@@ -337,12 +403,24 @@ trainingRouter.get('/kirby-output/:moduleId', requireAdminToken(), async (req, r
   } catch (e) { next(e); }
 });
 
-trainingRouter.get('/glossary', requireUserToken('free'), async (req, res, next) => {
+trainingRouter.get('/glossary', async (req, res, next) => {
   try {
     const { category, search, page = 1, limit = 100 } = req.query;
-    const terms = await db.listGlossaryTerms({ category, search, page: +page, limit: +limit });
-    res.json({ data: terms, meta: { page: +page, limit: +limit } });
-  } catch (e) { next(e); }
+    let terms = await db.listGlossaryTerms({ category, search, page: +page, limit: +limit });
+    if (!terms.length) {
+      terms = filterGlossaryTerms(DEFAULT_TRAINING_GLOSSARY, { category, search, page: +page, limit: +limit });
+    }
+    res.set('Cache-Control', 'public, max-age=300');
+    res.json({ data: terms, meta: { page: +page, limit: +limit, source: terms.length ? 'database_or_fallback' : 'empty' } });
+  } catch (e) {
+    if (e.code === '42P01') {
+      const { category, search, page = 1, limit = 100 } = req.query;
+      const terms = filterGlossaryTerms(DEFAULT_TRAINING_GLOSSARY, { category, search, page: +page, limit: +limit });
+      res.set('Cache-Control', 'public, max-age=300');
+      return res.json({ data: terms, meta: { page: +page, limit: +limit, source: 'fallback' } });
+    }
+    next(e);
+  }
 });
 
 trainingRouter.post('/glossary', requireAdminToken(['gm', 'training']), async (req, res, next) => {
