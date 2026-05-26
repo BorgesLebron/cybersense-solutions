@@ -4,11 +4,10 @@
 // James's Intel Article acquisition/runtime. Converts ready-for-intel repository
 // items into draft articles, then lets Jason -> Rob -> Jeff -> Maya continue.
 
-const crypto = require('crypto');
-const jwt    = require('jsonwebtoken');
-const { createGoogleGenerativeAI } = require('@ai-sdk/google');
-const { generateText } = require('ai');
-const db     = require('../db/queries');
+const crypto    = require('crypto');
+const jwt       = require('jsonwebtoken');
+const Anthropic = require('@anthropic-ai/sdk');
+const db        = require('../db/queries');
 const { notifyAgents } = require('./agents');
 
 const API_BASE = () =>
@@ -16,20 +15,10 @@ const API_BASE = () =>
 
 const ZERO_UUID = '00000000-0000-0000-0000-000000000000';
 const POLL_WINDOW_HOURS = 24;
-const DEFAULT_BRAIN_MODEL = 'gemini-2.5-flash';
+const JAMES_MODEL = process.env.JAMES_BRAIN_MODEL || 'claude-sonnet-4-6';
 
-function getJamesBrain() {
-  const apiKey = process.env.JAMES_BRAIN_API_KEY ||
-    process.env.INTEL_EDITORIAL_BRAIN_API_KEY ||
-    process.env.EDITORIAL_BRAIN_API_KEY ||
-    process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-
-  if (!apiKey) {
-    throw new Error('MISSING_JAMES_BRAIN_API_KEY: James cannot draft Intel articles without an LLM brain.');
-  }
-
-  const googleAI = createGoogleGenerativeAI({ apiKey });
-  return googleAI(process.env.JAMES_BRAIN_MODEL || process.env.INTEL_EDITORIAL_BRAIN_MODEL || process.env.EDITORIAL_BRAIN_MODEL || DEFAULT_BRAIN_MODEL);
+function getJamesClient() {
+  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 }
 
 const JAMES_SYSTEM_PROMPT = `
@@ -224,11 +213,13 @@ async function getNextIntelArticleCandidate() {
 }
 
 async function applyJamesDraft(item) {
-  const { text } = await generateText({
-    model: getJamesBrain(),
-    system: JAMES_SYSTEM_PROMPT,
-    prompt: buildJamesPrompt(item),
+  const msg = await getJamesClient().messages.create({
+    model:      JAMES_MODEL,
+    max_tokens: 2048,
+    system:     JAMES_SYSTEM_PROMPT,
+    messages:   [{ role: 'user', content: buildJamesPrompt(item) }],
   });
+  const text = (msg.content[0]?.text || '').trim();
 
   const body_md = (text || '').trim();
   const issues = validateJamesDraft(body_md);

@@ -11,11 +11,10 @@
  * Kirby polls agent_tasks for 'production' tasks and listens for signals.
  */
 
-const crypto = require('crypto');
-const jwt    = require('jsonwebtoken');
-const { createGoogleGenerativeAI } = require('@ai-sdk/google');
-const { generateText } = require('ai');
-const db     = require('../db/queries');
+const crypto    = require('crypto');
+const jwt       = require('jsonwebtoken');
+const Anthropic = require('@anthropic-ai/sdk');
+const db        = require('../db/queries');
 const { notifyAgents } = require('./agents');
 const { postAgentStatusToActiveMeeting } = require('./meetings');
 
@@ -23,15 +22,12 @@ const API_BASE = () =>
   process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
 
 const POLL_WINDOW_HOURS = 12;
+const KIRBY_MODEL = process.env.KIRBY_BRAIN_MODEL || 'claude-haiku-4-5-20251001';
 
 // ── LLM Configuration ────────────────────────────────────────────────────────
 
-function getKirbyBrain() {
-  if (!process.env.KIRBY_BRAIN_API_KEY) {
-    throw new Error('MISSING_KIRBY_BRAIN_API_KEY: Kirby cannot function without his LLM brain.');
-  }
-  const googleAI = createGoogleGenerativeAI({ apiKey: process.env.KIRBY_BRAIN_API_KEY });
-  return googleAI('gemini-1.5-flash');
+function getKirbyClient() {
+  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 }
 
 const KIRBY_SYSTEM_PROMPT = `
@@ -120,7 +116,7 @@ async function produceDailyTrainingByte(task) {
     const briefing = await db.pool.query(`
       SELECT * FROM briefings 
       WHERE pipeline_status IN ('draft', 'dev_edit', 'eic_review', 'published')
-      ORDER BY edition_date DESC, created_at DESC
+      ORDER BY edition_date DESC, published_at DESC NULLS LAST
       LIMIT 1
     `).then(r => r.rows[0]);
 
@@ -129,7 +125,7 @@ async function produceDailyTrainingByte(task) {
     if (briefing && briefing.threat_item_ids && briefing.threat_item_ids.length > 0) {
       // Pick one of the threats from the briefing
       sourceIntel = await db.pool.query(`
-        SELECT r.*, t.threat_name, t.severity, t.summary, r.normalized_data
+        SELECT r.*, t.threat_name, t.severity, r.normalized_data
         FROM intel_repository r
         JOIN threat_records t ON t.id = r.source_id
         WHERE r.source_id = ANY($1::uuid[])
@@ -140,7 +136,7 @@ async function produceDailyTrainingByte(task) {
     // Fallback if no briefing found or no threats in it
     if (!sourceIntel) {
       sourceIntel = await db.pool.query(`
-        SELECT r.*, t.threat_name, t.severity, t.summary, r.normalized_data
+        SELECT r.*, t.threat_name, t.severity, r.normalized_data
         FROM intel_repository r
         JOIN threat_records t ON t.id = r.source_id
         WHERE r.source_type = 'threat'
@@ -155,22 +151,22 @@ async function produceDailyTrainingByte(task) {
     }
 
     // 2. Generate content with LLM
-    const brain = getKirbyBrain();
-    const prompt = `
-      THREAT DATA:
-      Name: ${sourceIntel.threat_name}
-      Severity: ${sourceIntel.severity.toUpperCase()}
-      Summary: ${sourceIntel.summary}
-      Raw Details: ${JSON.stringify(sourceIntel.normalized_data || {})}
+    const normalized = sourceIntel.normalized_data || {};
+    const prompt = `THREAT DATA:
+Name: ${sourceIntel.threat_name || normalized.title}
+Severity: ${(sourceIntel.severity || normalized.severity || 'unknown').toUpperCase()}
+Summary: ${normalized.summary || 'See details below'}
+Raw Details: ${JSON.stringify(normalized)}
 
-      Task: Generate a Daily Training Byte based on this threat.
-    `;
+Task: Generate a Daily Training Byte based on this threat.`;
 
-    const { text } = await generateText({
-      model: brain,
-      system: KIRBY_SYSTEM_PROMPT,
-      prompt: prompt,
+    const kirbyMsg = await getKirbyClient().messages.create({
+      model:      KIRBY_MODEL,
+      max_tokens: 512,
+      system:     KIRBY_SYSTEM_PROMPT,
+      messages:   [{ role: 'user', content: prompt }],
     });
+    const text = (kirbyMsg.content[0]?.text || '').trim();
 
     // 3. Create the training module
     const title = `Training Byte: ${sourceIntel.threat_name}`;
