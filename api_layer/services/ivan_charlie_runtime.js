@@ -35,7 +35,7 @@ const DAILY_MAX_GROWTH     = 5;
 // Tier 3-4: Professional development, workforce strategy (Charlie's domain — certs, training, executive alignment)
 // Source taxonomy per scoutsGuide-Innovation&Growth.md
 const FEEDS = [
-  // ── Innovation (Tier-1 / Tier-2) ──────────────────────────────────────────
+  // ── Innovation (Tier-1) ────────────────────────────────────────────────────
   {
     type: 'innovation',
     category: 'ai-security-standards',
@@ -48,6 +48,25 @@ const FEEDS = [
     url: 'https://www.technologyreview.com/feed/',
     tags: ['mit-tech-review', 'ai', 'quantum', 'innovation', 'tier-1'],
   },
+  {
+    type: 'innovation',
+    category: 'academic-research',
+    url: 'https://news.mit.edu/rss/research',
+    tags: ['mit-news', 'academic', 'ai', 'innovation', 'tier-1'],
+  },
+  {
+    type: 'innovation',
+    category: 'academic-research',
+    url: 'https://ethz.ch/en/news-and-events/eth-news.rss',
+    tags: ['eth-zurich', 'academic', 'cryptography', 'innovation', 'tier-1'],
+  },
+  {
+    type: 'innovation',
+    category: 'quantum-computing',
+    url: 'https://quantumzeitgeist.com/feed/',
+    tags: ['quantum-zeitgeist', 'quantum', 'pqc', 'innovation', 'tier-1'],
+  },
+  // ── Innovation (Tier-2) ────────────────────────────────────────────────────
   {
     type: 'innovation',
     category: 'enterprise-security-research',
@@ -78,6 +97,49 @@ const FEEDS = [
     url: 'https://thehackernews.com/feeds/posts/default',
     tags: ['hacker-news', 'attack-intel', 'innovation', 'tier-2'],
   },
+  {
+    type: 'innovation',
+    category: 'cloud-security',
+    url: 'https://cloudblog.withgoogle.com/rss/',
+    tags: ['google-cloud', 'cloud', 'ai-security', 'innovation', 'tier-2'],
+  },
+  {
+    type: 'innovation',
+    category: 'ai-hardware',
+    url: 'https://nvidianews.nvidia.com/rss/all.rss',
+    tags: ['nvidia', 'ai-hardware', 'gpu', 'innovation', 'tier-2'],
+  },
+  {
+    type: 'innovation',
+    category: 'threat-intelligence',
+    url: 'https://research.checkpoint.com/feed/',
+    tags: ['checkpoint', 'threat-intel', 'malware', 'innovation', 'tier-2'],
+  },
+  {
+    type: 'innovation',
+    category: 'threat-intelligence',
+    // Note: talosintelligence.com/reputation is the IP lookup tool — using the blog feed instead.
+    url: 'https://blog.talosintelligence.com/feeds/posts/default',
+    tags: ['talos', 'cisco', 'threat-intel', 'innovation', 'tier-2'],
+  },
+  {
+    type: 'innovation',
+    category: 'cloud-security',
+    url: 'https://www.zscaler.com/blogs.rss',
+    tags: ['zscaler', 'zero-trust', 'cloud-security', 'innovation', 'tier-2'],
+  },
+  {
+    type: 'innovation',
+    category: 'ics-ot-security',
+    url: 'https://www.industrialdefender.com/ics-cybersecurity-blog/feed/',
+    tags: ['industrial-defender', 'ics', 'ot', 'critical-infrastructure', 'innovation', 'tier-2'],
+  },
+  {
+    type: 'innovation',
+    category: 'appsec-research',
+    url: 'https://www.aikido.dev/blog/rss.xml',
+    tags: ['aikido', 'appsec', 'devsec', 'innovation', 'tier-2'],
+  },
   // ── Growth (Tier-3 / Tier-4) ──────────────────────────────────────────────
   {
     type: 'growth',
@@ -102,6 +164,34 @@ const FEEDS = [
     category: 'certification-training',
     url: 'https://blog.isc2.org/blog/rss.xml',
     tags: ['isc2', 'certification', 'professional-development', 'growth', 'tier-3'],
+  },
+  {
+    type: 'growth',
+    category: 'online-learning',
+    // Class Central "The Report" — covers online learning, certifications, career development
+    url: 'https://www.classcentral.com/report/feed/',
+    tags: ['class-central', 'online-learning', 'mooc', 'growth', 'tier-3'],
+  },
+  {
+    type: 'growth',
+    category: 'open-learning',
+    // MIT Open Learning news — covers OCW, MicroMasters, professional programs
+    url: 'https://openlearning.mit.edu/news-insights/rss.xml',
+    tags: ['mit-open-learning', 'ocw', 'academic', 'growth', 'tier-3'],
+  },
+  {
+    type: 'growth',
+    category: 'certification-training',
+    // Cisco NetAcad blog — certifications, CCNA/CCNP, networking career content
+    url: 'https://blog.netacad.com/feed/',
+    tags: ['cisco', 'netacad', 'networking', 'certification', 'growth', 'tier-3'],
+  },
+  {
+    type: 'growth',
+    category: 'ai-training',
+    // NVIDIA Developer blog — Deep Learning Institute, AI certifications, training programs
+    url: 'https://developer.nvidia.com/blog/feed/',
+    tags: ['nvidia', 'dli', 'ai-training', 'certification', 'growth', 'tier-3'],
   },
 ];
 
