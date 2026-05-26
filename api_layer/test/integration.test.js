@@ -26,6 +26,7 @@ jest.mock('../db/queries', () => ({
   logPipelineEvent: jest.fn(),
   createTask: jest.fn(),
   getPublishedArticleStats: jest.fn(),
+  listGlossaryTerms: jest.fn(),
   pool: {
     query: jest.fn(),
   },
@@ -89,6 +90,7 @@ describe('Agent Status and Command Center Integration', () => {
       growth_count: 0,
       training_count: 0,
     });
+    db.listGlossaryTerms.mockResolvedValue([]);
     db.pool.query.mockResolvedValue({ rows: [] });
   });
 
@@ -238,6 +240,34 @@ describe('Agent Status and Command Center Integration', () => {
       agent_name: 'Rob',
     });
     expect(res.body.generated_at).toEqual(expect.any(String));
+  });
+
+  test('GET /api/training/glossary is public and falls back when no DB rows exist', async () => {
+    db.listGlossaryTerms.mockResolvedValueOnce([]);
+
+    const res = await request(app)
+      .get('/api/training/glossary');
+
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.data.length).toBeGreaterThan(0);
+    expect(res.body.data[0]).toEqual(expect.objectContaining({
+      term: expect.any(String),
+      definition: expect.any(String),
+      category: expect.any(String),
+    }));
+  });
+
+  test('GET /api/training/glossary uses fallback if the glossary table is missing', async () => {
+    db.listGlossaryTerms.mockRejectedValueOnce(Object.assign(new Error('relation does not exist'), { code: '42P01' }));
+
+    const res = await request(app)
+      .get('/api/training/glossary?search=phishing');
+
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.meta.source).toEqual('fallback');
+    expect(res.body.data).toEqual([
+      expect.objectContaining({ term: 'Phishing' }),
+    ]);
   });
 
   test('POST /api/admin/trigger/article-james runs the guarded James article cycle', async () => {
