@@ -1902,20 +1902,23 @@ async function triggerPipeline(endpoint, btnId, label) {
 
   try {
     const result = await CS.Auth.apiFetch('/api/admin/trigger/' + endpoint, { method: 'POST' });
-    btn.textContent = 'Done';
+    const ok = result.success !== false;
+
+    btn.textContent = ok ? 'Done' : 'Failed';
     btn.classList.remove('loading');
-    btn.classList.add('success');
+    btn.classList.add(ok ? 'success' : 'error');
 
     const entry = document.createElement('div');
     entry.className = 'pc-log-entry';
-    entry.innerHTML = `<span class="pc-log-ts">${esc(ts)}</span><span class="badge b-green">OK</span><span>${esc(result.message || 'Triggered successfully')}</span>`;
+    entry.innerHTML = `<span class="pc-log-ts">${esc(ts)}</span><span class="badge ${ok ? 'b-green' : 'b-red'}">${ok ? 'OK' : 'FAIL'}</span><span>${esc(result.message || (ok ? 'Triggered successfully' : 'Trigger completed with errors'))}</span>`;
     if (log.firstChild) log.insertBefore(entry, log.firstChild);
     else log.appendChild(entry);
     if (log.textContent.trim() === 'No triggers fired this session.') log.innerHTML = '';
 
     setTimeout(() => {
       btn.textContent = label;
-      btn.classList.remove('success');
+      btn.classList.remove('success', 'error');
+      if (!ok) btn.disabled = false;
       loadPipelineControlStatus();
       loadNewsletterStatus();
     }, 5000);

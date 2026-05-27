@@ -1110,18 +1110,99 @@ adminRouter.post('/briefings/:id/send-test', requireAdminToken(['gm']), async (r
 adminRouter.post('/trigger/kirby-cycle', requireAdminToken(['gm']), async (req, res, next) => {
   try {
     const { runKirbyDailyCycle, pollKirbyTasks } = require('../services/scheduler');
+    const todayCt = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Chicago' });
+
     await runKirbyDailyCycle();
+
+    // Find the queued task just created (or reset failed → queued manually)
+    let task = await db.pool.query(`
+      SELECT id, status, error_message FROM agent_tasks
+      WHERE agent_name = 'Kirby' AND task_type = 'production' AND content_type = 'training_byte'
+        AND status = 'queued'
+        AND started_at > now() - INTERVAL '1 hour'
+      ORDER BY started_at DESC LIMIT 1
+    `).then(r => r.rows[0] || null);
+
+    if (!task) {
+      // runKirbyDailyCycle skipped — check what's already there for today
+      const existing = await db.pool.query(`
+        SELECT id, status, error_message FROM agent_tasks
+        WHERE agent_name = 'Kirby' AND task_type = 'production'
+          AND (started_at AT TIME ZONE 'America/Chicago')::date = $1::date
+        ORDER BY started_at DESC LIMIT 1
+      `, [todayCt]).then(r => r.rows[0] || null);
+
+      if (existing?.status === 'complete') {
+        const byte = await db.pool.query(`
+          SELECT id, title FROM training_modules
+          WHERE type = 'training_byte' AND pipeline_status = 'published'
+            AND (created_at AT TIME ZONE 'America/Chicago')::date = $1::date
+          ORDER BY created_at DESC LIMIT 1
+        `, [todayCt]).then(r => r.rows[0] || null);
+        return res.json({ triggered: false, agent: 'Kirby', success: true, message: `Training byte already produced today: "${byte?.title || 'byte exists'}"` });
+      }
+      if (existing?.status === 'failed') {
+        // Force re-queue the failed task so the poll can pick it up
+        await db.pool.query(`UPDATE agent_tasks SET status='queued', started_at=now(), error_message=NULL WHERE id=$1`, [existing.id]);
+        task = existing;
+      } else {
+        return res.json({ triggered: false, agent: 'Kirby', success: false, message: 'Task creation failed — check migration 013 is applied (training_byte enum) and Railway logs.' });
+      }
+    }
+
     await pollKirbyTasks();
-    res.json({ triggered: true, agent: 'Kirby', message: 'Kirby daily cycle queued and polled. Training byte will be produced.' });
+
+    const result = await db.pool.query('SELECT status, error_message FROM agent_tasks WHERE id=$1', [task.id]).then(r => r.rows[0]);
+    if (result?.status === 'complete') {
+      const byte = await db.pool.query(`
+        SELECT id, title FROM training_modules
+        WHERE type = 'training_byte' AND pipeline_status = 'published'
+          AND (created_at AT TIME ZONE 'America/Chicago')::date = $1::date
+        ORDER BY created_at DESC LIMIT 1
+      `, [todayCt]).then(r => r.rows[0] || null);
+      return res.json({ triggered: true, agent: 'Kirby', success: true, message: `Training byte produced: "${byte?.title || 'byte'}"`, byte_id: byte?.id });
+    }
+    return res.json({
+      triggered: true, agent: 'Kirby', success: false,
+      message: `Kirby task ended as "${result?.status || 'unknown'}": ${result?.error_message || 'check Railway logs'}`,
+    });
   } catch (e) { next(e); }
 });
 
 adminRouter.post('/trigger/ruth-cycle', requireAdminToken(['gm']), async (req, res, next) => {
   try {
     const { runRuthDailyCycle, pollRuthTasks } = require('../services/scheduler');
+    const tomorrowCt = new Date(Date.now() + 86400000).toLocaleDateString('en-CA', { timeZone: 'America/Chicago' });
+
     await runRuthDailyCycle();
     await pollRuthTasks();
-    res.json({ triggered: true, agent: 'Ruth', message: 'Ruth daily cycle queued and polled. Briefing composition will run if training byte is available.' });
+
+    const briefing = await db.pool.query(
+      'SELECT id, edition_number, pipeline_status FROM briefings WHERE edition_date=$1 LIMIT 1',
+      [tomorrowCt]
+    ).then(r => r.rows[0] || null);
+
+    if (briefing) {
+      return res.json({ triggered: true, agent: 'Ruth', success: true, message: `Briefing started — Edition ${briefing.edition_number} now at stage "${briefing.pipeline_status}"`, briefing_id: briefing.id });
+    }
+
+    const task = await db.pool.query(`
+      SELECT status, error_message FROM agent_tasks
+      WHERE agent_name = 'Ruth' AND task_type = 'daily_cycle'
+        AND (started_at AT TIME ZONE 'America/Chicago')::date = (now() AT TIME ZONE 'America/Chicago')::date
+      ORDER BY started_at DESC LIMIT 1
+    `).then(r => r.rows[0] || null);
+
+    if (task?.status === 'in_progress') {
+      return res.json({ triggered: true, agent: 'Ruth', success: true, message: 'Ruth is composing — briefing will appear within ~30s.' });
+    }
+    if (task?.status === 'failed') {
+      return res.json({ triggered: true, agent: 'Ruth', success: false, message: `Ruth failed: ${task.error_message || 'check Railway logs'}` });
+    }
+    if (!task) {
+      return res.json({ triggered: false, agent: 'Ruth', success: false, message: 'Task not created — check if training byte exists and Railway logs.' });
+    }
+    return res.json({ triggered: true, agent: 'Ruth', message: 'Ruth daily cycle queued. Reload Pipeline Controls in ~30s to see result.' });
   } catch (e) { next(e); }
 });
 
@@ -1184,66 +1265,104 @@ adminRouter.post('/trigger/briefing-distribution', requireAdminToken(['gm']), as
 });
 
 // ── Editorial pipeline triggers (GM only) ─────────────────────────────────────
-// Manual override for escalated editorial tasks. Resets started_at so the
-// poll window catches the task regardless of when it was originally created.
+// Creates the task if it doesn't exist yet, re-queues if failed/escalated,
+// then polls immediately. Each trigger is idempotent and works at any time of day.
+
+async function ensureEditorialTask(agentName, taskType, briefingId) {
+  const existing = await db.pool.query(`
+    SELECT id, status, error_message FROM agent_tasks
+    WHERE agent_name = $1 AND task_type = $2 AND content_id = $3
+    ORDER BY started_at DESC LIMIT 1
+  `, [agentName, taskType, briefingId]).then(r => r.rows[0] || null);
+
+  if (!existing) {
+    await db.createTask({ agent_name: agentName, task_type: taskType, content_type: 'briefing', content_id: briefingId, sla_deadline: null });
+    return 'created';
+  }
+  if (['failed', 'escalated'].includes(existing.status)) {
+    await db.pool.query(`UPDATE agent_tasks SET status='queued', started_at=now(), error_message=NULL WHERE id=$1`, [existing.id]);
+    return 're-queued';
+  }
+  return existing.status; // 'queued' | 'in_progress' | 'complete'
+}
+
+async function checkEditorialTaskResult(agentName, taskType, briefingId) {
+  return db.pool.query(`
+    SELECT status, error_message FROM agent_tasks
+    WHERE agent_name = $1 AND task_type = $2 AND content_id = $3
+    ORDER BY started_at DESC LIMIT 1
+  `, [agentName, taskType, briefingId]).then(r => r.rows[0] || null);
+}
 
 adminRouter.post('/trigger/peter-edit', requireAdminToken(['gm']), async (req, res, next) => {
   try {
-    await db.pool.query(`
-      UPDATE agent_tasks SET status = 'queued', started_at = now()
-      WHERE agent_name = 'Peter'
-        AND task_type = 'dev_edit_briefing'
-        AND status IN ('escalated', 'failed')
-        AND started_at > now() - INTERVAL '48 hours'
-    `);
+    const briefing = await db.pool.query(`SELECT id, edition_number, pipeline_status FROM briefings WHERE pipeline_status NOT IN ('published') ORDER BY edition_date DESC LIMIT 1`).then(r => r.rows[0] || null);
+    if (!briefing) return res.json({ triggered: false, agent: 'Peter', success: false, message: 'No active briefing found.' });
+
+    const action = await ensureEditorialTask('Peter', 'dev_edit_briefing', briefing.id);
+    if (action === 'complete') return res.json({ triggered: false, agent: 'Peter', success: true, message: `Peter already completed dev edit for Edition ${briefing.edition_number}.` });
+
     const { pollPeterTasks } = require('../services/peter_runtime');
     await pollPeterTasks();
-    res.json({ triggered: true, agent: 'Peter', message: 'Peter dev edit triggered. Failed/escalated task re-queued and polled.' });
+
+    const result = await checkEditorialTaskResult('Peter', 'dev_edit_briefing', briefing.id);
+    if (result?.status === 'complete') return res.json({ triggered: true, agent: 'Peter', success: true, message: `Peter dev edit complete — Edition ${briefing.edition_number} advanced.` });
+    if (result?.status === 'failed') return res.json({ triggered: true, agent: 'Peter', success: false, message: `Peter failed: ${result.error_message || 'check Railway logs'}` });
+    return res.json({ triggered: true, agent: 'Peter', message: `Task ${action} for Edition ${briefing.edition_number}. Peter is running — reload Pipeline Controls shortly.` });
   } catch (e) { next(e); }
 });
 
 adminRouter.post('/trigger/ed-review', requireAdminToken(['gm']), async (req, res, next) => {
   try {
-    await db.pool.query(`
-      UPDATE agent_tasks SET status = 'queued', started_at = now()
-      WHERE agent_name = 'Ed'
-        AND task_type = 'eic_review_briefing'
-        AND status IN ('escalated', 'failed')
-        AND started_at > now() - INTERVAL '48 hours'
-    `);
+    const briefing = await db.pool.query(`SELECT id, edition_number, pipeline_status FROM briefings WHERE pipeline_status NOT IN ('published') ORDER BY edition_date DESC LIMIT 1`).then(r => r.rows[0] || null);
+    if (!briefing) return res.json({ triggered: false, agent: 'Ed', success: false, message: 'No active briefing found.' });
+
+    const action = await ensureEditorialTask('Ed', 'eic_review_briefing', briefing.id);
+    if (action === 'complete') return res.json({ triggered: false, agent: 'Ed', success: true, message: `Ed already completed review for Edition ${briefing.edition_number}.` });
+
     const { pollEdTasks } = require('../services/ed_runtime');
     await pollEdTasks();
-    res.json({ triggered: true, agent: 'Ed', message: 'Ed EIC review triggered. Failed/escalated task re-queued and polled.' });
+
+    const result = await checkEditorialTaskResult('Ed', 'eic_review_briefing', briefing.id);
+    if (result?.status === 'complete') return res.json({ triggered: true, agent: 'Ed', success: true, message: `Ed EIC review complete — Edition ${briefing.edition_number} advanced.` });
+    if (result?.status === 'failed') return res.json({ triggered: true, agent: 'Ed', success: false, message: `Ed failed: ${result.error_message || 'check Railway logs'}` });
+    return res.json({ triggered: true, agent: 'Ed', message: `Task ${action} for Edition ${briefing.edition_number}. Ed is running — reload Pipeline Controls shortly.` });
   } catch (e) { next(e); }
 });
 
 adminRouter.post('/trigger/jeff-qa', requireAdminToken(['gm']), async (req, res, next) => {
   try {
-    await db.pool.query(`
-      UPDATE agent_tasks SET status = 'queued', started_at = now()
-      WHERE agent_name = 'Jeff'
-        AND task_type = 'qa_briefing'
-        AND status IN ('escalated', 'failed')
-        AND started_at > now() - INTERVAL '48 hours'
-    `);
+    const briefing = await db.pool.query(`SELECT id, edition_number, pipeline_status FROM briefings WHERE pipeline_status NOT IN ('published') ORDER BY edition_date DESC LIMIT 1`).then(r => r.rows[0] || null);
+    if (!briefing) return res.json({ triggered: false, agent: 'Jeff', success: false, message: 'No active briefing found.' });
+
+    const action = await ensureEditorialTask('Jeff', 'qa_briefing', briefing.id);
+    if (action === 'complete') return res.json({ triggered: false, agent: 'Jeff', success: true, message: `Jeff already completed QA for Edition ${briefing.edition_number}.` });
+
     const { pollJeffTasks } = require('../services/jeff_runtime');
     await pollJeffTasks();
-    res.json({ triggered: true, agent: 'Jeff', message: 'Jeff QA triggered. Failed/escalated task re-queued and polled.' });
+
+    const result = await checkEditorialTaskResult('Jeff', 'qa_briefing', briefing.id);
+    if (result?.status === 'complete') return res.json({ triggered: true, agent: 'Jeff', success: true, message: `Jeff QA complete — Edition ${briefing.edition_number} advanced.` });
+    if (result?.status === 'failed') return res.json({ triggered: true, agent: 'Jeff', success: false, message: `Jeff failed: ${result.error_message || 'check Railway logs'}` });
+    return res.json({ triggered: true, agent: 'Jeff', message: `Task ${action} for Edition ${briefing.edition_number}. Jeff is running — reload Pipeline Controls shortly.` });
   } catch (e) { next(e); }
 });
 
 adminRouter.post('/trigger/maya-approve', requireAdminToken(['gm']), async (req, res, next) => {
   try {
-    await db.pool.query(`
-      UPDATE agent_tasks SET status = 'queued', started_at = now()
-      WHERE agent_name = 'Maya'
-        AND task_type = 'approve_briefing'
-        AND status IN ('escalated', 'failed')
-        AND started_at > now() - INTERVAL '48 hours'
-    `);
+    const briefing = await db.pool.query(`SELECT id, edition_number, pipeline_status FROM briefings WHERE pipeline_status NOT IN ('published') ORDER BY edition_date DESC LIMIT 1`).then(r => r.rows[0] || null);
+    if (!briefing) return res.json({ triggered: false, agent: 'Maya', success: false, message: 'No active briefing found.' });
+
+    const action = await ensureEditorialTask('Maya', 'approve_briefing', briefing.id);
+    if (action === 'complete') return res.json({ triggered: false, agent: 'Maya', success: true, message: `Maya already approved Edition ${briefing.edition_number}.` });
+
     const { pollMayaTasks } = require('../services/maya_runtime');
     await pollMayaTasks();
-    res.json({ triggered: true, agent: 'Maya', message: 'Maya approval triggered. Failed/escalated briefing will advance to approved stage.' });
+
+    const result = await checkEditorialTaskResult('Maya', 'approve_briefing', briefing.id);
+    if (result?.status === 'complete') return res.json({ triggered: true, agent: 'Maya', success: true, message: `Maya approved — Edition ${briefing.edition_number} ready for HITL.` });
+    if (result?.status === 'failed') return res.json({ triggered: true, agent: 'Maya', success: false, message: `Maya failed: ${result.error_message || 'check Railway logs'}` });
+    return res.json({ triggered: true, agent: 'Maya', message: `Task ${action} for Edition ${briefing.edition_number}. Maya is running — reload Pipeline Controls shortly.` });
   } catch (e) { next(e); }
 });
 
