@@ -355,6 +355,16 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
       <div class="panel" id="p-radar">
         <div class="panel-title">Threat radar</div>
         <div class="panel-sub">Live feed managed by Rick — linked to Intel Brief as articles complete</div>
+        <div class="card" style="margin-bottom:10px;">
+          <div class="card-hd">Acquisition controls</div>
+          <div class="pc-trigger-row">
+            <div class="pc-trigger-info">
+              <div class="pc-trigger-label">Rick — Threat Ingest</div>
+              <div class="pc-trigger-desc">NVD + CISA KEV + US-CERT · runs every 4 hours · populates cwe_id + sector_tags</div>
+            </div>
+            <button class="pc-btn" id="btn-rick" onclick="triggerPipeline('rick-ingest','btn-rick','Run Rick')">Run Rick</button>
+          </div>
+        </div>
         <div class="metric-row">
           <div class="met"><div class="met-lbl">Active threats tracked</div><div class="met-val" id="radar-total">—</div><div class="met-delta nt" id="radar-delta-total">Loading...</div></div>
           <div class="met"><div class="met-lbl">Critical (CVSS 9+)</div><div class="met-val" id="radar-critical">—</div><div class="met-delta dn">Needs immediate Intel</div></div>
@@ -367,16 +377,6 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
             <tr><th>Severity</th><th>Threat name</th><th>CVE</th><th>CVSS</th><th>Category</th><th>Article</th></tr>
             <tbody id="radar-tbody"><tr><td colspan="6" style="text-align:center;color:#666;padding:12px;">Loading threat data...</td></tr></tbody>
           </table>
-        </div>
-        <div class="card" style="margin-top:10px;">
-          <div class="card-hd">Acquisition controls</div>
-          <div class="pc-trigger-row">
-            <div class="pc-trigger-info">
-              <div class="pc-trigger-label">Rick — Threat Ingest</div>
-              <div class="pc-trigger-desc">NVD + CISA KEV + US-CERT · runs every 4 hours · populates cwe_id + sector_tags</div>
-            </div>
-            <button class="pc-btn" id="btn-rick" onclick="triggerPipeline('rick-ingest','btn-rick','Run Rick')">Run Rick</button>
-          </div>
         </div>
         <button class="ask-btn" onclick="sendPrompt('What data fields should the CyberSense threat radar database schema include for Rick to structure his CVE intake properly?','cy')">Design threat intake schema ↗</button>
       </div>
