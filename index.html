@@ -116,15 +116,16 @@
           <p class="section-label" style="margin:0;color:rgba(255,255,255,0.5);">Live Threat Radar</p>
         </div>
         <h2 style="font-size:clamp(20px,2.5vw,26px);font-weight:700;color:#fff;letter-spacing:-0.5px;margin-bottom:6px;">Active Threats &amp; Vulnerabilities</h2>
-        <p style="font-size:14px;color:rgba(255,255,255,0.45);margin-bottom:24px;line-height:1.6;">A rolling feed of tracked CVEs, active exploits, and vendor advisories. Full access for subscribers.</p>
+        <p style="font-size:14px;color:rgba(255,255,255,0.45);margin-bottom:16px;line-height:1.6;">A rolling feed of tracked CVEs, active exploits, and vendor advisories.</p>
+        <div id="radar-stat-strip" style="display:flex;gap:24px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.08);"></div>
         <div class="table-wrap">
           <table class="data-table" aria-label="Threat radar preview">
             <thead>
               <tr>
-                <th>Severity</th>
-                <th>Threat Name</th>
+                <th>Sev</th>
+                <th>Threat</th>
+                <th>Vector</th>
                 <th>CVSS</th>
-                <th>CVE</th>
               </tr>
             </thead>
             <tbody id="radar-preview-body">
@@ -133,21 +134,9 @@
               </tr>
             </tbody>
           </table>
-          <div class="gate-wrapper" id="radar-preview-gate" style="display:none;">
-            <div class="blurred" aria-hidden="true">
-              <table class="data-table">
-                <tbody id="radar-preview-blurred"></tbody>
-              </table>
-            </div>
-            <div class="gate-overlay">
-              <div class="gate-card">
-                <h3>Subscribe to see the live feed</h3>
-                <p>Full radar access includes all tracked threats, CVSS scores, and linked intelligence articles.</p>
-                <a href="newsletter.html#subscribe" class="btn btn-primary">Get Access</a>
-                <p style="margin-top:16px;font-size:13px;color:var(--cs-gray-400);text-align:right;"><a href="radar.html">View full radar →</a></p>
-              </div>
-            </div>
-          </div>
+        </div>
+        <div style="text-align:right;margin-top:10px;">
+          <a href="radar.html" style="font-size:13px;color:rgba(0,212,255,0.75);text-decoration:none;">View full radar →</a>
         </div>
       </div>
 
@@ -291,12 +280,33 @@ function severityBadge(s) {
   return `<span class="badge ${map[s] || 'badge-low'}">${s.charAt(0).toUpperCase() + s.slice(1)}</span>`;
 }
 
+const IDX_VECTORS = [
+  [/sql\s*inject/i,'SQL Injection'],[/command\s*inject|os\s*inject/i,'Cmd Injection'],
+  [/cross.site\s*script|xss\b/i,'XSS'],[/remote\s*code\s*exec|rce\b/i,'RCE'],
+  [/privilege\s*escal/i,'Priv Escalation'],[/buffer\s*overflow|heap\s*overflow/i,'Buffer Overflow'],
+  [/use.after.free/i,'Use-After-Free'],[/denial.of.service|\bdos\b|resource\s*exhaust/i,'DoS'],
+  [/path\s*travers|directory\s*travers/i,'Path Traversal'],[/auth\s*bypass|authentication\s*bypass/i,'Auth Bypass'],
+  [/information\s*disclos|sensitive\s*data/i,'Info Disclosure'],[/deserialization/i,'Deserialization'],
+  [/server.side\s*request|ssrf\b/i,'SSRF'],[/memory\s*corrupt|out.of.bounds/i,'Memory Corruption'],
+  [/integer\s*overflow/i,'Integer Overflow'],[/null\s*pointer|null\s*deref/i,'Null Deref'],
+];
+function idxVector(t) {
+  if (t.threat_category && !['vulnerability','known_exploited_vulnerability','us-cert-current-activity'].includes(t.threat_category))
+    return t.threat_category.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  const text = t.threat_name || '';
+  for (const [re, label] of IDX_VECTORS) { if (re.test(text)) return label; }
+  if (t.category === 'known_exploited_vulnerability') return 'Known Exploited';
+  if (t.category === 'us-cert-current-activity') return 'US-CERT';
+  return 'Vulnerability';
+}
 function radarRow(t) {
+  const name = (t.threat_name || '').length > 72 ? t.threat_name.slice(0, 72) + '…' : (t.threat_name || '—');
+  const vector = idxVector(t);
   return `<tr>
     <td>${severityBadge(t.severity)}</td>
-    <td style="font-weight:500;color:rgba(255,255,255,0.9);">${t.threat_name}</td>
-    <td class="mono">${parseFloat(t.cvss_score).toFixed(1)}</td>
-    <td class="mono">${t.cve_id}</td>
+    <td style="font-weight:500;color:rgba(255,255,255,0.88);font-size:12px;">${name}</td>
+    <td style="font-size:11px;color:rgba(0,212,255,0.75);white-space:nowrap;">${vector}</td>
+    <td class="mono">${parseFloat(t.cvss_score||0).toFixed(1)}</td>
   </tr>`;
 }
 
@@ -304,15 +314,17 @@ async function loadHomeData(user) {
   // ── Radar Preview ──────────────────────────────────────────────
   if (user) {
     try {
-      const radarData = await CS.Auth.apiFetch('/api/content/radar?limit=10');
+      const radarData = await CS.Auth.apiFetch('/api/content/radar?limit=50');
       const threats = radarData.data || [];
-      const visible = threats.slice(0, 3);
-      const hidden  = threats.slice(3);
-
+      const critical = threats.filter(t => t.severity === 'critical').length;
+      const high     = threats.filter(t => t.severity === 'high').length;
+      document.getElementById('radar-stat-strip').innerHTML = `
+        <div style="text-align:center;"><div style="font-size:22px;font-weight:700;color:#ef4444;">${critical}</div><div style="font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:.6px;margin-top:2px;">CRITICAL</div></div>
+        <div style="text-align:center;"><div style="font-size:22px;font-weight:700;color:#d97706;">${high}</div><div style="font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:.6px;margin-top:2px;">HIGH</div></div>
+        <div style="text-align:center;"><div style="font-size:22px;font-weight:700;color:rgba(255,255,255,0.65);">${threats.length}</div><div style="font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:.6px;margin-top:2px;">TRACKED</div></div>`;
       document.getElementById('radar-preview-body').innerHTML =
-        visible.length ? visible.map(radarRow).join('') :
+        threats.length ? threats.slice(0, 5).map(radarRow).join('') :
         '<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--cs-gray-400);">No threats tracked yet.</td></tr>';
-
     } catch(e) {
       document.getElementById('radar-preview-body').innerHTML =
         '<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--cs-gray-400);">Radar temporarily unavailable.</td></tr>';
