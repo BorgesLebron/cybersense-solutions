@@ -246,16 +246,12 @@ async function executeRuthDailyCycle(task) {
       missing: missing.length > 0 ? missing : null,
     }));
 
-    // If the only missing item is the training_byte and Kirby's 5:30 CT SLA
-    // hasn't passed yet, re-queue so the next poll retries after Kirby produces.
+    // Re-queue whenever the training byte is the only missing item — supports
+    // both the scheduled 04:00 CT production path and manual daytime testing.
     if (!trainingByte && missing.length === 1 && missing[0].startsWith('training_byte')) {
-      const ctNow = new Date().toLocaleString('en-US', { timeZone: 'America/Chicago', hour: '2-digit', minute: '2-digit', hour12: false });
-      const [h, m] = ctNow.split(':').map(Number);
-      if (h < 5 || (h === 5 && m < 45)) {
-        await db.updateTask(task.id, { status: 'queued' });
-        console.log(JSON.stringify({ ts, runtime: 'ruth', event: 'AWAITING_TRAINING_BYTE', edition_date: editionDate, retry_after: 'next poll' }));
-        return;
-      }
+      await db.updateTask(task.id, { status: 'queued' });
+      console.log(JSON.stringify({ ts, runtime: 'ruth', event: 'AWAITING_TRAINING_BYTE', edition_date: editionDate, retry_after: 'next poll' }));
+      return;
     }
 
     if (missing.length > 0) {

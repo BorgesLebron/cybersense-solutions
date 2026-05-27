@@ -265,7 +265,7 @@ async function pollKirbyTasks() {
     `).then(r => r.rows);
 
     for (const task of tasks) {
-      if (task.content_type === 'training_byte') {
+      if (task.task_type === 'production') {
         await produceDailyTrainingByte(task);
       }
     }

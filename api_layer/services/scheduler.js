@@ -480,7 +480,7 @@ async function runLeadQualificationCheck() {
 }
 
 // ── Training: Kirby daily cycle initiation (T1 — fires at 04:00 CT, Sun–Thu) ──
-// Creates a production/training_byte task so pollKirbyTasks can pick it up and
+// Creates a production/training task so pollKirbyTasks can pick it up and
 // run produceDailyTrainingByte. Fires 30 min before Ruth's 04:30 CT trigger so
 // the byte is ready when Ruth first polls for composition items.
 async function runKirbyDailyCycle() {
@@ -490,7 +490,7 @@ async function runKirbyDailyCycle() {
       `SELECT id FROM agent_tasks
        WHERE agent_name    = 'Kirby'
          AND task_type     = 'production'
-         AND content_type  = 'training_byte'
+         AND content_type  = 'training'
          AND status        IN ('queued','in_progress','complete')
          AND started_at   >= (($1::date)::timestamp AT TIME ZONE 'America/Chicago')
          AND started_at   <  (($1::date + interval '1 day')::timestamp AT TIME ZONE 'America/Chicago')
@@ -509,7 +509,7 @@ async function runKirbyDailyCycle() {
     const task = await db.createTask({
       agent_name:   'Kirby',
       task_type:    'production',
-      content_type: 'training_byte',
+      content_type: 'training',
       content_id:   '00000000-0000-0000-0000-000000000000',
       sla_deadline: sla,
     });

@@ -1117,7 +1117,7 @@ adminRouter.post('/trigger/kirby-cycle', requireAdminToken(['gm']), async (req, 
     // Find the queued task just created (or reset failed → queued manually)
     let task = await db.pool.query(`
       SELECT id, status, error_message FROM agent_tasks
-      WHERE agent_name = 'Kirby' AND task_type = 'production' AND content_type = 'training_byte'
+      WHERE agent_name = 'Kirby' AND task_type = 'production' AND content_type = 'training'
         AND status = 'queued'
         AND started_at > now() - INTERVAL '1 hour'
       ORDER BY started_at DESC LIMIT 1
