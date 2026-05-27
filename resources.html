@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png">
+<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png">
+<title>Resources Hub - CyberSense.Solutions</title>
+<meta name="description" content="Central CyberSense repository for glossary, policy guidance, intel, innovation, growth, and training resources.">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="auth.css">
+</head>
+<body>
+<nav class="nav" role="navigation" aria-label="Main navigation">
+  <a href="index.html" class="nav-wordmark">CyberSense<span>.Solutions</span></a>
+  <ul class="nav-links"></ul>
+  <button class="nav-login" onclick="CS.Auth.showLoginModal()">Login</button>
+  <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+</nav>
+<div class="nav-drawer" id="nav-drawer"><ul></ul><a href="#" class="drawer-login" onclick="CS.Auth.showLoginModal();return false;">Login</a></div>
+
+<main class="resources-page">
+  <section class="resources-shell">
+    <h1 class="resources-title"><span>Resources</span> Hub</h1>
+    <p class="resources-copy">Welcome to your central repository for continuous learning and operational readiness. Whether you are looking to catch up on missed briefings, trace back a specific threat reference, or accelerate your professional growth, this page serves as your definitive knowledge vault. Here, you will find a fully searchable archive of our past Daily Digital Awareness Briefs, comprehensive glossaries to decode complex sector terminology, and an curated directory of ongoing training resources, webinars, and career development assets. Designed for both rapid reference and deep-dive study, this hub ensures that even if you missed the live daily broadcast, you never fall behind the pace of the evolving threat landscape.</p>
+
+    <nav class="resources-list" aria-label="Resources directory">
+      <a href="glossary.html"><span class="resource-icon">📖</span><span>Glossary</span></a>
+      <a href="policy.html"><span class="resource-icon">🏛️</span><span>Policy &amp; Guidelines</span></a>
+      <a href="intel-repository.html"><span class="resource-icon">🗂️</span><span>Intel Repository</span></a>
+    </nav>
+    <nav class="resources-list indented" aria-label="Intel repository sections">
+      <a href="intel-repository.html#threat-intelligence"><span class="resource-icon">⚠️</span><span>Threat Intelligence</span></a>
+      <a href="innovation.html"><span class="resource-icon">💡</span><span>Innovation</span></a>
+      <a href="growth.html"><span class="resource-icon">🎓</span><span>Professional Growth</span></a>
+      <a href="training.html"><span class="resource-icon">🧮</span><span>Training Resources</span></a>
+    </nav>
+  </section>
+</main>
+
+<script>window.CS_API_BASE = 'https://api.cybersense.solutions';</script>
+<script src="auth.js"></script>
+<script src="main.js"></script>
+</body>
+</html>

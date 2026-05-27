@@ -5,257 +5,71 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png">
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png">
-<title>Proficient — Professional Growth — CyberSense.Solutions</title>
-<meta name="description" content="Webinars, certification paths, and curated resources for cybersecurity professionals.">
+<title>Professional Growth - CyberSense.Solutions</title>
+<meta name="description" content="Professional growth resources for cybersecurity practitioners.">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="auth.css">
-
 </head>
 <body>
-  
-<div style="background:rgba(0,180,204,0.08);border-bottom:1px solid rgba(0,180,204,0.2);padding:12px 24px;text-align:center;font-size:14px;color:#00B4CC;letter-spacing:0.5px;">
-  Professional Growth resources are being updated – full access coming soon.
-</div>
-  
-<nav class="nav" role="navigation">
+<nav class="nav" role="navigation" aria-label="Main navigation">
   <a href="index.html" class="nav-wordmark">CyberSense<span>.Solutions</span></a>
-  <ul class="nav-links">
-    <li><a href="index.html">Home</a></li>
-    <li><a href="about.html">About</a></li>
-    <li><a href="radar.html">Radar</a></li>
-    <li><a href="intelligence.html">Intel</a></li>
-    <li><a href="newsletter.html">Newsletter</a></li>
-    <li><a href="growth.html" class="active">Growth</a></li>
-    <li><a href="innovation.html">Innovation</a></li>
-  </ul>
+  <ul class="nav-links"></ul>
   <button class="nav-login" onclick="CS.Auth.showLoginModal()">Login</button>
   <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
 </nav>
-<div class="nav-drawer" id="nav-drawer">
-  <ul>
-    <li><a href="index.html">Home</a></li>
-    <li><a href="about.html">About</a></li>
-    <li><a href="radar.html">Radar</a></li>
-    <li><a href="intelligence.html">Intel</a></li>
-    <li><a href="newsletter.html">Newsletter</a></li>
-    <li><a href="growth.html" class="active">Growth</a></li>
-    <li><a href="innovation.html">Innovation</a></li>
-  </ul>
-  <a href="#" class="drawer-login" onclick="CS.Auth.showLoginModal();return false;">Login</a>
-</div>
+<div class="nav-drawer" id="nav-drawer"><ul></ul><a href="#" class="drawer-login" onclick="CS.Auth.showLoginModal();return false;">Login</a></div>
 
-<section class="hero-dark section" style="padding:64px 24px 56px;">
-  <div class="container" style="position:relative;z-index:1;">
-    <p class="section-label">Proficient</p>
-    <h1 class="section-heading section-heading-light" style="font-size:clamp(30px,5vw,48px);">Professional Growth</h1>
-    <p class="section-sub section-sub-light">Upcoming webinars, industry-recognized certification guides, and curated learning resources to advance your cybersecurity career.</p>
-  </div>
-</section>
+<main class="resources-page">
+  <section class="resources-shell">
+    <h1 class="resources-title"><span class="resource-icon">🎓</span> <span>Professional</span> Growth</h1>
+    <p class="resources-copy">A dedicated launchpad for aspiring and advancing cybersecurity professionals. This section houses our curated archive of career development insights, resume-building strategies, industry trend analyses, and expert advice designed to help you bridge the gap from academic foundational knowledge to Day 1 operational readiness.</p>
+    <input class="resource-search" type="search" placeholder="Search date, vendor, product, type" aria-label="Search professional growth resources">
 
-<section class="section" style="background:var(--cs-white);">
-  <div class="container">
+    <div class="resource-grid">
+      <section class="resource-panel">
+        <div class="resource-panel-title">Video</div>
+        <div class="resource-items">
+          <a href="trainingProducts/videos/AI Coding Tools - Verify Workspace Trust Before Running Project Automation.mp4">AI Coding Tools: Verify Workspace Trust Before Running Project Automation</a>
+          <a href="trainingProducts/videos/Cloud Infrastructure Dependency.mp4">Cloud Infrastructure Dependency</a>
+        </div>
+        <span class="resource-more">More ▼</span>
+      </section>
 
-<!-- Upcoming Webinars — placeholder content, uncomment when events are scheduled
-<div class="category-section">
-  <div class="category-label-bar">Upcoming Webinars</div>
-  ...all three webinar cards...
-</div>
--->
+      <section class="resource-panel">
+        <div class="resource-panel-title">Courses</div>
+        <div class="resource-items">
+          <span>Threat Intelligence Fundamentals: the intelligence cycle explained.</span>
+          <span>Zero-Trust Architecture: implementing network microsegmentation.</span>
+          <span>Cloud Security Posture Management: AWS and Azure misconfiguration detection.</span>
+        </div>
+        <span class="resource-more">More ▼</span>
+      </section>
 
-    <!-- Certification Paths -->
-    <div class="category-section">
-      <div class="category-label-bar">Certification Paths</div>
-      <div class="blurred">
-      <div class="grid-4">
-        <div class="card" style="border-top:3px solid var(--cs-cyan);">
-          <div style="font-size:28px;margin-bottom:8px;">🏅</div>
-          <h3 style="font-size:17px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;">CISSP</h3>
-          <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--cs-gray-400);margin-bottom:10px;">ISC2 – Advanced</div>
-          <p style="font-size:13px;color:var(--cs-gray-600);line-height:1.6;margin-bottom:16px;">The gold-standard certification for experienced security professionals. CyberSense covers all 8 domains with domain-aligned briefing archives, study companions, and practice question sets mapped to current exam weights.</p>
-          <a href="#" target="_blank" rel="noopener noreferrer" style="font-size:13px;font-weight:600;color:var(--cs-cyan);">Study resources →</a>
+      <section class="resource-panel">
+        <div class="resource-panel-title">Webinar</div>
+        <div class="resource-items">
+          <a href="https://www.bankinfosecurity.com/webinars/webinar-agentic-ai-vs-identitys-last-mile-problem-w-6999" target="_blank" rel="noopener noreferrer">Agentic AI vs. Identity's Last Mile Problem</a>
+          <a href="https://us02web.zoom.us/webinar/register/WN_b4KhoS29TPymX4MJhWk9JA#/registration" target="_blank" rel="noopener noreferrer">Independence is Fragile: How Being Helpful Breaks Audit</a>
         </div>
-        <div class="card" style="border-top:3px solid var(--cs-red);">
-          <div style="font-size:28px;margin-bottom:8px;">🎯</div>
-          <h3 style="font-size:17px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;">CEH</h3>
-          <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--cs-gray-400);margin-bottom:10px;">EC-Council – Intermediate</div>
-          <p style="font-size:13px;color:var(--cs-gray-600);line-height:1.6;margin-bottom:16px;">The Certified Ethical Hacker credential validates offensive security knowledge. Our CEH path includes hands-on lab exercises aligned to the EC-Council's v12 exam framework and updated methodology coverage.</p>
-          <a href="#" target="_blank" rel="noopener noreferrer" style="font-size:13px;font-weight:600;color:var(--cs-cyan);">Study resources →</a>
+        <span class="resource-more">More ▼</span>
+      </section>
+
+      <section class="resource-panel">
+        <div class="resource-panel-title">Certification Readiness</div>
+        <div class="resource-items">
+          <span>CISSP - advanced security leadership.</span>
+          <span>CEH - offensive security knowledge.</span>
+          <span>CompTIA Security+ - foundational practitioner baseline.</span>
+          <span>CISM - management and governance readiness.</span>
         </div>
-        <div class="card" style="border-top:3px solid var(--cs-green);">
-          <div style="font-size:28px;margin-bottom:8px;">🛡</div>
-          <h3 style="font-size:17px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;">CompTIA Security+</h3>
-          <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--cs-gray-400);margin-bottom:10px;">CompTIA – Foundation</div>
-          <p style="font-size:13px;color:var(--cs-gray-600);line-height:1.6;margin-bottom:16px;">The DoD-approved baseline certification for security practitioners. Our SY0-701 coverage includes updated threat intelligence, cloud security, and automation domains added in the most recent revision.</p>
-          <a href="#" target="_blank" rel="noopener noreferrer" style="font-size:13px;font-weight:600;color:var(--cs-cyan);">Study resources →</a>
-        </div>
-        <div class="card" style="border-top:3px solid var(--cs-amber);">
-          <div style="font-size:28px;margin-bottom:8px;">📊</div>
-          <h3 style="font-size:17px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;">CISM</h3>
-          <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--cs-gray-400);margin-bottom:10px;">ISACA – Management</div>
-          <p style="font-size:13px;color:var(--cs-gray-600);line-height:1.6;margin-bottom:16px;">The Certified Information Security Manager is the standard credential for security management and governance roles. Our CISM track is tuned for security leaders managing programs, policies, and incident response functions.</p>
-          <a href="#" target="_blank" rel="noopener noreferrer" style="font-size:13px;font-weight:600;color:var(--cs-cyan);">Study resources →</a>
-        </div>
-      </div>
-       </div> 
+        <span class="resource-more">More ▼</span>
+      </section>
     </div>
+  </section>
+</main>
 
-    <!-- Curated Resources -->
-    <div class="category-section">
-      <div class="category-label-bar">Curated Resources</div>
-      <div class="blurred">
-      <div class="grid-4">
-        <div class="card">
-          <h3 style="font-size:15px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;line-height:1.3;">MITRE ATT&amp;CK Navigator</h3>
-          <p style="font-size:13px;color:var(--cs-gray-600);line-height:1.55;margin-bottom:12px;">The essential threat modeling tool for mapping adversary techniques to detection gaps. Our guided walkthrough covers enterprise matrix navigation, technique filtering, and layer export for red team coverage analysis.</p>
-          <a href="https://attack.mitre.org/resources/attack-navigator/" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">Open Resource →</a>
-        </div>
-        <div class="card">
-          <h3 style="font-size:15px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;line-height:1.3;">CISA Known Exploited Vulnerabilities Catalog</h3>
-          <p style="font-size:13px;color:var(--cs-gray-600);line-height:1.55;margin-bottom:12px;">The authoritative federal list of vulnerabilities confirmed as actively exploited. Every security team should have this bookmarked and monitored for new additions – it's the most actionable patch prioritization signal available.</p>
-          <a href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">Open Resource →</a>
-        </div>
-        <div class="card">
-          <h3 style="font-size:15px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;line-height:1.3;">NIST National Vulnerability Database</h3>
-          <p style="font-size:13px;color:var(--cs-gray-600);line-height:1.55;margin-bottom:12px;">The primary U.S. government repository for CVE information, CVSS scores, and CWE classifications. Essential for vulnerability triage workflows and building contextual understanding of newly published CVEs.</p>
-          <a href="https://nvd.nist.gov/" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">Open Resource →</a>
-        </div>
-        <div class="card">
-          <h3 style="font-size:15px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;line-height:1.3;">ISC2 Cybersecurity Workforce Study 2024</h3>
-          <p style="font-size:13px;color:var(--cs-gray-600);line-height:1.55;margin-bottom:12px;">The annual benchmark for cybersecurity workforce trends, compensation data, skill demand shifts, and the global talent gap. Required reading for security leaders making hiring and training investment decisions.</p>
-          <a href="https://www.isc2.org/research/workforce-study" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">Open Resource →</a>
-        </div>
-      </div>
-      </div>
-    </div>
-
-  </div>
-</section>
-
-<footer>
-  <div class="footer-inner">
-    <div class="footer-grid">
-      <div><div class="footer-logo">CyberSense<span>.Solutions</span></div><p class="footer-mission">Delivering actionable cybersecurity intelligence, daily awareness briefings, and professional training to teams that can't afford to be caught off guard.</p><div class="footer-socials"><a href="https://www.linkedin.com/company/cybersense-solutions/" target="_blank" class="footer-social-icon">in</a><a href="https://www.facebook.com/profile.php?id=61570667370162" target="_blank" class="footer-social-icon">f</a><a href="https://x.com/cybersensesec" target="_blank" class="footer-social-icon">𝕏</a><a href="https://www.instagram.com/cybersense.solutions/" target="_blank" class="footer-social-icon">ig</a><a href="https://www.threads.com/@cybersense.solutions" target="_blank" class="footer-social-icon">tt</a></div></div>
-      <div class="footer-col"><h4>Platform</h4>
-        <ul>
-          <li><a href="index.html">Home</a></li>
-          <li><a href="about.html">About</a></li>
-          <li><a href="radar.html">Threat Radar</a></li>
-          <li><a href="intelligence.html">Intel Briefs</a></li>
-          <li><a href="newsletter.html">Newsletter</a></li>
-          <li><a href="growth.html">Growth</a></li>
-          <li><a href="innovation.html">Innovation</a></li>
-        </ul>
-      </div>
-      <div class="footer-col"><h4>Legal</h4><ul><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li><li><a href="about.html">Contact Us</a></li></ul></div>
-    </div>
-    <div class="footer-bottom">
-      <span>&copy; 2026 CyberSense.Solutions. All rights reserved.</span>
-      <span>Security awareness starts here.</span>
-    </div>
-  </div>
-</footer>
 <script>window.CS_API_BASE = 'https://api.cybersense.solutions';</script>
 <script src="auth.js"></script>
 <script src="main.js"></script>
-<script>
-const TIER_RANK = { free: 0, freemium: 1, monthly: 2, enterprise: 3 };
-
-function growthArticleShell() {
-  const statusBanner = document.querySelector('body > div');
-  if (statusBanner) statusBanner.textContent = 'Professional Growth coverage now reflects the latest published Growth articles.';
-
-  const container = document.querySelector('section.section .container');
-  if (!container) return null;
-  container.innerHTML = `
-    <div class="freemium-banner" id="growth-banner" style="display:none;">
-      <p><strong>Professional Growth coverage.</strong> Monthly subscribers unlock full article access and the complete archive.</p>
-      <a href="newsletter.html#subscribe" class="btn btn-primary btn-sm">Subscribe</a>
-    </div>
-    <div class="category-section">
-      <div class="category-label-bar">Professional Growth</div>
-      <div class="grid-2" id="growth-feed">
-        <div style="grid-column:span 2;text-align:center;padding:40px;color:var(--cs-gray-400);font-size:14px;" id="growth-feed-loading">
-          Loading professional growth coverage...
-        </div>
-      </div>
-    </div>`;
-  return document.getElementById('growth-feed');
-}
-
-function growthCard(article, isLocked) {
-  const teaser = article.teaser || article.summary || 'Full analysis available to subscribers.';
-  const link = article.slug
-    ? `<a href="intel/article.html?slug=${encodeURIComponent(article.slug)}" class="card-link">${isLocked ? 'Read preview' : 'Read more'} -></a>`
-    : '<span class="card-link" aria-disabled="true">Article pending</span>';
-  if (isLocked) {
-    return `
-      <div class="gate-wrapper" style="border-radius:var(--radius-lg);height:100%;">
-        <div class="article-card blurred" aria-hidden="true">
-          <span class="badge badge-published">Growth</span>
-          <div class="card-headline">${article.title}</div>
-          <div class="card-teaser">${teaser}</div>
-          ${link}
-        </div>
-        <div class="gate-overlay">
-          <div class="gate-card">
-            <h3>Subscribers only</h3>
-            <p>Unlock full Professional Growth coverage for $9/month.</p>
-            ${article.slug ? `<a href="intel/article.html?slug=${encodeURIComponent(article.slug)}" class="btn btn-outline btn-sm">Read preview</a>` : ''}
-            <a href="newsletter.html#subscribe" class="btn btn-primary btn-sm">Subscribe</a>
-          </div>
-        </div>
-      </div>`;
-  }
-  return `
-    <div class="article-card">
-      <span class="badge badge-published">Growth</span>
-      <div class="card-headline">${article.title}</div>
-      <div class="card-teaser">${teaser}</div>
-      ${link}
-    </div>`;
-}
-
-async function loadGrowthFeed() {
-  const grid = growthArticleShell();
-  if (!grid) return;
-
-  if (!CS.Auth.isLoggedIn()) {
-    document.getElementById('growth-banner').style.display = 'flex';
-    grid.innerHTML = `
-      <div style="grid-column:span 2;">
-        <div class="gate-card" style="max-width:480px;margin:0 auto;">
-          <h3>Free account required</h3>
-          <p>Create a free account to access Professional Growth coverage. No credit card required.</p>
-          <a href="#" class="btn btn-primary btn-sm" onclick="CS.Auth.showLoginModal();return false;">Sign Up Free</a>
-        </div>
-      </div>`;
-    return;
-  }
-
-  try {
-    const user = CS.Auth.getUser();
-    const tierRank = TIER_RANK[user?.tier || 'free'] || 0;
-    const data = await CS.Auth.apiFetch('/api/content/articles?section=growth&limit=24');
-    const articles = data.data || [];
-    document.getElementById('growth-banner').style.display = 'flex';
-
-    if (articles.length === 0) {
-      grid.innerHTML = '<div style="grid-column:span 2;text-align:center;padding:40px;color:var(--cs-gray-400);font-size:14px;">New Professional Growth coverage is coming soon.</div>';
-      return;
-    }
-
-    grid.innerHTML = articles.map(article => {
-      const requiredRank = TIER_RANK[article.access_tier] || 0;
-      return growthCard(article, tierRank < requiredRank);
-    }).join('');
-  } catch (e) {
-    console.error('Growth feed load error:', e);
-    grid.innerHTML = '<div style="grid-column:span 2;text-align:center;padding:40px;color:var(--cs-gray-400);font-size:14px;">Professional Growth coverage is temporarily unavailable.</div>';
-  }
-}
-
-document.addEventListener('cs:login', loadGrowthFeed);
-document.addEventListener('cs:guest', loadGrowthFeed);
-</script>
 </body>
 </html>
