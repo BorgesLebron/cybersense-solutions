@@ -1206,6 +1206,56 @@ adminRouter.post('/trigger/ruth-cycle', requireAdminToken(['gm']), async (req, r
   } catch (e) { next(e); }
 });
 
+adminRouter.post('/trigger/matt-publish', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    const { pollMattTasks } = require('../services/matt_runtime');
+
+    // Find most recent Matt task (failed or queued) within poll window
+    let task = await db.pool.query(`
+      SELECT id, status, error_message, content_id FROM agent_tasks
+      WHERE agent_name = 'Matt' AND task_type = 'generate_newsletter_html'
+        AND started_at > now() - INTERVAL '48 hours'
+      ORDER BY started_at DESC LIMIT 1
+    `).then(r => r.rows[0] || null);
+
+    if (task?.status === 'failed' || task?.status === 'escalated') {
+      await db.pool.query(`UPDATE agent_tasks SET status='queued', error_message=NULL, started_at=now() WHERE id=$1`, [task.id]);
+    } else if (!task) {
+      // No task — find the most recent approved briefing without a file_path
+      const briefing = await db.pool.query(`
+        SELECT id FROM briefings
+        WHERE pipeline_status = 'approved' AND (file_path IS NULL OR file_path = '')
+        ORDER BY edition_date DESC LIMIT 1
+      `).then(r => r.rows[0] || null);
+
+      if (!briefing) {
+        return res.json({ triggered: false, agent: 'Matt', success: false, message: 'No approved briefing without a committed file. Nothing for Matt to do.' });
+      }
+
+      const sla = new Date(); sla.setHours(7, 30, 0, 0);
+      task = await db.createTask({
+        agent_name: 'Matt', task_type: 'generate_newsletter_html',
+        content_type: 'briefing', content_id: briefing.id, sla_deadline: sla,
+      });
+    } else if (task?.status === 'complete') {
+      const briefing = await db.pool.query(`SELECT edition_number, file_path FROM briefings WHERE id=$1`, [task.content_id]).then(r => r.rows[0] || null);
+      return res.json({ triggered: false, agent: 'Matt', success: true, message: `Matt already committed Edition ${briefing?.edition_number || ''} — file: ${briefing?.file_path || 'unknown'}` });
+    }
+
+    await pollMattTasks();
+
+    const result = await db.pool.query('SELECT status, error_message, content_id FROM agent_tasks WHERE id=$1', [task.id]).then(r => r.rows[0]);
+    if (result?.status === 'complete') {
+      const briefing = await db.pool.query(`SELECT edition_number, file_path FROM briefings WHERE id=$1`, [result.content_id]).then(r => r.rows[0] || null);
+      return res.json({ triggered: true, agent: 'Matt', success: true, message: `Edition ${briefing?.edition_number || ''} committed to GitHub — ${briefing?.file_path || ''}` });
+    }
+    return res.json({
+      triggered: true, agent: 'Matt', success: false,
+      message: `Matt task ended as "${result?.status || 'unknown'}": ${result?.error_message || 'check Railway logs'}`,
+    });
+  } catch (e) { next(e); }
+});
+
 adminRouter.post('/trigger/rick-ingest', requireAdminToken(['gm']), async (req, res, next) => {
   try {
     const task = await db.createTask({

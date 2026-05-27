@@ -658,6 +658,13 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
             </div>
             <button class="pc-btn" id="btn-maya" onclick="triggerPipeline('maya-approve','btn-maya','Trigger Maya')" disabled>Trigger Maya</button>
           </div>
+          <div class="pc-trigger-row">
+            <div class="pc-trigger-info">
+              <div class="pc-trigger-label">Matt — Publish to GitHub</div>
+              <div class="pc-trigger-desc">Commits newsletter HTML to GitHub Pages after edition is approved</div>
+            </div>
+            <button class="pc-btn" id="btn-matt" onclick="triggerPipeline('matt-publish','btn-matt','Trigger Matt')">Trigger Matt</button>
+          </div>
         </div>
         <div class="card" style="margin-top:10px;">
           <div class="card-hd">Trigger log <button style="font-size:11px;color:var(--color-text-tertiary);background:none;border:none;cursor:pointer;padding:0;" onclick="document.getElementById('pc-log').innerHTML=''">Clear</button></div>
