@@ -5,376 +5,71 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png">
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png">
-<title>Training Resources — CyberSense.Solutions</title>
-<meta name="description" content="Labs, video training, guides, and a searchable cybersecurity glossary.">
+<title>Training Resources - CyberSense.Solutions</title>
+<meta name="description" content="CyberSense training bytes, videos, labs, and guides.">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="auth.css">
-<style>
-  .glossary-tools{display:grid;grid-template-columns:minmax(160px,220px) minmax(240px,1fr);gap:12px;margin-top:22px;max-width:760px;}
-  .glossary-select,.glossary-hero-search{width:100%;padding:10px 14px;border:1.5px solid rgba(255,255,255,0.28);border-radius:var(--radius);font-size:13.5px;background:#fff;color:var(--cs-navy);}
-  .glossary-select:focus,.glossary-hero-search:focus{outline:none;border-color:var(--cs-cyan);box-shadow:0 0 0 3px rgba(0,212,255,0.16);}
-  .glossary-list{border-top:1px solid #e2e8f0;}
-  .glossary-item{border-bottom:1px solid #e2e8f0;padding:0;}
-  .glossary-item[hidden]{display:none;}
-  .glossary-item summary{list-style:none;cursor:pointer;padding:15px 0;font-size:15px;font-weight:700;color:var(--cs-navy);font-family:var(--font-mono);display:flex;align-items:center;justify-content:space-between;gap:16px;}
-  .glossary-item summary::-webkit-details-marker{display:none;}
-  .glossary-item summary::after{content:'+';font-family:var(--font-sans);font-size:18px;color:var(--cs-cyan);font-weight:700;}
-  .glossary-item[open] summary::after{content:'-';}
-  .glossary-def{padding:0 0 16px;font-size:14px;color:var(--cs-gray-600);line-height:1.6;}
-  .glossary-meta{font-size:12px;color:var(--cs-gray-400);margin-top:8px;}
-  .glossary-empty{padding:32px 0;text-align:center;color:var(--cs-gray-400);font-size:14px;}
-  @media(max-width:720px){.glossary-tools{grid-template-columns:1fr;}}
-</style>
-
 </head>
 <body>
-
-<div style="background:rgba(0,180,204,0.08);border-bottom:1px solid rgba(0,180,204,0.2);padding:12px 24px;text-align:center;font-size:14px;color:#00B4CC;letter-spacing:0.5px;">
-  Training Resources is being updated – full access coming soon.
-</div> 
-
-<nav class="nav" role="navigation">
+<nav class="nav" role="navigation" aria-label="Main navigation">
   <a href="index.html" class="nav-wordmark">CyberSense<span>.Solutions</span></a>
-  <ul class="nav-links">
-    <li><a href="index.html">Home</a></li>
-    <li><a href="about.html">About</a></li>
-    <li><a href="radar.html">Radar</a></li>
-    <li><a href="intelligence.html">Intel</a></li>
-    <li><a href="newsletter.html">Newsletter</a></li>
-    <li><a href="growth.html">Growth</a></li>
-    <li><a href="innovation.html">Innovation</a></li>
-  </ul>
+  <ul class="nav-links"></ul>
   <button class="nav-login" onclick="CS.Auth.showLoginModal()">Login</button>
   <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
 </nav>
-<div class="nav-drawer" id="nav-drawer">
-  <ul><li><a href="index.html">Home</a></li>
-    <li><a href="about.html">About</a></li>
-    <li><a href="radar.html">Radar</a></li>
-    <li><a href="intelligence.html">Intel</a></li>
-    <li><a href="newsletter.html">Newsletter</a></li>
-    <li><a href="growth.html">Growth</a></li>
-    <li><a href="innovation.html">Innovation</a></li>
-  </ul>
-  <a href="#" class="drawer-login" onclick="CS.Auth.showLoginModal();return false;">Login</a>
-</div>
+<div class="nav-drawer" id="nav-drawer"><ul></ul><a href="#" class="drawer-login" onclick="CS.Auth.showLoginModal();return false;">Login</a></div>
 
-<section class="hero-dark section" style="padding:64px 24px 56px;">
-  <div class="container" style="position:relative;z-index:1;">
-    <p class="section-label">Training</p>
-    <h1 class="section-heading section-heading-light" style="font-size:clamp(30px,5vw,48px);">Training Resources</h1>
-    <p class="section-sub section-sub-light">Hands-on labs, video courses, step-by-step guides, and a searchable glossary – built on current threat intelligence, not dated textbooks.</p>
-    <div class="glossary-tools" aria-label="Glossary search tools">
-      <select class="glossary-select" id="glossary-letter" aria-label="Filter glossary by letter">
-        <option value="">All letters</option>
-      </select>
-      <input class="glossary-hero-search" id="glossary-search" type="search" placeholder="Search glossary terms..." aria-label="Search glossary">
-    </div>
-  </div>
-</section>
+<main class="resources-page">
+  <section class="resources-shell">
+    <h1 class="resources-title"><span class="resource-icon">🧮</span> <span>Training</span> Resources</h1>
+    <p class="resources-copy">Your tactical learning library. This repository preserves our unique <strong>Training Bytes</strong>, alongside past webinars, seminar links, educational videos, and step-by-step technical walkthroughs. Every resource here is mapped to real-world scenarios, offering actionable, repeatable lessons to sharpen your hands-on engineering and defense skills.</p>
+    <input class="resource-search" type="search" placeholder="Search date, vendor, product, type" aria-label="Search training resources">
 
-<section class="section" style="background:var(--cs-white);">
-  <div class="container">
-
-    <!-- Cyber Glossary -->
-    <div class="category-section">
-      <div class="category-label-bar">Cyber Glossary</div>
-      <div class="card">
-        <div id="glossary-list" class="glossary-list">
-          <div class="glossary-empty">Loading glossary...</div>
+    <div class="resource-grid">
+      <section class="resource-panel">
+        <div class="resource-panel-title">Training Byte</div>
+        <div class="resource-items">
+          <a href="trainingProducts/videos/trainingByte20260519.mp4">CyberSense Solutions: Training Byte 20260519</a>
+          <span class="resource-muted">Essential cybersecurity concepts from the current awareness cycle.</span>
         </div>
-      </div>
-    </div>
+        <a class="resource-more" href="trainingProducts/videos/trainingByte20260519.mp4">More ▼</a>
+      </section>
 
-    <!-- Training Bytes -->
-    <div class="category-section">
-      <div class="category-label-bar">Training Bytes</div>
-      <div class="card">
-        <video controls style="width:100%;max-width:800px;margin:0 auto;display:block;">
-          <source src="trainingProducts/videos/trainingByte20260519.mp4" type="video/mp4">
-          Your browser does not support the video tag.
-        </video>
-        <h3 style="font-size:18px;font-weight:700;color:var(--cs-navy);margin-top:16px;text-align:center;">
-          CyberSense Solutions: Training Byte 20260519
-        </h3>
-        <p style="font-size:14px;color:var(--cs-gray-600);text-align:center;margin-top:8px;">
-          Your first training byte covering essential cybersecurity concepts.
-        </p>
-      </div>
-    </div>
-
-    <!-- Vulnerability/Mitigation Labs -->
-    <div class="category-section">
-      <div class="category-label-bar">Vulnerability &amp; Mitigation Labs</div>
-        <div class="grid-4">
-          <div class="card">
-            <span class="badge badge-beginner" style="margin-bottom:12px;">Beginner</span>
-            <h3 style="font-size:15px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;line-height:1.3;">Vulnerability Triage: CVE to Remediation Decision</h3>
-            <p style="font-size:13px;color:var(--cs-gray-600);line-height:1.55;margin-bottom:16px;">Walk through the complete triage workflow – NVD query, CVSS contextualization, exploitability scoring, and patch prioritization in a simulated enterprise environment.</p>
-            <button class="btn btn-outline btn-sm" disabled>Coming Soon</button>
-          </div>
-          <div class="card">
-            <span class="badge badge-beginner" style="margin-bottom:12px;">Beginner</span>
-            <h3 style="font-size:15px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;line-height:1.3;">Phishing Email Analysis: Header Forensics &amp; Link Inspection</h3>
-            <p style="font-size:13px;color:var(--cs-gray-600);line-height:1.55;margin-bottom:16px;">Analyze real-world phishing samples: email header inspection, display name spoofing, domain lookalike detection, and embedded URL defanging techniques used by analysts.</p>
-            <button class="btn btn-outline btn-sm" disabled>Coming Soon</button>
-          </div>
-          <div class="card">
-            <span class="badge badge-intermediate" style="margin-bottom:12px;">Intermediate</span>
-            <h3 style="font-size:15px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;line-height:1.3;">SIEM Alert Tuning: Reducing False Positives Without Missing True Positives</h3>
-            <p style="font-size:13px;color:var(--cs-gray-600);line-height:1.55;margin-bottom:16px;">Configure and tune detection rules in a Splunk sandbox environment, working through the false positive reduction cycle on 12 sample alert scenarios from real-world SOC data.</p>
-            <button class="btn btn-outline btn-sm" disabled>Coming Soon</button>
-          </div>
-          <div class="card">
-            <span class="badge badge-intermediate" style="margin-bottom:12px;">Intermediate</span>
-            <h3 style="font-size:15px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;line-height:1.3;">Active Directory Attack Paths: Golden Ticket, Pass-the-Hash, and Kerberoasting</h3>
-            <p style="font-size:13px;color:var(--cs-gray-600);line-height:1.55;margin-bottom:16px;">Explore the three most common AD privilege escalation techniques from both attacker and defender perspectives in a fully isolated lab environment using BloodHound and Impacket.</p>
-            <button class="btn btn-outline btn-sm" disabled>Coming Soon</button>
-          </div>
+      <section class="resource-panel">
+        <div class="resource-panel-title">Training Video</div>
+        <div class="resource-items">
+          <a href="trainingProducts/videos/Threat Radar.mp4">Threat Radar</a>
+          <a href="trainingProducts/videos/Daily Digital Awareness Briefing.mp4">Daily Digital Awareness Briefing</a>
+          <a href="trainingProducts/videos/Amy Intro Intro - Welcome to the Force.mp4">Welcome to the Force</a>
         </div>
-    </div>
+        <span class="resource-more">More ▼</span>
+      </section>
 
-    <!-- Video Training -->
-    <div class="category-section">
-      <div class="category-label-bar">Video Training</div>
-        <div class="grid-3">
-          <div class="card">
-            <div class="video-thumb" role="img" aria-label="Video: Threat Intelligence Fundamentals">
-              <div class="play-icon" aria-hidden="true">▶</div>
-            </div>
-            <span class="badge badge-beginner" style="margin-bottom:8px;">Beginner</span>
-            <h3 style="font-size:15px;font-weight:700;color:var(--cs-navy);margin-bottom:4px;line-height:1.3;">Threat Intelligence Fundamentals: The Intelligence Cycle Explained</h3>
-            <p style="font-size:13px;color:var(--cs-gray-400);">42 min • Series: Intel Foundations</p>
-          </div>
-          <div class="card">
-            <div class="video-thumb" role="img" aria-label="Video: Zero-Trust Architecture">
-              <div class="play-icon" aria-hidden="true">▶</div>
-            </div>
-            <span class="badge badge-intermediate" style="margin-bottom:8px;">Intermediate</span>
-            <h3 style="font-size:15px;font-weight:700;color:var(--cs-navy);margin-bottom:4px;line-height:1.3;">Zero-Trust Architecture: Implementing Network Microsegmentation</h3>
-            <p style="font-size:13px;color:var(--cs-gray-400);">67 min • Series: Zero-Trust</p>
-          </div>
-          <div class="card">
-            <div class="video-thumb" role="img" aria-label="Video: Cloud Security Posture Management">
-              <div class="play-icon" aria-hidden="true">▶</div>
-            </div>
-            <span class="badge badge-intermediate" style="margin-bottom:8px;">Intermediate</span>
-            <h3 style="font-size:15px;font-weight:700;color:var(--cs-navy);margin-bottom:4px;line-height:1.3;">Cloud Security Posture Management: AWS and Azure Misconfiguration Detection</h3>
-            <p style="font-size:13px;color:var(--cs-gray-400);">55 min • Series: Cloud Security</p>
-          </div>
+      <section class="resource-panel">
+        <div class="resource-panel-title">Labs</div>
+        <div class="resource-items">
+          <span><strong>Vulnerability Triage:</strong> CVE to remediation decision.</span>
+          <span><strong>Phishing Email Analysis:</strong> header forensics and link inspection.</span>
+          <span><strong>SIEM Alert Tuning:</strong> reduce false positives without missing true positives.</span>
         </div>
-      </div>
-    </div>
+        <span class="resource-more">More ▼</span>
+      </section>
 
-    <!-- Video Training -->
-    <div class="category-section">
-      <div class="category-label-bar">Video Training</div>
-        <div class="grid-3">
-          <div class="card">
-            <div class="video-thumb" role="img" aria-label="Video: Threat Intelligence Fundamentals">
-              <div class="play-icon" aria-hidden="true">▶</div>
-            </div>
-            <span class="badge badge-beginner" style="margin-bottom:8px;">Beginner</span>
-            <h3 style="font-size:15px;font-weight:700;color:var(--cs-navy);margin-bottom:4px;line-height:1.3;">Threat Intelligence Fundamentals: The Intelligence Cycle Explained</h3>
-            <p style="font-size:13px;color:var(--cs-gray-400);">42 min • Series: Intel Foundations</p>
-          </div>
-          <div class="card">
-            <div class="video-thumb" role="img" aria-label="Video: Zero-Trust Architecture">
-              <div class="play-icon" aria-hidden="true">▶</div>
-            </div>
-            <span class="badge badge-intermediate" style="margin-bottom:8px;">Intermediate</span>
-            <h3 style="font-size:15px;font-weight:700;color:var(--cs-navy);margin-bottom:4px;line-height:1.3;">Zero-Trust Architecture: Implementing Network Microsegmentation</h3>
-            <p style="font-size:13px;color:var(--cs-gray-400);">67 min • Series: Zero-Trust</p>
-          </div>
-          <div class="card">
-            <div class="video-thumb" role="img" aria-label="Video: Cloud Security Posture Management">
-              <div class="play-icon" aria-hidden="true">▶</div>
-            </div>
-            <span class="badge badge-intermediate" style="margin-bottom:8px;">Intermediate</span>
-            <h3 style="font-size:15px;font-weight:700;color:var(--cs-navy);margin-bottom:4px;line-height:1.3;">Cloud Security Posture Management: AWS and Azure Misconfiguration Detection</h3>
-            <p style="font-size:13px;color:var(--cs-gray-400);">55 min • Series: Cloud Security</p>
-          </div>
+      <section class="resource-panel">
+        <div class="resource-panel-title">Guides</div>
+        <div class="resource-items">
+          <span>How to build a SIEM detection rule from a CISA advisory.</span>
+          <span>Configuring Windows Event Forwarding for a SOC environment.</span>
+          <span>Email header analysis: a step-by-step field reference.</span>
         </div>
+        <span class="resource-more">More ▼</span>
+      </section>
     </div>
+  </section>
+</main>
 
-    <!-- Lab Scenarios (Phase 3 Scaffold) -->
-    <div class="category-section">
-      <div class="category-label-bar">Lab Scenarios</div>
-        <div class="grid-3">
-          <div class="card" style="min-height:180px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
-            <h3 style="font-size:18px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;line-height:1.3;">Beginner Scenario 1</h3>
-            <p style="font-size:14px;color:var(--cs-gray-600);line-height:1.55;margin-bottom:16px;">A foundational lab for new users.</p>
-            <button class="btn btn-outline btn-sm" disabled>Coming Soon</button>
-          </div>
-          <div class="card" style="min-height:180px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
-            <h3 style="font-size:18px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;line-height:1.3;">Intermediate Scenario A</h3>
-            <p style="font-size:14px;color:var(--cs-gray-600);line-height:1.55;margin-bottom:16px;">A deeper dive for experienced users.</p>
-            <button class="btn btn-outline btn-sm" disabled>Coming Soon</button>
-          </div>
-          <div class="card" style="min-height:180px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
-            <h3 style="font-size:18px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;line-height:1.3;">Advanced Scenario X</h3>
-            <p style="font-size:14px;color:var(--cs-gray-600);line-height:1.55;margin-bottom:16px;">Complex challenges for expert users.</p>
-            <button class="btn btn-outline btn-sm" disabled>Coming Soon</button>
-          </div>
-        </div>
-    </div>
-
-    <!-- Step-by-Step Guides -->
-    <div class="category-section">
-      <div class="category-label-bar">Step-by-Step Guides</div>
-      <div>
-        <div class="grid-4">
-          <div class="card">
-            <div style="font-size:12px;color:var(--cs-gray-400);font-weight:600;margin-bottom:8px;">8 min read</div>
-            <h3 style="font-size:15px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;line-height:1.3;">How to Build a SIEM Detection Rule from a CISA Advisory</h3>
-            <a href="#" style="font-size:13px;font-weight:600;color:var(--cs-cyan);">Read guide →</a>
-          </div>
-          <div class="card">
-            <div style="font-size:12px;color:var(--cs-gray-400);font-weight:600;margin-bottom:8px;">12 min read</div>
-            <h3 style="font-size:15px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;line-height:1.3;">Configuring Windows Event Forwarding for a SOC Environment</h3>
-            <a href="#" style="font-size:13px;font-weight:600;color:var(--cs-cyan);">Read guide →</a>
-          </div>
-          <div class="card">
-            <div style="font-size:12px;color:var(--cs-gray-400);font-weight:600;margin-bottom:8px;">6 min read</div>
-            <h3 style="font-size:15px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;line-height:1.3;">Email Header Analysis: A Step-by-Step Field Reference</h3>
-            <a href="#" style="font-size:13px;font-weight:600;color:var(--cs-cyan);">Read guide →</a>
-          </div>
-          <div class="card">
-            <div style="font-size:12px;color:var(--cs-gray-400);font-weight:600;margin-bottom:8px;">15 min read</div>
-            <h3 style="font-size:15px;font-weight:700;color:var(--cs-navy);margin-bottom:8px;line-height:1.3;">Setting Up Wazuh for Open-Source SIEM on a Shoestring Budget</h3>
-            <a href="#" style="font-size:13px;font-weight:600;color:var(--cs-cyan);">Read guide →</a>
-          </div>
-        </div>
-      </div>  
-    </div>
-
-  </div>
-</section>
-
-<footer>
-  <div class="footer-inner">
-    <div class="footer-grid">
-      <div><div class="footer-logo">CyberSense<span>.Solutions</span></div>
-        <p class="footer-mission">Delivering actionable cybersecurity intelligence, daily awareness briefings, and professional training to teams that can't afford to be caught off guard.</p>
-        <div class="footer-socials">
-          <a href="https://www.linkedin.com/company/cybersense-solutions/" target="_blank" class="footer-social-icon">in</a>
-          <a href="https://www.facebook.com/profile.php?id=61570667370162" target="_blank" class="footer-social-icon">f</a>
-          <a href="https://x.com/cybersensesec" target="_blank" class="footer-social-icon">𝕏</a>
-          <a href="https://www.instagram.com/cybersense.solutions/" target="_blank" class="footer-social-icon">ig</a>
-          <a href="https://www.threads.com/@cybersense.solutions" target="_blank" class="footer-social-icon">tt</a>
-        </div>
-      </div>
-      <div class="footer-col"><h4>Platform</h4>
-        <ul>
-          <li><a href="index.html">Home</a></li>
-          <li><a href="about.html">About</a></li>
-          <li><a href="radar.html">Threat Radar</a></li>
-          <li><a href="intelligence.html">Intel Briefs</a></li>
-          <li><a href="newsletter.html">Newsletter</a></li>
-          <li><a href="growth.html">Growth</a></li>
-          <li><a href="innovation.html">Innovation</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <h4>Legal</h4>
-        <ul>
-          <li>
-            <a href="#">Privacy Policy</a></li>
-          <li><a href="#">Terms of Service</a></li>
-          <li><a href="about.html">Contact Us</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <span>&copy; 2026 CyberSense.Solutions. All rights reserved.</span>
-      <span>Security awareness starts here.</span>
-    </div>
-  </div>
-</footer>
 <script>window.CS_API_BASE = 'https://api.cybersense.solutions';</script>
 <script src="auth.js"></script>
 <script src="main.js"></script>
-<script>
-  /* ── Training Glossary Integration ──────────────────────────────── */
-  (function() {
-    const list = document.getElementById('glossary-list');
-    const search = document.getElementById('glossary-search');
-    const letter = document.getElementById('glossary-letter');
-    let glossaryTerms = [];
-    if (!list) return;
-
-    function esc(value) {
-      return String(value == null ? '' : value)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
-
-    function firstLetter(term) {
-      const match = String(term || '').trim().match(/[A-Za-z]/);
-      return match ? match[0].toUpperCase() : '#';
-    }
-
-    function renderLetterOptions(terms) {
-      if (!letter) return;
-      const letters = Array.from(new Set(terms.map(t => firstLetter(t.term)))).sort();
-      letter.innerHTML = '<option value="">All letters</option>' + letters.map(l => `<option value="${esc(l)}">${esc(l)}</option>`).join('');
-    }
-
-    function renderGlossary() {
-      const query = (search?.value || '').toLowerCase().trim();
-      const selectedLetter = letter?.value || '';
-      const filtered = glossaryTerms.filter(t => {
-        const matchesLetter = !selectedLetter || firstLetter(t.term) === selectedLetter;
-        const haystack = `${t.term || ''} ${t.definition || ''}`.toLowerCase();
-        return matchesLetter && (!query || haystack.includes(query));
-      });
-
-      if (!filtered.length) {
-        list.innerHTML = '<div class="glossary-empty">No glossary terms match the current filters.</div>';
-        return;
-      }
-
-      list.innerHTML = filtered.map(t => `
-        <details class="glossary-item" data-letter="${esc(firstLetter(t.term))}" data-category="${esc(t.category || '')}">
-          <summary>${esc(t.term)}</summary>
-          <div class="glossary-def">
-            ${esc(t.definition)}
-            ${t.category ? `<div class="glossary-meta">${esc(t.category)}</div>` : ''}
-          </div>
-        </details>
-      `).join('');
-    }
-
-    async function initGlossary() {
-      try {
-        if (!window.CS?.Auth?.apiFetch) throw new Error('Authentication client unavailable');
-        const json = await CS.Auth.apiFetch('/api/training/glossary');
-        const terms = (json.data || []).slice().sort((a, b) => String(a.term || '').localeCompare(String(b.term || '')));
-        
-        if (terms.length === 0) {
-          list.innerHTML = '<div class="glossary-empty">No terms found in glossary.</div>';
-          return;
-        }
-
-        glossaryTerms = terms;
-        renderLetterOptions(glossaryTerms);
-        renderGlossary();
-      } catch (e) {
-        console.error('Glossary load error:', e);
-        const message = e.code === 'SESSION_EXPIRED'
-          ? 'Sign in with a free account to load the cybersecurity glossary.'
-          : 'Error loading glossary. Please refresh.';
-        list.innerHTML = `<div class="glossary-empty" style="color:var(--cs-red);">${esc(message)}</div>`;
-      }
-    }
-
-    search?.addEventListener('input', renderGlossary);
-    letter?.addEventListener('change', renderGlossary);
-    initGlossary();
-  })();
-</script>
 </body>
 </html>

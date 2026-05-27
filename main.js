@@ -11,35 +11,55 @@
     intel: [
       {
         title: 'Threat Intelligence',
-        href: 'intelligence.html#threat-intelligence',
+        href: 'intel-repository.html#threat-intelligence',
         body: 'Decrypting the active threat landscape. Access analyses of emerging vulnerability vectors, weaponized exploits, and tactical mitigation strategies designed to safeguard enterprise infrastructure and workforce assets.',
       },
       {
+        title: 'Policy Updates',
+        href: 'policy.html',
+        body: 'Operational frameworks, compliance mandates, and governance guidance for modern cybersecurity programs.',
+      },
+      {
         title: 'Professional Growth',
-        href: 'intelligence.html#professional-growth',
+        href: 'growth.html',
         body: 'Empowering a digitally disciplined workforce. Discover data-backed insights on evolving technical certifications, cyber career trajectories, and interdisciplinary team structures designed to bridge the skills gap between practitioners and leadership.',
       },
       {
         title: 'Innovation',
-        href: 'intelligence.html#innovation',
+        href: 'innovation.html',
         body: 'Anticipating the technological frontier. Explore balanced, forward-looking deconstructions of emerging breakthroughs, from autonomous agentic AI architectures to post-quantum cryptographic transitions, and their structural impacts on future enterprise strategy.',
       },
       {
         title: 'Training Resources',
-        href: 'intelligence.html#training-resources',
+        href: 'training.html',
         body: 'Actionable pathways for continuous learning. Access a highly curated library of high-ROI webinars, instructional videos, and verified open-access courses to build systemic organizational resilience and technical mastery.',
       },
     ],
     resources: [
       {
-        title: 'Threat Intelligence',
-        href: 'intelligence.html#threat-intelligence',
-        body: 'Reference active and enduring threat analysis beyond the daily feed, organized for teams that need durable operational context.',
+        title: 'Resources Hub',
+        href: 'resources.html',
+        body: 'The central entry point for CyberSense reference, policy, intel, innovation, growth, and training resources.',
       },
       {
-        title: 'Professional Growth',
-        href: 'growth.html',
-        body: 'Career pathways, seminars, webinars, courses, and workforce guidance for building a resilient professional bench.',
+        title: 'Glossary',
+        href: 'glossary.html',
+        body: 'A durable terminology library for acronyms, concepts, frameworks, and operational language used across CyberSense coverage.',
+      },
+      {
+        title: 'Policy & Guidelines',
+        href: 'policy.html',
+        body: 'Core cybersecurity frameworks, data protection resources, breach references, and compliance guidance.',
+      },
+      {
+        title: 'Intel Repository',
+        href: 'intel-repository.html',
+        body: 'The central archive for threat intelligence, innovation, professional growth, and training resources.',
+      },
+      {
+        title: 'Threat Intelligence',
+        href: 'intel-repository.html#threat-intelligence',
+        body: 'Reference active and enduring threat analysis beyond the daily feed, organized for teams that need durable operational context.',
       },
       {
         title: 'Innovation',
@@ -47,15 +67,14 @@
         body: 'Emerging technology coverage with longer shelf life, from AI operations to post-quantum readiness and enterprise modernization.',
       },
       {
+        title: 'Professional Growth',
+        href: 'growth.html',
+        body: 'Career pathways, seminars, webinars, courses, and workforce guidance for building a resilient professional bench.',
+      },
+      {
         title: 'Training Resources',
         href: 'training.html',
         body: 'Practical training modules, labs, videos, and learning references grounded in current CyberSense intelligence.',
-      },
-      {
-        title: 'Glossary',
-        href: 'glossary.html',
-        body: 'A durable terminology library for acronyms, concepts, frameworks, and operational language used across CyberSense coverage.',
-        pending: true,
       },
     ],
   };
@@ -127,7 +146,7 @@
 
     const activeGroups = {
       intel: ['intelligence.html'],
-      resources: ['growth.html', 'innovation.html', 'training.html', 'glossary.html'],
+      resources: ['resources.html', 'glossary.html', 'policy.html', 'intel-repository.html', 'growth.html', 'innovation.html', 'training.html'],
     };
     Object.keys(activeGroups).forEach(function (group) {
       if (activeGroups[group].includes(path)) {

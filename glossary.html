@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png">
+<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png">
+<title>Glossary - CyberSense.Solutions</title>
+<meta name="description" content="Searchable CyberSense cybersecurity glossary.">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="auth.css">
+</head>
+<body>
+<nav class="nav" role="navigation" aria-label="Main navigation">
+  <a href="index.html" class="nav-wordmark">CyberSense<span>.Solutions</span></a>
+  <ul class="nav-links"></ul>
+  <button class="nav-login" onclick="CS.Auth.showLoginModal()">Login</button>
+  <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+</nav>
+<div class="nav-drawer" id="nav-drawer"><ul></ul><a href="#" class="drawer-login" onclick="CS.Auth.showLoginModal();return false;">Login</a></div>
+
+<main class="resources-page">
+  <section class="resources-shell">
+    <h1 class="resources-title"><span class="resource-icon">📖</span> <span>Glossary</span></h1>
+    <p class="resources-copy">Demystify complex sector terminology with our centralized cybersecurity glossary. From decoding critical CVE frameworks and threat vector mechanics to mastering the latest AI, ML, and quantum policy nomenclature, this reference guide provides clear, direct definitions. Use it to sharpen your technical vocabulary, baseline your foundational knowledge, and maintain total situational awareness across the evolving digital landscape.</p>
+
+    <input class="resource-search" id="glossary-search" type="search" placeholder="Search by term, keyword" aria-label="Search glossary">
+    <div class="resource-alpha" id="glossary-alpha" aria-label="Glossary letter filter"></div>
+    <div id="glossary-list" class="glossary-group">
+      <p class="resource-note">Loading glossary...</p>
+    </div>
+  </section>
+</main>
+
+<script>window.CS_API_BASE = 'https://api.cybersense.solutions';</script>
+<script src="auth.js"></script>
+<script src="main.js"></script>
+<script>
+(function() {
+  const alpha = document.getElementById('glossary-alpha');
+  const list = document.getElementById('glossary-list');
+  const search = document.getElementById('glossary-search');
+  let terms = [];
+  let selectedLetter = 'A';
+  const fallback = [
+    { term: 'access', definition: 'The ability and means to communicate with or otherwise interact with a system, resource, or data.' },
+    { term: 'access and identity management', definition: 'The methods and processes used to manage subjects and their authentication and authorizations to access specific objects.' },
+    { term: 'access control', definition: 'Security controls that restrict who or what can view, use, or modify protected resources.' },
+    { term: 'access control mechanism', definition: 'A technical, administrative, or physical control that enforces access control decisions.' },
+    { term: 'active attack', definition: 'An attack that attempts to alter system resources, affect operations, or manipulate data in transit.' },
+    { term: 'active content', definition: 'Executable or dynamic content embedded in a document, web page, or message.' }
+  ];
+
+  function esc(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, ch => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[ch]));
+  }
+
+  function firstLetter(term) {
+    const match = String(term || '').trim().match(/[A-Za-z]/);
+    return match ? match[0].toUpperCase() : '#';
+  }
+
+  function renderAlpha() {
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+    alpha.innerHTML = letters.map(letter => `<button class="resource-letter${letter === selectedLetter ? ' active' : ''}" type="button" data-letter="${letter}">${letter}</button>`).join('');
+    alpha.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        selectedLetter = btn.dataset.letter;
+        render();
+      });
+    });
+  }
+
+  function render() {
+    renderAlpha();
+    const query = (search.value || '').toLowerCase().trim();
+    const filtered = terms.filter(item => {
+      const haystack = `${item.term || ''} ${item.definition || ''}`.toLowerCase();
+      return firstLetter(item.term) === selectedLetter && (!query || haystack.includes(query));
+    });
+    if (!filtered.length) {
+      list.innerHTML = `<h2>${esc(selectedLetter)}</h2><p class="resource-note">No glossary terms match the current filters.</p>`;
+      return;
+    }
+    list.innerHTML = `<h2>${esc(selectedLetter)}</h2>` + filtered.map((item, index) => `
+      <div class="glossary-row">
+        <details${index === 1 ? ' open' : ''}>
+          <summary>${esc(item.term)}</summary>
+          <p>${esc(item.definition)}</p>
+        </details>
+      </div>`).join('');
+  }
+
+  async function load() {
+    try {
+      if (!window.CS?.Auth?.apiFetch) throw new Error('API client unavailable');
+      const json = await CS.Auth.apiFetch('/api/training/glossary');
+      terms = (json.data && json.data.length ? json.data : fallback).slice().sort((a, b) => String(a.term || '').localeCompare(String(b.term || '')));
+    } catch (e) {
+      console.error('Glossary load error:', e);
+      terms = fallback;
+    }
+    render();
+  }
+
+  search.addEventListener('input', render);
+  load();
+})();
+</script>
+</body>
+</html>

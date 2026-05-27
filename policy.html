@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png">
+<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png">
+<title>Policy &amp; Guidelines - CyberSense.Solutions</title>
+<meta name="description" content="Cybersecurity policy, compliance, privacy, and guidance resources.">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="auth.css">
+</head>
+<body>
+<nav class="nav" role="navigation" aria-label="Main navigation">
+  <a href="index.html" class="nav-wordmark">CyberSense<span>.Solutions</span></a>
+  <ul class="nav-links"></ul>
+  <button class="nav-login" onclick="CS.Auth.showLoginModal()">Login</button>
+  <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+</nav>
+<div class="nav-drawer" id="nav-drawer"><ul></ul><a href="#" class="drawer-login" onclick="CS.Auth.showLoginModal();return false;">Login</a></div>
+
+<main class="resources-page">
+  <section class="resources-shell">
+    <h1 class="resources-title"><span class="resource-icon">🏛️</span> <span>Policy &amp;</span> Guidelines</h1>
+    <p class="resources-copy">Navigate the shifting regulatory landscape with confidence. This section provides immediate access to core operational frameworks, compliance mandates, and governing policies shaping modern cybersecurity. From standardizing data protection protocols to breaking down the latest AI governance, machine learning constraints, and emerging federal regulations, these guidelines ensure your team operates safely, ethically, and in total alignment with current industry standards.</p>
+
+    <div class="policy-section">
+      <h2>NIST</h2>
+      <p><a href="https://www.nist.gov/cybersecurity" target="_blank" rel="noopener noreferrer">Fiscal Year 2025 Annual Report for NIST Cybersecurity and Privacy Program - May 21, 2026</a></p>
+      <p><a href="https://www.nist.gov/cybersecurity" target="_blank" rel="noopener noreferrer">Advancing Human-Centered Cybersecurity: Challenges and Pathways Forward - May 15, 2026</a></p>
+    </div>
+
+    <div class="policy-section" style="margin-top:28px;">
+      <h2>Data Breaches</h2>
+      <p><a href="https://privacyrights.org/data-breaches" target="_blank" rel="noopener noreferrer">Privacy Rights Clearinghouse - https://privacyrights.org/data-breaches</a></p>
+      <p><a href="https://ocrportal.hhs.gov/ocr/breach/breach_report.jsf" target="_blank" rel="noopener noreferrer">DHS Breach Portal - https://ocrportal.hhs.gov/ocr/breach/breach_report.jsf</a></p>
+    </div>
+
+    <div class="policy-section" style="margin-top:28px;">
+      <h3>HIPAA</h3>
+      <h3>PCI-DSS</h3>
+    </div>
+  </section>
+</main>
+
+<script>window.CS_API_BASE = 'https://api.cybersense.solutions';</script>
+<script src="auth.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
