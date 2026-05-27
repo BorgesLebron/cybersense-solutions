@@ -1218,13 +1218,21 @@ adminRouter.post('/trigger/matt-publish', requireAdminToken(['gm']), async (req,
       ORDER BY started_at DESC LIMIT 1
     `).then(r => r.rows[0] || null);
 
-    if (task?.status === 'failed' || task?.status === 'escalated') {
+    // Clear bad file_path (NaN/undefined from Date object bug) so Matt doesn't skip
+    if (task?.content_id) {
+      await db.pool.query(`
+        UPDATE briefings SET file_path = NULL
+        WHERE id = $1 AND file_path LIKE '%NaN%'
+      `, [task.content_id]);
+    }
+
+    if (task?.status === 'failed' || task?.status === 'escalated' || task?.status === 'complete') {
       await db.pool.query(`UPDATE agent_tasks SET status='queued', error_message=NULL, started_at=now() WHERE id=$1`, [task.id]);
     } else if (!task) {
       // No task — find the most recent approved briefing without a file_path
       const briefing = await db.pool.query(`
         SELECT id FROM briefings
-        WHERE pipeline_status = 'approved' AND (file_path IS NULL OR file_path = '')
+        WHERE pipeline_status = 'approved' AND (file_path IS NULL OR file_path = '' OR file_path LIKE '%NaN%')
         ORDER BY edition_date DESC LIMIT 1
       `).then(r => r.rows[0] || null);
 
@@ -1237,9 +1245,6 @@ adminRouter.post('/trigger/matt-publish', requireAdminToken(['gm']), async (req,
         agent_name: 'Matt', task_type: 'generate_newsletter_html',
         content_type: 'briefing', content_id: briefing.id, sla_deadline: sla,
       });
-    } else if (task?.status === 'complete') {
-      const briefing = await db.pool.query(`SELECT edition_number, file_path FROM briefings WHERE id=$1`, [task.content_id]).then(r => r.rows[0] || null);
-      return res.json({ triggered: false, agent: 'Matt', success: true, message: `Matt already committed Edition ${briefing?.edition_number || ''} — file: ${briefing?.file_path || 'unknown'}` });
     }
 
     await pollMattTasks();
