@@ -183,26 +183,11 @@
         </div>
         <h2 style="font-size:clamp(20px,2.5vw,26px);font-weight:700;color:#fff;letter-spacing:-0.5px;margin-bottom:6px;">Active Threats &amp; Vulnerabilities</h2>
         <p style="font-size:14px;color:rgba(255,255,255,0.45);margin-bottom:16px;line-height:1.6;">A rolling feed of tracked CVEs, active exploits, and vendor advisories.</p>
-        <div id="radar-stat-strip" style="display:flex;gap:24px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.08);"></div>
-        <div class="table-wrap">
-          <table class="data-table" aria-label="Threat radar preview">
-            <thead>
-              <tr>
-                <th>Sev</th>
-                <th>Threat</th>
-                <th>Vector</th>
-                <th>CVSS</th>
-              </tr>
-            </thead>
-            <tbody id="radar-preview-body">
-              <tr>
-                <td colspan="4" style="text-align:center;padding:32px;color:rgba(255,255,255,0.3);">Loading threats...</td>
-              </tr>
-            </tbody>
-          </table>
+        <div style="border-radius:10px;overflow:hidden;border:1px solid rgba(0,212,255,0.15);box-shadow:0 0 24px rgba(0,212,255,0.06);">
+          <iframe src="radar.html?embed=1" style="width:100%;height:620px;border:none;display:block;" title="Live Threat Radar" loading="lazy"></iframe>
         </div>
         <div style="text-align:right;margin-top:10px;">
-          <a href="radar.html" style="font-size:13px;color:rgba(0,212,255,0.75);text-decoration:none;">View full radar →</a>
+          <a href="radar.html" style="font-size:13px;color:rgba(0,212,255,0.75);text-decoration:none;">Open full radar →</a>
         </div>
       </div>
 
@@ -341,66 +326,7 @@
 <script src="main.js"></script>
 <script>
 
-function severityBadge(s) {
-  const map = { critical: 'badge-critical', high: 'badge-high', medium: 'badge-medium', low: 'badge-low' };
-  return `<span class="badge ${map[s] || 'badge-low'}">${s.charAt(0).toUpperCase() + s.slice(1)}</span>`;
-}
-
-const IDX_VECTORS = [
-  [/sql\s*inject/i,'SQL Injection'],[/command\s*inject|os\s*inject/i,'Cmd Injection'],
-  [/cross.site\s*script|xss\b/i,'XSS'],[/remote\s*code\s*exec|rce\b/i,'RCE'],
-  [/privilege\s*escal/i,'Priv Escalation'],[/buffer\s*overflow|heap\s*overflow/i,'Buffer Overflow'],
-  [/use.after.free/i,'Use-After-Free'],[/denial.of.service|\bdos\b|resource\s*exhaust/i,'DoS'],
-  [/path\s*travers|directory\s*travers/i,'Path Traversal'],[/auth\s*bypass|authentication\s*bypass/i,'Auth Bypass'],
-  [/information\s*disclos|sensitive\s*data/i,'Info Disclosure'],[/deserialization/i,'Deserialization'],
-  [/server.side\s*request|ssrf\b/i,'SSRF'],[/memory\s*corrupt|out.of.bounds/i,'Memory Corruption'],
-  [/integer\s*overflow/i,'Integer Overflow'],[/null\s*pointer|null\s*deref/i,'Null Deref'],
-];
-function idxVector(t) {
-  if (t.threat_category && !['vulnerability','known_exploited_vulnerability','us-cert-current-activity'].includes(t.threat_category))
-    return t.threat_category.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
-  const text = t.threat_name || '';
-  for (const [re, label] of IDX_VECTORS) { if (re.test(text)) return label; }
-  if (t.category === 'known_exploited_vulnerability') return 'Known Exploited';
-  if (t.category === 'us-cert-current-activity') return 'US-CERT';
-  return 'Vulnerability';
-}
-function radarRow(t) {
-  const name = (t.threat_name || '').length > 72 ? t.threat_name.slice(0, 72) + '…' : (t.threat_name || '—');
-  const vector = idxVector(t);
-  return `<tr>
-    <td>${severityBadge(t.severity)}</td>
-    <td style="font-weight:500;color:rgba(255,255,255,0.88);font-size:12px;">${name}</td>
-    <td style="font-size:11px;color:rgba(0,212,255,0.75);white-space:nowrap;">${vector}</td>
-    <td class="mono">${parseFloat(t.cvss_score||0).toFixed(1)}</td>
-  </tr>`;
-}
-
 async function loadHomeData(user) {
-  // ── Radar Preview ──────────────────────────────────────────────
-  if (user) {
-    try {
-      const radarData = await CS.Auth.apiFetch('/api/content/radar?limit=50');
-      const threats = radarData.data || [];
-      const critical = threats.filter(t => t.severity === 'critical').length;
-      const high     = threats.filter(t => t.severity === 'high').length;
-      document.getElementById('radar-stat-strip').innerHTML = `
-        <div style="text-align:center;"><div style="font-size:22px;font-weight:700;color:#ef4444;">${critical}</div><div style="font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:.6px;margin-top:2px;">CRITICAL</div></div>
-        <div style="text-align:center;"><div style="font-size:22px;font-weight:700;color:#d97706;">${high}</div><div style="font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:.6px;margin-top:2px;">HIGH</div></div>
-        <div style="text-align:center;"><div style="font-size:22px;font-weight:700;color:rgba(255,255,255,0.65);">${threats.length}</div><div style="font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:.6px;margin-top:2px;">TRACKED</div></div>`;
-      document.getElementById('radar-preview-body').innerHTML =
-        threats.length ? threats.slice(0, 5).map(radarRow).join('') :
-        '<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--cs-gray-400);">No threats tracked yet.</td></tr>';
-    } catch(e) {
-      document.getElementById('radar-preview-body').innerHTML =
-        '<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--cs-gray-400);">Radar temporarily unavailable.</td></tr>';
-    }
-  } else {
-    document.getElementById('radar-preview-body').innerHTML = `
-      <tr><td colspan="4" style="text-align:center;padding:32px;">
-        <a href="#" class="btn btn-primary btn-sm" onclick="CS.Auth.showLoginModal();return false;">Sign In to View Live Radar</a>
-      </td></tr>`;
-  }
 
   // ── Briefing Preview ───────────────────────────────────────────
   if (user) {
