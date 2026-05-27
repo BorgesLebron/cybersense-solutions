@@ -1151,9 +1151,35 @@ adminRouter.post('/trigger/barbara-batch', requireAdminToken(['gm']), async (req
 
 adminRouter.post('/trigger/briefing-distribution', requireAdminToken(['gm']), async (req, res, next) => {
   try {
+    // Manual trigger from ops console = HITL authorization. Auto-log the auth event if
+    // the confirm-distribution step was skipped or missed, then run distribution.
+    const todayCt = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Chicago' });
+    const briefing = await db.pool.query(
+      `SELECT * FROM briefings WHERE pipeline_status = 'approved' AND edition_date = $1 LIMIT 1`,
+      [todayCt]
+    ).then(r => r.rows[0] || null);
+
+    if (briefing) {
+      const existing = await db.pool.query(
+        `SELECT id FROM pipeline_events WHERE content_type = 'briefing' AND content_id = $1 AND notes LIKE 'Distribution authorized for 0430 CT%' LIMIT 1`,
+        [briefing.id]
+      ).then(r => r.rows[0] || null);
+
+      if (!existing) {
+        await db.logPipelineEvent({
+          content_type: 'briefing',
+          content_id: briefing.id,
+          from_status: 'approved',
+          to_status: 'approved',
+          agent_name: 'human_executive',
+          notes: `Distribution authorized for 0430 CT publishing-day job - Edition ${briefing.edition_number}`,
+        });
+      }
+    }
+
     const { runDailyBriefingEmailDistribution } = require('../services/scheduler');
     await runDailyBriefingEmailDistribution();
-    res.json({ triggered: true, job: 'briefing_distribution', message: 'Distribution triggered. Approved edition will be sent to subscribers if HITL authorization is confirmed.' });
+    res.json({ triggered: true, job: 'briefing_distribution', message: 'Distribution triggered. Approved and authorized edition will be sent to subscribers now.' });
   } catch (e) { next(e); }
 });
 
@@ -1327,10 +1353,16 @@ adminRouter.get('/pipeline/controls-status', requireAdminToken(), async (req, re
           AND status = 'queued'
       `).then(r => parseInt(r.rows[0]?.count || 0)),
       db.pool.query(`
-        SELECT id, edition_number, edition_date, pipeline_status
-        FROM briefings
-        WHERE pipeline_status = 'approved'
-          AND edition_date = (now() AT TIME ZONE 'America/Chicago')::date
+        SELECT b.id, b.edition_number, b.edition_date, b.pipeline_status,
+          EXISTS(
+            SELECT 1 FROM pipeline_events pe
+            WHERE pe.content_type = 'briefing'
+              AND pe.content_id = b.id
+              AND pe.notes LIKE 'Distribution authorized for 0430 CT%'
+          ) AS authorized
+        FROM briefings b
+        WHERE b.pipeline_status = 'approved'
+          AND b.edition_date = (now() AT TIME ZONE 'America/Chicago')::date
         LIMIT 1
       `).then(r => r.rows[0] || null),
     ]);

@@ -1823,13 +1823,16 @@ async function loadPipelineControlStatus() {
 
     // Distribution
     const distOk = !!pending_distribution;
-    document.getElementById('pc-dist-val').textContent = distOk ? 'Ready' : 'None';
-    document.getElementById('pc-dist-val').className = 'met-val ' + (distOk ? 'up' : 'nt');
-    document.getElementById('pc-dist-note').textContent = distOk
-      ? 'Edition ' + pending_distribution.edition_number + ' approved and waiting'
+    const distAuthorized = distOk && !!pending_distribution.authorized;
+    document.getElementById('pc-dist-val').textContent = distAuthorized ? 'Authorized' : distOk ? 'Needs auth' : 'None';
+    document.getElementById('pc-dist-val').className = 'met-val ' + (distAuthorized ? 'up' : distOk ? 'nt' : 'nt');
+    document.getElementById('pc-dist-note').textContent = distAuthorized
+      ? 'Edition ' + pending_distribution.edition_number + ' authorized — ready to send'
+      : distOk ? 'Edition ' + pending_distribution.edition_number + ' approved but not yet authorized'
       : 'No approved edition pending send';
-    document.getElementById('pc-dist-desc').textContent = distOk
-      ? 'Edition ' + pending_distribution.edition_number + ' approved — ready to distribute to subscribers'
+    document.getElementById('pc-dist-desc').textContent = distAuthorized
+      ? 'Edition ' + pending_distribution.edition_number + ' — click Send Briefing to distribute now'
+      : distOk ? 'Approved but not authorized — authorize in Newsletter tab first, or click Send Briefing to authorize and send in one step'
       : 'No approved edition for today';
     const btnDist = document.getElementById('btn-dist');
     if (!btnDist.classList.contains('success') && !btnDist.classList.contains('loading')) btnDist.disabled = !distOk;
