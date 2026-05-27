@@ -175,7 +175,7 @@ Task: Generate a Daily Training Byte based on this threat.`;
       type: 'training_byte',
       phase: 'library',
       zt_module: 'threat_defense',
-      access_tier: 'free',
+      access_tier: 'freemium',
       duration_min: 5,
       content_url: null,
       body_md: text.trim(),
