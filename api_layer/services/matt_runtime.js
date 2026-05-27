@@ -42,10 +42,7 @@ async function ensureMattToken() {
 // ── File path helpers ─────────────────────────────────────────────────────────
 
 function buildFilePath(edition_date, edition_number) {
-  const dateStr = edition_date instanceof Date
-    ? edition_date.toISOString().slice(0, 10)
-    : String(edition_date).slice(0, 10);
-  const d     = new Date(dateStr + 'T12:00:00Z');
+  const d     = new Date(edition_date + 'T12:00:00Z');
   const month = MONTHS[d.getUTCMonth()];
   const year  = d.getUTCFullYear();
   const mm    = String(d.getUTCMonth() + 1).padStart(2, '0');
@@ -54,10 +51,7 @@ function buildFilePath(edition_date, edition_number) {
 }
 
 function formatDisplayDate(edition_date) {
-  const dateStr = edition_date instanceof Date
-    ? edition_date.toISOString().slice(0, 10)
-    : String(edition_date).slice(0, 10);
-  const d = new Date(dateStr + 'T12:00:00Z');
+  const d = new Date(edition_date + 'T12:00:00Z');
   return `${MONTHS_LONG[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
 }
 
