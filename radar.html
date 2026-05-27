@@ -750,12 +750,47 @@ function updateStats(threats) {
 /* ════════════════════════════════════════════════
    TOP 10 ATTACK VECTORS (dynamic)
 ════════════════════════════════════════════════ */
+const VECTOR_RULES = [
+  [/sql\s*inject|cql\s*inject/i,              'SQL Injection'],
+  [/command\s*inject|os\s*inject|shell\s*inject/i, 'Command Injection'],
+  [/cross.site\s*script|xss\b/i,              'Cross-Site Scripting'],
+  [/remote\s*code\s*exec|rce\b|code\s*exec/i, 'Remote Code Execution'],
+  [/privilege\s*escal|local\s*privilege/i,    'Privilege Escalation'],
+  [/buffer\s*overflow|heap\s*overflow|stack\s*overflow/i, 'Buffer Overflow'],
+  [/use.after.free|uaf\b/i,                   'Use-After-Free'],
+  [/denial.of.service|\bdos\b|resource\s*exhaust|flood/i, 'Denial of Service'],
+  [/path\s*travers|directory\s*travers/i,      'Path Traversal'],
+  [/authentication\s*bypass|auth\s*bypass|improper\s*auth/i, 'Auth Bypass'],
+  [/information\s*disclos|data\s*expos|sensitive\s*data/i, 'Information Disclosure'],
+  [/deserialization/i,                         'Deserialization'],
+  [/server.side\s*request|ssrf\b/i,            'SSRF'],
+  [/xml\s*extern|xxe\b/i,                      'XXE'],
+  [/open\s*redirect/i,                         'Open Redirect'],
+  [/race\s*condition|time.of.check/i,          'Race Condition'],
+  [/null\s*pointer|null\s*deref/i,             'Null Dereference'],
+  [/integer\s*overflow|integer\s*underflow/i,  'Integer Overflow'],
+  [/cross.site\s*request\s*forgery|csrf\b/i,   'CSRF'],
+  [/memory\s*corrupt|out.of.bounds|heap\s*corrupt/i, 'Memory Corruption'],
+];
+const CATEGORY_LABELS = {
+  ransomware: 'Ransomware', phishing: 'Phishing', apt: 'APT',
+  known_exploited_vulnerability: 'Known Exploited', 'us-cert-current-activity': 'US-CERT Advisory',
+};
+function classifyVector(t) {
+  if (t.threat_category && CATEGORY_LABELS[t.threat_category]) return CATEGORY_LABELS[t.threat_category];
+  const text = t.threat_name || '';
+  for (const [re, label] of VECTOR_RULES) { if (re.test(text)) return label; }
+  if (t.threat_category && t.threat_category !== 'vulnerability') return fmtCat(t.threat_category);
+  if (t.category === 'known_exploited_vulnerability') return 'Known Exploited';
+  if (t.category === 'us-cert-current-activity') return 'US-CERT Advisory';
+  return 'Other Vulnerability';
+}
 function renderTop10(threats) {
   const body = document.getElementById('top10-body');
   if (!threats.length) { body.innerHTML = '<div class="top10-empty">No threat data available.</div>'; return; }
   const counts = {};
   threats.forEach(t => {
-    const k = fmtCat(t.threat_category || t.category);
+    const k = classifyVector(t);
     counts[k] = (counts[k]||0) + 1;
   });
   const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,10);
