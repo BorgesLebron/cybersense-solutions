@@ -145,44 +145,15 @@
     <div class="home-split-grid">
 
       <!-- Left: Radar Widget -->
-      <div class="split-panel-radar" role="link" tabindex="0" onclick="window.location.href='radar.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.location.href='radar.html';}">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-          <span class="live-dot"></span>
-          <p class="section-label" style="margin:0;color:rgba(255,255,255,0.5);">Live Intelligence</p>
+      <div class="split-panel-radar">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="live-dot"></span>
+            <p class="section-label" style="margin:0;color:rgba(255,255,255,0.5);">Live Intelligence</p>
+          </div>
+          <span class="split-radar-pill">Live <i></i></span>
         </div>
-        <div class="split-radar-top">
-          <div>
-            <h2 style="font-size:clamp(20px,2.5vw,26px);font-weight:700;color:#fff;letter-spacing:-0.5px;margin-bottom:6px;">Threat Radar</h2>
-            <p style="font-size:13px;color:rgba(255,255,255,0.42);line-height:1.6;">Tracked vulnerabilities and active threats</p>
-          </div>
-          <span class="split-radar-pill">Live Radar <i></i></span>
-        </div>
-        <div class="split-radar-dashboard" aria-hidden="true">
-          <div class="split-radar-stats">
-            <div class="split-radar-stat"><strong>200</strong><span>Total</span></div>
-            <div class="split-radar-stat"><strong>2</strong><span>Critical</span></div>
-            <div class="split-radar-stat"><strong>5</strong><span>High</span></div>
-            <div class="split-radar-stat"><strong>0</strong><span>Medium</span></div>
-            <div class="split-radar-stat"><strong>193</strong><span>Low</span></div>
-          </div>
-          <div class="mini-radar-orb">
-            <i></i><i></i><i></i>
-          </div>
-          <div class="split-radar-feed">
-            <div><strong>High</strong><b>KEV edge device exploit</b><span>9.8</span></div>
-            <div><strong>Critical</strong><b>Remote code execution</b><span>10.0</span></div>
-            <div><strong>High</strong><b>Identity provider bypass</b><span>8.7</span></div>
-            <div><strong>Low</strong><b>Vendor advisory update</b><span>4.2</span></div>
-          </div>
-          <div class="split-radar-matrix">
-            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-          </div>
-          <div class="split-radar-line"></div>
-        </div>
-        <h2 style="font-size:clamp(20px,2.5vw,26px);font-weight:700;color:#fff;letter-spacing:-0.5px;margin-bottom:6px;">Active Threats &amp; Vulnerabilities</h2>
-        <p style="font-size:14px;color:rgba(255,255,255,0.45);margin-bottom:16px;line-height:1.6;">A rolling feed of tracked CVEs, active exploits, and vendor advisories.</p>
+        <h2 style="font-size:clamp(18px,2vw,22px);font-weight:700;color:#fff;letter-spacing:-0.5px;margin-bottom:14px;">Threat Radar</h2>
         <div style="border-radius:10px;overflow:hidden;border:1px solid rgba(0,212,255,0.15);box-shadow:0 0 24px rgba(0,212,255,0.06);">
           <iframe src="radar.html?embed=1" style="width:100%;height:620px;border:none;display:block;" title="Live Threat Radar" loading="lazy"></iframe>
         </div>
