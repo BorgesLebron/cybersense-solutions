@@ -118,18 +118,20 @@ function parseH3Items(sectionText) {
 
 function parseBodyMd(body_md) {
   const sections = {};
-  for (const raw of body_md.split(/^###\s+/m)) {
+  // Ruth's LLM uses ## (H2) section headings; scaffold fallback uses ### (H3)
+  const splitRe = /^## /m.test(body_md) ? /^## +/m : /^### +/m;
+  for (const raw of body_md.split(splitRe)) {
     if (!raw.trim()) continue;
     const nl = raw.indexOf('\n');
     if (nl === -1) continue;
-    const key     = raw.slice(0, nl).trim().toLowerCase();
+    const key     = raw.slice(0, nl).trim().toLowerCase().replace(/^[#\s]+/, '');
     const content = raw.slice(nl + 1).trim();
-    if (key.includes('opening') || key.includes('brief'))  sections.opening       = content;
-    else if (key.includes('situational'))                  sections.situational   = content;
-    else if (key.includes('training'))                     sections.training      = content;
-    else if (key.includes('career'))                       sections.career        = content;
-    else if (key.includes('modernization'))                sections.modernization = content;
-    else if (key.includes('final'))                        sections.final         = content;
+    if (key.includes('opening') || key.includes('brief'))         sections.opening       = content;
+    else if (key.includes('situational'))                          sections.situational   = content;
+    else if (key.includes('training'))                             sections.training      = content;
+    else if (key.includes('career') || key.includes('development')) sections.career       = content;
+    else if (key.includes('modernization') || key.includes('innovation')) sections.modernization = content;
+    else if (key.includes('final'))                                sections.final         = content;
   }
   return sections;
 }
@@ -137,11 +139,22 @@ function parseBodyMd(body_md) {
 // ── Section renderers ─────────────────────────────────────────────────────────
 
 function renderSituationalAwareness(content) {
-  const items = parseH3Items(content);
+  // Handle both ### heading items (scaffold) and --- separated items (LLM output)
+  let items;
+  if (/^###\s+/m.test(content)) {
+    items = parseH3Items(content);
+  } else {
+    items = content.split(/^---\s*$/m).map(s => s.trim()).filter(Boolean).map(block => {
+      const nl = block.indexOf('\n');
+      return nl === -1
+        ? { title: block.trim(), content: '' }
+        : { title: block.slice(0, nl).trim(), content: block.slice(nl + 1).trim() };
+    });
+  }
   const inner = items.map((item, i) => [
     item.title ? `<h3 class="text-xl font-semibold mb-1">${escHtml(item.title)}</h3>` : '',
     renderLines(item.content.split('\n')),
-    i < items.length - 1 ? '<hr>' : '',
+    i < items.length - 1 ? '<hr class="my-6 border-white/10">' : '',
   ].filter(Boolean).join('\n')).join('\n');
 
   return `
@@ -187,7 +200,8 @@ function renderFullWidthSection(title, content) {
 
 function buildNewsletterHtml(briefing) {
   const { edition_number, edition_date, subject_line, body_md } = briefing;
-  const year        = new Date(edition_date + 'T12:00:00Z').getUTCFullYear();
+  const dateStr     = edition_date instanceof Date ? edition_date.toISOString().slice(0, 10) : String(edition_date).slice(0, 10);
+  const year        = new Date(dateStr + 'T12:00:00Z').getUTCFullYear();
   const displayDate = formatDisplayDate(edition_date);
   const filePath    = buildFilePath(edition_date, edition_number);
   const publicUrl   = `https://cybersense.solutions/${filePath}`;
