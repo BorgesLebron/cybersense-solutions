@@ -7,20 +7,32 @@ const db        = require('../db/queries');
 const { notifyAgents } = require('./agents');
 const { postAgentStatusToActiveMeeting } = require('./meetings');
 
-const ACQUISITIONS_SYSTEM_PROMPT = `You are the Acquisitions Editor for CyberSense: Daily Digital Awareness Brief, a daily professional intelligence newsletter focused on workforce cyber awareness, institutional resilience, and human-centric risk. You operate upstream of writing and are responsible for identifying content that is timely, credible, and directly relevant to digital awareness and professional decision-making. Do not generate prose; only provide a structured outline suitable for editorial drafting.
+const ACQUISITIONS_SYSTEM_PROMPT = `You are the lead writer for CyberSense: Daily Digital Awareness Brief, a daily professional intelligence newsletter for security-aware workforces. Write the complete, publication-ready newsletter — not an outline.
 
-Use the provided Topic Selection to draft the outline for the Daily Digital Awareness Brief.
+OUTPUT FORMAT — use these exact ## section headings in this order:
 
-Draft the training Byte that goes in accordance with the theme of the letter.
+## Opening Brief
+2–3 paragraphs (150–200 words). Identify the unifying theme across today's content. Do not name individual threats — write at the pattern level. Professional, direct tone.
 
-Produce a complete Daily Digital Awareness Brief outline that includes:
-• A unifying daily theme supported by all selected items
-• Select the three recent, compelling, and most relevant to the them for Situational Awareness entries
-• One Training Byte explanation with vulnerability and mitigation
-• One Career Development entry meeting ROI criteria
-• Two Modernization and AI Insight entries
+## Situational Awareness
+Three threat entries. Each entry: plain-text title on its own line, then 2–3 substantive paragraphs covering the threat, organizational impact, and recommended actions. Separate entries with ---
 
-Each selected item must be justified with a one-sentence rationale linking it to the newsletter mission.`;
+## Training Byte
+Insert the Training Byte content verbatim from the provided source. Do not rewrite it.
+
+## Career Development
+One entry, 2–3 paragraphs. Career and professional growth implications of today's threat landscape.
+
+## Modernization and AI Insight
+Two entries separated by ---. Each: 2–3 paragraphs on technology modernization or AI developments relevant to security practitioners.
+
+## Final Thought
+One closing paragraph (50–80 words). Synthesize the day's theme into a forward-looking perspective. Do not append any footer, metadata, or publication boilerplate.
+
+RULES:
+- Do not include "Correct Answer" in the Knowledge Check — the answer appears in the next edition.
+- The SUBJECT line must be a thematic 5–7 word headline capturing the edition theme — NOT a restatement of any individual threat title.
+- Do not append CyberSense footer text or date lines after Final Thought.`;
 
 const API_BASE = () =>
   process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
@@ -178,10 +190,15 @@ async function buildAcquisitionsOutline(threats, innovations, growthItem, traini
   });
 
   const text = (message.content[0]?.text || '').trim();
-  const subjectMatch = text.match(/^SUBJECT:\s*(.+)$/m);
+  const subjectMatch  = text.match(/^SUBJECT:\s*(.+)$/m);
+  // Prefer explicit SUBJECT line; fall back to H1 thematic title (after colon) before
+  // using the first threat title, which would duplicate the first SA item heading.
+  const h1ThemeMatch  = text.match(/^#\s+[^:\n]+:\s*(.+)$/m);
   const subjectLine = subjectMatch
     ? subjectMatch[1].trim().slice(0, 120)
-    : (threats[0]?.title || `Daily Awareness Brief — ${editionDate}`);
+    : h1ThemeMatch
+      ? h1ThemeMatch[1].trim().slice(0, 120)
+      : (threats[0]?.title || `Daily Awareness Brief — ${editionDate}`);
   const body_md = text.replace(/^SUBJECT:.*$/m, '').trimEnd();
 
   return { subjectLine, body_md };

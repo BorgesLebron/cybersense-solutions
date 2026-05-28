@@ -96,9 +96,32 @@ function renderLines(lines) {
       if (inList) { result.push('</ul>'); inList = false; }
       continue;
     }
+    // Skip horizontal rules — section separators that bleed into content
+    if (/^-{3,}\s*$/.test(line)) {
+      if (inList) { result.push('</ul>'); inList = false; }
+      continue;
+    }
+    // Skip LLM footer metadata lines
+    if (/^\*?CyberSense\.Solutions/.test(line) || /^\*?(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),/.test(line)) {
+      continue;
+    }
+    // Heading markers (####, ###, ##, #)
+    const h4 = line.match(/^####\s+(.+)/);
+    const h3 = line.match(/^###\s+(.+)/);
+    const h2 = line.match(/^##\s+(.+)/);
+    const h1 = line.match(/^#\s+(.+)/);
+    if (h4 || h3 || h2 || h1) {
+      if (inList) { result.push('</ul>'); inList = false; }
+      const [, text] = h4 || h3 || h2 || h1;
+      const tag  = h4 ? 'h4' : h3 ? 'h3' : h2 ? 'h2' : 'h1';
+      const cls  = h4 ? 'text-base font-semibold mt-5 mb-1'
+                 : h3 ? 'text-lg font-semibold mt-6 mb-2'
+                 : 'text-xl font-bold mt-6 mb-2';
+      result.push(`<${tag} class="${cls}">${inlineMarkdown(text)}</${tag}>`);
+      continue;
+    }
     const bulletMatch   = line.match(/^[-*•]\s+(.+)/);
     const numberedMatch = line.match(/^\d+\.\s+(.+)/);
-
     if (bulletMatch || numberedMatch) {
       const text = (bulletMatch || numberedMatch)[1];
       if (!inList) { result.push('<ul class="list-disc list-inside space-y-1 text-gray-800 mb-3 text-sm">'); inList = true; }
@@ -137,7 +160,10 @@ function parseBodyMd(body_md) {
     else if (key.includes('training'))                             sections.training      = content;
     else if (key.includes('career') || key.includes('development')) sections.career       = content;
     else if (key.includes('modernization') || key.includes('innovation')) sections.modernization = content;
-    else if (key.includes('final'))                                sections.final         = content;
+    else if (key.includes('final')) {
+      // Strip LLM-appended footer metadata (CyberSense boilerplate + date lines)
+      sections.final = content.replace(/\*?CyberSense\.Solutions[\s\S]*$/m, '').trim();
+    }
   }
   return sections;
 }
