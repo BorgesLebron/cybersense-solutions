@@ -12,27 +12,27 @@
       {
         title: 'Threat Intelligence',
         href: 'intel-repository.html#threat-intelligence',
-        body: 'Decrypting the active threat landscape. Access analyses of emerging vulnerability vectors, weaponized exploits, and tactical mitigation strategies designed to safeguard enterprise infrastructure and workforce assets.',
+        body: 'Threat repository and historical reference.',
       },
       {
         title: 'Policy Updates',
         href: 'policy.html',
-        body: 'Operational frameworks, compliance mandates, and governance guidance for modern cybersecurity programs.',
+        body: 'Policy repository and historical reference.',
       },
       {
         title: 'Professional Growth',
         href: 'growth.html',
-        body: 'Empowering a digitally disciplined workforce. Discover data-backed insights on evolving technical certifications, cyber career trajectories, and interdisciplinary team structures designed to bridge the skills gap between practitioners and leadership.',
+        body: 'Growth repository and historical reference.',
       },
       {
         title: 'Innovation',
         href: 'innovation.html',
-        body: 'Anticipating the technological frontier. Explore balanced, forward-looking deconstructions of emerging breakthroughs, from autonomous agentic AI architectures to post-quantum cryptographic transitions, and their structural impacts on future enterprise strategy.',
+        body: 'Innovation repository and historical reference.',
       },
       {
         title: 'Training Resources',
         href: 'training.html',
-        body: 'Actionable pathways for continuous learning. Access a highly curated library of high-ROI webinars, instructional videos, and verified open-access courses to build systemic organizational resilience and technical mastery.',
+        body: 'Training repository and historical reference.',
       },
     ],
     resources: [
@@ -87,12 +87,13 @@
   }
 
   function navDropdown(label, key) {
+    const menuTitle = key === 'intel' ? 'Intel Articles' : `${label} &rarr;`;
     return `<li class="nav-menu-item" data-nav-group="${key}">
       <button class="nav-menu-trigger" type="button" aria-haspopup="true" aria-expanded="false">
         ${label}<span class="nav-caret" aria-hidden="true"></span>
       </button>
       <div class="nav-mega" role="menu" aria-label="${label} menu">
-        <div class="nav-mega-title">${label} &rarr;</div>
+        <div class="nav-mega-title">${menuTitle}</div>
         <div class="nav-mega-grid">
           ${NAV_GROUPS[key].map(navCard).join('')}
         </div>
