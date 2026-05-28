@@ -10,29 +10,34 @@
   const NAV_GROUPS = {
     intel: [
       {
+        title: 'Intel Articles',
+        href: 'intelligence.html',
+        body: 'Full Intel Articles page.',
+      },
+      {
         title: 'Threat Intelligence',
-        href: 'intel-repository.html#threat-intelligence',
-        body: 'Threat repository and historical reference.',
+        href: 'intelligence.html#threat-intelligence',
+        body: 'Current threat intelligence.',
       },
       {
         title: 'Policy Updates',
-        href: 'policy.html',
-        body: 'Policy repository and historical reference.',
+        href: 'intelligence.html#policy-updates',
+        body: 'Current policy updates.',
       },
       {
         title: 'Professional Growth',
-        href: 'growth.html',
-        body: 'Growth repository and historical reference.',
+        href: 'intelligence.html#professional-growth',
+        body: 'Current professional growth.',
       },
       {
         title: 'Innovation',
-        href: 'innovation.html',
-        body: 'Innovation repository and historical reference.',
+        href: 'intelligence.html#innovation',
+        body: 'Current innovation coverage.',
       },
       {
         title: 'Training Resources',
-        href: 'training.html',
-        body: 'Training repository and historical reference.',
+        href: 'intelligence.html#training-resources',
+        body: 'Current training resources.',
       },
     ],
     resources: [
