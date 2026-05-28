@@ -198,31 +198,68 @@ function renderSituationalAwareness(content) {
   </div>`;
 }
 
-function renderCard(title, content) {
-  const items = parseH3Items(content || '');
-  const inner = items.map(item => [
-    item.title ? `<h3 class="text-xl font-semibold mb-2">${escHtml(item.title)}</h3>` : '',
-    renderLines(item.content.split('\n')),
-  ].filter(Boolean).join('\n')).join('\n');
+// Extract the first meaningful title line regardless of LLM heading format:
+// handles #### / ### / ## headings, **bold**, and plain first line.
+function extractFirstLineTitle(lines) {
+  for (let i = 0; i < lines.length; i++) {
+    const l = lines[i].trim();
+    if (!l) continue;
+    const hMatch = l.match(/^#{1,4}\s+(.+)/);
+    if (hMatch) return { title: hMatch[1].trim(), bodyStart: i + 1 };
+    const boldMatch = l.match(/^\*\*(.+?)\*\*\s*$/);
+    if (boldMatch) return { title: boldMatch[1].trim(), bodyStart: i + 1 };
+    // Plain text first line — treat as title
+    return { title: l.replace(/^[-•]\s*/, ''), bodyStart: i + 1 };
+  }
+  return { title: null, bodyStart: 0 };
+}
+
+// Training Byte — robust title extraction regardless of LLM heading format
+function renderTrainingByteCard(content) {
+  const lines = (content || '').split('\n');
+  const { title, bodyStart } = extractFirstLineTitle(lines);
   return `
     <div class="section-card p-6 rounded-xl border">
-      <h2 class="text-2xl font-bold mb-4 flex items-center border-b pb-2">${escHtml(title)}</h2>
-      ${inner}
+      <h2 class="text-2xl font-bold mb-4 flex items-center border-b pb-2">Training Byte</h2>
+      ${title ? `<h4 class="text-base font-semibold mt-1 mb-3" style="color:#66B2FF;">${inlineMarkdown(title)}</h4>` : ''}
+      ${renderLines(lines.slice(bodyStart))}
     </div>`;
 }
 
-function renderFullWidthSection(title, content) {
-  const items = parseH3Items(content);
-  const inner = items.map((item, i) => [
-    item.title ? `<h3 class="text-xl font-semibold mb-2">${escHtml(item.title)}</h3>` : '',
-    renderLines(item.content.split('\n')),
-    i < items.length - 1 ? '<hr>' : '',
-  ].filter(Boolean).join('\n')).join('\n');
+// Career Development — first line = course/cert title, Link: line = styled anchor
+function renderCareerDevCard(content) {
+  const lines = (content || '').split('\n');
+  const { title, bodyStart } = extractFirstLineTitle(lines);
+  const bodyLines = lines.slice(bodyStart).map(l => {
+    const linkMatch = l.trim().match(/^Link:\s*(https?:\/\/\S+)/i);
+    if (linkMatch) return `[Read More ↗](${linkMatch[1]})`;
+    return l;
+  });
+  return `
+    <div class="section-card p-6 rounded-xl border">
+      <h2 class="text-2xl font-bold mb-4 flex items-center border-b pb-2">Career Development</h2>
+      ${title ? `<h4 class="text-base font-semibold mt-1 mb-3" style="color:#66B2FF;">${inlineMarkdown(title)}</h4>` : ''}
+      ${renderLines(bodyLines)}
+    </div>`;
+}
+
+// Modernization and AI Insight — split on --- separators, extract per-entry title
+function renderModernizationSection(content) {
+  const blocks = (content || '').split(/^---\s*$/m).map(s => s.trim()).filter(Boolean);
+  const inner = blocks.map((block, i) => {
+    const lines = block.split('\n');
+    const { title, bodyStart } = extractFirstLineTitle(lines);
+    return [
+      title ? `<h3 class="text-xl font-semibold mb-2">${inlineMarkdown(title)}</h3>` : '',
+      renderLines(lines.slice(bodyStart)),
+      i < blocks.length - 1 ? '<hr>' : '',
+    ].filter(Boolean).join('\n');
+  }).join('\n');
 
   return `
   <div class="mb-8">
     <div class="section-card p-6 rounded-xl border">
-      <h2 class="text-2xl font-bold mb-4 flex items-center border-b pb-2">${escHtml(title)}</h2>
+      <h2 class="text-2xl font-bold mb-4 flex items-center border-b pb-2">Modernization and AI Insight</h2>
       ${inner}
     </div>
   </div>`;
@@ -242,9 +279,9 @@ function buildNewsletterHtml(briefing) {
   const openingHtml      = sections.opening      ? `<section class="mb-12">${renderLines(sections.opening.split('\n'))}</section>` : '';
   const situationalHtml  = sections.situational  ? renderSituationalAwareness(sections.situational) : '';
   const twoColHtml       = (sections.training || sections.career)
-    ? `\n  <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">${renderCard('Training Byte', sections.training || '')}${renderCard('Career Development', sections.career || '')}\n  </div>`
+    ? `\n  <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">${renderTrainingByteCard(sections.training || '')}${renderCareerDevCard(sections.career || '')}\n  </div>`
     : '';
-  const modernizationHtml = sections.modernization ? renderFullWidthSection('Modernization and AI Insight', sections.modernization) : '';
+  const modernizationHtml = sections.modernization ? renderModernizationSection(sections.modernization) : '';
   const finalHtml         = sections.final
     ? `\n  <div class="mb-8">\n    <div class="section-card p-6 rounded-xl border">\n      <h2 class="text-2xl font-bold mb-4 flex items-center border-b pb-2">Final Thought</h2>\n      ${renderLines(sections.final.split('\n'))}\n    </div>\n  </div>`
     : '';
