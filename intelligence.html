@@ -24,6 +24,7 @@
   .intel-link:hover { color:var(--cs-cyan); text-decoration:underline; text-underline-offset:2px; }
   .intel-meta { color:rgba(255,255,255,.58); font-size:11px; margin-top:4px; text-align:right; }
   .intel-empty { color:rgba(255,255,255,.55); font-size:12px; padding:8px 2px; }
+  .intel-subtopic { color:#fff; font-size:18px; line-height:1.1; margin:14px 0 6px; padding-bottom:6px; border-bottom:1px solid rgba(0,212,255,.38); }
   .intel-note { color:rgba(255,255,255,.6); font-size:12px; margin-top:12px; }
   .intel-repo-link { color:var(--cs-cyan); text-decoration:underline; text-underline-offset:2px; }
   @media (max-width: 900px) {
@@ -76,7 +77,16 @@
         </div>
         <div class="intel-section" id="innovation">
           <h2 class="intel-heading">Innovation <a class="intel-more" href="innovation.html">More Articles &rarr;</a></h2>
-          <div class="intel-list" id="innovation-list"><div class="intel-empty">Loading current-week innovation articles...</div></div>
+          <h3 class="intel-subtopic">Artificial Intelligence (AI) / Machine Learning (ML)</h3>
+          <div class="intel-list" id="innovation-ai-ml"><div class="intel-empty">Loading AI/ML innovation articles...</div></div>
+          <h3 class="intel-subtopic">Quantum Computing &amp; Research</h3>
+          <div class="intel-list" id="innovation-quantum"><div class="intel-empty">Loading quantum innovation articles...</div></div>
+          <h3 class="intel-subtopic">Cloud, Applications, &amp; Web</h3>
+          <div class="intel-list" id="innovation-cloud-apps-web"><div class="intel-empty">Loading cloud, applications, and web innovation articles...</div></div>
+          <h3 class="intel-subtopic">IoT &amp; Sensors</h3>
+          <div class="intel-list" id="innovation-iot-sensors"><div class="intel-empty">Loading IoT and sensor innovation articles...</div></div>
+          <h3 class="intel-subtopic">New Technology</h3>
+          <div class="intel-list" id="innovation-new-technology"><div class="intel-empty">Loading new technology innovation articles...</div></div>
         </div>
       </div>
     </div>
@@ -140,8 +150,20 @@
   }
 
   async function loadIntelArticles() {
+    const sectionIds = [
+      'threat-list',
+      'policy-list',
+      'growth-list',
+      'training-list',
+      'innovation-ai-ml',
+      'innovation-quantum',
+      'innovation-cloud-apps-web',
+      'innovation-iot-sensors',
+      'innovation-new-technology',
+    ];
+
     if (!CS.Auth.isLoggedIn()) {
-      ['threat-list', 'policy-list', 'growth-list', 'innovation-list', 'training-list'].forEach(id => {
+      sectionIds.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
           el.innerHTML = '<div class="intel-empty">Sign in to view current-week Intel Articles.</div>';
@@ -152,16 +174,28 @@
 
     try {
       const response = await CS.Auth.apiFetch('/api/content/articles?limit=80');
-      const articles = (response.data || []).filter(a => inCurrentWeek(a.published_at));
+      const allArticles = response.data || [];
+      const currentWeek = allArticles.filter(a => inCurrentWeek(a.published_at));
+      const chooseCurrentOrLatest = (section) => {
+        const current = currentWeek.filter(a => a.section === section);
+        if (current.length) return current;
+        return allArticles.filter(a => a.section === section);
+      };
 
-      renderList('threat-list', articles.filter(a => a.section === 'threat').slice(0, 4));
-      renderList('policy-list', articles.filter(a => a.section === 'policy').slice(0, 4));
-      renderList('growth-list', articles.filter(a => a.section === 'growth').slice(0, 4));
-      renderList('innovation-list', articles.filter(a => a.section === 'innovation').slice(0, 6));
-      renderList('training-list', articles.filter(a => a.section === 'training').slice(0, 4));
+      renderList('threat-list', chooseCurrentOrLatest('threat').slice(0, 4));
+      renderList('policy-list', chooseCurrentOrLatest('policy').slice(0, 4));
+      renderList('growth-list', chooseCurrentOrLatest('growth').slice(0, 4));
+      renderList('training-list', chooseCurrentOrLatest('training').slice(0, 4));
+
+      const innovationArticles = chooseCurrentOrLatest('innovation');
+      renderList('innovation-ai-ml', innovationArticles.filter(a => a.innovation_topic === 'ai_ml').slice(0, 3));
+      renderList('innovation-quantum', innovationArticles.filter(a => a.innovation_topic === 'quantum').slice(0, 3));
+      renderList('innovation-cloud-apps-web', innovationArticles.filter(a => a.innovation_topic === 'cloud_apps_web').slice(0, 3));
+      renderList('innovation-iot-sensors', innovationArticles.filter(a => a.innovation_topic === 'iot_sensors').slice(0, 3));
+      renderList('innovation-new-technology', innovationArticles.filter(a => a.innovation_topic === 'new_technology').slice(0, 3));
     } catch (error) {
       console.error('Failed to load Intel Articles', error);
-      ['threat-list', 'policy-list', 'growth-list', 'innovation-list', 'training-list'].forEach(id => {
+      sectionIds.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
           el.innerHTML = '<div class="intel-empty">Intel Articles are temporarily unavailable.</div>';
