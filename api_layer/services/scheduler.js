@@ -206,7 +206,8 @@ async function runRedTeamBatchCycle() {
 // ── Intel article cycle trigger (J1 — fires after Barbara batch normalization) ──
 // Creates one James task when ready-for-intel repository items exist and the
 // article pipeline is not already backed up. James owns source selection/draft.
-async function runJamesArticleCycle() {
+// sourceType: 'threat' | 'innovation' | 'growth' | 'policy' | null (null = any available)
+async function runJamesArticleCycle(sourceType = null) {
   try {
     const activeTask = await db.pool.query(`
       SELECT id FROM agent_tasks
@@ -247,16 +248,17 @@ async function runJamesArticleCycle() {
       return;
     }
 
+    const allowedTypes = sourceType ? [sourceType] : ['innovation', 'growth', 'policy', 'threat'];
     const candidate = await db.pool.query(`
       SELECT r.id
       FROM intel_repository r
       LEFT JOIN intel_items i ON i.id = r.source_id AND r.source_type IN ('innovation','growth','policy')
       LEFT JOIN threat_records t ON t.id = r.source_id AND r.source_type = 'threat'
       WHERE r.ready_for_intel = true
-        AND r.source_type IN ('innovation','growth','policy','threat')
+        AND r.source_type = ANY($1)
         AND COALESCE(i.article_id, t.article_id) IS NULL
       LIMIT 1
-    `).then(r => r.rows[0] || null);
+    `, [allowedTypes]).then(r => r.rows[0] || null);
 
     if (!candidate) {
       console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'james_article_cycle', status: 'skipped', reason: 'no_candidate' }));
