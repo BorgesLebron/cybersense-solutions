@@ -86,7 +86,7 @@
   <div class="mb-8">
     <div class="section-card p-6 rounded-xl border w-full">
       <h2 class="text-3xl font-bold mb-6 flex items-center border-b pb-2">Situational Awareness</h2>
-      <h3 class="text-xl font-semibold mb-1">**Adobe Commerce Stored XSS Vulnerability Poses Risk to E-Commerce Integrity (CVE-2026-34686 | CVSS 8.7)**</h3>
+      <h3 class="text-xl font-semibold mb-1"><strong>Adobe Commerce Stored XSS Vulnerability Poses Risk to E-Commerce Integrity (CVE-2026-34686 | CVSS 8.7)</strong></h3>
 <p class="text-gray-800 mb-3 text-sm">A stored Cross-Site Scripting (XSS) vulnerability affecting Adobe Commerce — including versions 2.4.9-beta1, 2.4.8-p4, 2.4.7-p9, 2.4.6-p14, 2.4.5-p16, 2.4.4-p17, and earlier — has been assigned a CVSS score of 8.7. Stored XSS vulnerabilities are notable because malicious scripts persist within the application's data layer, meaning every subsequent user who loads the affected page becomes a potential target. In a commerce environment, this translates directly to risks including session hijacking, credential harvesting, payment interface tampering, and customer-facing fraud.</p>
 <p class="text-gray-800 mb-3 text-sm">For organizations operating Adobe Commerce storefronts, the impact extends beyond technical remediation. Successful exploitation can compromise administrator sessions, expose customer personally identifiable information (PII), and trigger regulatory obligations under frameworks such as PCI DSS and GDPR. The reputational and financial consequences of a customer-facing compromise in a transactional environment are severe and often long-lasting.</p>
 <p class="text-gray-800 mb-3 text-sm"><strong>Defensive Actions:</strong></p>
@@ -97,7 +97,7 @@
 <li>Review input validation logic and user-generated content fields as a secondary control measure.</li>
 </ul>
 <hr class="my-6 border-white/10">
-<h3 class="text-xl font-semibold mb-1">**Adobe After Effects Stack-Based Buffer Overflow Facilitates Code Execution (CVE-2026-34690 | CVSS 7.8)**</h3>
+<h3 class="text-xl font-semibold mb-1"><strong>Adobe After Effects Stack-Based Buffer Overflow Facilitates Code Execution (CVE-2026-34690 | CVSS 7.8)</strong></h3>
 <p class="text-gray-800 mb-3 text-sm">Adobe After Effects versions 26.0, 25.6.4, and earlier contain a stack-based buffer overflow vulnerability with a CVSS score of 7.8 that can result in arbitrary code execution in the context of the current user. A threat actor who can deliver a maliciously crafted project file or media asset to a user's workstation can execute code without requiring elevated privileges, leveraging only the permissions already held by the logged-in user.</p>
 <p class="text-gray-800 mb-3 text-sm">The organizational profile of After Effects users — creative departments, video production teams, freelance contractors, and marketing agencies — often places these workstations outside the standard hardening and patch management coverage applied to enterprise business systems. Creative environments frequently involve third-party asset sharing, collaborative project file exchange, and plugin ecosystems that meaningfully expand the attack surface. A compromised creative workstation with access to shared drives, cloud storage, or corporate networks represents a significant lateral movement opportunity.</p>
 <p class="text-gray-800 mb-3 text-sm"><strong>Defensive Actions:</strong></p>
@@ -109,7 +109,7 @@
 <li>Conduct targeted security awareness training for creative staff on the risks of opening project files from unknown or unverified collaborators.</li>
 </ul>
 <hr class="my-6 border-white/10">
-<h3 class="text-xl font-semibold mb-1">**Authenticated RCE in Aruba AOS Web Management Interface Presents Risk to Network Infrastructure (CVE-2026-44852 | CVSS 7.2)**</h3>
+<h3 class="text-xl font-semibold mb-1"><strong>Authenticated RCE in Aruba AOS Web Management Interface Presents Risk to Network Infrastructure (CVE-2026-44852 | CVSS 7.2)</strong></h3>
 <p class="text-gray-800 mb-3 text-sm">An authenticated remote code execution (RCE) vulnerability has been identified in the web-based management interfaces of Aruba AOS-8 and AOS-10, exploitable through a flaw in the certificate download functionality. While exploitation requires authentication, vulnerabilities of this nature in network management interfaces carry disproportionate risk — successful exploitation can lead to compromise of the entire managed network infrastructure. Administrative interfaces for switches, controllers, and access points are high-value targets because they provide direct control over network segmentation, traffic policy, and device configuration.</p>
 <p class="text-gray-800 mb-3 text-sm">Credential exposure pathways that could facilitate exploitation include phishing, credential stuffing, session token theft, and the use of default or shared administrative credentials — all common findings in enterprise wireless infrastructure assessments. Organizations that have not enforced multi-factor authentication (MFA) on network management consoles, or that have exposed these interfaces to broader network segments, should treat this vulnerability as a priority remediation item regardless of its authenticated prerequisite.</p>
 <p class="text-gray-800 mb-3 text-sm"><strong>Defensive Actions:</strong></p>
