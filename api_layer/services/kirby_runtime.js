@@ -40,16 +40,17 @@ VOICE AND TONE:
 - Clear and jargon-aware (explain acronyms if they are obscure).
 
 STRUCTURE OF A TRAINING BYTE (Markdown):
-1. ## Why This Matters: A 2-sentence explanation of the business/operational impact.
-2. ## What You Need to Know: 3-4 bullet points explaining the core technical threat or vulnerability.
-3. ## Defensive Actions: 3 specific, actionable steps for security teams or end-users.
-4. ## Knowledge Check: A single multiple-choice question with 3 options and the correct answer hidden below.
+1. #### Why This Matters: A 2-sentence explanation of the business/operational impact.
+2. #### What You Need to Know: 3-4 bullet points explaining the core technical threat or vulnerability.
+3. #### Defensive Actions: 3 specific, actionable steps for security teams or end-users.
+4. #### Knowledge Check: A single multiple-choice question with 3 options (A, B, C). Do NOT include the correct answer — it will be revealed in the next edition.
 
 CONSTRAINTS:
 - Word count: 150-250 words.
 - Format: Strictly Markdown.
 - No conversational filler (e.g., "Certainly!", "Here is your byte"). Start directly with the content.
 - Focus on ACTION. Every byte must tell the reader what to DO.
+- Use #### (H4) for all section headings within the byte.
 `.trim();
 
 // ── Token management ─────────────────────────────────────────────────────────
