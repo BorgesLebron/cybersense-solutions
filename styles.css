@@ -71,6 +71,7 @@ ul{list-style:none}
 .nav-menu-item[data-nav-group="resources"] .nav-mega-card:hover{transform:none;background:transparent;box-shadow:none;color:var(--cs-cyan);text-decoration:underline}
 .nav-menu-item[data-nav-group="resources"] .nav-mega-card h3{font-size:23px;margin:0}
 .nav-menu-item[data-nav-group="resources"] .nav-mega-card p{display:none}
+<<<<<<< HEAD
 .nav-menu-item[data-nav-group="intel"] .nav-mega{width:min(880px,calc(100vw - 32px));min-height:596px;border-radius:0 0 28px 28px;padding:32px 48px 54px}
 .nav-menu-item[data-nav-group="intel"] .nav-mega-title{color:var(--cs-white);margin-bottom:8px;padding-bottom:14px;border-bottom:1px solid rgba(0,212,255,0.55)}
 .nav-menu-item[data-nav-group="intel"] .nav-mega-grid{display:flex;flex-direction:column;gap:14px;max-width:420px}
@@ -78,6 +79,36 @@ ul{list-style:none}
 .nav-menu-item[data-nav-group="intel"] .nav-mega-card:hover{transform:none;background:transparent;box-shadow:none;color:var(--cs-cyan);text-decoration:underline}
 .nav-menu-item[data-nav-group="intel"] .nav-mega-card h3{font-size:22px;line-height:1.1;margin:0;font-weight:400}
 .nav-menu-item[data-nav-group="intel"] .nav-mega-card p{display:none}
+=======
+.nav-menu-item[data-nav-group="resources"] .nav-mega-item{position:relative;display:block}
+.nav-menu-item[data-nav-group="resources"] .nav-mega-item-nested{padding-bottom:4px}
+.nav-menu-item[data-nav-group="resources"] .nav-mega-submenu{
+  position:absolute;
+  top:-10px;
+  left:calc(100% + 24px);
+  min-width:320px;
+  background:#132742;
+  border:1px solid rgba(0,212,255,0.24);
+  border-radius:8px;
+  padding:12px 14px;
+  display:none;
+  box-shadow:0 16px 34px rgba(0,0,0,0.34);
+}
+.nav-menu-item[data-nav-group="resources"] .nav-mega-item-nested:hover .nav-mega-submenu,
+.nav-menu-item[data-nav-group="resources"] .nav-mega-item-nested:focus-within .nav-mega-submenu{display:block}
+.nav-menu-item[data-nav-group="resources"] .nav-mega-subitem{
+  display:block;
+  color:var(--cs-gray-400);
+  font-size:18px;
+  line-height:1.25;
+  padding:8px 0;
+  text-decoration:none;
+}
+.nav-menu-item[data-nav-group="resources"] .nav-mega-subitem:hover{
+  color:var(--cs-cyan);
+  text-decoration:underline;
+}
+>>>>>>> a54e5d8 ([20260528-G002] Add Resources repository menu and Intel nested submenu (Gwen))
 .nav-login{border:1.5px solid var(--cs-cyan);color:var(--cs-cyan);background:transparent;padding:7px 16px;border-radius:var(--radius);font-size:13px;font-weight:600;transition:all var(--transition);white-space:nowrap;cursor:pointer}
 .nav-login:hover{background:var(--cs-cyan);color:var(--cs-navy)}
 .hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;padding:8px;cursor:pointer;margin-left:auto}

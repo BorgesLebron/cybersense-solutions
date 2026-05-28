@@ -42,49 +42,41 @@
     ],
     resources: [
       {
-        title: 'Resources Hub',
-        href: 'resources.html',
-        body: 'The central entry point for CyberSense reference, policy, intel, innovation, growth, and training resources.',
-      },
-      {
         title: 'Glossary',
         href: 'glossary.html',
-        body: 'A durable terminology library for acronyms, concepts, frameworks, and operational language used across CyberSense coverage.',
+        body: 'Cyber terminology and definitions.',
       },
       {
         title: 'Policy & Guidelines',
         href: 'policy.html',
-        body: 'Core cybersecurity frameworks, data protection resources, breach references, and compliance guidance.',
+        body: 'Policy and guidelines repository.',
       },
       {
         title: 'Intel Repository',
         href: 'intel-repository.html',
-        body: 'The central archive for threat intelligence, innovation, professional growth, and training resources.',
-      },
-      {
-        title: 'Threat Intelligence',
-        href: 'intel-repository.html#threat-intelligence',
-        body: 'Reference active and enduring threat analysis beyond the daily feed, organized for teams that need durable operational context.',
-      },
-      {
-        title: 'Innovation',
-        href: 'innovation.html',
-        body: 'Emerging technology coverage with longer shelf life, from AI operations to post-quantum readiness and enterprise modernization.',
-      },
-      {
-        title: 'Professional Growth',
-        href: 'growth.html',
-        body: 'Career pathways, seminars, webinars, courses, and workforce guidance for building a resilient professional bench.',
-      },
-      {
-        title: 'Training Resources',
-        href: 'training.html',
-        body: 'Practical training modules, labs, videos, and learning references grounded in current CyberSense intelligence.',
+        body: 'Open repository menu.',
+        children: [
+          { title: 'Threat Intelligence', href: 'intel-repository.html#threat-intelligence' },
+          { title: 'Innovation', href: 'innovation.html' },
+          { title: 'Professional Growth', href: 'growth.html' },
+          { title: 'Training Resources', href: 'training.html' },
+        ],
       },
     ],
   };
 
   function navCard(item) {
+    if (Array.isArray(item.children) && item.children.length) {
+      return `<div class="nav-mega-item nav-mega-item-nested">
+        <a class="nav-mega-card${item.pending ? ' pending' : ''}" href="${item.href}">
+          <h3>${item.title}</h3>
+          <p>${item.body}</p>
+        </a>
+        <div class="nav-mega-submenu" role="menu" aria-label="${item.title} submenu">
+          ${item.children.map(child => `<a class="nav-mega-subitem" href="${child.href}">${child.title}</a>`).join('')}
+        </div>
+      </div>`;
+    }
     return `<a class="nav-mega-card${item.pending ? ' pending' : ''}" href="${item.href}">
       <h3>${item.title}</h3>
       <p>${item.body}</p>
@@ -122,6 +114,16 @@
     }
 
     if (drawerList) {
+      const resourceDrawerItems = NAV_GROUPS.resources.flatMap(item => {
+        if (!Array.isArray(item.children) || !item.children.length) {
+          return [`<li class="drawer-sub"><a href="${item.href}">${item.title}</a></li>`];
+        }
+        return [
+          `<li class="drawer-sub"><a href="${item.href}">${item.title}</a></li>`,
+          ...item.children.map(child => `<li class="drawer-sub"><a href="${child.href}">${child.title}</a></li>`),
+        ];
+      });
+
       drawerList.innerHTML = [
         '<li><a href="index.html">Home</a></li>',
         '<li><a href="about.html">About</a></li>',
@@ -130,7 +132,7 @@
         ...NAV_GROUPS.intel.map(item => `<li class="drawer-sub"><a href="${item.href}">${item.title}</a></li>`),
         '<li><a href="newsletter.html">Newsletter</a></li>',
         '<li class="drawer-group">Resources</li>',
-        ...NAV_GROUPS.resources.map(item => `<li class="drawer-sub"><a href="${item.href}">${item.title}</a></li>`),
+        ...resourceDrawerItems,
       ].join('');
     }
   }
