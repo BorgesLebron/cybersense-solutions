@@ -5,69 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png">
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png">
-<title>Intelligence Brief — CyberSense.Solutions</title>
-<meta name="description" content="In-depth cybersecurity intelligence briefs — threat analysis, policy updates, and innovation coverage.">
+<title>Intel Articles - CyberSense.Solutions</title>
+<meta name="description" content="Current-week Intel Articles by theme: Threat Intelligence, Policy Updates, Professional Growth, Innovation, and Training Resources.">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="auth.css">
 <style>
-  .intel-board {
-    background: #0f172a;
-    border: 1px solid rgba(0, 212, 255, .14);
-    border-radius: 8px;
-    padding: 28px 32px 36px;
-  }
-  .intel-board .category-label-bar {
-    border-bottom: 0;
-    padding-bottom: 0;
-    margin-bottom: 18px;
-  }
-  .intel-board .category-label-bar::after {
-    display: none;
-  }
-  .intel-board .article-card {
-    background: #1f416b;
-    border-color: rgba(148, 163, 184, .18);
-    border-radius: 18px;
-    color: #e5f2ff;
-    min-height: 142px;
-    padding: 16px;
-  }
-  .intel-board .article-card:hover {
-    box-shadow: 0 14px 28px rgba(2, 6, 23, .24);
-  }
-  .intel-board .card-topline {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-  }
-  .intel-board .article-card .badge {
-    color: #fff;
-    border: 0;
-    box-shadow: inset 0 1px 6px rgba(255, 255, 255, .25);
-  }
-  .intel-board .article-card .card-date {
-    color: #f8fafc;
-    font-size: 10px;
-    font-weight: 700;
-    white-space: nowrap;
-  }
-  .intel-board .article-card .card-headline {
-    color: #fff;
-    font-size: 14px;
-  }
-  .intel-board .article-card .card-teaser {
-    color: #d8e6f6;
-    font-size: 11px;
-    line-height: 1.45;
-  }
-  .intel-board .article-card .card-link {
-    align-self: flex-end;
-  }
-  @media (max-width: 768px) {
-    .intel-board {
-      padding: 22px 18px;
-    }
+  .intel-shell { background:#11233f; border:1px solid rgba(0,212,255,.2); padding:28px; }
+  .intel-title { color:#fff; font-size:40px; line-height:1; margin-bottom:18px; }
+  .intel-sub { color:rgba(255,255,255,.82); max-width:740px; font-size:14px; line-height:1.45; margin-bottom:24px; }
+  .intel-grid { display:grid; grid-template-columns:1fr 1fr; gap:28px; align-items:start; }
+  .intel-section { margin-bottom:22px; }
+  .intel-heading { background:#1f3f6b; color:#fff; font-size:30px; font-weight:500; line-height:1; padding:8px 12px; margin-bottom:10px; }
+  .intel-list { display:grid; gap:8px; }
+  .intel-item { border-bottom:1px solid rgba(0,212,255,.28); padding:8px 2px 10px; }
+  .intel-link { color:#fff; font-size:12px; font-weight:700; line-height:1.3; text-decoration:none; display:block; }
+  .intel-link:hover { color:var(--cs-cyan); text-decoration:underline; text-underline-offset:2px; }
+  .intel-meta { color:rgba(255,255,255,.58); font-size:11px; margin-top:4px; text-align:right; }
+  .intel-empty { color:rgba(255,255,255,.55); font-size:12px; padding:8px 2px; }
+  .intel-note { color:rgba(255,255,255,.6); font-size:12px; margin-top:12px; }
+  .intel-repo-link { color:var(--cs-cyan); text-decoration:underline; text-underline-offset:2px; }
+  @media (max-width: 900px) {
+    .intel-grid { grid-template-columns:1fr; }
+    .intel-title { font-size:32px; }
+    .intel-heading { font-size:24px; }
   }
 </style>
 </head>
@@ -75,137 +35,65 @@
 
 <nav class="nav" role="navigation">
   <a href="index.html" class="nav-wordmark">CyberSense<span>.Solutions</span></a>
-  <ul class="nav-links">
-    <li><a href="index.html">Home</a></li>
-    <li><a href="about.html">About</a></li>
-    <li><a href="radar.html">Radar</a></li>
-    <li><a href="intelligence.html" class="active">Intel</a></li>
-    <li><a href="newsletter.html">Newsletter</a></li>
-    <li><a href="growth.html">Growth</a></li>
-    <li><a href="innovation.html">Innovation</a></li>
-  </ul>
+  <ul class="nav-links"></ul>
   <button class="nav-login" onclick="CS.Auth.showLoginModal()">Login</button>
   <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
 </nav>
 <div class="nav-drawer" id="nav-drawer">
-  <ul>
-    <li><a href="index.html">Home</a></li>
-    <li><a href="about.html">About</a></li>
-    <li><a href="radar.html">Radar</a></li>
-    <li><a href="intelligence.html">Intel</a></li>
-    <li><a href="newsletter.html">Newsletter</a></li>
-    <li><a href="growth.html">Growth</a></li>
-    <li><a href="innovation.html">Innovation</a></li>
-  </ul>
+  <ul></ul>
   <a href="#" class="drawer-login" onclick="CS.Auth.showLoginModal();return false;">Login</a>
 </div>
 
-<section class="hero-dark section" style="padding:64px 24px 56px;">
-  <div class="container" style="position:relative;z-index:1;">
-    <p class="section-label">Intelligence</p>
-    <h1 class="section-heading section-heading-light" style="font-size:clamp(30px,5vw,48px);">Intelligence Brief</h1>
-    <p class="section-sub section-sub-light">Analyst-written intelligence on active threats, policy frameworks, emerging technologies, and professional development.</p>
-  </div>
-</section>
+<section class="section" style="background:#07182d;padding-top:88px;">
+  <div class="container intel-shell">
+    <h1 class="intel-title">Intel Articles</h1>
+    <p class="intel-sub">
+      Stay ahead of the wire with our high-velocity briefing hub. This page aggregates the absolute latest sector intelligence published over the last seven days. Designed for immediate situational awareness, this dynamic feed ensures you are operating on the most current data before it transitions into our permanent historical repository.
+    </p>
 
-<section class="section" style="background:var(--cs-gray-100);">
-  <div class="container intel-board">
+    <div class="intel-grid">
+      <div>
+        <div class="intel-section">
+          <h2 class="intel-heading">Threat Intelligence</h2>
+          <div class="intel-list" id="threat-list"><div class="intel-empty">Loading current-week threat intelligence...</div></div>
+        </div>
+        <div class="intel-section">
+          <h2 class="intel-heading">Professional Growth</h2>
+          <div class="intel-list" id="growth-list"><div class="intel-empty">Loading current-week growth articles...</div></div>
+        </div>
+        <div class="intel-section">
+          <h2 class="intel-heading">Training Resources</h2>
+          <div class="intel-list" id="training-list"><div class="intel-empty">Loading current-week training resources...</div></div>
+        </div>
+      </div>
 
-    <!-- Section 1: Threat Intelligence — live from API -->
-    <div class="category-section" id="threat-intelligence">
-      <div class="category-label-bar">Threat Intelligence</div>
-      <div class="grid-3" id="threat-grid" style="align-items:start;">
-        <div style="grid-column:span 3;text-align:center;padding:40px;color:var(--cs-gray-400);font-size:14px;" id="threat-loading">
-          Loading threat intelligence...
+      <div>
+        <div class="intel-section">
+          <h2 class="intel-heading">Policy Updates</h2>
+          <div class="intel-list" id="policy-list"><div class="intel-empty">Loading current-week policy updates...</div></div>
+        </div>
+        <div class="intel-section">
+          <h2 class="intel-heading">Innovation</h2>
+          <div class="intel-list" id="innovation-list"><div class="intel-empty">Loading current-week innovation articles...</div></div>
         </div>
       </div>
     </div>
 
-    <!-- Section 2: Policy Updates — live from API -->
-    <div class="category-section" id="policy-updates">
-      <div class="category-label-bar">Policy Updates</div>
-      <div class="grid-2" id="policy-grid">
-        <div style="grid-column:span 2;text-align:center;padding:40px;color:var(--cs-gray-400);font-size:14px;" id="policy-loading">
-          Loading policy updates...
-        </div>
-      </div>
-    </div>
-
-    <!-- Section 3: Latest Innovations — live from API -->
-    <div class="category-section" id="innovation">
-      <div class="category-label-bar">Latest Innovations</div>
-      <div class="grid-3" id="innovation-grid">
-        <div style="grid-column:span 3;text-align:center;padding:40px;color:var(--cs-gray-400);font-size:14px;" id="innovation-loading">
-          Loading innovations...
-        </div>
-      </div>
-    </div>
-
-    <!-- Section 4: Professional Growth — static curated -->
-    <div class="category-section" id="professional-growth">
-      <div class="category-label-bar">Professional Growth</div>
-      <div class="grid-2">
-        <div class="article-card">
-          <div style="font-size:12px;color:var(--cs-gray-400);font-weight:600;">Friday, April 17, 2026 — Webinar</div>
-          <div class="card-headline">Independence is Fragile: How "Being Helpful" Breaks Audit</div>
-          <p style="font-size:13.5px;color:var(--cs-gray-600);line-height:1.6;">In today's audit environment, independence must be actively protected. A foundational principle of internal audit — but more fragile than most organizations admit.</p>
-          <p style="font-size:13.5px;color:var(--cs-gray-600);line-height:1.6;">🕛 12pm–1pm Central &nbsp;·&nbsp; ✉️ 1.0 CPE &nbsp;·&nbsp; 💲 FREE</p>
-          <p style="font-size:13.5px;color:var(--cs-gray-600);line-height:1.6;">Provided by: Verracy</p>
-          <a href="https://us02web.zoom.us/webinar/register/WN_b4KhoS29TPymX4MJhWk9JA#/registration" class="card-link" target="_blank">Register →</a>
-        </div>
-        <div class="article-card">
-          <div style="font-size:12px;color:var(--cs-gray-400);font-weight:600;">Wednesday, May 27, 2026 — Webinar</div>
-          <div class="card-headline">Agentic AI vs. Identity's Last Mile Problem</div>
-          <p style="font-size:13.5px;color:var(--cs-gray-600);line-height:1.6;">Agentic AI is reshaping identity security — but nearly half of enterprise applications still fall outside traditional identity systems. Matt Chiodi, former Palo Alto Networks CSO, examines what Agentic AI can and cannot solve today.</p>
-          <p style="font-size:13.5px;color:var(--cs-gray-600);line-height:1.6;">💲 FREE &nbsp;·&nbsp; Provided by: Information Security Media Group</p>
-          <a href="https://www.bankinfosecurity.com/webinars/webinar-agentic-ai-vs-identitys-last-mile-problem-w-6999" class="card-link" target="_blank">View resource →</a>
-        </div>
-      </div>
-    </div>
-
-    <!-- Section 5: Training Resources — static curated -->
-    <div class="category-section" id="training-resources">
-      <div class="category-label-bar">Training Resources</div>
-      <div class="grid-2">
-        <div class="article-card">
-          <span class="badge badge-beginner">Beginner</span>
-          <div class="card-headline">Vulnerability Triage Lab: From CVE Publication to Remediation Decision</div>
-          <p style="font-size:13.5px;color:var(--cs-gray-600);line-height:1.6;">A hands-on lab walking through the complete vulnerability triage workflow — from NVD CVE publication through CVSS contextualization, exploitability assessment, and patch prioritization decision-making.</p>
-          <span class="card-link" aria-disabled="true">Coming soon</span>
-        </div>
-        <div class="article-card">
-          <span class="badge badge-intermediate">Intermediate</span>
-          <div class="card-headline">Phishing Email Analysis: Identifying Sophisticated Spear-Phishing Indicators</div>
-          <p style="font-size:13.5px;color:var(--cs-gray-600);line-height:1.6;">An intermediate-level training module covering email header analysis, domain spoofing detection, HTML anchor tag obfuscation, and the threat actor techniques that bypass traditional email security gateways.</p>
-          <span class="card-link" aria-disabled="true">Coming soon</span>
-        </div>
-      </div>
-    </div>
-
+    <p class="intel-note">
+      Current-week Intel Articles move to their themed repositories for historical reference:
+      <a class="intel-repo-link" href="intel-repository.html">Intel Repository</a>.
+    </p>
   </div>
 </section>
 
 <footer>
   <div class="footer-inner">
     <div class="footer-grid">
-      <div><div class="footer-logo">CyberSense<span>.Solutions</span></div><p class="footer-mission">Delivering actionable cybersecurity intelligence, daily awareness briefings, and professional training to teams that can't afford to be caught off guard.</p><div class="footer-socials"><a href="https://www.linkedin.com/company/cybersense-solutions/" target="_blank" class="footer-social-icon">in</a><a href="https://www.facebook.com/profile.php?id=61570667370162" target="_blank" class="footer-social-icon">f</a><a href="https://x.com/cybersensesec" target="_blank" class="footer-social-icon">𝕏</a><a href="https://www.instagram.com/cybersense.solutions/" target="_blank" class="footer-social-icon">ig</a><a href="https://www.threads.com/@cybersense.solutions" target="_blank" class="footer-social-icon">tt</a></div></div>
-      <div class="footer-col"><h4>Platform</h4>
-        <ul>
-          <li><a href="index.html">Home</a></li>
-          <li><a href="about.html">About</a></li>
-          <li><a href="radar.html">Threat Radar</a></li>
-          <li><a href="intelligence.html">Intel Briefs</a></li>
-          <li><a href="newsletter.html">Newsletter</a></li>
-          <li><a href="growth.html">Growth</a></li>
-          <li><a href="innovation.html">Innovation</a></li>
-        </ul>
-      </div>
+      <div><div class="footer-logo">CyberSense<span>.Solutions</span></div><p class="footer-mission">Delivering actionable cybersecurity intelligence, daily awareness briefings, and professional training to teams that can't afford to be caught off guard.</p><div class="footer-socials"><a href="https://www.linkedin.com/company/cybersense-solutions/" target="_blank" class="footer-social-icon">in</a><a href="https://www.facebook.com/profile.php?id=61570667370162" target="_blank" class="footer-social-icon">f</a><a href="https://x.com/cybersensesec" target="_blank" class="footer-social-icon">X</a><a href="https://www.instagram.com/cybersense.solutions/" target="_blank" class="footer-social-icon">ig</a><a href="https://www.threads.com/@cybersense.solutions" target="_blank" class="footer-social-icon">tt</a></div></div>
+      <div class="footer-col"><h4>Platform</h4><ul><li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li><li><a href="radar.html">Threat Radar</a></li><li><a href="intelligence.html">Intel Briefs</a></li><li><a href="newsletter.html">Newsletter</a></li><li><a href="growth.html">Growth</a></li><li><a href="innovation.html">Innovation</a></li></ul></div>
       <div class="footer-col"><h4>Legal</h4><ul><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li><li><a href="about.html">Contact Us</a></li></ul></div>
     </div>
-    <div class="footer-bottom">
-      <span>&copy; 2026 CyberSense.Solutions. All rights reserved.</span>
-      <span>Security awareness starts here.</span>
-    </div>
+    <div class="footer-bottom"><span>&copy; 2026 CyberSense.Solutions. All rights reserved.</span><span>Security awareness starts here.</span></div>
   </div>
 </footer>
 
@@ -213,189 +101,75 @@
 <script src="auth.js"></script>
 <script src="main.js"></script>
 <script>
-const TIER_RANK = { free: 0, freemium: 1, monthly: 2, enterprise: 3 };
+  const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
-function getSeverityBadge(section) {
-  const map = { threat: 'badge-critical', policy: 'badge-medium', innovation: 'badge-medium', growth: 'badge-published', training: 'badge-beginner' };
-  return map[section] || 'badge-medium';
-}
-
-function getSectionLabel(section) {
-  const map = { threat: 'Threat', policy: 'Policy', innovation: 'Innovation', growth: 'Growth', training: 'Training' };
-  return map[section] || section;
-}
-
-function esc(value) {
-  return String(value ?? '').replace(/[&<>"']/g, ch => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  }[ch]));
-}
-
-function formatArticleDate(value) {
-  if (!value) return 'Date';
-  return new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
-}
-
-function teaserText(article) {
-  const text = String(article.teaser || article.summary || '').replace(/\s+/g, ' ').trim();
-  if (!text) return 'Full analysis is being prepared for subscribers.';
-  return text.length > 185 ? text.slice(0, 184).trimEnd() + '...' : text;
-}
-
-function ensureGrowthGrid() {
-  let grid = document.getElementById('growth-grid');
-  if (grid) return grid;
-
-  const sections = Array.from(document.querySelectorAll('.category-section'));
-  const growthSection = sections.find(section => {
-    const label = section.querySelector('.category-label-bar');
-    return label && label.textContent.trim() === 'Professional Growth';
-  });
-
-  grid = growthSection ? growthSection.querySelector('.grid-2') : null;
-  if (!grid) return null;
-
-  grid.id = 'growth-grid';
-  grid.innerHTML = `
-    <div style="grid-column:span 2;text-align:center;padding:40px;color:var(--cs-gray-400);font-size:14px;" id="growth-loading">
-      Loading professional growth...
-    </div>`;
-  return grid;
-}
-
-function articleCard(article, isLocked) {
-  const section = esc(getSectionLabel(article.section));
-  const headline = esc(article.title);
-  const teaser = esc(teaserText(article));
-  const date = esc(formatArticleDate(article.published_at));
-  const link = article.slug
-    ? `<a href="intel/article.html?slug=${encodeURIComponent(article.slug)}" class="card-link">Read more -&gt;</a>`
-    : '<span class="card-link" aria-disabled="true">Article pending</span>';
-  const body = `
-      <div class="card-topline"><span class="badge ${getSeverityBadge(article.section)}">${section}</span><span class="card-date">${date}</span></div>
-      <div class="card-headline">${headline}</div>
-      <div class="card-teaser">${teaser}</div>
-      ${link}`;
-  if (isLocked) {
-    return `
-      <div class="gate-wrapper" style="border-radius:var(--radius-lg);height:100%;">
-        <div class="article-card blurred" aria-hidden="true">${body}</div>
-        <div class="gate-overlay">
-          <div class="gate-card">
-            <h3>Standard subscribers get full access</h3>
-            <p>Unlock all Intel Briefs for $9/month.</p>
-            <a href="newsletter.html#subscribe" class="btn btn-primary btn-sm">Subscribe Free</a>
-          </div>
-        </div>
-      </div>`;
-  }
-  return `<div class="article-card">${body}</div>`;
-}
-
-function legacyArticleCard(article, isLocked) {
-  if (isLocked) {
-    return `
-      <div class="gate-wrapper" style="border-radius:var(--radius-lg);height:100%;">
-        <div class="article-card blurred" aria-hidden="true">
-          <span class="badge ${getSeverityBadge(article.section)}">${getSectionLabel(article.section)}</span>
-          <div class="card-headline">${article.title}</div>
-          <a href="#" class="card-link">Read more →</a>
-        </div>
-        <div class="gate-overlay">
-          <div class="gate-card">
-            <h3>Standard subscribers get full access</h3>
-            <p>Unlock all Intel Briefs for $9/month.</p>
-            <a href="newsletter.html#subscribe" class="btn btn-primary btn-sm">Subscribe Free</a>
-          </div>
-        </div>
-      </div>`;
-  }
-  return `
-    <div class="article-card">
-      <span class="badge ${getSeverityBadge(article.section)}">${getSectionLabel(article.section)}</span>
-      <div class="card-headline">${article.title}</div>
-      <a href="intel/article.html?slug=${article.slug}" class="card-link">Read more →</a>
-    </div>`;
-}
-
-function renderGuestState() {
-  ensureGrowthGrid();
-  const guestHTML = `
-    <div style="grid-column:span 3;border-radius:var(--radius-lg);">
-      <div class="gate-card" style="max-width:480px;margin:0 auto;">
-        <h3>Free account required</h3>
-        <p>Create a free account to access Intel Briefs. No credit card required.</p>
-        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:16px;">
-          <a href="#" class="btn btn-primary btn-sm" onclick="CS.Auth.showLoginModal();return false;">Sign Up Free</a>
-          <a href="newsletter.html#subscribe" class="btn btn-outline btn-sm">Subscribe Free</a>
-        </div>
-      </div>
-    </div>`;
-  const policyGuest = guestHTML.replace('span 3', 'span 2');
-
-  document.getElementById('threat-loading').outerHTML  = guestHTML;
-  document.getElementById('policy-loading').outerHTML  = policyGuest;
-  document.getElementById('innovation-loading').outerHTML = guestHTML;
-  document.getElementById('growth-loading').outerHTML = policyGuest;
-}
-
-async function loadArticles() {
-  ensureGrowthGrid();
-  if (!CS.Auth.isLoggedIn()) {
-    renderGuestState();
-    return;
+  function esc(value) {
+    return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[ch]));
   }
 
-  const user = CS.Auth.getUser();
-  const tierRank = TIER_RANK[user?.tier || 'free'] || 0;
-
-  try {
-    const data = await CS.Auth.apiFetch('/api/content/articles?limit=20');
-    const articles = data.data || [];
-
-    const threats     = articles.filter(a => a.section === 'threat');
-    const policies    = articles.filter(a => a.section === 'policy');
-    const innovations = articles.filter(a => a.section === 'innovation');
-    const growth      = articles.filter(a => a.section === 'growth');
-
-    renderSection('threat-grid', 'threat-loading', threats, tierRank, 3);
-    renderSection('policy-grid', 'policy-loading', policies, tierRank, 2);
-    renderSection('innovation-grid', 'innovation-loading', innovations, tierRank, 3);
-    renderSection('growth-grid', 'growth-loading', growth, tierRank, 2);
-
-  } catch(e) {
-    console.error('Intel load error:', e);
-    ['threat-loading', 'policy-loading', 'innovation-loading', 'growth-loading'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = 'Content temporarily unavailable.';
-    });
-  }
-}
-
-function renderSection(gridId, loadingId, articles, tierRank, cols) {
-  const grid = document.getElementById(gridId);
-  const loading = document.getElementById(loadingId);
-  if (!grid) return;
-
-  if (articles.length === 0) {
-    if (loading) loading.innerHTML = '<span style="color:var(--cs-gray-400);font-size:14px;">New articles coming soon — check back daily.</span>';
-    return;
+  function formatDate(value) {
+    if (!value) return 'Current week';
+    return new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
   }
 
-  if (loading) loading.remove();
+  function inCurrentWeek(value) {
+    if (!value) return false;
+    const now = Date.now();
+    const ts = Date.parse(value);
+    return Number.isFinite(ts) && (now - ts) <= WEEK_MS;
+  }
 
-  let html = '';
-  articles.slice(0, cols).forEach((article) => {
-    const requiredRank = TIER_RANK[article.access_tier] || 0;
-    const isLocked = tierRank < requiredRank;
-    html += articleCard(article, isLocked);
-  });
+  function articleItem(article) {
+    if (!article.slug) return '';
+    return `<article class="intel-item">
+      <a class="intel-link" href="intel/article.html?slug=${encodeURIComponent(article.slug)}">${esc(article.title)}</a>
+      <div class="intel-meta">${esc(formatDate(article.published_at))}</div>
+    </article>`;
+  }
 
-  grid.innerHTML = html;
-}
+  function renderList(containerId, articles) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    if (!articles.length) {
+      el.innerHTML = '<div class="intel-empty">No current-week articles yet. Check the repository for archive content.</div>';
+      return;
+    }
+    el.innerHTML = articles.map(articleItem).join('');
+  }
 
-document.addEventListener('cs:login', loadArticles);
-document.addEventListener('cs:guest', () => renderGuestState());
+  async function loadIntelArticles() {
+    if (!CS.Auth.isLoggedIn()) {
+      ['threat-list', 'policy-list', 'growth-list', 'innovation-list', 'training-list'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.innerHTML = '<div class="intel-empty">Sign in to view current-week Intel Articles.</div>';
+        }
+      });
+      return;
+    }
+
+    try {
+      const response = await CS.Auth.apiFetch('/api/content/articles?limit=80');
+      const articles = (response.data || []).filter(a => inCurrentWeek(a.published_at));
+
+      renderList('threat-list', articles.filter(a => a.section === 'threat').slice(0, 4));
+      renderList('policy-list', articles.filter(a => a.section === 'policy').slice(0, 4));
+      renderList('growth-list', articles.filter(a => a.section === 'growth').slice(0, 4));
+      renderList('innovation-list', articles.filter(a => a.section === 'innovation').slice(0, 6));
+      renderList('training-list', articles.filter(a => a.section === 'training').slice(0, 4));
+    } catch (error) {
+      console.error('Failed to load Intel Articles', error);
+      ['threat-list', 'policy-list', 'growth-list', 'innovation-list', 'training-list'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.innerHTML = '<div class="intel-empty">Intel Articles are temporarily unavailable.</div>';
+        }
+      });
+    }
+  }
+
+  document.addEventListener('cs:login', loadIntelArticles);
+  document.addEventListener('cs:guest', loadIntelArticles);
 </script>
 </body>
 </html>
