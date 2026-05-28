@@ -406,6 +406,25 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
       <div class="panel" id="p-innovation">
         <div class="panel-title">Innovation &amp; AI/ML/Quantum radar</div>
         <div class="panel-sub">Managed by Ivan/Charlie — feeds Intel Brief, Awareness pipeline, and Innovation page</div>
+        <div class="card" style="margin-bottom:10px;">
+          <div class="card-hd">Acquisition controls</div>
+          <div style="padding:8px 0 10px;border-bottom:1px solid var(--color-border-tertiary);margin-bottom:10px;">
+            <div style="font-size:11px;color:var(--color-text-tertiary);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">Topic — Ivan/Charlie will ingest this feed category</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;" id="ic-topic-selector">
+              <button class="innovation-filter-btn active" id="ic-topic-all"    onclick="setIcTopic(null,'ic-topic-all')">All</button>
+              <button class="innovation-filter-btn"        id="ic-topic-innov"  onclick="setIcTopic('innovation','ic-topic-innov')">Innovation</button>
+              <button class="innovation-filter-btn"        id="ic-topic-policy" onclick="setIcTopic('policy','ic-topic-policy')">Policy &amp; Guidelines</button>
+              <button class="innovation-filter-btn"        id="ic-topic-growth" onclick="setIcTopic('growth','ic-topic-growth')">Professional Growth</button>
+            </div>
+          </div>
+          <div class="pc-trigger-row">
+            <div class="pc-trigger-info">
+              <div class="pc-trigger-label">Ivan / Charlie — Acquisition Ingest</div>
+              <div class="pc-trigger-desc">Innovation, Policy, Growth feeds · select topic above to target a specific category</div>
+            </div>
+            <button class="pc-btn" id="btn-ivan-charlie" onclick="triggerIvanCharlieIngest()">Run Ivan/Charlie</button>
+          </div>
+        </div>
         <div class="metric-row">
           <div class="met"><div class="met-lbl">Topics tracked</div><div class="met-val" id="innovation-total">-</div><div class="met-delta nt" id="innovation-categories">Loading...</div></div>
           <div class="met"><div class="met-lbl">Ready for Intel</div><div class="met-val" id="innovation-ready-intel">-</div><div class="met-delta up">James queue</div></div>
@@ -485,6 +504,16 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
           <div class="panel-sub" style="margin-bottom:10px;">Article controls — Manual triggers for missed or stale Intel Article windows — James → Jason → Rob → Jeff → Maya → HITL → Laura</div>
           <div class="card">
             <div class="card-hd">Intel Article pipeline <span id="ar-trigger-badge" class="badge b-gray">Loading</span></div>
+            <div style="padding:8px 0 10px;border-bottom:1px solid var(--color-border-tertiary);margin-bottom:10px;">
+              <div style="font-size:11px;color:var(--color-text-tertiary);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">Article Type — James will draft this category</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;" id="ar-type-selector">
+                <button class="innovation-filter-btn active" id="ar-type-any"    onclick="setArticleType(null,'ar-type-any')">Any</button>
+                <button class="innovation-filter-btn"        id="ar-type-threat" onclick="setArticleType('threat','ar-type-threat')">Threat Intel</button>
+                <button class="innovation-filter-btn"        id="ar-type-innov"  onclick="setArticleType('innovation','ar-type-innov')">Innovation</button>
+                <button class="innovation-filter-btn"        id="ar-type-growth" onclick="setArticleType('growth','ar-type-growth')">Professional Growth</button>
+                <button class="innovation-filter-btn"        id="ar-type-policy" onclick="setArticleType('policy','ar-type-policy')">Policy &amp; Guidelines</button>
+              </div>
+            </div>
             <div class="pc-trigger-row">
               <div class="pc-trigger-info">
                 <div class="pc-trigger-label">James — Draft Article</div>
@@ -1948,6 +1977,68 @@ async function triggerPipeline(endpoint, btnId, label) {
   }
 }
 
+// ── Article type selector ─────────────────────────────────────────────────────
+let _arSourceType = null;
+
+function setArticleType(type, activeId) {
+  _arSourceType = type;
+  document.querySelectorAll('#ar-type-selector .innovation-filter-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(activeId)?.classList.add('active');
+}
+
+// ── Ivan/Charlie topic selector ───────────────────────────────────────────────
+let _icTopic = null;
+
+function setIcTopic(topic, activeId) {
+  _icTopic = topic;
+  document.querySelectorAll('#ic-topic-selector .innovation-filter-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(activeId)?.classList.add('active');
+}
+
+async function triggerIvanCharlieIngest() {
+  const btn = document.getElementById('btn-ivan-charlie');
+  if (!btn) return;
+  btn.disabled = true;
+  btn.textContent = 'Running...';
+  btn.classList.add('loading');
+
+  const topicLabel = _icTopic || 'all';
+  const ts = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const log = document.getElementById('pc-log');
+
+  try {
+    const body = _icTopic ? { topic: _icTopic } : {};
+    const result = await CS.Auth.apiFetch('/api/admin/trigger/ivan-charlie-ingest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    btn.textContent = 'Done';
+    btn.classList.remove('loading');
+    btn.classList.add('success');
+    if (log) {
+      const entry = document.createElement('div');
+      entry.className = 'pc-log-entry';
+      entry.innerHTML = `<span class="pc-log-ts">${esc(ts)}</span><span class="badge b-green">OK</span><span>Ivan/Charlie (${esc(topicLabel)}): ${esc(result.message || 'Ingest complete')}</span>`;
+      if (log.textContent.includes('No triggers')) log.innerHTML = '';
+      if (log.firstChild) log.insertBefore(entry, log.firstChild); else log.appendChild(entry);
+    }
+    setTimeout(() => { btn.textContent = 'Run Ivan/Charlie'; btn.classList.remove('success'); loadInnovationData(); }, 5000);
+  } catch (e) {
+    btn.textContent = 'Failed';
+    btn.classList.remove('loading');
+    btn.classList.add('error');
+    if (log) {
+      const entry = document.createElement('div');
+      entry.className = 'pc-log-entry';
+      entry.innerHTML = `<span class="pc-log-ts">${esc(ts)}</span><span class="badge b-red">ERR</span><span>Ivan/Charlie: ${esc(e.message || 'Trigger failed')}</span>`;
+      if (log.textContent.includes('No triggers')) log.innerHTML = '';
+      if (log.firstChild) log.insertBefore(entry, log.firstChild); else log.appendChild(entry);
+    }
+    setTimeout(() => { btn.textContent = 'Run Ivan/Charlie'; btn.classList.remove('error'); }, 4000);
+  }
+}
+
 async function triggerArticlePipeline(endpoint, btnId, label) {
   const btn = document.getElementById(btnId);
   if (!btn || btn.disabled) return;
@@ -1959,7 +2050,12 @@ async function triggerArticlePipeline(endpoint, btnId, label) {
   const ts = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
   try {
-    const result = await CS.Auth.apiFetch('/api/admin/trigger/' + endpoint, { method: 'POST' });
+    const body = (endpoint === 'article-james' && _arSourceType) ? { source_type: _arSourceType } : {};
+    const result = await CS.Auth.apiFetch('/api/admin/trigger/' + endpoint, {
+      method: 'POST',
+      headers: Object.keys(body).length ? { 'Content-Type': 'application/json' } : {},
+      body: Object.keys(body).length ? JSON.stringify(body) : undefined,
+    });
     btn.textContent = 'Done';
     btn.classList.remove('loading');
     btn.classList.add('success');

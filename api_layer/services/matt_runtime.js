@@ -91,13 +91,13 @@ function renderLines(lines) {
   let inList = false;
 
   for (const raw of lines) {
-    const line = raw.trimEnd();
+    const line = raw.trim();
     if (!line) {
       if (inList) { result.push('</ul>'); inList = false; }
       continue;
     }
     // Skip horizontal rules — section separators that bleed into content
-    if (/^-{3,}\s*$/.test(line)) {
+    if (/^-{3,}$/.test(line)) {
       if (inList) { result.push('</ul>'); inList = false; }
       continue;
     }
@@ -105,7 +105,7 @@ function renderLines(lines) {
     if (/^\*?CyberSense\.Solutions/.test(line) || /^\*?(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),/.test(line)) {
       continue;
     }
-    // Heading markers (####, ###, ##, #)
+    // Heading markers (####, ###, ##, #) — match after trim so leading spaces don't break detection
     const h4 = line.match(/^####\s+(.+)/);
     const h3 = line.match(/^###\s+(.+)/);
     const h2 = line.match(/^##\s+(.+)/);
@@ -184,7 +184,7 @@ function renderSituationalAwareness(content) {
     });
   }
   const inner = items.map((item, i) => [
-    item.title ? `<h3 class="text-xl font-semibold mb-1">${escHtml(item.title)}</h3>` : '',
+    item.title ? `<h3 class="text-xl font-semibold mb-1">${inlineMarkdown(item.title)}</h3>` : '',
     renderLines(item.content.split('\n')),
     i < items.length - 1 ? '<hr class="my-6 border-white/10">' : '',
   ].filter(Boolean).join('\n')).join('\n');

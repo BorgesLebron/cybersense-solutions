@@ -267,6 +267,61 @@ const FEEDS = [
     url: 'https://techcommunity.microsoft.com/t5/s/gxcuf89692/rss/board?board.id=MicrosoftLearnBlog',
     tags: ['microsoft-learn', 'azure', 'certification', 'career-development', 'growth', 'tier-3'],
   },
+  // ── Policy & Guidelines (Tier-2) ─────────────────────────────────────────────
+  // Regulatory updates, compliance standards, and cybersecurity policy feeds.
+  // Per Hector directive 2026-05-28. Sources without RSS are listed below as static refs.
+  {
+    type: 'policy',
+    category: 'healthcare-compliance',
+    url: 'https://www.hipaajournal.com/feed/',
+    tags: ['hipaa', 'healthcare-compliance', 'phi', 'policy', 'tier-2'],
+  },
+  {
+    type: 'policy',
+    category: 'cyber-law-enforcement',
+    url: 'https://www.fbi.gov/feeds/fbi-stories-and-news.rss',
+    tags: ['fbi', 'cyber', 'law-enforcement', 'policy', 'tier-2'],
+  },
+  {
+    type: 'policy',
+    category: 'consumer-protection',
+    // FTC news feed — enforcement actions, rulemaking, privacy and data security guidance
+    url: 'https://www.ftc.gov/news-events/news/rss.xml',
+    tags: ['ftc', 'consumer-protection', 'gramm-leach-bliley', 'privacy', 'policy', 'tier-2'],
+  },
+  {
+    type: 'policy',
+    category: 'cyber-best-practices',
+    // CISA alerts and advisories — best practices, ICS, critical infrastructure guidance
+    url: 'https://www.cisa.gov/cybersecurity-advisories/all.xml',
+    tags: ['cisa', 'advisories', 'best-practices', 'critical-infrastructure', 'policy', 'tier-2'],
+  },
+  {
+    type: 'policy',
+    category: 'federal-legislation',
+    // GovInfo RSS — new federal register and congressional publications
+    url: 'https://www.govinfo.gov/rss/bills.xml',
+    tags: ['congress', 'legislation', 'federal', 'policy', 'tier-2'],
+  },
+  {
+    type: 'policy',
+    category: 'nist-standards',
+    // NIST cybersecurity publications and SP 800-series updates
+    url: 'https://www.nist.gov/blogs/cybersecurity-insights/rss.xml',
+    tags: ['nist', 'standards', 'frameworks', 'policy', 'tier-1'],
+  },
+  // ── Static regulatory reference pages — no RSS feed available ────────────────
+  // These are reference or manual pages; Charlie cannot ingest them via feed polling.
+  // Use as citation context in Barbara's normalization prompt when relevant.
+  //
+  // https://www.sans.org/information-security-policy        — SANS policy templates
+  // https://www.pcisecuritystandards.org/standards/         — PCI DSS standards
+  // https://ncua.gov/regulation-supervision                 — NCUA credit union regs
+  // https://grants.nih.gov/policy-and-compliance            — NIH grants policy
+  // https://www.justice.gov/jm/jm-9-48000-computer-fraud   — DOJ CFAA manual
+  // https://www.nacdl.org/Landing/ComputerFraudandAbuseAct — NACDL CFAA resource
+  // https://www.ncbi.nlm.nih.gov/books/NBK500019/          — NCBI health IT security
+  //
   // ── Static catalog resources — no RSS feed available ─────────────────────────
   // These are course directory/catalog pages. Charlie cannot ingest them via RSS.
   // Integration path: add a dedicated scraper or periodic manual intake task.
@@ -394,8 +449,11 @@ function normalizeFeedItem(block, feed) {
   };
 }
 
-async function collectIntelItems() {
-  const results = await Promise.allSettled(FEEDS.map(async feed => {
+// topicFilter: 'innovation' | 'policy' | 'growth' | null (null = all types)
+async function collectIntelItems(topicFilter = null) {
+  const feeds = topicFilter ? FEEDS.filter(f => f.type === topicFilter) : FEEDS;
+
+  const results = await Promise.allSettled(feeds.map(async feed => {
     const xml = await feedText(feed.url);
     return parseFeedItems(xml).map(block => normalizeFeedItem(block, feed)).filter(Boolean);
   }));
@@ -408,7 +466,7 @@ async function collectIntelItems() {
   }
 
   if (!items.length && errors.length) {
-    throw new Error(`All innovation/growth feeds failed or produced no recent items: ${errors.join('; ')}`);
+    throw new Error(`All ${topicFilter || 'innovation/growth/policy'} feeds failed or produced no recent items: ${errors.join('; ')}`);
   }
 
   return { items, feedErrors: errors };
@@ -437,22 +495,30 @@ async function filterNewItems(items) {
   return unique.filter(item => !existing.has(item.headline));
 }
 
+const DAILY_MAX_POLICY = 8;
+
 // Submit all new qualifying items up to per-type daily caps.
-function selectRequiredItems(items) {
+// topicFilter restricts which types are selected; null = all types.
+function selectRequiredItems(items, topicFilter = null) {
+  const filter = type => !topicFilter || topicFilter === type;
   return [
-    ...items.filter(item => item.type === 'innovation').slice(0, DAILY_MAX_INNOVATION),
-    ...items.filter(item => item.type === 'growth').slice(0, DAILY_MAX_GROWTH),
+    ...(filter('innovation') ? items.filter(item => item.type === 'innovation').slice(0, DAILY_MAX_INNOVATION) : []),
+    ...(filter('growth')     ? items.filter(item => item.type === 'growth').slice(0, DAILY_MAX_GROWTH) : []),
+    ...(filter('policy')     ? items.filter(item => item.type === 'policy').slice(0, DAILY_MAX_POLICY) : []),
   ];
 }
 
 // Cycle execution
+// opts.topicFilter: 'innovation' | 'policy' | 'growth' | null (null = all types)
 
-async function executeIvanCharlieIngest(task) {
-  const ts = new Date().toISOString();
+async function executeIvanCharlieIngest(task, opts = {}) {
+  const ts          = new Date().toISOString();
+  const topicFilter = opts.topicFilter || null;
+  const topicLabel  = topicFilter || 'all';
 
   console.log(JSON.stringify({
     ts, runtime: 'ivan_charlie', event: 'INTEL_INGEST_START',
-    task_id: task.id,
+    task_id: task.id, topic: topicLabel,
   }));
 
   await db.updateTask(task.id, { status: 'in_progress' });
@@ -463,15 +529,16 @@ async function executeIvanCharlieIngest(task) {
     from_status:  'queued',
     to_status:    'in_progress',
     agent_name:   'Ivan/Charlie',
-    notes:        'Ingest cycle started — scanning innovation and growth feeds',
+    notes:        `Ingest cycle started — topic: ${topicLabel}`,
   });
 
   try {
-    const { items: allItems, feedErrors } = await collectIntelItems();
+    const { items: allItems, feedErrors } = await collectIntelItems(topicFilter);
     const newItems  = await filterNewItems(allItems);
-    const selected  = selectRequiredItems(newItems);
+    const selected  = selectRequiredItems(newItems, topicFilter);
     const innovationCount = selected.filter(item => item.type === 'innovation').length;
     const growthCount     = selected.filter(item => item.type === 'growth').length;
+    const policyCount     = selected.filter(item => item.type === 'policy').length;
 
     if (selected.length === 0) {
       await db.logPipelineEvent({
@@ -509,7 +576,8 @@ async function executeIvanCharlieIngest(task) {
 
     // Warn (non-fatal) when this cycle is below minimums — daily totals are
     // validated at 06:05 CT by runAcquisitionDeliveryCheck in scheduler.js.
-    if (innovationCount < DAILY_MIN_INNOVATION || growthCount < DAILY_MIN_GROWTH) {
+    // Skip the minimum check for targeted topic runs — they are supplemental.
+    if (!topicFilter && (innovationCount < DAILY_MIN_INNOVATION || growthCount < DAILY_MIN_GROWTH)) {
       console.warn(JSON.stringify({
         ts, runtime: 'ivan_charlie', event: 'CYCLE_BELOW_DAILY_MIN',
         task_id: task.id,
@@ -525,9 +593,10 @@ async function executeIvanCharlieIngest(task) {
 
     console.log(JSON.stringify({
       ts, runtime: 'ivan_charlie', event: 'INTEL_INGEST_COMPLETE',
-      task_id: task.id, submitted,
+      task_id: task.id, submitted, topic: topicLabel,
       innovation_this_cycle: innovationCount,
       growth_this_cycle: growthCount,
+      policy_this_cycle: policyCount,
     }));
   } catch (e) {
     await db.logPipelineEvent({

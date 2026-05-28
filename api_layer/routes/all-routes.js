@@ -1419,6 +1419,40 @@ adminRouter.post('/trigger/maya-approve', requireAdminToken(['gm']), async (req,
   } catch (e) { next(e); }
 });
 
+// ── Ivan/Charlie acquisition trigger (GM only) ────────────────────────────────
+// Manual intake run — optional topic filter to target a specific feed category.
+// topic: 'innovation' | 'policy' | 'growth' | null (null = all types)
+
+adminRouter.post('/trigger/ivan-charlie-ingest', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    const { executeIvanCharlieIngest } = require('../services/ivan_charlie_runtime');
+    const validTopics = ['innovation', 'policy', 'growth'];
+    const topic = validTopics.includes(req.body?.topic) ? req.body.topic : null;
+    const topicLabel = topic || 'all';
+
+    const task = await db.createTask({
+      agent_name:   'Ivan/Charlie',
+      task_type:    'intel_ingest',
+      content_type: 'system',
+      content_id:   '00000000-0000-0000-0000-000000000000',
+    });
+
+    await executeIvanCharlieIngest(task, { topicFilter: topic });
+
+    const finalTask = await db.pool.query(
+      `SELECT status, error_message FROM agent_tasks WHERE id = $1`, [task.id]
+    ).then(r => r.rows[0] || {});
+
+    if (finalTask.status === 'complete') {
+      return res.json({ triggered: true, agent: 'Ivan/Charlie', topic: topicLabel, success: true, message: `Ivan/Charlie ingest complete (topic: ${topicLabel}).` });
+    }
+    if (finalTask.status === 'failed') {
+      return res.json({ triggered: true, agent: 'Ivan/Charlie', topic: topicLabel, success: false, message: `Ivan/Charlie failed: ${finalTask.error_message || 'check Railway logs'}` });
+    }
+    res.json({ triggered: true, agent: 'Ivan/Charlie', topic: topicLabel, message: `Ingest running (topic: ${topicLabel}) — check Railway logs for results.` });
+  } catch (e) { next(e); }
+});
+
 const ARTICLE_TRIGGER_STAGES = {
   Jason: ['draft'],
   Rob: ['dev_edit'],
@@ -1459,9 +1493,13 @@ async function refreshArticleAgentTasks(agentName, taskType) {
 adminRouter.post('/trigger/article-james', requireAdminToken(['gm']), async (req, res, next) => {
   try {
     const { runJamesArticleCycle, pollJamesTasks } = require('../services/scheduler');
-    await runJamesArticleCycle();
+    const sourceType = req.body?.source_type || null;
+    const validTypes = ['threat', 'innovation', 'growth', 'policy'];
+    const filteredType = validTypes.includes(sourceType) ? sourceType : null;
+    await runJamesArticleCycle(filteredType);
     await pollJamesTasks();
-    res.json({ triggered: true, agent: 'James', message: 'James article cycle triggered. Ready-for-intel content will draft if capacity allows.' });
+    const typeLabel = filteredType ? ` (type: ${filteredType})` : '';
+    res.json({ triggered: true, agent: 'James', source_type: filteredType, message: `James article cycle triggered${typeLabel}. Ready-for-intel content will draft if capacity allows.` });
   } catch (e) { next(e); }
 });
 
