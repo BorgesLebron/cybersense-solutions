@@ -1218,12 +1218,10 @@ adminRouter.post('/trigger/matt-publish', requireAdminToken(['gm']), async (req,
       ORDER BY started_at DESC LIMIT 1
     `).then(r => r.rows[0] || null);
 
-    // Clear bad file_path (NaN/undefined from Date object bug) so Matt doesn't skip
+    // Always clear file_path when manually re-triggering so Matt re-renders
+    // (covers both bad NaN paths and valid paths that need a re-render after code fixes)
     if (task?.content_id) {
-      await db.pool.query(`
-        UPDATE briefings SET file_path = NULL
-        WHERE id = $1 AND file_path LIKE '%NaN%'
-      `, [task.content_id]);
+      await db.pool.query(`UPDATE briefings SET file_path = NULL WHERE id = $1`, [task.content_id]);
     }
 
     if (task?.status === 'failed' || task?.status === 'escalated' || task?.status === 'complete') {
