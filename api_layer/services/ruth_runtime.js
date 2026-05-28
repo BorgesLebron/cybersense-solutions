@@ -171,7 +171,7 @@ function formatTopicSelection(threats, innovations, growthItem, trainingByte, ed
     '',
     'TRAINING BYTE — USE THIS CONTENT VERBATIM (do not rewrite or summarize):',
     trainingByte
-      ? `Title: ${trainingByte.title}\n\n${trainingByte.body_md}`
+      ? `#### ${trainingByte.title.replace(/^Training Byte:\s*/i, '')}\n\n${trainingByte.body_md}`
       : '(no published byte available — write one aligned to the day\'s SA threats)',
     '',
     '---',
