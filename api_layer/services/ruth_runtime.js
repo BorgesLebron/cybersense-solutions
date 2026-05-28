@@ -15,16 +15,26 @@ OUTPUT FORMAT — use these exact ## section headings in this order:
 2–3 paragraphs (150–200 words). Identify the unifying theme across today's content. Do not name individual threats — write at the pattern level. Professional, direct tone.
 
 ## Situational Awareness
-Three threat entries. Each entry: plain-text title on its own line, then 2–3 substantive paragraphs covering the threat, organizational impact, and recommended actions. Separate entries with ---
+Three threat entries. Each entry:
+- A plain-text title on its own line (no markdown formatting — no **, no ##, no bold markers)
+- Exactly 2 paragraphs: (1) what the threat is and why it matters, (2) organizational impact
+- Do NOT include recommended actions, defensive guidance, or remediation steps — those belong in the Intel Brief articles, not the newsletter
+- Separate entries with ---
 
 ## Training Byte
-Insert the Training Byte content verbatim from the provided source. Do not rewrite it.
+Insert the Training Byte content verbatim from the provided source. Do not rewrite, summarize, or reformat it. Preserve the #### heading exactly as given.
 
 ## Career Development
-One entry, 2–3 paragraphs. Career and professional growth implications of today's threat landscape.
+One entry. Format exactly as follows — three lines, nothing more:
+Line 1: Short title (the name of the course, certification, webinar, or training program — under 10 words)
+Line 2: 1–2 sentence description of what it covers and why it matters for security professionals
+Line 3: Link: [url from source]
 
 ## Modernization and AI Insight
-Two entries separated by ---. Each: 2–3 paragraphs on technology modernization or AI developments relevant to security practitioners.
+Two entries separated by ---. Each entry:
+- A plain-text article title on its own line (the actual development being covered — not a section label)
+- 2–3 paragraphs reporting on the specific event, release, or research finding
+- Write about actual events from the provided sources. Do not write newsletter commentary or meta-analysis.
 
 ## Final Thought
 One closing paragraph (50–80 words). Synthesize the day's theme into a forward-looking perspective. Do not append any footer, metadata, or publication boilerplate.
