@@ -24,7 +24,10 @@
   .intel-link:hover { color:var(--cs-cyan); text-decoration:underline; text-underline-offset:2px; }
   .intel-meta { color:rgba(255,255,255,.58); font-size:11px; margin-top:4px; text-align:right; }
   .intel-empty { color:rgba(255,255,255,.55); font-size:12px; padding:8px 2px; }
-  .intel-subtopic { color:#fff; font-size:18px; line-height:1.1; margin:14px 0 6px; padding-bottom:6px; border-bottom:1px solid rgba(0,212,255,.38); }
+  .intel-subcard { background:rgba(8, 28, 52, .55); border:1px solid rgba(0,212,255,.2); border-radius:8px; padding:10px 12px 8px; margin:12px 0; }
+  .intel-subtopic { color:rgba(140, 233, 255, .96); font-size:13px; line-height:1.2; margin:0 0 8px; padding-bottom:6px; border-bottom:1px solid rgba(0,212,255,.38); text-transform:uppercase; letter-spacing:.6px; }
+  .intel-subcard .intel-item { padding:7px 2px 8px; }
+  .intel-subcard .intel-link { font-size:11px; font-weight:600; color:rgba(235,247,255,.96); }
   .intel-note { color:rgba(255,255,255,.6); font-size:12px; margin-top:12px; }
   .intel-repo-link { color:var(--cs-cyan); text-decoration:underline; text-underline-offset:2px; }
   @media (max-width: 900px) {
@@ -77,16 +80,26 @@
         </div>
         <div class="intel-section" id="innovation">
           <h2 class="intel-heading">Innovation <a class="intel-more" href="innovation.html">More Articles &rarr;</a></h2>
-          <h3 class="intel-subtopic">Artificial Intelligence (AI) / Machine Learning (ML)</h3>
-          <div class="intel-list" id="innovation-ai-ml"><div class="intel-empty">Loading AI/ML innovation articles...</div></div>
-          <h3 class="intel-subtopic">Quantum Computing &amp; Research</h3>
-          <div class="intel-list" id="innovation-quantum"><div class="intel-empty">Loading quantum innovation articles...</div></div>
-          <h3 class="intel-subtopic">Cloud, Applications, &amp; Web</h3>
-          <div class="intel-list" id="innovation-cloud-apps-web"><div class="intel-empty">Loading cloud, applications, and web innovation articles...</div></div>
-          <h3 class="intel-subtopic">IoT &amp; Sensors</h3>
-          <div class="intel-list" id="innovation-iot-sensors"><div class="intel-empty">Loading IoT and sensor innovation articles...</div></div>
-          <h3 class="intel-subtopic">New Technology</h3>
-          <div class="intel-list" id="innovation-new-technology"><div class="intel-empty">Loading new technology innovation articles...</div></div>
+          <div class="intel-subcard">
+            <h3 class="intel-subtopic">Artificial Intelligence (AI) / Machine Learning (ML)</h3>
+            <div class="intel-list" id="innovation-ai-ml"><div class="intel-empty">Loading AI/ML innovation articles...</div></div>
+          </div>
+          <div class="intel-subcard">
+            <h3 class="intel-subtopic">Quantum Computing &amp; Research</h3>
+            <div class="intel-list" id="innovation-quantum"><div class="intel-empty">Loading quantum innovation articles...</div></div>
+          </div>
+          <div class="intel-subcard">
+            <h3 class="intel-subtopic">Cloud, Applications, &amp; Web</h3>
+            <div class="intel-list" id="innovation-cloud-apps-web"><div class="intel-empty">Loading cloud, applications, and web innovation articles...</div></div>
+          </div>
+          <div class="intel-subcard">
+            <h3 class="intel-subtopic">IoT &amp; Sensors</h3>
+            <div class="intel-list" id="innovation-iot-sensors"><div class="intel-empty">Loading IoT and sensor innovation articles...</div></div>
+          </div>
+          <div class="intel-subcard">
+            <h3 class="intel-subtopic">New Technology</h3>
+            <div class="intel-list" id="innovation-new-technology"><div class="intel-empty">Loading new technology innovation articles...</div></div>
+          </div>
         </div>
       </div>
     </div>
