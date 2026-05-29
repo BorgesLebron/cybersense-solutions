@@ -13,7 +13,14 @@
 <body>
 <nav class="nav" role="navigation" aria-label="Main navigation">
   <a href="index.html" class="nav-wordmark">CyberSense<span>.Solutions</span></a>
-  <ul class="nav-links"></ul>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="radar.html">Radar</a></li>
+    <li><a href="intelligence.html">Intel</a></li>
+    <li><a href="newsletter.html">Newsletter</a></li>
+    <li><a href="resources.html"class="active">Resources</a></li>
+  </ul>
   <button class="nav-login" onclick="CS.Auth.showLoginModal()">Login</button>
   <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
 </nav>
@@ -21,7 +28,7 @@
 
 <main class="resources-page">
   <section class="resources-shell">
-    <h1 class="resources-title"><span class="resource-icon">🎓</span> <span>Professional</span> Growth</h1>
+    <h1 class="resources-title"><span>Professional</span> Growth</h1>
     <p class="resources-copy">A dedicated launchpad for aspiring and advancing cybersecurity professionals. This section houses our curated archive of career development insights, resume-building strategies, industry trend analyses, and expert advice designed to help you bridge the gap from academic foundational knowledge to Day 1 operational readiness.</p>
     <input class="resource-search" type="search" placeholder="Search date, vendor, product, type" aria-label="Search professional growth resources">
 
@@ -67,7 +74,48 @@
     </div>
   </section>
 </main>
+<footer>
+    <div class="footer-inner">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-logo">CyberSense<span>.Solutions</span></div>
+        <p class="footer-mission">Delivering clear, practical, and timely cybersecurity intelligence – building awareness, resilience, and a culture that takes care of itself.</p>
+        <div class="footer-socials">
+          <a href="https://www.linkedin.com/company/cybersense-solutions/" target="_blank" class="footer-social-icon">in</a>
+          <a href="https://www.facebook.com/profile.php?id=61570667370162" target="_blank" class="footer-social-icon">f</a>
+          <a href="https://x.com/cybersensesec" target="_blank" class="footer-social-icon">𝕏</a>
+          <a href="https://www.instagram.com/cybersense.solutions/" target="_blank" class="footer-social-icon">ig</a>
+          <a href="https://www.threads.com/@cybersense.solutions" target="_blank" class="footer-social-icon">tt</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Platform</h4>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="radar.html">Threat Radar</a></li>
+          <li><a href="intelligence.html">Intel Briefs</a></li>
+          <li><a href="newsletter.html">Newsletter</a></li>
+          <li><a href="resources.html">Resources</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+          <li><a href="about.html">Contact Us</a></li>
+          <li><a href="#">Cookie Policy</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 CyberSense.Solutions. All rights reserved.</span>
+      <span>Security awareness starts here.</span>
+    </div>
+  </div>
 
+</footer>
 <script>window.CS_API_BASE = 'https://api.cybersense.solutions';</script>
 <script src="auth.js"></script>
 <script src="main.js"></script>
