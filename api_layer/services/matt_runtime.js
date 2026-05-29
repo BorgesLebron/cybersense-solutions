@@ -226,15 +226,35 @@ function renderTrainingByteCard(content) {
     </div>`;
 }
 
-// Career Development — first line = course/cert title, Link: line = styled anchor
+// Career Development — short first line = course/cert title (h4); long first line = no title.
+// Handles both new 3-line format (title + description + Link:) and old paragraph format gracefully.
 function renderCareerDevCard(content) {
   const lines = (content || '').split('\n');
-  const { title, bodyStart } = extractFirstLineTitle(lines);
+  let title = null;
+  let bodyStart = 0;
+
+  for (let i = 0; i < lines.length; i++) {
+    const l = lines[i].trim();
+    if (!l) continue;
+    // Explicit heading or bold marker — always a title
+    const hMatch = l.match(/^#{1,4}\s+(.+)/);
+    if (hMatch) { title = hMatch[1].trim(); bodyStart = i + 1; break; }
+    const boldMatch = l.match(/^\*\*(.+?)\*\*\s*$/);
+    if (boldMatch) { title = boldMatch[1].trim(); bodyStart = i + 1; break; }
+    // Plain text: only treat as title if short — course/cert names are concise.
+    // Long first lines are old-format paragraphs; render without a forced h4.
+    if (l.length <= 80 && !l.endsWith('.') && !l.endsWith('!') && !l.endsWith('?')) {
+      title = l; bodyStart = i + 1;
+    }
+    break;
+  }
+
   const bodyLines = lines.slice(bodyStart).map(l => {
     const linkMatch = l.trim().match(/^Link:\s*(https?:\/\/\S+)/i);
     if (linkMatch) return `[Read More ↗](${linkMatch[1]})`;
     return l;
   });
+
   return `
     <div class="section-card p-6 rounded-xl border">
       <h2 class="text-2xl font-bold mb-4 flex items-center border-b pb-2">Career Development</h2>
@@ -243,9 +263,23 @@ function renderCareerDevCard(content) {
     </div>`;
 }
 
-// Modernization and AI Insight — split on --- separators, extract per-entry title
+// Modernization and AI Insight — split on --- separators, extract per-entry title.
+// Falls back to plain section rendering when content is old-format (fewer than 2 blocks).
 function renderModernizationSection(content) {
   const blocks = (content || '').split(/^---\s*$/m).map(s => s.trim()).filter(Boolean);
+
+  // Old format: single continuous block — render without forced title extraction
+  if (blocks.length < 2) {
+    return `
+  <div class="mb-8">
+    <div class="section-card p-6 rounded-xl border">
+      <h2 class="text-2xl font-bold mb-4 flex items-center border-b pb-2">Modernization and AI Insight</h2>
+      ${renderLines((content || '').split('\n'))}
+    </div>
+  </div>`;
+  }
+
+  // New format: two entries separated by --- with per-entry title extraction
   const inner = blocks.map((block, i) => {
     const lines = block.split('\n');
     const { title, bodyStart } = extractFirstLineTitle(lines);
