@@ -41,42 +41,16 @@
       },
     ],
     resources: [
-      {
-        title: 'Glossary',
-        href: 'glossary.html',
-        body: 'Cyber terminology and definitions.',
-      },
-      {
-        title: 'Policy & Guidelines',
-        href: 'policy.html',
-        body: 'Policy and guidelines repository.',
-      },
-      {
-        title: 'Intel Repository',
-        href: 'intel-repository.html',
-        body: 'Open repository menu.',
-        children: [
-          { title: 'Threat Intelligence', href: 'intel-repository.html#threat-intelligence' },
-          { title: 'Innovation', href: 'innovation.html' },
-          { title: 'Professional Growth', href: 'growth.html' },
-          { title: 'Training Resources', href: 'training.html' },
-        ],
-      },
+      { title: 'Glossary', href: 'glossary.html', body: 'Cyber terminology and definitions.' },
+      { title: 'Policy & Guidelines', href: 'policy.html', body: 'Policy and guidelines repository.' },
+      { title: 'Threat Intelligence', href: 'intel-repository.html#threat-intelligence', body: 'Threat intelligence repository.' },
+      { title: 'Innovation', href: 'innovation.html', body: 'Innovation repository.' },
+      { title: 'Professional Growth', href: 'growth.html', body: 'Professional growth repository.' },
+      { title: 'Training Resources', href: 'training.html', body: 'Training resources repository.' },
     ],
   };
 
   function navCard(item) {
-    if (Array.isArray(item.children) && item.children.length) {
-      return `<div class="nav-mega-item nav-mega-item-nested">
-        <a class="nav-mega-card${item.pending ? ' pending' : ''}" href="${item.href}">
-          <h3>${item.title}</h3>
-          <p>${item.body}</p>
-        </a>
-        <div class="nav-mega-submenu" role="menu" aria-label="${item.title} submenu">
-          ${item.children.map(child => `<a class="nav-mega-subitem" href="${child.href}">${child.title}</a>`).join('')}
-        </div>
-      </div>`;
-    }
     return `<a class="nav-mega-card${item.pending ? ' pending' : ''}" href="${item.href}">
       <h3>${item.title}</h3>
       <p>${item.body}</p>
@@ -84,13 +58,21 @@
   }
 
   function navDropdown(label, key) {
+<<<<<<< HEAD
     const menuTitle = key === 'intel' ? 'Intel Articles' : `${label} &rarr;`;
+=======
+    const titleText = key === 'resources' ? label : `${label} &rarr;`;
+>>>>>>> 3df5abc ([20260528-G002] Simplify Resources menu and remove Intel dropdown (Gwen))
     return `<li class="nav-menu-item" data-nav-group="${key}">
       <button class="nav-menu-trigger" type="button" aria-haspopup="true" aria-expanded="false">
         ${label}<span class="nav-caret" aria-hidden="true"></span>
       </button>
       <div class="nav-mega" role="menu" aria-label="${label} menu">
+<<<<<<< HEAD
         <div class="nav-mega-title">${menuTitle}</div>
+=======
+        <div class="nav-mega-title">${titleText}</div>
+>>>>>>> 3df5abc ([20260528-G002] Simplify Resources menu and remove Intel dropdown (Gwen))
         <div class="nav-mega-grid">
           ${NAV_GROUPS[key].map(navCard).join('')}
         </div>
@@ -107,32 +89,21 @@
         '<li><a href="index.html">Home</a></li>',
         '<li><a href="about.html">About</a></li>',
         '<li><a href="radar.html">Radar</a></li>',
-        navDropdown('Intel', 'intel'),
+        '<li><a href="intelligence.html">Intel</a></li>',
         '<li><a href="newsletter.html">Newsletter</a></li>',
         navDropdown('Resources', 'resources'),
       ].join('');
     }
 
     if (drawerList) {
-      const resourceDrawerItems = NAV_GROUPS.resources.flatMap(item => {
-        if (!Array.isArray(item.children) || !item.children.length) {
-          return [`<li class="drawer-sub"><a href="${item.href}">${item.title}</a></li>`];
-        }
-        return [
-          `<li class="drawer-sub"><a href="${item.href}">${item.title}</a></li>`,
-          ...item.children.map(child => `<li class="drawer-sub"><a href="${child.href}">${child.title}</a></li>`),
-        ];
-      });
-
       drawerList.innerHTML = [
         '<li><a href="index.html">Home</a></li>',
         '<li><a href="about.html">About</a></li>',
         '<li><a href="radar.html">Radar</a></li>',
-        '<li class="drawer-group">Intel</li>',
-        ...NAV_GROUPS.intel.map(item => `<li class="drawer-sub"><a href="${item.href}">${item.title}</a></li>`),
+        '<li><a href="intelligence.html">Intel</a></li>',
         '<li><a href="newsletter.html">Newsletter</a></li>',
         '<li class="drawer-group">Resources</li>',
-        ...resourceDrawerItems,
+        ...NAV_GROUPS.resources.map(item => `<li class="drawer-sub"><a href="${item.href}">${item.title}</a></li>`),
       ].join('');
     }
   }
