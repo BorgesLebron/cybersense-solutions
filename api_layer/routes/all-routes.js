@@ -1515,7 +1515,7 @@ async function refreshArticleAgentTasks(agentName, taskType) {
 
 adminRouter.post('/trigger/article-james', requireAdminToken(['gm']), async (req, res, next) => {
   try {
-    const { runJamesArticleCycle } = require('../services/scheduler');
+    const { runJamesArticleCycle, pollJasonTasks } = require('../services/scheduler');
     const { executeJamesDraftArticle } = require('../services/james_runtime');
     const sourceType = req.body?.source_type || null;
     const validTypes = ['threat', 'innovation', 'growth', 'policy'];
@@ -1550,7 +1550,10 @@ adminRouter.post('/trigger/article-james', requireAdminToken(['gm']), async (req
     ).then(r => r.rows[0]);
 
     if (finalTask?.status === 'complete') {
-      return res.json({ triggered: true, agent: 'James', source_type: filteredType, success: true, message: `James drafted an article${typeLabel}. Check Articles Console — Jason is next.` });
+      // Jason's cron only runs 4–9 AM CT. Poll immediately so manual afternoon
+      // triggers don't leave the article stuck queued until next morning.
+      await pollJasonTasks();
+      return res.json({ triggered: true, agent: 'James', source_type: filteredType, success: true, message: `James drafted an article${typeLabel}. Jason has been notified — check Articles Console.` });
     }
     if (finalTask?.status === 'failed') {
       return res.json({ triggered: true, agent: 'James', source_type: filteredType, success: false, message: `James failed${typeLabel}: ${finalTask.error_message || 'check Railway logs'}` });
