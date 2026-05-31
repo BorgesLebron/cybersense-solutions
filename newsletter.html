@@ -196,16 +196,49 @@
 
 /* ── Utilities ─────────────────────────────────────────────────────────── */
 
+function parseEditionDate(dateStr) {
+  const raw = String(dateStr || '').trim();
+  const dateOnly = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (dateOnly) {
+    return new Date(Date.UTC(
+      Number(dateOnly[1]),
+      Number(dateOnly[2]) - 1,
+      Number(dateOnly[3]),
+      12
+    ));
+  }
+  return new Date(raw);
+}
+
 function formatDate(dateStr) {
-  return new Date(dateStr).toLocaleDateString('en-US', {
+  return parseEditionDate(dateStr).toLocaleDateString('en-US', {
     month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC'
   });
+}
+
+function newsletterPath(b) {
+  if (!b || !b.edition_date) return 'newsletter.html';
+
+  const date = parseEditionDate(b.edition_date);
+  if (Number.isNaN(date.getTime())) return b.file_path || 'newsletter.html';
+
+  const year = date.toLocaleDateString('en-US', { year: 'numeric', timeZone: 'UTC' });
+  const month = date.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' });
+  const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(date.getUTCDate()).padStart(2, '0');
+  const y = String(date.getUTCFullYear());
+  const dateToken = `${mm}${dd}${y}`;
+  const editionNumber = Number(b.edition_number);
+  const usesLegacyPath = date < new Date(Date.UTC(2026, 3, 9, 12)) || editionNumber < 99;
+
+  if (usesLegacyPath) return `/newsletter/${year}/${month}/${dateToken}.html`;
+  return b.file_path || `/newsletter/${year}/${month}/${dateToken}_edition${editionNumber}.html`;
 }
 
 /* ── Left card: current edition ────────────────────────────────────────── */
 
 function renderCurrentEdition(b) {
-  const link    = b.file_path || 'newsletter.html';
+  const link    = newsletterPath(b);
   const dateStr = formatDate(b.edition_date);
   const num     = b.edition_number ? `EDITION ${b.edition_number}` : 'Latest Edition';
   document.getElementById('edition-current').innerHTML = `
@@ -227,7 +260,10 @@ function renderCurrentEdition(b) {
 /* ── Right panel: year/month/date repository ───────────────────────────── */
 
 function archiveDateParts(dateStr) {
-  const date = new Date(dateStr + 'T12:00:00Z');
+  const date = parseEditionDate(dateStr);
+  if (Number.isNaN(date.getTime())) {
+    return { year: 'Unknown Year', month: 'Unknown Month', dateLabel: 'Unknown Date' };
+  }
   return {
     year: date.toLocaleDateString('en-US', { year: 'numeric', timeZone: 'UTC' }),
     month: date.toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC' }),
@@ -248,7 +284,7 @@ function groupByYearMonth(editions) {
 }
 
 function editionRow(b) {
-  const link = b.file_path || '#';
+  const link = newsletterPath(b);
   const parts = archiveDateParts(b.edition_date);
   return `
     <div class="nl-edition-row">
