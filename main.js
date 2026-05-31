@@ -57,28 +57,6 @@
     </a>`;
   }
 
-  function navDropdown(label, key) {
-<<<<<<< HEAD
-    const menuTitle = key === 'intel' ? 'Intel Articles' : `${label} &rarr;`;
-=======
-    const titleText = key === 'resources' ? label : `${label} &rarr;`;
->>>>>>> 3df5abc ([20260528-G002] Simplify Resources menu and remove Intel dropdown (Gwen))
-    return `<li class="nav-menu-item" data-nav-group="${key}">
-      <button class="nav-menu-trigger" type="button" aria-haspopup="true" aria-expanded="false">
-        ${label}<span class="nav-caret" aria-hidden="true"></span>
-      </button>
-      <div class="nav-mega" role="menu" aria-label="${label} menu">
-<<<<<<< HEAD
-        <div class="nav-mega-title">${menuTitle}</div>
-=======
-        <div class="nav-mega-title">${titleText}</div>
->>>>>>> 3df5abc ([20260528-G002] Simplify Resources menu and remove Intel dropdown (Gwen))
-        <div class="nav-mega-grid">
-          ${NAV_GROUPS[key].map(navCard).join('')}
-        </div>
-      </div>
-    </li>`;
-  }
 
   function renderPublicNav() {
     const navLinks = document.querySelector('.nav-links');
