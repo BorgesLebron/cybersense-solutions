@@ -219,7 +219,7 @@ async function runJamesArticleCycle(sourceType = null) {
 
     if (activeTask) {
       console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'james_article_cycle', status: 'skipped', reason: 'active_task', task_id: activeTask.id }));
-      return;
+      return { status: 'skipped', reason: 'active_task', task_id: activeTask.id };
     }
 
     const activeArticles = await db.pool.query(`
@@ -245,7 +245,7 @@ async function runJamesArticleCycle(sourceType = null) {
         approved_backlog: approvedBacklog,
         capacity_limit: capacityLimit,
       }));
-      return;
+      return { status: 'skipped', reason: 'pipeline_capacity', active_articles: activeArticles, capacity_limit: capacityLimit };
     }
 
     const allowedTypes = sourceType ? [sourceType] : ['innovation', 'growth', 'policy', 'threat'];
@@ -261,8 +261,8 @@ async function runJamesArticleCycle(sourceType = null) {
     `, [allowedTypes]).then(r => r.rows[0] || null);
 
     if (!candidate) {
-      console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'james_article_cycle', status: 'skipped', reason: 'no_candidate' }));
-      return;
+      console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'james_article_cycle', status: 'skipped', reason: 'no_candidate', source_type: sourceType }));
+      return { status: 'skipped', reason: 'no_candidate', source_type: sourceType };
     }
 
     const task = await db.createTask({
@@ -284,10 +284,12 @@ async function runJamesArticleCycle(sourceType = null) {
       job: 'james_article_cycle',
       status: 'triggered',
       task_id: task.id,
+      source_type: sourceType,
       active_articles: activeArticles,
       approved_backlog: approvedBacklog,
       capacity_limit: capacityLimit,
     }));
+    return { status: 'triggered', task };
   } catch (e) {
     console.error(JSON.stringify({ ts: new Date().toISOString(), job: 'james_article_cycle', status: 'error', error: e.message }));
     await notifyAgents(['Barret', 'Henry'], {
@@ -295,6 +297,7 @@ async function runJamesArticleCycle(sourceType = null) {
       error: e.message,
       message: `James article cycle trigger failed: ${e.message}. Intel articles may not draft automatically.`,
     });
+    return { status: 'error', error: e.message };
   }
 }
 
