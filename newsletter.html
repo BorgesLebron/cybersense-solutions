@@ -33,7 +33,7 @@
     padding: 8px 18px;
     border-radius: 50px;
   }
-  .nl-month-btn {
+  .nl-archive-btn {
     width: 100%;
     display: flex;
     justify-content: space-between;
@@ -48,8 +48,18 @@
     text-align: left;
     transition: background 0.15s;
   }
-  .nl-month-btn:hover { background: #1a5696; }
-  .nl-month-btn.open { background: #1a56b0; }
+  .nl-archive-btn:hover { background: #1a5696; }
+  .nl-archive-btn.open { background: #1a56b0; }
+  .nl-year-btn {
+    background: #0f2347;
+    border-radius: 8px;
+  }
+  .nl-year-btn:hover,
+  .nl-year-btn.open { background: #163263; }
+  .nl-month-btn {
+    background: #1d5fa4;
+    padding-left: 28px;
+  }
   .nl-edition-row {
     display: flex;
     align-items: center;
@@ -70,6 +80,14 @@
     border-radius: 50px;
     white-space: nowrap;
   }
+  .nl-edition-date {
+    flex-shrink: 0;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 700;
+    min-width: 92px;
+    white-space: nowrap;
+  }
   .nl-edition-subject {
     flex: 1;
     font-size: 13px;
@@ -88,6 +106,8 @@
   .nl-read-link:hover { text-decoration: underline; }
   @media (max-width: 820px) {
     .nl-grid { grid-template-columns: 1fr; }
+    .nl-edition-row { flex-wrap: wrap; }
+    .nl-edition-subject { flex-basis: 100%; }
   }
 </style>
 </head>
@@ -137,9 +157,9 @@
         </div>
       </div>
 
-      <!-- RIGHT: Previous editions accordion -->
+      <!-- RIGHT: Previous editions repository -->
       <div>
-        <h2 style="font-size:20px;font-weight:700;color:var(--cs-navy);margin-bottom:16px;">Previous Edition</h2>
+        <h2 style="font-size:20px;font-weight:700;color:var(--cs-navy);margin-bottom:16px;">Previous Edition Repository</h2>
         <div id="editions-accordion">
           <div style="color:var(--cs-gray-400);font-size:14px;padding:12px 0;">Loading editions...</div>
         </div>
@@ -204,23 +224,35 @@ function renderCurrentEdition(b) {
   `;
 }
 
-/* ── Right panel: month accordion ──────────────────────────────────────── */
+/* ── Right panel: year/month/date repository ───────────────────────────── */
 
-function groupByMonth(editions) {
+function archiveDateParts(dateStr) {
+  const date = new Date(dateStr + 'T12:00:00Z');
+  return {
+    year: date.toLocaleDateString('en-US', { year: 'numeric', timeZone: 'UTC' }),
+    month: date.toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC' }),
+    dateLabel: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
+  };
+}
+
+function groupByYearMonth(editions) {
   const groups = new Map();
   editions.forEach(b => {
-    const key = new Date(b.edition_date + 'T12:00:00Z')
-      .toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(b);
+    const parts = archiveDateParts(b.edition_date);
+    if (!groups.has(parts.year)) groups.set(parts.year, new Map());
+    const yearGroup = groups.get(parts.year);
+    if (!yearGroup.has(parts.month)) yearGroup.set(parts.month, []);
+    yearGroup.get(parts.month).push(b);
   });
   return groups;
 }
 
 function editionRow(b) {
   const link = b.file_path || '#';
+  const parts = archiveDateParts(b.edition_date);
   return `
     <div class="nl-edition-row">
+      <span class="nl-edition-date">${parts.dateLabel}</span>
       <span class="nl-edition-num">EDITION ${b.edition_number || '—'}</span>
       <span class="nl-edition-subject">${b.subject_line || 'Daily Digital Awareness Brief'}</span>
       <a href="${link}" class="nl-read-link" target="_blank">Read &rarr;</a>
@@ -228,20 +260,32 @@ function editionRow(b) {
 }
 
 function renderAccordion(briefings) {
-  const groups    = groupByMonth(briefings);
+  const groups    = groupByYearMonth(briefings);
   const container = document.getElementById('editions-accordion');
   let html        = '';
 
-  groups.forEach((editions, monthKey) => {
-    const key = monthKey.replace(/[\s,]/g, '_');
+  groups.forEach((months, yearKey) => {
+    const yearId = `year-${yearKey}`;
     html += `
       <div style="margin-bottom:8px;border-radius:8px;overflow:hidden;">
-        <button class="nl-month-btn" id="btn-${key}" onclick="toggleMonth('${key}')">
-          <span>${monthKey}</span>
-          <span id="chev-${key}" style="font-size:11px;">&#9660;</span>
+        <button class="nl-archive-btn nl-year-btn" id="btn-${yearId}" onclick="toggleArchive('${yearId}')">
+          <span>${yearKey}</span>
+          <span id="chev-${yearId}" style="font-size:11px;">&#9660;</span>
         </button>
-        <div id="month-${key}" style="display:none;">
-          ${editions.map(editionRow).join('')}
+        <div id="panel-${yearId}" style="display:none;padding-top:8px;">
+          ${Array.from(months.entries()).map(([monthKey, editions]) => {
+            const monthId = `month-${yearKey}-${monthKey}`.replace(/\s/g, '_');
+            return `
+              <div style="margin-bottom:8px;overflow:hidden;">
+                <button class="nl-archive-btn nl-month-btn" id="btn-${monthId}" onclick="toggleArchive('${monthId}')">
+                  <span>${monthKey}</span>
+                  <span id="chev-${monthId}" style="font-size:11px;">&#9660;</span>
+                </button>
+                <div id="panel-${monthId}" style="display:none;">
+                  ${editions.map(editionRow).join('')}
+                </div>
+              </div>`;
+          }).join('')}
         </div>
       </div>`;
   });
@@ -249,8 +293,8 @@ function renderAccordion(briefings) {
   container.innerHTML = html || '<p style="color:var(--cs-gray-400);font-size:14px;padding:8px 0;">No previous editions.</p>';
 }
 
-function toggleMonth(key) {
-  const panel = document.getElementById('month-' + key);
+function toggleArchive(key) {
+  const panel = document.getElementById('panel-' + key);
   const chev  = document.getElementById('chev-' + key);
   const btn   = document.getElementById('btn-' + key);
   const isOpen = panel.style.display !== 'none';
