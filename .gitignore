@@ -6,6 +6,7 @@ node_modules/
 .vscode/
 .cybersense-sop(privateLibrary)
 api_layer/package-lock.json
+api_layer/.env
 engineernotes.md
 carousel_*.png
 .tools/.env
