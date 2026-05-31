@@ -16,12 +16,35 @@ function unlockArticle(article) {
   };
 }
 
+function classifyInnovationTopic(article) {
+  if (!article || article.section !== 'innovation') return null;
+  const text = `${article.title || ''} ${article.teaser || ''} ${article.body_md || ''}`.toLowerCase();
+
+  if (/(artificial intelligence|machine learning|\bai\b|\bml\b|llm|agentic|neural|model quantization|nvidia)/.test(text)) {
+    return 'ai_ml';
+  }
+  if (/(quantum|qubit|post-quantum|pqc|supercomputer)/.test(text)) {
+    return 'quantum';
+  }
+  if (/(cloud|kubernetes|container|serverless|api|web|application|apps|saas|paas|iaas)/.test(text)) {
+    return 'cloud_apps_web';
+  }
+  if (/(iot|sensor|firmware|embedded|edge device|telemetry)/.test(text)) {
+    return 'iot_sensors';
+  }
+  return 'new_technology';
+}
+
 contentRouter.get('/articles', requireUserToken('free'), async (req, res, next) => {
   try {
     const { section, page = 1, limit = 20 } = req.query;
     const articles = await db.listArticles({ section, page: +page, limit: +limit });
     const total = await db.pool.query('SELECT COUNT(*) FROM articles WHERE pipeline_status=$1', ['published']).then(r => +r.rows[0].count);
-    res.json({ data: articles.map(unlockArticle), meta: { page: +page, limit: +limit, total, pages: Math.ceil(total / limit) } });
+    const data = articles.map(article => {
+      const unlocked = unlockArticle(article);
+      return { ...unlocked, innovation_topic: classifyInnovationTopic(article) };
+    });
+    res.json({ data, meta: { page: +page, limit: +limit, total, pages: Math.ceil(total / limit) } });
   } catch (e) { next(e); }
 });
 
@@ -30,7 +53,7 @@ contentRouter.get('/articles/:slug', requireUserToken('free'), async (req, res, 
     const article = await db.getArticle(req.params.slug);
     if (!article || article.pipeline_status !== 'published') return res.status(404).json(err('NOT_FOUND', 'Article not found'));
     await db.incrementArticleViews(article.id);
-    res.json(unlockArticle(article));
+    res.json({ ...unlockArticle(article), innovation_topic: classifyInnovationTopic(article) });
   } catch (e) { next(e); }
 });
 
@@ -1492,14 +1515,50 @@ async function refreshArticleAgentTasks(agentName, taskType) {
 
 adminRouter.post('/trigger/article-james', requireAdminToken(['gm']), async (req, res, next) => {
   try {
-    const { runJamesArticleCycle, pollJamesTasks } = require('../services/scheduler');
+    const { runJamesArticleCycle, pollJasonTasks } = require('../services/scheduler');
+    const { executeJamesDraftArticle } = require('../services/james_runtime');
     const sourceType = req.body?.source_type || null;
     const validTypes = ['threat', 'innovation', 'growth', 'policy'];
     const filteredType = validTypes.includes(sourceType) ? sourceType : null;
-    await runJamesArticleCycle(filteredType);
-    await pollJamesTasks();
     const typeLabel = filteredType ? ` (type: ${filteredType})` : '';
-    res.json({ triggered: true, agent: 'James', source_type: filteredType, message: `James article cycle triggered${typeLabel}. Ready-for-intel content will draft if capacity allows.` });
+
+    const cycle = await runJamesArticleCycle(filteredType);
+
+    if (cycle.status === 'skipped') {
+      const skipMessages = {
+        active_task:        `James already has an active task — check its status before re-triggering.`,
+        pipeline_capacity:  `Pipeline at capacity: ${cycle.active_articles} of ${cycle.capacity_limit} article slots in use. Approve or publish an article before triggering James again.`,
+        no_candidate:       `No ready-for-intel candidates${filteredType ? ` of type "${filteredType}"` : ''} without an existing article. Run Ivan/Charlie or Barbara to build the queue.`,
+      };
+      return res.json({
+        triggered: false, agent: 'James', source_type: filteredType,
+        reason: cycle.reason,
+        message: skipMessages[cycle.reason] || `James skipped: ${cycle.reason}`,
+      });
+    }
+
+    if (cycle.status === 'error') {
+      return next(new Error(cycle.error || 'James article cycle failed'));
+    }
+
+    // Task created — run immediately with sourceType preserved so the type selector
+    // actually controls what James drafts (threats otherwise always win by priority).
+    await executeJamesDraftArticle(cycle.task, { sourceType: filteredType });
+
+    const finalTask = await db.pool.query(
+      'SELECT status, error_message FROM agent_tasks WHERE id=$1', [cycle.task.id]
+    ).then(r => r.rows[0]);
+
+    if (finalTask?.status === 'complete') {
+      // Jason's cron only runs 4–9 AM CT. Poll immediately so manual afternoon
+      // triggers don't leave the article stuck queued until next morning.
+      await pollJasonTasks();
+      return res.json({ triggered: true, agent: 'James', source_type: filteredType, success: true, message: `James drafted an article${typeLabel}. Jason has been notified — check Articles Console.` });
+    }
+    if (finalTask?.status === 'failed') {
+      return res.json({ triggered: true, agent: 'James', source_type: filteredType, success: false, message: `James failed${typeLabel}: ${finalTask.error_message || 'check Railway logs'}` });
+    }
+    return res.json({ triggered: true, agent: 'James', source_type: filteredType, message: `James article cycle queued${typeLabel}. Check Articles Console shortly.` });
   } catch (e) { next(e); }
 });
 

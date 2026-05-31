@@ -10,29 +10,34 @@
   const NAV_GROUPS = {
     intel: [
       {
+        title: 'Intel Articles',
+        href: 'intelligence.html',
+        body: 'Full Intel Articles page.',
+      },
+      {
         title: 'Threat Intelligence',
-        href: 'intel-repository.html#threat-intelligence',
-        body: 'Decrypting the active threat landscape. Access analyses of emerging vulnerability vectors, weaponized exploits, and tactical mitigation strategies designed to safeguard enterprise infrastructure and workforce assets.',
+        href: 'intelligence.html#threat-intelligence',
+        body: 'Current threat intelligence.',
       },
       {
         title: 'Policy Updates',
-        href: 'policy.html',
-        body: 'Operational frameworks, compliance mandates, and governance guidance for modern cybersecurity programs.',
+        href: 'intelligence.html#policy-updates',
+        body: 'Current policy updates.',
       },
       {
         title: 'Professional Growth',
-        href: 'growth.html',
-        body: 'Empowering a digitally disciplined workforce. Discover data-backed insights on evolving technical certifications, cyber career trajectories, and interdisciplinary team structures designed to bridge the skills gap between practitioners and leadership.',
+        href: 'intelligence.html#professional-growth',
+        body: 'Current professional growth.',
       },
       {
         title: 'Innovation',
-        href: 'innovation.html',
-        body: 'Anticipating the technological frontier. Explore balanced, forward-looking deconstructions of emerging breakthroughs, from autonomous agentic AI architectures to post-quantum cryptographic transitions, and their structural impacts on future enterprise strategy.',
+        href: 'intelligence.html#innovation',
+        body: 'Current innovation coverage.',
       },
       {
         title: 'Training Resources',
-        href: 'training.html',
-        body: 'Actionable pathways for continuous learning. Access a highly curated library of high-ROI webinars, instructional videos, and verified open-access courses to build systemic organizational resilience and technical mastery.',
+        href: 'intelligence.html#training-resources',
+        body: 'Current training resources.',
       },
     ],
     resources: [
@@ -52,20 +57,6 @@
     </a>`;
   }
 
-  function navDropdown(label, key) {
-    const titleText = key === 'resources' ? label : `${label} &rarr;`;
-    return `<li class="nav-menu-item" data-nav-group="${key}">
-      <button class="nav-menu-trigger" type="button" aria-haspopup="true" aria-expanded="false">
-        ${label}<span class="nav-caret" aria-hidden="true"></span>
-      </button>
-      <div class="nav-mega" role="menu" aria-label="${label} menu">
-        <div class="nav-mega-title">${titleText}</div>
-        <div class="nav-mega-grid">
-          ${NAV_GROUPS[key].map(navCard).join('')}
-        </div>
-      </div>
-    </li>`;
-  }
 
   function renderPublicNav() {
     const navLinks = document.querySelector('.nav-links');
