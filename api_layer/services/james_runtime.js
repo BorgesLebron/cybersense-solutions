@@ -152,7 +152,15 @@ function normalizeCandidate(row) {
   };
 }
 
-async function getNextIntelArticleCandidate() {
+// sourceType: when provided, restricts candidate selection to that type only.
+// This is what makes the article type selector actually work — threats always
+// rank highest by priority, so without a filter every manual trigger drafts a
+// threat article regardless of what was selected in the admin console.
+async function getNextIntelArticleCandidate(sourceType = null) {
+  const allowedTypes = sourceType
+    ? [sourceType]
+    : ['innovation', 'growth', 'policy', 'threat'];
+
   const row = await db.pool.query(`
     SELECT r.id AS repository_id,
            r.source_id,
@@ -197,7 +205,7 @@ async function getNextIntelArticleCandidate() {
     LEFT JOIN intel_items i ON i.id = r.source_id AND r.source_type IN ('innovation','growth','policy')
     LEFT JOIN threat_records t ON t.id = r.source_id AND r.source_type = 'threat'
     WHERE r.ready_for_intel = true
-      AND r.source_type IN ('innovation','growth','policy','threat')
+      AND r.source_type = ANY($1)
       AND COALESCE(i.article_id, t.article_id) IS NULL
     ORDER BY CASE r.source_type
       WHEN 'threat'     THEN 1
@@ -207,7 +215,7 @@ async function getNextIntelArticleCandidate() {
       ELSE 3
     END, r.processed_at ASC
     LIMIT 1
-  `).then(r => r.rows[0] || null);
+  `, [allowedTypes]).then(r => r.rows[0] || null);
 
   return row ? normalizeCandidate(row) : null;
 }
@@ -235,14 +243,15 @@ async function applyJamesDraft(item) {
   };
 }
 
-async function executeJamesDraftArticle(task) {
+async function executeJamesDraftArticle(task, opts = {}) {
   const ts = new Date().toISOString();
-  console.log(JSON.stringify({ ts, runtime: 'james', event: 'DRAFT_START', task_id: task.id }));
+  const sourceType = opts.sourceType || null;
+  console.log(JSON.stringify({ ts, runtime: 'james', event: 'DRAFT_START', task_id: task.id, source_type: sourceType || 'any' }));
 
   await db.updateTask(task.id, { status: 'in_progress' });
 
   try {
-    const item = await getNextIntelArticleCandidate();
+    const item = await getNextIntelArticleCandidate(sourceType);
     if (!item) {
       await db.updateTask(task.id, { status: 'complete' });
       console.log(JSON.stringify({ ts, runtime: 'james', event: 'NO_CANDIDATE', task_id: task.id }));
@@ -302,6 +311,7 @@ async function pollJamesTasks() {
 
 module.exports = {
   pollJamesTasks,
+  executeJamesDraftArticle,
   ensureJamesToken,
   getNextIntelArticleCandidate,
   applyJamesDraft,
