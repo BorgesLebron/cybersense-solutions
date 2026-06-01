@@ -18,12 +18,53 @@
   .hero-vid-card video{width:100%;display:block;object-fit:cover;aspect-ratio:16/9;}
   .hero-vid-card.is-portrait video{aspect-ratio:3/4;}
   .hero-vid-label{position:absolute;top:0;left:0;right:0;padding:10px 14px;background:linear-gradient(rgba(0,0,0,0.65),transparent);color:#fff;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
-  .split-panel-radar{background:#071225;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:20px;min-height:430px;box-shadow:0 24px 70px rgba(0,0,0,0.38);cursor:pointer;transition:transform .16s,border-color .16s,box-shadow .16s;}
+  .split-panel-radar{background:#071225;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:0;min-height:430px;box-shadow:0 24px 70px rgba(0,0,0,0.38);cursor:pointer;transition:transform .16s,border-color .16s,box-shadow .16s;overflow:hidden;}
   .split-panel-radar:hover{transform:translateY(-2px);border-color:rgba(0,212,255,0.42);box-shadow:0 30px 80px rgba(0,0,0,0.46);}
   .split-panel-radar .table-wrap{display:none;}
   .split-radar-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px;}
   .split-radar-pill{display:inline-flex;align-items:center;gap:8px;border-radius:999px;background:rgba(0,212,255,0.18);border:1px solid rgba(0,212,255,0.32);padding:7px 12px;color:#fff;font-size:13px;font-weight:700;white-space:nowrap;}
   .split-radar-pill i{width:9px;height:9px;border-radius:50%;background:#22c55e;box-shadow:0 0 14px rgba(34,197,94,0.9);}
+  /* ── Radar Preview Widget ── */
+  .radar-preview-widget{position:relative;width:100%;background:#071225;min-height:430px;display:flex;flex-direction:column;}
+  .widget-header{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:rgba(0,0,0,0.3);border-bottom:1px solid rgba(0,212,255,0.12);}
+  .widget-status{font-family:monospace;font-size:0.72rem;color:var(--cs-cyan);letter-spacing:0.08em;display:flex;align-items:center;gap:8px;}
+  .widget-pulse{width:8px;height:8px;background:#ef4444;border-radius:50%;box-shadow:0 0 0 0 rgba(239,68,68,0.7);animation:rpulse 1.6s infinite;flex-shrink:0;}
+  .widget-link{font-size:0.82rem;color:rgba(255,255,255,0.4);text-decoration:none;white-space:nowrap;}
+  .widget-link:hover{color:rgba(0,212,255,0.9);}
+  /* Desktop table view */
+  .radar-desktop-view{display:block;overflow-x:auto;}
+  .preview-table{width:100%;border-collapse:collapse;text-align:left;font-size:0.85rem;}
+  .preview-table th{padding:10px 16px;background:rgba(0,0,0,0.25);color:rgba(255,255,255,0.35);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid rgba(0,212,255,0.1);white-space:nowrap;}
+  .preview-table td{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.05);color:rgba(255,255,255,0.75);vertical-align:middle;}
+  .row-clear td{opacity:1;}
+  .row-blurred td{filter:blur(4px);opacity:0.3;user-select:none;pointer-events:none;}
+  /* Mobile card view */
+  .radar-mobile-view{display:none;padding:14px;flex-direction:column;gap:10px;}
+  .intel-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:14px;}
+  .clear-card{border-color:rgba(0,212,255,0.18);}
+  .card-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .card-title{font-size:0.95rem;color:#fff;margin:0 0 5px 0;font-weight:600;}
+  .card-desc{font-size:0.8rem;color:rgba(255,255,255,0.5);margin:0 0 10px 0;line-height:1.45;}
+  .card-footer{display:flex;justify-content:flex-end;}
+  .blurred-card{filter:blur(4px);opacity:0.25;user-select:none;pointer-events:none;}
+  /* Shared badge and metric styles */
+  .rw-badge{padding:2px 7px;border-radius:3px;font-size:0.65rem;font-weight:700;letter-spacing:0.03em;white-space:nowrap;}
+  .sev-critical{background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);}
+  .sev-high{background:rgba(249,115,22,0.15);color:#fb923c;border:1px solid rgba(249,115,22,0.3);}
+  .sev-medium{background:rgba(234,179,8,0.15);color:#facc15;border:1px solid rgba(234,179,8,0.3);}
+  .sev-low{background:rgba(34,197,94,0.12);color:#4ade80;border:1px solid rgba(34,197,94,0.25);}
+  .cvss-val{font-family:monospace;font-weight:700;color:#fff;font-size:0.85rem;}
+  .threat-name{color:#f1f5f9;font-weight:600;}
+  .intel-action-lnk{color:var(--cs-cyan);font-size:0.8rem;font-weight:500;}
+  /* Conversion curtain */
+  .conversion-curtain{position:absolute;bottom:0;left:0;right:0;height:62%;background:linear-gradient(to top,#071225 72%,rgba(7,18,37,0) 100%);display:flex;align-items:flex-end;justify-content:center;padding-bottom:28px;pointer-events:none;}
+  .curtain-box{text-align:center;max-width:380px;padding:0 20px;pointer-events:auto;}
+  .curtain-icon{font-size:1.8rem;margin-bottom:6px;}
+  .curtain-box h3{color:#fff;font-size:1.2rem;margin:0 0 8px 0;font-weight:700;}
+  .curtain-box p{color:rgba(255,255,255,0.45);font-size:0.82rem;line-height:1.5;margin:0 0 18px 0;}
+  .cta-glow{display:inline-block;background:#2563eb;color:#fff;padding:11px 26px;border-radius:6px;font-weight:700;font-size:0.88rem;text-decoration:none;box-shadow:0 4px 20px rgba(37,99,235,0.45);transition:all .2s;}
+  .cta-glow:hover{background:#1d4ed8;transform:translateY(-1px);box-shadow:0 6px 26px rgba(37,99,235,0.55);}
+  @keyframes rpulse{0%{transform:scale(.95);box-shadow:0 0 0 0 rgba(239,68,68,.7);}70%{transform:scale(1);box-shadow:0 0 0 5px rgba(239,68,68,0);}100%{transform:scale(.95);box-shadow:0 0 0 0 rgba(239,68,68,0);}}
   .split-radar-dashboard{border-radius:8px;background:#030914;border:1px solid rgba(0,212,255,0.18);padding:12px;display:grid;grid-template-columns:.62fr 1fr;gap:10px;}
   .split-radar-stats{grid-column:1/-1;display:grid;grid-template-columns:repeat(5,1fr);gap:7px;}
   .split-radar-stat{background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.14);border-radius:4px;padding:7px 8px;}
@@ -58,6 +99,13 @@
     .home-split-grid{grid-template-columns:1fr;}
     .split-panel-radar{min-height:0;}
     .split-radar-dashboard{grid-template-columns:1fr;}
+    .radar-desktop-view{display:none!important;}
+    .radar-mobile-view{display:flex!important;}
+    .widget-link{display:none;}
+    .conversion-curtain{height:70%;padding-bottom:22px;}
+    .curtain-box h3{font-size:1.05rem;}
+    .curtain-box p{font-size:0.78rem;}
+    .cta-glow{display:block;text-align:center;}
   }
 </style>
 </head>
@@ -143,20 +191,91 @@
     <div class="home-split-grid">
 
       <!-- Left: Radar Widget -->
-      <div class="split-panel-radar">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <span class="live-dot"></span>
-            <p class="section-label" style="margin:0;color:rgba(255,255,255,0.5);">Live Intelligence</p>
+      <div class="split-panel-radar" onclick="window.location='radar.html'">
+        <div class="radar-preview-widget">
+
+          <div class="widget-header">
+            <div class="widget-status">
+              <span class="widget-pulse"></span> LIVE COMPROMISE TELEMETRY
+            </div>
+            <a href="radar.html" class="widget-link" onclick="event.stopPropagation()">Open Full Radar →</a>
           </div>
-          <span class="split-radar-pill">Live <i></i></span>
-        </div>
-        <h2 style="font-size:clamp(18px,2vw,22px);font-weight:700;color:#fff;letter-spacing:-0.5px;margin-bottom:14px;">Threat Radar</h2>
-        <div style="border-radius:10px;overflow:hidden;border:1px solid rgba(0,212,255,0.15);box-shadow:0 0 24px rgba(0,212,255,0.06);">
-          <iframe src="radar.html?embed=1" style="width:100%;height:620px;border:none;display:block;" title="Live Threat Radar" loading="lazy"></iframe>
-        </div>
-        <div style="text-align:right;margin-top:10px;">
-          <a href="radar.html" style="font-size:13px;color:rgba(0,212,255,0.75);text-decoration:none;">Open full radar →</a>
+
+          <!-- Desktop table view -->
+          <div class="radar-desktop-view">
+            <table class="preview-table">
+              <thead>
+                <tr>
+                  <th>Severity</th>
+                  <th>Threat / Target Stack</th>
+                  <th>CVSS</th>
+                  <th>Intel</th>
+                </tr>
+              </thead>
+              <tbody id="rw-desktop-body">
+                <tr class="row-clear" id="rw-row-0">
+                  <td><span class="rw-badge sev-critical" id="rw-d-sev-0">CRITICAL</span></td>
+                  <td><span class="threat-name" id="rw-d-name-0">BerriAI LiteLLM</span> — <span id="rw-d-desc-0">SQL injection in telemetry configuration router actively exploited</span></td>
+                  <td><span class="cvss-val" id="rw-d-cvss-0">9.8</span></td>
+                  <td><span class="intel-action-lnk">View →</span></td>
+                </tr>
+                <tr class="row-blurred">
+                  <td><span class="rw-badge sev-high">HIGH</span></td>
+                  <td><span class="threat-name">Edge Device Cluster</span> — Active brute force targeting authentication APIs</td>
+                  <td><span class="cvss-val">8.4</span></td>
+                  <td><span class="intel-action-lnk">View →</span></td>
+                </tr>
+                <tr class="row-blurred">
+                  <td><span class="rw-badge sev-medium">MEDIUM</span></td>
+                  <td><span class="threat-name">Cloud Infrastructure OS</span> — Memory corruption in origin validation handles</td>
+                  <td><span class="cvss-val">6.5</span></td>
+                  <td><span class="intel-action-lnk">View →</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Mobile card stack -->
+          <div class="radar-mobile-view">
+            <div class="intel-card clear-card">
+              <div class="card-meta">
+                <span class="rw-badge sev-critical" id="rw-m-sev-0">CRITICAL</span>
+                <span class="cvss-val" id="rw-m-cvss-0">9.8</span>
+              </div>
+              <h4 class="card-title" id="rw-m-name-0">BerriAI LiteLLM</h4>
+              <p class="card-desc" id="rw-m-desc-0">SQL injection in telemetry configuration router actively exploited in the wild.</p>
+              <div class="card-footer">
+                <span class="intel-action-lnk">View Briefing →</span>
+              </div>
+            </div>
+            <div class="intel-card blurred-card">
+              <div class="card-meta">
+                <span class="rw-badge sev-high">HIGH</span>
+                <span class="cvss-val">8.4</span>
+              </div>
+              <h4 class="card-title">Edge Device Cluster</h4>
+              <p class="card-desc">Active brute force targeting authentication APIs across multi-region environments.</p>
+            </div>
+            <div class="intel-card blurred-card">
+              <div class="card-meta">
+                <span class="rw-badge sev-medium">MEDIUM</span>
+                <span class="cvss-val">6.5</span>
+              </div>
+              <h4 class="card-title">Cloud Infrastructure OS</h4>
+              <p class="card-desc">Memory corruption in origin validation handles observed across enterprise deployments.</p>
+            </div>
+          </div>
+
+          <!-- Conversion curtain -->
+          <div class="conversion-curtain">
+            <div class="curtain-box">
+              <div class="curtain-icon">🔒</div>
+              <h3>Unlock Live Threat Telemetry</h3>
+              <p>Unredacted access to real-time platform tracking, vulnerability matrix mapping, and immediate critical alerts.</p>
+              <a href="newsletter.html" class="cta-glow" onclick="event.stopPropagation()">Subscribe Free Now</a>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -294,7 +413,51 @@
 <script src="main.js"></script>
 <script>
 
+// ── Radar Widget — severity helpers ───────────────────────────────
+function rwSevClass(s){return{critical:'sev-critical',high:'sev-high',medium:'sev-medium',low:'sev-low'}[s]||'sev-medium';}
+function rwSevLabel(s){return(s||'').toUpperCase();}
+function rwName(t){return(t.threat_name||t.cve_id||'Unknown Threat').slice(0,40);}
+function rwDesc(t){const d=t.raw_data;if(typeof d==='string')return d.slice(0,90);if(d&&d.description)return String(d.description).slice(0,90);return(t.category||'Threat record').slice(0,90);}
+
+async function loadRadarWidget(user) {
+  if (!user) return; // guests see static fallback — already rendered in HTML
+  try {
+    const data = await CS.Auth.apiFetch('/api/content/radar?limit=3&severity=critical,high,medium');
+    const threats = (data.data || []).slice(0, 3);
+    if (!threats.length) return;
+    const t = threats[0];
+    const sevClass = rwSevClass(t.severity);
+    const sevLabel = rwSevLabel(t.severity);
+    const name     = rwName(t);
+    const desc     = rwDesc(t);
+    const cvss     = t.cvss_score != null ? parseFloat(t.cvss_score).toFixed(1) : '—';
+    // Desktop row 0
+    const ds = document.getElementById('rw-d-sev-0');
+    if(ds){ds.className='rw-badge '+sevClass;ds.textContent=sevLabel;}
+    const dn = document.getElementById('rw-d-name-0');
+    if(dn) dn.textContent = name;
+    const dd = document.getElementById('rw-d-desc-0');
+    if(dd) dd.textContent = desc;
+    const dc = document.getElementById('rw-d-cvss-0');
+    if(dc) dc.textContent = cvss;
+    // Mobile card 0
+    const ms = document.getElementById('rw-m-sev-0');
+    if(ms){ms.className='rw-badge '+sevClass;ms.textContent=sevLabel;}
+    const mn = document.getElementById('rw-m-name-0');
+    if(mn) mn.textContent = name;
+    const md = document.getElementById('rw-m-desc-0');
+    if(md) md.textContent = desc;
+    const mc = document.getElementById('rw-m-cvss-0');
+    if(mc) mc.textContent = cvss;
+  } catch(e) {
+    // Silent — static fallback stays rendered
+  }
+}
+
 async function loadHomeData(user) {
+
+  // ── Radar Widget ───────────────────────────────────────────────
+  await loadRadarWidget(user);
 
   // ── Briefing Preview ───────────────────────────────────────────
   if (user) {
