@@ -1525,8 +1525,34 @@ adminRouter.post('/trigger/article-james', requireAdminToken(['gm']), async (req
     const cycle = await runJamesArticleCycle(filteredType);
 
     if (cycle.status === 'skipped') {
+      if (cycle.reason === 'active_task') {
+        const t = cycle.task;
+        const ageMin = t?.started_at
+          ? Math.round((Date.now() - new Date(t.started_at).getTime()) / 60000)
+          : null;
+
+        // Stuck in_progress (Railway restart / Anthropic error mid-run) or
+        // queued but cron hasn't fired — reset and run immediately either way.
+        if (t?.status === 'queued' || (t?.status === 'in_progress' && (ageMin === null || ageMin > 3))) {
+          await db.pool.query(
+            `UPDATE agent_tasks SET status='queued', error_message=NULL, started_at=now() WHERE id=$1`,
+            [t.id]
+          );
+          const resetTask = await db.pool.query('SELECT * FROM agent_tasks WHERE id=$1', [t.id]).then(r => r.rows[0]);
+          await executeJamesDraftArticle(resetTask, { sourceType: filteredType });
+          const finalTask = await db.pool.query('SELECT status, error_message FROM agent_tasks WHERE id=$1', [t.id]).then(r => r.rows[0]);
+          if (finalTask?.status === 'complete') {
+            await pollJasonTasks();
+            return res.json({ triggered: true, agent: 'James', source_type: filteredType, success: true, message: `Stuck task cleared and completed${typeLabel}. Jason has been notified.` });
+          }
+          return res.json({ triggered: true, agent: 'James', source_type: filteredType, success: false, message: `Task reset — James ${finalTask?.status || 'unknown'}: ${finalTask?.error_message || 'check Railway logs'}` });
+        }
+
+        // Actively running and recent — leave it alone
+        return res.json({ triggered: false, agent: 'James', source_type: filteredType, reason: 'active_task', message: `James is actively running (${ageMin !== null ? ageMin + ' min' : 'recently started'}). Check Articles Console in a moment.` });
+      }
+
       const skipMessages = {
-        active_task:        `James already has an active task — check its status before re-triggering.`,
         pipeline_capacity:  `Pipeline at capacity: ${cycle.active_articles} of ${cycle.capacity_limit} article slots in use. Approve or publish an article before triggering James again.`,
         no_candidate:       `No ready-for-intel candidates${filteredType ? ` of type "${filteredType}"` : ''} without an existing article. Run Ivan/Charlie or Barbara to build the queue.`,
       };
