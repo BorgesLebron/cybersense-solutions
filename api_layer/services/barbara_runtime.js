@@ -264,7 +264,7 @@ async function normalizeIntelItem(item) {
       }),
     },
     correlation_tags: [...new Set([...(item.tags || []), item.type])],
-    ready_for_intel:     isHighPriority,
+    ready_for_intel:     true,
     ready_for_awareness: true,
     source_tier:         enriched?.source_tier ?? inferSourceTier(item.tags),
     quality_flag:        enriched?.quality_flag ?? false,
