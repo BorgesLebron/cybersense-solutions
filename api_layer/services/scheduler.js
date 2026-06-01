@@ -210,7 +210,7 @@ async function runRedTeamBatchCycle() {
 async function runJamesArticleCycle(sourceType = null) {
   try {
     const activeTask = await db.pool.query(`
-      SELECT id FROM agent_tasks
+      SELECT id, status, started_at FROM agent_tasks
       WHERE agent_name = 'James'
         AND task_type = 'draft_article'
         AND status IN ('queued','in_progress')
@@ -218,8 +218,8 @@ async function runJamesArticleCycle(sourceType = null) {
     `).then(r => r.rows[0] || null);
 
     if (activeTask) {
-      console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'james_article_cycle', status: 'skipped', reason: 'active_task', task_id: activeTask.id }));
-      return { status: 'skipped', reason: 'active_task', task_id: activeTask.id };
+      console.log(JSON.stringify({ ts: new Date().toISOString(), job: 'james_article_cycle', status: 'skipped', reason: 'active_task', task_id: activeTask.id, task_status: activeTask.status }));
+      return { status: 'skipped', reason: 'active_task', task: activeTask };
     }
 
     const activeArticles = await db.pool.query(`
