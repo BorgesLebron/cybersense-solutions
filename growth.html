@@ -9,6 +9,7 @@
 <meta name="description" content="Professional growth resources for cybersecurity practitioners.">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="auth.css">
+<link rel="stylesheet" href="repositories.css">
 </head>
 <body>
 <nav class="nav" role="navigation" aria-label="Main navigation">
@@ -19,104 +20,43 @@
     <li><a href="radar.html">Radar</a></li>
     <li><a href="intelligence.html">Intel</a></li>
     <li><a href="newsletter.html">Newsletter</a></li>
-    <li><a href="resources.html"class="active">Resources</a></li>
+    <li><a href="resources.html" class="active">Resources</a></li>
   </ul>
   <button class="nav-login" onclick="CS.Auth.showLoginModal()">Login</button>
   <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
 </nav>
 <div class="nav-drawer" id="nav-drawer"><ul></ul><a href="#" class="drawer-login" onclick="CS.Auth.showLoginModal();return false;">Login</a></div>
 
-<main class="resources-page">
-  <section class="resources-shell">
-    <a href="resources.html" style="display:inline-block;color:var(--cs-cyan);font-size:13px;font-weight:700;text-decoration:none;margin-bottom:20px;">&lt;-- Back To Resources</a>
-    <h1 class="resources-title"><span>Professional</span> Growth</h1>
-    <p class="resources-copy">A dedicated launchpad for aspiring and advancing cybersecurity professionals. This section houses our curated archive of career development insights, resume-building strategies, industry trend analyses, and expert advice designed to help you bridge the gap from academic foundational knowledge to Day 1 operational readiness.</p>
-    <input class="resource-search" type="search" placeholder="Search date, vendor, product, type" aria-label="Search professional growth resources">
+<main class="repo-main">
+  <section class="repo-shell">
+    <a href="resources.html" class="repo-back">&lt;-- Back To Resources</a>
+    <p class="repo-kicker">Executive &amp; Market Analytics Hub</p>
+    <h1 class="repo-title">Professional Growth</h1>
+    <p class="repo-copy">Executive risk metrics, enterprise governance references, market analytics, and vendor risk management resources for security leaders and advancing practitioners.</p>
 
-    <div class="resource-grid">
-      <section class="resource-panel">
-        <div class="resource-panel-title">Video</div>
-        <div class="resource-items">
-          <a href="trainingProducts/videos/AI Coding Tools - Verify Workspace Trust Before Running Project Automation.mp4">AI Coding Tools: Verify Workspace Trust Before Running Project Automation</a>
-          <a href="trainingProducts/videos/Cloud Infrastructure Dependency.mp4">Cloud Infrastructure Dependency</a>
+    <div class="repo-tabs" aria-label="Growth resource tracks">
+      <a class="repo-tab" href="#board-metrics">CISO &amp; Executive Board Metrics</a>
+      <a class="repo-tab" href="#vendor-risk">Vendor Risk Management &amp; Governance</a>
+    </div>
+
+    <div class="repo-grid-layout two-col">
+      <section class="repo-section" id="board-metrics">
+        <h2 class="repo-section-title">CISO &amp; Executive Board Metrics</h2>
+        <div class="resource-list">
+          <div class="resource-row"><div><div class="resource-title">NIST IR 8286B upd1 Prioritizing Cybersecurity Risk for ERM</div><p class="resource-desc">Enterprise risk management reference for prioritizing cybersecurity risk at executive level.</p></div><a href="Policy/Training%20Resources/NIST%20IR%208286B%20(upd1)%20%E2%80%93%20Prioritizing%20Cybersecurity%20Risk%20for%20Enterprise%20Risk%20Management.pdf" class="action-link primary">Download PDF</a></div>
         </div>
-        <span class="resource-more">More ▼</span>
       </section>
 
-      <section class="resource-panel">
-        <div class="resource-panel-title">Courses</div>
-        <div class="resource-items">
-          <span>Threat Intelligence Fundamentals: the intelligence cycle explained.</span>
-          <span>Zero-Trust Architecture: implementing network microsegmentation.</span>
-          <span>Cloud Security Posture Management: AWS and Azure misconfiguration detection.</span>
+      <section class="repo-section" id="vendor-risk">
+        <h2 class="repo-section-title">Vendor Risk Management &amp; Governance</h2>
+        <div class="resource-list">
+          <div class="resource-row"><div><div class="resource-title">Standard Information Gathering Vendor Questionnaire</div><p class="resource-desc">Official SIG questionnaire source for third-party screening and vendor governance workflows.</p></div><a href="https://sharedassessments.org/sig/" class="action-link source" target="_blank" rel="noopener noreferrer">Access Source &#8599;</a></div>
         </div>
-        <span class="resource-more">More ▼</span>
-      </section>
-
-      <section class="resource-panel">
-        <div class="resource-panel-title">Webinar</div>
-        <div class="resource-items">
-          <a href="https://www.bankinfosecurity.com/webinars/webinar-agentic-ai-vs-identitys-last-mile-problem-w-6999" target="_blank" rel="noopener noreferrer">Agentic AI vs. Identity's Last Mile Problem</a>
-          <a href="https://us02web.zoom.us/webinar/register/WN_b4KhoS29TPymX4MJhWk9JA#/registration" target="_blank" rel="noopener noreferrer">Independence is Fragile: How Being Helpful Breaks Audit</a>
-        </div>
-        <span class="resource-more">More ▼</span>
-      </section>
-
-      <section class="resource-panel">
-        <div class="resource-panel-title">Certification Readiness</div>
-        <div class="resource-items">
-          <span>CISSP - advanced security leadership.</span>
-          <span>CEH - offensive security knowledge.</span>
-          <span>CompTIA Security+ - foundational practitioner baseline.</span>
-          <span>CISM - management and governance readiness.</span>
-        </div>
-        <span class="resource-more">More ▼</span>
       </section>
     </div>
   </section>
 </main>
-<footer>
-    <div class="footer-inner">
-    <div class="footer-grid">
-      <div>
-        <div class="footer-logo">CyberSense<span>.Solutions</span></div>
-        <p class="footer-mission">Delivering clear, practical, and timely cybersecurity intelligence – building awareness, resilience, and a culture that takes care of itself.</p>
-        <div class="footer-socials">
-          <a href="https://www.linkedin.com/company/cybersense-solutions/" target="_blank" class="footer-social-icon">in</a>
-          <a href="https://www.facebook.com/profile.php?id=61570667370162" target="_blank" class="footer-social-icon">f</a>
-          <a href="https://x.com/cybersensesec" target="_blank" class="footer-social-icon">𝕏</a>
-          <a href="https://www.instagram.com/cybersense.solutions/" target="_blank" class="footer-social-icon">ig</a>
-          <a href="https://www.threads.com/@cybersense.solutions" target="_blank" class="footer-social-icon">tt</a>
-        </div>
-      </div>
-      <div class="footer-col">
-        <h4>Platform</h4>
-        <ul>
-          <li><a href="index.html">Home</a></li>
-          <li><a href="about.html">About</a></li>
-          <li><a href="radar.html">Threat Radar</a></li>
-          <li><a href="intelligence.html">Intel Briefs</a></li>
-          <li><a href="newsletter.html">Newsletter</a></li>
-          <li><a href="resources.html">Resources</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <h4>Legal</h4>
-        <ul>
-          <li><a href="#">Privacy Policy</a></li>
-          <li><a href="#">Terms of Service</a></li>
-          <li><a href="about.html">Contact Us</a></li>
-          <li><a href="#">Cookie Policy</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <span>&copy; 2026 CyberSense.Solutions. All rights reserved.</span>
-      <span>Security awareness starts here.</span>
-    </div>
-  </div>
 
-</footer>
 <script>window.CS_API_BASE = 'https://api.cybersense.solutions';</script>
 <script src="auth.js"></script>
 <script src="main.js"></script>

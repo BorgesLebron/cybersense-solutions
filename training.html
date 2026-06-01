@@ -9,6 +9,7 @@
 <meta name="description" content="CyberSense training bytes, videos, labs, and guides.">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="auth.css">
+<link rel="stylesheet" href="repositories.css">
 </head>
 <body>
 <nav class="nav" role="navigation" aria-label="Main navigation">
@@ -26,97 +27,36 @@
 </nav>
 <div class="nav-drawer" id="nav-drawer"><ul></ul><a href="#" class="drawer-login" onclick="CS.Auth.showLoginModal();return false;">Login</a></div>
 
-<main class="resources-page">
-  <section class="resources-shell">
-    <a href="resources.html" style="display:inline-block;color:var(--cs-cyan);font-size:13px;font-weight:700;text-decoration:none;margin-bottom:20px;">&lt;-- Back To Resources</a>
-    <h1 class="resources-title"><span>Training</span> Resources</h1>
-    <p class="resources-copy">Your tactical learning library. This repository preserves our unique <strong>Training Bytes</strong>, alongside past webinars, seminar links, educational videos, and step-by-step technical walkthroughs. Every resource here is mapped to real-world scenarios, offering actionable, repeatable lessons to sharpen your hands-on engineering and defense skills.</p>
-    <input class="resource-search" type="search" placeholder="Search date, vendor, product, type" aria-label="Search training resources">
+<main class="repo-main">
+  <section class="repo-shell">
+    <a href="resources.html" class="repo-back">&lt;-- Back To Resources</a>
+    <p class="repo-kicker">Interactive Training Catalog</p>
+    <h1 class="repo-title">Training Resources</h1>
+    <p class="repo-copy">An active curriculum dashboard organized into hands-on validation labs, operational templates, infrastructure syllabi, and official external technical training portals.</p>
 
-    <div class="resource-grid">
-      <section class="resource-panel">
-        <div class="resource-panel-title">Training Byte</div>
-        <div class="resource-items">
-          <a href="trainingProducts/videos/trainingByte20260519.mp4">CyberSense Solutions: Training Byte 20260519</a>
-          <span class="resource-muted">Essential cybersecurity concepts from the current awareness cycle.</span>
+    <div class="repo-grid-layout two-col">
+      <section class="repo-section">
+        <h2 class="repo-section-title">Hands-on Validation Labs &amp; Utilities</h2>
+        <div class="resource-list">
+          <div class="resource-row"><div><div class="resource-title">ENISA Handbook for Cyber Stress Test</div><p class="resource-desc">Stress-test handbook for exercising cyber resilience and validation planning.</p></div><a href="Policy/Training%20Resources/ENISA.%20(2025).%20Handbook%20for%20Cyber%20Stress%20Test..pdf" class="action-link primary">Download PDF</a></div>
+          <div class="resource-row"><div><div class="resource-title">NIST Cybersecurity Framework Policy Template Guide</div><p class="resource-desc">Policy template guide for translating CSF practices into operating documents.</p></div><a href="Policy/Training%20Resources/NIST%20Cybersecurity%20Framework%20Policy%20Template%20Guide.pdf" class="action-link primary">Download PDF</a></div>
+          <div class="resource-row"><div><div class="resource-title">MITRE ATT&amp;CK Evaluations</div><p class="resource-desc">Official evaluation platform for defensive tool and technique validation.</p></div><a href="https://attackevals.mitre-engenuity.org/" class="action-link source" target="_blank" rel="noopener noreferrer">Access Source &#8599;</a></div>
         </div>
-        <a class="resource-more" href="trainingProducts/videos/trainingByte20260519.mp4">More ▼</a>
       </section>
 
-      <section class="resource-panel">
-        <div class="resource-panel-title">Training Video</div>
-        <div class="resource-items">
-          <a href="trainingProducts/videos/Threat Radar.mp4">Threat Radar</a>
-          <a href="trainingProducts/videos/Daily Digital Awareness Briefing.mp4">Daily Digital Awareness Briefing</a>
-          <a href="trainingProducts/videos/Amy Intro Intro - Welcome to the Force.mp4">Welcome to the Force</a>
+      <section class="repo-section">
+        <h2 class="repo-section-title">External Technical Syllabi</h2>
+        <div class="resource-list">
+          <div class="resource-row"><div><div class="resource-title">NIST Roadmap for Improving Critical Infrastructure Cybersecurity</div><p class="resource-desc">Roadmap for critical infrastructure cybersecurity improvement.</p></div><a href="Policy/Training%20Resources/NIST%20Roadmap%20for%20Improving%20Critical%20Infrastructure%20Cybersecurity.pdf" class="action-link primary">Download PDF</a></div>
+          <div class="resource-row"><div><div class="resource-title">CISA FedVTE Catalog and Blue Team Training</div><p class="resource-desc">Official training portal for federal virtual training and blue team coursework.</p></div><a href="https://www.cisa.gov/resources-tools/training/federal-virtual-training-environment-fedvte" class="action-link source" target="_blank" rel="noopener noreferrer">Access Source &#8599;</a></div>
+          <div class="resource-row"><div><div class="resource-title">GIAC Enterprise Security Management Hub</div><p class="resource-desc">Certification and enterprise security management training portal.</p></div><a href="https://www.giac.org/certifications/" class="action-link source" target="_blank" rel="noopener noreferrer">Access Source &#8599;</a></div>
+          <div class="resource-row"><div><div class="resource-title">A Comprehensive Guide to the NIST CSF 2.0</div><p class="resource-desc">Publisher source for the Edwards NIST CSF 2.0 guide.</p></div><a href="https://www.wiley.com/" class="action-link source" target="_blank" rel="noopener noreferrer">Access Source &#8599;</a></div>
         </div>
-        <span class="resource-more">More ▼</span>
-      </section>
-
-      <section class="resource-panel">
-        <div class="resource-panel-title">Labs</div>
-        <div class="resource-items">
-          <span><strong>Vulnerability Triage:</strong> CVE to remediation decision.</span>
-          <span><strong>Phishing Email Analysis:</strong> header forensics and link inspection.</span>
-          <span><strong>SIEM Alert Tuning:</strong> reduce false positives without missing true positives.</span>
-        </div>
-        <span class="resource-more">More ▼</span>
-      </section>
-
-      <section class="resource-panel">
-        <div class="resource-panel-title">Guides</div>
-        <div class="resource-items">
-          <span>How to build a SIEM detection rule from a CISA advisory.</span>
-          <span>Configuring Windows Event Forwarding for a SOC environment.</span>
-          <span>Email header analysis: a step-by-step field reference.</span>
-        </div>
-        <span class="resource-more">More ▼</span>
       </section>
     </div>
   </section>
 </main>
-<footer>
-    <div class="footer-inner">
-    <div class="footer-grid">
-      <div>
-        <div class="footer-logo">CyberSense<span>.Solutions</span></div>
-        <p class="footer-mission">Delivering clear, practical, and timely cybersecurity intelligence – building awareness, resilience, and a culture that takes care of itself.</p>
-        <div class="footer-socials">
-          <a href="https://www.linkedin.com/company/cybersense-solutions/" target="_blank" class="footer-social-icon">in</a>
-          <a href="https://www.facebook.com/profile.php?id=61570667370162" target="_blank" class="footer-social-icon">f</a>
-          <a href="https://x.com/cybersensesec" target="_blank" class="footer-social-icon">𝕏</a>
-          <a href="https://www.instagram.com/cybersense.solutions/" target="_blank" class="footer-social-icon">ig</a>
-          <a href="https://www.threads.com/@cybersense.solutions" target="_blank" class="footer-social-icon">tt</a>
-        </div>
-      </div>
-      <div class="footer-col">
-        <h4>Platform</h4>
-        <ul>
-          <li><a href="index.html">Home</a></li>
-          <li><a href="about.html">About</a></li>
-          <li><a href="radar.html">Threat Radar</a></li>
-          <li><a href="intelligence.html">Intel Briefs</a></li>
-          <li><a href="newsletter.html">Newsletter</a></li>
-          <li><a href="resources.html">Resources</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <h4>Legal</h4>
-        <ul>
-          <li><a href="#">Privacy Policy</a></li>
-          <li><a href="#">Terms of Service</a></li>
-          <li><a href="about.html">Contact Us</a></li>
-          <li><a href="#">Cookie Policy</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <span>&copy; 2026 CyberSense.Solutions. All rights reserved.</span>
-      <span>Security awareness starts here.</span>
-    </div>
-  </div>
 
-</footer>
 <script>window.CS_API_BASE = 'https://api.cybersense.solutions';</script>
 <script src="auth.js"></script>
 <script src="main.js"></script>

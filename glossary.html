@@ -9,6 +9,7 @@
 <meta name="description" content="Searchable CyberSense cybersecurity glossary.">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="auth.css">
+<link rel="stylesheet" href="repositories.css">
 </head>
 <body>
 <nav class="nav" role="navigation" aria-label="Main navigation">
@@ -19,68 +20,37 @@
     <li><a href="radar.html">Radar</a></li>
     <li><a href="intelligence.html">Intel</a></li>
     <li><a href="newsletter.html">Newsletter</a></li>
-    <li><a href="resources.html">Resources</a></li>
+    <li><a href="resources.html" class="active">Resources</a></li>
   </ul>
   <button class="nav-login" onclick="CS.Auth.showLoginModal()">Login</button>
   <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
 </nav>
 <div class="nav-drawer" id="nav-drawer"><ul></ul><a href="#" class="drawer-login" onclick="CS.Auth.showLoginModal();return false;">Login</a></div>
 
-<main class="resources-page">
-  <section class="resources-shell">
-    <a href="resources.html" style="display:inline-block;color:var(--cs-cyan);font-size:13px;font-weight:700;text-decoration:none;margin-bottom:20px;">&lt;-- Back To Resources</a>
-    <h1 class="resources-title"><span class="resource-icon">📖</span> <span>Glossary</span></h1>
-    <p class="resources-copy">Demystify complex sector terminology with our centralized cybersecurity glossary. From decoding critical CVE frameworks and threat vector mechanics to mastering the latest AI, ML, and quantum policy nomenclature, this reference guide provides clear, direct definitions. Use it to sharpen your technical vocabulary, baseline your foundational knowledge, and maintain total situational awareness across the evolving digital landscape.</p>
+<main class="repo-main">
+  <section class="repo-shell">
+    <a href="resources.html" class="repo-back">&lt;-- Back To Resources</a>
+    <p class="repo-kicker">Nomenclature Vault</p>
+    <h1 class="repo-title">Glossary</h1>
+    <p class="repo-copy">A fast lookup panel for cybersecurity terminology, threat vocabulary, CVE mechanics, governance language, and emerging technology nomenclature.</p>
+
+    <section class="repo-section">
+      <div class="resource-row">
+        <div>
+          <div class="resource-title">Cybersecurity Terms Glossary v2.0</div>
+          <p class="resource-desc">Downloadable baseline glossary for offline reference.</p>
+        </div>
+        <a href="Policy/Glossary_Cybersecurity_Terms(v.2.0).pdf" class="action-link primary">Download PDF</a>
+      </div>
+    </section>
 
     <input class="resource-search" id="glossary-search" type="search" placeholder="Search by term, keyword" aria-label="Search glossary">
-    <div class="resource-alpha" id="glossary-alpha" aria-label="Glossary letter filter"></div>
+    <div class="alpha-rail" id="glossary-alpha" aria-label="Glossary letter filter"></div>
     <div id="glossary-list" class="glossary-group">
       <p class="resource-note">Loading glossary...</p>
     </div>
   </section>
 </main>
-<footer>
-    <div class="footer-inner">
-    <div class="footer-grid">
-      <div>
-        <div class="footer-logo">CyberSense<span>.Solutions</span></div>
-        <p class="footer-mission">Delivering clear, practical, and timely cybersecurity intelligence – building awareness, resilience, and a culture that takes care of itself.</p>
-        <div class="footer-socials">
-          <a href="https://www.linkedin.com/company/cybersense-solutions/" target="_blank" class="footer-social-icon">in</a>
-          <a href="https://www.facebook.com/profile.php?id=61570667370162" target="_blank" class="footer-social-icon">f</a>
-          <a href="https://x.com/cybersensesec" target="_blank" class="footer-social-icon">𝕏</a>
-          <a href="https://www.instagram.com/cybersense.solutions/" target="_blank" class="footer-social-icon">ig</a>
-          <a href="https://www.threads.com/@cybersense.solutions" target="_blank" class="footer-social-icon">tt</a>
-        </div>
-      </div>
-      <div class="footer-col">
-        <h4>Platform</h4>
-        <ul>
-          <li><a href="index.html">Home</a></li>
-          <li><a href="about.html">About</a></li>
-          <li><a href="radar.html">Threat Radar</a></li>
-          <li><a href="intelligence.html">Intel Briefs</a></li>
-          <li><a href="newsletter.html">Newsletter</a></li>
-          <li><a href="resources.html">Resources</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <h4>Legal</h4>
-        <ul>
-          <li><a href="#">Privacy Policy</a></li>
-          <li><a href="#">Terms of Service</a></li>
-          <li><a href="about.html">Contact Us</a></li>
-          <li><a href="#">Cookie Policy</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <span>&copy; 2026 CyberSense.Solutions. All rights reserved.</span>
-      <span>Security awareness starts here.</span>
-    </div>
-  </div>
-
-</footer>
 
 <script>window.CS_API_BASE = 'https://api.cybersense.solutions';</script>
 <script src="auth.js"></script>
@@ -131,7 +101,7 @@
       return firstLetter(item.term) === selectedLetter && (!query || haystack.includes(query));
     });
     if (!filtered.length) {
-      list.innerHTML = `<h2>${esc(selectedLetter)}</h2><p class="resource-note">No glossary terms match the current filters.</p>`;
+      list.innerHTML = `<h2>${esc(selectedLetter)}</h2><p class="resource-desc">No glossary terms match the current filters.</p>`;
       return;
     }
     list.innerHTML = `<h2>${esc(selectedLetter)}</h2>` + filtered.map((item, index) => `

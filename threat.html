@@ -26,31 +26,63 @@
 </nav>
 <div class="nav-drawer" id="nav-drawer"><ul></ul><a href="#" class="drawer-login" onclick="CS.Auth.showLoginModal();return false;">Login</a></div>
 
-<main class="resources-page">
-  <section class="resources-shell">
-    <a href="resources.html" style="display:inline-block;color:var(--cs-cyan);font-size:13px;font-weight:700;text-decoration:none;margin-bottom:20px;">&lt;-- Back To Resources</a>
-    <section id="threat-intelligence">
-      <h1 class="resources-title"><span>Threat</span> Intelligence</h1>
-      <p class="resources-copy">The historical backbone of our situational awareness. This section archives past threat reports, breach analyses, and indicators of compromise. Use this repository to track evolving adversary tactics, analyze recurring attack methodologies, and cross-reference legacy artifacts with active CVE data to reinforce your defensive posture.</p>
-      <div class="threat-layout">
-        <div class="threat-shell">
-          <div class="resource-items">
-            <div><span class="resource-muted">May 27, 2026 - </span><a href="#">CVE-2026-2611: MLflow Assistant's Improper Origin Validation Enables Remote Code Execution via Browser</a></div>
-            <div><span class="resource-muted">May 27, 2026 - </span><a href="#">CVE-2026-46725: PHP Object Injection via Unsanitized Cookie Deserialization Enables Unauthenticated RCE on TYPO3</a></div>
-            <div><span class="resource-muted">May 27, 2026 - </span><a href="#">CVE-2026-4885: Unauthenticated Arbitrary File Upload in Piotnet Addons for Elementor Pro Demands Immediate Response</a></div>
-            <div><span class="resource-muted">May 26, 2026 - </span>...</div>
+<main class="repo-main">
+  <section class="repo-shell">
+    <a href="resources.html" class="repo-back">&lt;-- Back To Resources</a>
+    <p class="repo-kicker">Zero-Code Threat Intelligence Feed</p>
+    <h1 class="repo-title">Threat Intelligence</h1>
+    <p class="repo-copy">A chronological ledger for tactical indicators, incident handling references, forensic logging, and source links. Live Radar integration remains an Alan-owned handoff; this page is the repository-ready surface.</p>
+
+    <section class="repo-section">
+      <h2 class="repo-section-title">Active Telemetry Shell</h2>
+      <div class="repo-grid-layout two-col">
+        <article class="intel-log-card">
+          <div class="log-header-row">
+            <span class="badge badge-crit">Critical</span>
+            <span class="log-time">2026-06-01 15:34 UTC</span>
           </div>
-          <p class="resource-note">Shell only. Alan will spec the existing /api/threats and KEV query before Gwen wires live data here.</p>
+          <h3 class="vulnerability-id">CISA KEV Target: CVE-2026-48027</h3>
+          <p class="telemetry-details">Observed active exploitation trends leveraging code injection patterns against exposed enterprise deployment surfaces.</p>
+          <div class="asset-actions"><a href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog" class="action-link primary" target="_blank" rel="noopener noreferrer">CISA KEV Source &#8599;</a></div>
+        </article>
+        <article class="intel-log-card">
+          <div class="log-header-row">
+            <span class="badge badge-crit">Critical</span>
+            <span class="log-time">Source-linked</span>
+          </div>
+          <h3 class="vulnerability-id">MITRE D3FEND and CVSS Baseline References</h3>
+          <p class="telemetry-details">Defensive technique taxonomy and severity scoring references remain source-only external links.</p>
+          <div class="asset-actions"><a href="https://d3fend.mitre.org/" class="action-link source" target="_blank" rel="noopener noreferrer">MITRE D3FEND &#8599;</a><a href="https://www.first.org/cvss/v4.0/specification-document" class="action-link source" target="_blank" rel="noopener noreferrer">CVSS v4.0 &#8599;</a></div>
+        </article>
+      </div>
+    </section>
+
+    <div class="repo-grid-layout two-col">
+      <section class="repo-section">
+        <h2 class="repo-section-title">Incident &amp; Asset Handlers</h2>
+        <div class="resource-list">
+          <div class="resource-row"><div><div class="resource-title">NIST SP 800-61r3 Incident Response Recommendations</div><p class="resource-desc">Cybersecurity risk management considerations for incident response.</p></div><a href="Policy/Threat%20Intelligence/NIST%20SP%20800-61r3%20-%20Incident%20Response%20recommendations%20and%20Considerations%20for%20Cybersecurity%20Risk%20Management..pdf" class="action-link primary">Download PDF</a></div>
+          <div class="resource-row"><div><div class="resource-title">NIST SP 800-150 Cyber Threat Information Sharing</div><p class="resource-desc">Guidance for structured threat information sharing.</p></div><a href="Policy/Threat%20Intelligence/NIST%20SP%20800-150%20Guide%20to%20Cyber%20Threat%20Information%20Sharing.pdf" class="action-link primary">Download PDF</a></div>
+          <div class="resource-row"><div><div class="resource-title">NIST SP 800-40 r4 Patch Management</div><p class="resource-desc">Patch and vulnerability management planning baseline.</p></div><a href="Policy/Threat%20Intelligence/NIST%20SP%20800-40%20r4%20Patch%20Management.pdf" class="action-link primary">Download PDF</a></div>
+          <div class="resource-row"><div><div class="resource-title">NIST SP 800-137A Assessing ISCM Programs</div><p class="resource-desc">Continuous monitoring program assessment reference.</p></div><a href="Policy/Threat%20Intelligence/NIST%20SP%20800-137A%20Assessing%20Information%20Security%20Continuous%20Monitoring%20(ISCM)%20Programs.pdf" class="action-link primary">Download PDF</a></div>
         </div>
-        <aside class="kev-shell" aria-label="CISA KEV shell">
-          <div class="kev-title"><span class="kev-light"></span><span>CISA KEV Catalog</span></div>
-          <input class="resource-search" style="width:100%;height:48px;margin:0 0 12px;" type="search" placeholder="Search CVE, vendor, product, attack type" disabled>
-          <div style="color:red;font-weight:800;font-size:13px;margin:8px 0 14px;">CONFIRMED, WEAPONIZED VULNERABILITIES - V2026.05.26</div>
-          <div class="kev-card"><strong>CVE-2026-48172</strong>LiteSpeed - cPanel Plugin</div>
-          <div class="kev-card"><strong>CVE-2026-9082</strong>Drupal - Core</div>
-          <div class="kev-card"><strong>CVE-2025-34291</strong>Langflow - Langflow</div>
-          <div class="kev-card"><strong>CVE-2026-34926</strong>Trend Micro - Apex One</div>
-        </aside>
+      </section>
+      <section class="repo-section">
+        <h2 class="repo-section-title">Investigative Forensics</h2>
+        <div class="resource-list">
+          <div class="resource-row"><div><div class="resource-title">INTERPOL Cybercrime and Electronic Evidence Guide</div><p class="resource-desc">Criminal justice statistics and electronic evidence reference.</p></div><a href="Policy/Threat%20Intelligence/INTERPOL%20-%20Guide%20for%20Criminal%20Justice%20Statistics%20on%20Cybercrime%20and%20Electronic%20Evidence.pdf" class="action-link primary">Download PDF</a></div>
+          <div class="resource-row"><div><div class="resource-title">NIST IR 8428 DFIR Framework for OT</div><p class="resource-desc">Digital forensics and incident response for operational technology.</p></div><a href="Policy/Threat%20Intelligence/NIST%20IR%208428%20-%20Digital%20Forensics%20and%20Incident%20Response%20(DFIR)%20Framework%20for%20Operational%20Technology%20(OT).%20.pdf" class="action-link primary">Download PDF</a></div>
+          <div class="resource-row"><div><div class="resource-title">NIST IR 8387 Digital Evidence Preservation</div><p class="resource-desc">Evidence handler considerations for digital preservation.</p></div><a href="Policy/Threat%20Intelligence/NIST%20IR%208387%20-%20Digital%20Evidence%20Preservation.%20Considerations%20for%20Evidence%20Handlers.%20pdf.pdf" class="action-link primary">Download PDF</a></div>
+        </div>
+      </section>
+    </div>
+
+    <section class="repo-section">
+      <h2 class="repo-section-title">Risk Calculation Baselines</h2>
+      <div class="resource-list">
+        <div class="resource-row"><div><div class="resource-title">NIST SP 800-30 r1 Guide for Conducting Risk Assessments</div><p class="resource-desc">Risk assessment methodology baseline.</p></div><a href="Policy/Threat%20Intelligence/NIST%20SP%20800-30%20r1%20Guide%20for%20Conducting%20Risk%20Assessments.pdf" class="action-link primary">Download PDF</a></div>
+        <div class="resource-row"><div><div class="resource-title">NIST SP 800-34 Contingency Planning Guide</div><p class="resource-desc">Contingency planning reference for federal information systems.</p></div><a href="Policy/Threat%20Intelligence/NIST%20SP%20800-34%20Contingency%20Planning%20Guide%20for%20Federal%20Information%20Systems.pdf" class="action-link primary">Download PDF</a></div>
+        <div class="resource-row"><div><div class="resource-title">NIST SP 800-46r2 Telework, Remote Access, and BYOD Security</div><p class="resource-desc">Enterprise telework and remote access security guidance.</p></div><a href="Policy/Threat%20Intelligence/NIST%20SP%20800-46r2%20Guide%20to%20Enterprise%20Telework,%20Remote%20Access,%20%26%20BYOD%20security.pdf" class="action-link primary">Download PDF</a></div>
       </div>
     </section>
   </section>

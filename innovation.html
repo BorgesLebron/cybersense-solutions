@@ -9,6 +9,7 @@
 <meta name="description" content="Innovation archive covering AI, cloud, IoT, sensors, quantum computing, and research.">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="auth.css">
+<link rel="stylesheet" href="repositories.css">
 </head>
 <body>
 <nav class="nav" role="navigation" aria-label="Main navigation">
@@ -26,95 +27,46 @@
 </nav>
 <div class="nav-drawer" id="nav-drawer"><ul></ul><a href="#" class="drawer-login" onclick="CS.Auth.showLoginModal();return false;">Login</a></div>
 
-<main class="resources-page">
-  <section class="resources-shell">
-    <a href="resources.html" style="display:inline-block;color:var(--cs-cyan);font-size:13px;font-weight:700;text-decoration:none;margin-bottom:20px;">&lt;-- Back To Resources</a>
-    <h1 class="resources-title"><span>Innovation</span></h1>
-    <p class="resources-copy">Your window into the future of the sector. This vault stores our past briefs on modernization, artificial intelligence, machine learning breakthroughs, neural networks, and quantum computing. It also tracks the evolution of global AI regulations and compliance policies, helping you understand where technology and governance intersect.</p>
+<main class="repo-main">
+  <section class="repo-shell">
+    <a href="resources.html" class="repo-back">&lt;-- Back To Resources</a>
+    <p class="repo-kicker">Emerging Tech &amp; Security Blueprint</p>
+    <h1 class="repo-title">Innovation</h1>
+    <p class="repo-copy">Advanced research materials, secure development guidance, AI governance, cloud and virtualization references, IoT baselines, and resilient infrastructure hardening.</p>
 
-    <div class="resource-grid">
-      <section class="resource-panel">
-        <div class="resource-panel-title">Artificial Intelligence &amp; Machine Learning</div>
-        <div class="resource-items">
-          <div><span class="resource-muted">May 18, 2026 - </span><a href="#">Anomaly Detection at Scale: How eBPF and ML Are Replacing Signature-Based EDR</a></div>
-          <div><span class="resource-muted">May 18, 2026 - </span><a href="#">NIST AI Risk Management Framework: Applying AI RMF 1.0 to Security Operations Platforms</a></div>
-          <div><span class="resource-muted">May 17, 2026 - </span><a href="#">Graph Neural Networks for Insider Threat Detection: Early Results from Financial Sector Deployments</a></div>
+    <section class="repo-section">
+      <h2 class="repo-section-title">AI Risk &amp; Secure Development</h2>
+      <div class="resource-list">
+        <div class="resource-row"><div><div class="resource-title">NIST AI 100-1 Artificial Intelligence Risk Management</div><p class="resource-desc">Risk management framework for AI systems.</p></div><a href="Policy/Innovation/NIST%20AI%20100-1%20Artificial%20Intelligence%20Risk%20Management.pdf" class="action-link primary">Download PDF</a></div>
+        <div class="resource-row"><div><div class="resource-title">NIST SP 800-218A Secure Software Practices for GenAI</div><p class="resource-desc">Secure software development practices for generative AI and dual-use foundation models.</p></div><a href="Policy/Innovation/NIST%20SP%20800-218A%20Secure%20Software%20Development%20Practices%20for%20Generative%20AI%20and%20Dual-Use%20Foundation%20Models.pdf" class="action-link primary">Download PDF</a></div>
+        <div class="resource-row"><div><div class="resource-title">OWASP Top 10 for LLM Applications</div><p class="resource-desc">Source-only community reference for LLM application security risks.</p></div><a href="https://owasp.org/www-project-top-10-for-large-language-model-applications/" class="action-link source" target="_blank" rel="noopener noreferrer">Access Source &#8599;</a></div>
+        <div class="resource-row"><div><div class="resource-title">CISA &amp; UK NCSC Secure AI System Development</div><p class="resource-desc">Secure AI development guidance maintained by national cybersecurity agencies.</p></div><a href="https://www.cisa.gov/resources-tools/resources/guidelines-secure-ai-system-development" class="action-link source" target="_blank" rel="noopener noreferrer">Access Source &#8599;</a></div>
+      </div>
+    </section>
+
+    <div class="repo-grid-layout two-col">
+      <section class="repo-section">
+        <h2 class="repo-section-title">Cloud, Virtualization, &amp; IoT Perimeters</h2>
+        <div class="resource-list">
+          <div class="resource-row"><div><div class="resource-title">NIST SP 1800-19 Trusted Cloud</div><p class="resource-desc">Trusted cloud implementation reference.</p></div><a href="Policy/Innovation/NIST%20SP%201800-19%20Trusted%20Cloud.pdf" class="action-link primary">Download PDF</a></div>
+          <div class="resource-row"><div><div class="resource-title">NIST SP 800-125 Full Virtualization Security</div><p class="resource-desc">Security guidance for full virtualization technologies.</p></div><a href="Policy/Innovation/NIST%20SP%20800-125%20Guide%20to%20Security%20for%20Full%20Virtualization%20Technologies.pdf" class="action-link primary">Download PDF</a></div>
+          <div class="resource-row"><div><div class="resource-title">NIST SP 800-183 Networks of Things</div><p class="resource-desc">Modeling and security context for connected devices.</p></div><a href="Policy/Innovation/NIST%20SP%20800-183%20Networks%20of%20Things.pdf" class="action-link primary">Download PDF</a></div>
+          <div class="resource-row"><div><div class="resource-title">NIST IR 8259 r1 IoT Cybersecurity Activities</div><p class="resource-desc">Foundational IoT cybersecurity activities for product manufacturers.</p></div><a href="Policy/Innovation/NIST%20IR%208259%20r1%20-%20Foundational%20Cybersecurity%20Activities%20for%20IoT%20Product%20Manufacturers.%20Initial%20Public%20Draft..pdf" class="action-link primary">Download PDF</a></div>
         </div>
-        <span class="resource-more">More ▼</span>
       </section>
-
-      <section class="resource-panel">
-        <div class="resource-panel-title">IoT &amp; Sensors</div>
-        <div class="resource-items">
-          <div><span class="resource-muted">May 20, 2026 - </span><a href="#">OT Network Visibility: Deploying Passive Sensors in Industrial Control Environments Without Disrupting Operations</a></div>
-          <div><span class="resource-muted">May 19, 2026 - </span><a href="#">SBOM for IoT: How Matter Protocol and Connectivity Standards Alliance Are Addressing Firmware Security</a></div>
+      <section class="repo-section">
+        <h2 class="repo-section-title">Resilient Infrastructure Hardening</h2>
+        <div class="resource-list">
+          <div class="resource-row"><div><div class="resource-title">NIST SP 800-160 v2r1 Cyber-Resilient Systems</div><p class="resource-desc">Engineering approach for developing cyber-resilient systems.</p></div><a href="Policy/Innovation/NIST%20SP%20800-160%20(v2r1)%20Developing%20Cyber-Resilient%20Systems%20-%20A%20System%20Security%20Engineering%20Approach.pdf" class="action-link primary">Download PDF</a></div>
+          <div class="resource-row"><div><div class="resource-title">NIST SP 800-189 Resilient Interdomain Traffic Exchange</div><p class="resource-desc">Network resilience for interdomain traffic exchange.</p></div><a href="Policy/Innovation/NIST%20SP%20800-189%20Resilient%20Interdomain%20Traffic%20Exchange.pdf" class="action-link primary">Download PDF</a></div>
+          <div class="resource-row"><div><div class="resource-title">NIST SP 800-172r3 Enhanced CUI Requirements</div><p class="resource-desc">Enhanced security requirements for controlled unclassified information.</p></div><a href="Policy/Innovation/NIST%20SP%20800-172r3%20Enhanced%20Security%20Requirements%20for%20Protecting%20Controlled%20Unclassified%20Information.pdf" class="action-link primary">Download PDF</a></div>
+          <div class="resource-row"><div><div class="resource-title">NIST SP 800-172Ar3 CUI Assessment Procedures</div><p class="resource-desc">Assessment procedures for enhanced CUI security requirements.</p></div><a href="Policy/Innovation/NIST%20SP%20800-172Ar3%20Assessing%20Enhanced%20Security%20Requirements%20for%20Controlled%20Unclassified%20Information.pdf" class="action-link primary">Download PDF</a></div>
         </div>
-        <span class="resource-more">More ▼</span>
-      </section>
-
-      <section class="resource-panel">
-        <div class="resource-panel-title">Cloud</div>
-        <div class="resource-items">
-          <div><span class="resource-muted">May 17, 2026 - </span><a href="#">AWS IMDSv2 Enforcement: Why Every EC2 Instance Still Running IMDSv1 Is a Live Credential Theft Risk</a></div>
-          <div><span class="resource-muted">May 7, 2026 - </span><a href="#">Confidential Computing in 2025: AMD SEV-SNP and Intel TDX Move from Research to Production</a></div>
-        </div>
-        <span class="resource-more">More ▼</span>
-      </section>
-
-      <section class="resource-panel">
-        <div class="resource-panel-title">Quantum Computing &amp; Research</div>
-        <div class="resource-items">
-          <div><span class="resource-muted">May 21, 2026 - </span><a href="#">Harvest Now, Decrypt Later: Assessing Your Organization's Quantum Risk Exposure Today</a></div>
-          <div><span class="resource-muted">May 13, 2026 - </span><a href="#">NIST IR 8413: A Third NIST PQC Candidate Report - What Didn't Make the Cut and Why</a></div>
-          <div><span class="resource-muted">May 27, 2026 - </span><a href="#">Quantum Key Distribution in Financial Networks: A Practical Assessment for Security Architects</a></div>
-        </div>
-        <span class="resource-more">More ▼</span>
       </section>
     </div>
   </section>
 </main>
-<footer>
-    <div class="footer-inner">
-    <div class="footer-grid">
-      <div>
-        <div class="footer-logo">CyberSense<span>.Solutions</span></div>
-        <p class="footer-mission">Delivering clear, practical, and timely cybersecurity intelligence – building awareness, resilience, and a culture that takes care of itself.</p>
-        <div class="footer-socials">
-          <a href="https://www.linkedin.com/company/cybersense-solutions/" target="_blank" class="footer-social-icon">in</a>
-          <a href="https://www.facebook.com/profile.php?id=61570667370162" target="_blank" class="footer-social-icon">f</a>
-          <a href="https://x.com/cybersensesec" target="_blank" class="footer-social-icon">𝕏</a>
-          <a href="https://www.instagram.com/cybersense.solutions/" target="_blank" class="footer-social-icon">ig</a>
-          <a href="https://www.threads.com/@cybersense.solutions" target="_blank" class="footer-social-icon">tt</a>
-        </div>
-      </div>
-      <div class="footer-col">
-        <h4>Platform</h4>
-        <ul>
-          <li><a href="index.html">Home</a></li>
-          <li><a href="about.html">About</a></li>
-          <li><a href="radar.html">Threat Radar</a></li>
-          <li><a href="intelligence.html">Intel Briefs</a></li>
-          <li><a href="newsletter.html">Newsletter</a></li>
-          <li><a href="resources.html">Resources</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <h4>Legal</h4>
-        <ul>
-          <li><a href="#">Privacy Policy</a></li>
-          <li><a href="#">Terms of Service</a></li>
-          <li><a href="about.html">Contact Us</a></li>
-          <li><a href="#">Cookie Policy</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <span>&copy; 2026 CyberSense.Solutions. All rights reserved.</span>
-      <span>Security awareness starts here.</span>
-    </div>
-  </div>
 
-</footer>
 <script>window.CS_API_BASE = 'https://api.cybersense.solutions';</script>
 <script src="auth.js"></script>
 <script src="main.js"></script>
