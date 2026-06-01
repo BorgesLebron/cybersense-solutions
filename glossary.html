@@ -32,22 +32,56 @@
     <a href="resources.html" class="repo-back">&lt;-- Back To Resources</a>
     <p class="repo-kicker">Nomenclature Vault</p>
     <h1 class="repo-title">Glossary</h1>
-    <p class="repo-copy">A fast lookup panel for cybersecurity terminology, threat vocabulary, CVE mechanics, governance language, and emerging technology nomenclature.</p>
+    <p class="repo-copy">A CyberSense-built vocabulary layer derived from NIST CSRC, CISA NICCS, SANS, selective U.S. Army Cyber terminology, and CyberSense platform-specific agentic operations language.</p>
 
     <section class="repo-section">
       <div class="resource-row">
         <div>
-          <div class="resource-title">Cybersecurity Terms Glossary v2.0</div>
-          <p class="resource-desc">Downloadable baseline glossary for offline reference.</p>
+          <div class="resource-title">Source-Cited Master Glossary</div>
+          <p class="resource-desc">Definitions are curated into CyberSense language, deduplicated against NIST as the baseline authority, and filtered to avoid legacy infrastructure noise.</p>
         </div>
-        <a href="Policy/Glossary_Cybersecurity_Terms(v.2.0).pdf" class="action-link primary">Download PDF</a>
+        <a href="https://csrc.nist.gov/glossary" class="action-link source" target="_blank" rel="noopener noreferrer">NIST CSRC Source &#8599;</a>
       </div>
     </section>
 
-    <input class="resource-search" id="glossary-search" type="search" placeholder="Search by term, keyword" aria-label="Search glossary">
+    <section class="repo-section">
+      <h2 class="repo-section-title">Source Stack</h2>
+      <div class="resource-list">
+        <div class="resource-row">
+          <div>
+            <div class="resource-title">NIST CSRC Glossary</div>
+            <p class="resource-desc">Baseline authority for formal framework and regulatory definitions.</p>
+          </div>
+          <a href="https://csrc.nist.gov/glossary" class="action-link source" target="_blank" rel="noopener noreferrer">Open Source &#8599;</a>
+        </div>
+        <div class="resource-row">
+          <div>
+            <div class="resource-title">CISA NICCS Glossary</div>
+            <p class="resource-desc">Practitioner-friendly cybersecurity vocabulary for awareness and workforce education.</p>
+          </div>
+          <a href="https://niccs.cisa.gov/resources/glossary#explore-terms-a-glossary-of-common-cybersecurity-words-and-phrases" class="action-link source" target="_blank" rel="noopener noreferrer">Open Source &#8599;</a>
+        </div>
+        <div class="resource-row">
+          <div>
+            <div class="resource-title">SANS Glossary of Terms</div>
+            <p class="resource-desc">Hands-on engineering reference for practical security operations language.</p>
+          </div>
+          <a href="https://www.sans.org/security-resources/glossary-of-terms" class="action-link source" target="_blank" rel="noopener noreferrer">Open Source &#8599;</a>
+        </div>
+        <div class="resource-row">
+          <div>
+            <div class="resource-title">U.S. Army Cyber Command Terminology</div>
+            <p class="resource-desc">Selective operational terminology used for readiness, defense posture, and evidence-handling concepts.</p>
+          </div>
+          <a href="https://www.arcyber.army.mil/Portals/78/Documents/FactSheets/cybersecurity-terminology/cybersecurity-terminology_14%20November%202023.pdf?ver=GjDgjqGPqyFmI4BGhRdszQ%3D%3D" class="action-link source" target="_blank" rel="noopener noreferrer">Open Source &#8599;</a>
+        </div>
+      </div>
+    </section>
+
+    <input class="resource-search" id="glossary-search" type="search" placeholder="Search term, definition, or source" aria-label="Search glossary">
     <div class="alpha-rail" id="glossary-alpha" aria-label="Glossary letter filter"></div>
     <div id="glossary-list" class="glossary-group">
-      <p class="resource-note">Loading glossary...</p>
+      <p class="resource-desc">Loading glossary...</p>
     </div>
   </section>
 </main>
@@ -60,16 +94,163 @@
   const alpha = document.getElementById('glossary-alpha');
   const list = document.getElementById('glossary-list');
   const search = document.getElementById('glossary-search');
-  let terms = [];
   let selectedLetter = 'A';
-  const fallback = [
-    { term: 'access', definition: 'The ability and means to communicate with or otherwise interact with a system, resource, or data.' },
-    { term: 'access and identity management', definition: 'The methods and processes used to manage subjects and their authentication and authorizations to access specific objects.' },
-    { term: 'access control', definition: 'Security controls that restrict who or what can view, use, or modify protected resources.' },
-    { term: 'access control mechanism', definition: 'A technical, administrative, or physical control that enforces access control decisions.' },
-    { term: 'active attack', definition: 'An attack that attempts to alter system resources, affect operations, or manipulate data in transit.' },
-    { term: 'active content', definition: 'Executable or dynamic content embedded in a document, web page, or message.' }
+
+  const glossaryGroups = [
+    {
+      letter: 'A',
+      terms: [
+        { name: 'Access', source: 'CISA NICCS', definition: 'The ability and means to interact with a system, use resources, view information, or affect system functions.' },
+        { name: 'Access Control', source: 'NIST / CISA NICCS', definition: 'A policy and technical process that grants or denies requests to use data, systems, services, or protected facilities.' },
+        { name: 'Active Attack', source: 'CISA NICCS', definition: 'An intentional attempt to alter systems, data, resources, or operations rather than only observe them.' },
+        { name: 'Advanced Persistent Threat', source: 'NIST / CISA NICCS', definition: 'A resourceful adversary that uses multiple attack vectors over time to pursue a defined objective.' },
+        { name: 'Adversary', source: 'CISA NICCS', definition: 'An individual, group, organization, or state actor with intent to conduct harmful cyber activity.' },
+        { name: 'Agentic Observability', source: 'CyberSense Sourced', definition: 'Instrumentation for tracing autonomous workflow steps, tool calls, token use, decisions, and approval checkpoints across AI agent operations.' },
+        { name: 'Agentic Ecosystem', source: 'CyberSense Sourced', definition: 'A coordinated network of specialized AI agents that share state, use tools, and execute multi-step operational workflows.' },
+        { name: 'Asset Decay', source: 'CyberSense Sourced', definition: 'The rule-based movement of time-sensitive intelligence from active dashboards into archival repositories after its operational freshness window closes.' },
+        { name: 'Attack Lineage', source: 'CyberSense Sourced', definition: 'The mapped chain of parent and child processes, commands, files, identities, and network actions that explain how an attack unfolded.' },
+        { name: 'Attack Surface', source: 'CISA NICCS / SANS', definition: 'The total set of exposed systems, identities, interfaces, services, and workflows an adversary can attempt to exploit.' },
+        { name: 'Authentication', source: 'CISA NICCS', definition: 'The process of verifying the identity or attributes of a user, process, device, or data source.' },
+        { name: 'Authorization', source: 'CISA NICCS', definition: 'The decision process that determines whether a verified subject is permitted to access a specific resource or action.' },
+        { name: 'Autonomous Agent', source: 'CyberSense Sourced', definition: 'An AI agent capable of executing multi-turn workflows, using tools, adjusting state, and completing tasks without continuous human micromanagement.' },
+        { name: 'Availability', source: 'NIST / CISA NICCS', definition: 'The property that systems, data, and services remain accessible and usable when authorized users need them.' }
+      ]
+    },
+    {
+      letter: 'B',
+      terms: [
+        { name: 'Backdoor', source: 'SANS / U.S. Army Cyber', definition: 'A method or tool that bypasses normal security controls to regain or maintain access to a system or application.' },
+        { name: 'Beacon', source: 'U.S. Army Cyber', definition: 'Malware behavior where an infected system periodically contacts an attacker-controlled destination for instructions or remote access.' },
+        { name: 'Blue Team', source: 'SANS', definition: 'Defenders responsible for hardening systems, monitoring activity, responding to threats, and improving organizational security posture.' },
+        { name: 'Botnet', source: 'SANS / U.S. Army Cyber', definition: 'A collection of compromised systems remotely controlled to send spam, distribute malware, steal data, or launch denial-of-service activity.' },
+        { name: 'Brute Force Attack', source: 'SANS / U.S. Army Cyber', definition: 'An attack that tries many possible passwords, keys, or values until one succeeds.' },
+        { name: 'Business Impact Analysis', source: 'SANS', definition: 'An assessment of how disruptions affect business functions, recovery priorities, and acceptable downtime.' }
+      ]
+    },
+    {
+      letter: 'C',
+      terms: [
+        { name: 'Chain of Custody', source: 'SANS', definition: 'A documented trail showing how evidence was collected, handled, transferred, stored, and preserved.' },
+        { name: 'Ciphertext', source: 'U.S. Army Cyber', definition: 'Data that has been transformed by encryption into unreadable form until decrypted with the proper key or process.' },
+        { name: 'Cloud Computing', source: 'SANS / U.S. Army Cyber', definition: 'The use of remote provider infrastructure to store, process, manage, and deliver data or services over a network.' },
+        { name: 'Confidentiality', source: 'NIST / SANS', definition: 'The property that sensitive information is not disclosed to unauthorized people, systems, or processes.' },
+        { name: 'Cryptography', source: 'U.S. Army Cyber / SANS', definition: 'Methods for transforming data to preserve confidentiality, integrity, authenticity, or nonrepudiation.' },
+        { name: 'Cyber Operations', source: 'CISA NICCS', definition: 'Cybersecurity work focused on gathering evidence, mitigating threats, protecting against espionage or insider activity, and supporting intelligence functions.' },
+        { name: 'Cyber Threat Intelligence', source: 'CISA NICCS', definition: 'Actionable information about adversary intent, capability, opportunity, and behavior that supports decision-making.' },
+        { name: 'Cybersecurity', source: 'NIST CSRC', definition: 'Protecting and restoring computers, communications systems, services, and the information they contain so they remain available, confidential, authentic, integral, and nonrepudiable.' }
+      ]
+    },
+    {
+      letter: 'D',
+      terms: [
+        { name: 'Data Breach', source: 'SANS', definition: 'A security incident where sensitive, protected, or confidential information is accessed, disclosed, stolen, or used without authorization.' },
+        { name: 'Defense in Depth', source: 'SANS', definition: 'A layered security approach that reduces dependence on any single control or defensive mechanism.' },
+        { name: 'Denial of Service', source: 'NIST / U.S. Army Cyber', definition: 'An attack or condition that prevents authorized users from accessing a system, resource, or service.' },
+        { name: 'Digital Forensics', source: 'NIST / CyberSense Sourced', definition: 'The preservation, examination, and analysis of digital evidence to reconstruct activity and support response or legal processes.' },
+        { name: 'Distributed Denial of Service', source: 'U.S. Army Cyber', definition: 'A denial-of-service attack launched from many systems at the same time to overwhelm a target.' }
+      ]
+    },
+    {
+      letter: 'E',
+      terms: [
+        { name: 'Encryption', source: 'CISA NICCS / U.S. Army Cyber', definition: 'The transformation of readable data into protected form so unauthorized parties cannot easily understand it.' },
+        { name: 'Enterprise Risk Management', source: 'CISA NICCS', definition: 'An organization-wide approach to risk decisions that coordinates people, processes, and systems around business objectives.' },
+        { name: 'Exploit', source: 'U.S. Army Cyber / SANS', definition: 'Code, a technique, or a sequence of actions that takes advantage of a vulnerability.' }
+      ]
+    },
+    {
+      letter: 'F',
+      terms: [
+        { name: 'Firewall', source: 'U.S. Army Cyber / SANS', definition: 'A hardware, software, or cloud control that filters traffic according to defined security rules.' },
+        { name: 'Forensic Artifact', source: 'CyberSense Sourced', definition: 'A log entry, file, registry value, process record, packet capture, or other evidence item useful in reconstructing activity.' }
+      ]
+    },
+    {
+      letter: 'H',
+      terms: [
+        { name: 'Hash', source: 'SANS', definition: 'A fixed-length output produced from data by an algorithm, commonly used to verify integrity or identify known files.' },
+        { name: 'Human-in-the-Loop Gate', source: 'CyberSense Sourced', definition: 'An authorization checkpoint where an automated workflow pauses for explicit human review before a higher-risk action proceeds.' }
+      ]
+    },
+    {
+      letter: 'I',
+      terms: [
+        { name: 'Incident Response', source: 'NIST / CyberSense Sourced', definition: 'The organized process of detecting, analyzing, containing, eradicating, recovering from, and learning from cybersecurity incidents.' },
+        { name: 'Indicator of Compromise', source: 'SANS / CyberSense Sourced', definition: 'A technical clue such as a hash, IP address, domain, filename, process, or registry key that suggests malicious activity.' },
+        { name: 'Integrity', source: 'NIST / CISA NICCS', definition: 'The property that information or systems have not been improperly altered or destroyed.' }
+      ]
+    },
+    {
+      letter: 'L',
+      terms: [
+        { name: 'Least Privilege', source: 'NIST / CyberSense Sourced', definition: 'Granting users, services, and processes only the permissions required to perform authorized work.' },
+        { name: 'Lateral Movement', source: 'SANS / CyberSense Sourced', definition: 'Post-compromise activity where an adversary moves from one system, identity, or network segment to another.' }
+      ]
+    },
+    {
+      letter: 'M',
+      terms: [
+        { name: 'Malware', source: 'SANS / U.S. Army Cyber', definition: 'Software designed to disrupt, damage, spy on, steal from, or gain unauthorized control of systems or data.' },
+        { name: 'Multi-Factor Authentication', source: 'CISA NICCS / CyberSense Sourced', definition: 'Authentication that requires two or more independent factors, such as something known, possessed, inherent, performed, or location-based.' }
+      ]
+    },
+    {
+      letter: 'N',
+      terms: [
+        { name: 'Nonrepudiation', source: 'NIST CSRC', definition: 'Assurance that a party cannot reasonably deny the authenticity or origin of an action, message, or transaction.' },
+        { name: 'Network Segmentation', source: 'CyberSense Sourced', definition: 'Separating networks into controlled zones to limit exposure, reduce lateral movement, and enforce policy boundaries.' }
+      ]
+    },
+    {
+      letter: 'P',
+      terms: [
+        { name: 'Patch Management', source: 'NIST / CyberSense Sourced', definition: 'The lifecycle for identifying, testing, deploying, and verifying fixes for software and firmware vulnerabilities.' },
+        { name: 'Phishing', source: 'SANS / CyberSense Sourced', definition: 'A social engineering attack that uses deceptive messages or sites to trick people into revealing information or taking unsafe actions.' },
+        { name: 'Process Tree Tracking', source: 'CyberSense Sourced', definition: 'Endpoint analysis that traces parent and child processes to identify the sequence of actions behind suspicious execution.' },
+        { name: 'Prompt Tracing', source: 'CyberSense Sourced', definition: 'Recording prompts, model outputs, tool calls, intermediate reasoning metadata, and approvals in an AI workflow for auditability.' }
+      ]
+    },
+    {
+      letter: 'R',
+      terms: [
+        { name: 'Ransomware', source: 'SANS / CyberSense Sourced', definition: 'Malware or extortion activity that blocks access, encrypts data, threatens disclosure, or disrupts operations until demands are met.' },
+        { name: 'Risk Assessment', source: 'NIST / CISA NICCS', definition: 'The process of identifying threats, vulnerabilities, likelihood, and impact to understand risk to organizational objectives.' }
+      ]
+    },
+    {
+      letter: 'S',
+      terms: [
+        { name: 'Security as a Service', source: 'CISA NICCS', definition: 'A cloud-delivered model where security capabilities are provided by an external service rather than fully operated in-house.' },
+        { name: 'Security Operations', source: 'CISA NICCS / CyberSense Sourced', definition: 'Coordinated monitoring, triage, investigation, response, and improvement activities that defend systems and data.' },
+        { name: 'Supply Chain', source: 'CISA NICCS', definition: 'The connected set of people, organizations, services, software, information, and components used to create and deliver products.' }
+      ]
+    },
+    {
+      letter: 'T',
+      terms: [
+        { name: 'Threat', source: 'CISA NICCS', definition: 'A circumstance or event that can exploit vulnerabilities and adversely affect systems, assets, individuals, organizations, or society.' },
+        { name: 'Threat Actor', source: 'CyberSense Sourced', definition: 'A person, group, organization, or state-linked entity conducting or enabling harmful cyber activity.' },
+        { name: 'Threat Modeling', source: 'CyberSense Sourced', definition: 'A structured process for identifying likely adversaries, attack paths, weaknesses, controls, and residual risk before or during system operation.' },
+        { name: 'Trojan Horse', source: 'U.S. Army Cyber / SANS', definition: 'Malware disguised as legitimate software or content to persuade a user or system to execute it.' }
+      ]
+    },
+    {
+      letter: 'V',
+      terms: [
+        { name: 'Vulnerability', source: 'NIST / CISA NICCS', definition: 'A weakness in a system, design, implementation, configuration, process, or control that can be exploited.' },
+        { name: 'Vulnerability Management', source: 'CyberSense Sourced', definition: 'The continuous process of discovering, prioritizing, remediating, and verifying weaknesses across assets and services.' }
+      ]
+    },
+    {
+      letter: 'Z',
+      terms: [
+        { name: 'Zero Trust Architecture', source: 'NIST / CyberSense Sourced', definition: 'A security architecture that assumes no implicit trust and continuously evaluates identity, context, policy, and risk for access decisions.' }
+      ]
+    }
   ];
+
+  const terms = glossaryGroups.flatMap(group => group.terms.map(term => ({ ...term, letter: group.letter })))
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   function esc(value) {
     return String(value == null ? '' : value).replace(/[&<>"']/g, ch => ({
@@ -83,9 +264,10 @@
   }
 
   function renderAlpha() {
+    const availableLetters = new Set(terms.map(item => firstLetter(item.name)));
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-    alpha.innerHTML = letters.map(letter => `<button class="resource-letter${letter === selectedLetter ? ' active' : ''}" type="button" data-letter="${letter}">${letter}</button>`).join('');
-    alpha.querySelectorAll('button').forEach(btn => {
+    alpha.innerHTML = letters.map(letter => `<button class="resource-letter${letter === selectedLetter ? ' active' : ''}" type="button" data-letter="${letter}"${availableLetters.has(letter) ? '' : ' disabled'}>${letter}</button>`).join('');
+    alpha.querySelectorAll('button:not([disabled])').forEach(btn => {
       btn.addEventListener('click', () => {
         selectedLetter = btn.dataset.letter;
         render();
@@ -97,36 +279,24 @@
     renderAlpha();
     const query = (search.value || '').toLowerCase().trim();
     const filtered = terms.filter(item => {
-      const haystack = `${item.term || ''} ${item.definition || ''}`.toLowerCase();
-      return firstLetter(item.term) === selectedLetter && (!query || haystack.includes(query));
+      const haystack = `${item.name || ''} ${item.definition || ''} ${item.source || ''}`.toLowerCase();
+      return (!query && firstLetter(item.name) === selectedLetter) || (query && haystack.includes(query));
     });
+    const heading = query ? 'Search Results' : selectedLetter;
     if (!filtered.length) {
-      list.innerHTML = `<h2>${esc(selectedLetter)}</h2><p class="resource-desc">No glossary terms match the current filters.</p>`;
+      list.innerHTML = `<h2>${esc(heading)}</h2><p class="resource-desc">No glossary terms match the current filters.</p>`;
       return;
     }
-    list.innerHTML = `<h2>${esc(selectedLetter)}</h2>` + filtered.map((item, index) => `
-      <div class="glossary-row">
-        <details${index === 1 ? ' open' : ''}>
-          <summary>${esc(item.term)}</summary>
-          <p>${esc(item.definition)}</p>
-        </details>
-      </div>`).join('');
-  }
-
-  async function load() {
-    try {
-      if (!window.CS?.Auth?.apiFetch) throw new Error('API client unavailable');
-      const json = await CS.Auth.apiFetch('/api/training/glossary');
-      terms = (json.data && json.data.length ? json.data : fallback).slice().sort((a, b) => String(a.term || '').localeCompare(String(b.term || '')));
-    } catch (e) {
-      console.error('Glossary load error:', e);
-      terms = fallback;
-    }
-    render();
+    list.innerHTML = `<h2>${esc(heading)}</h2>` + filtered.map(item => `
+      <article class="term-card">
+        <h3>${esc(item.name)}</h3>
+        <p>${esc(item.definition)}</p>
+        <div class="term-source">Source: ${esc(item.source)}</div>
+      </article>`).join('');
   }
 
   search.addEventListener('input', render);
-  load();
+  render();
 })();
 </script>
 </body>
