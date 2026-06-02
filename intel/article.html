@@ -3,29 +3,358 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title id="page-title">Intel Brief — CyberSense.Solutions</title>
-<meta name="description" content="CyberSense.Solutions — analyst-written cybersecurity intelligence.">
+<title id="page-title">Intel Brief - CyberSense.Solutions</title>
+<meta name="description" content="CyberSense.Solutions - analyst-written cybersecurity intelligence.">
 <link rel="stylesheet" href="../styles.css">
 <link rel="stylesheet" href="../auth.css">
 <link rel="icon" type="image/png" href="/assets/csicon.png">
 <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
 <style>
-  .article-body { max-width: 720px; margin: 0 auto; }
-  .article-body h2 { font-size: 22px; font-weight: 700; color: var(--cs-navy); margin: 32px 0 12px; }
-  .article-body h3 { font-size: 18px; font-weight: 700; color: var(--cs-navy); margin: 24px 0 10px; }
-  .article-body p  { font-size: 16px; color: #334155; line-height: 1.8; margin-bottom: 18px; }
-  .article-body ul, .article-body ol { margin: 0 0 18px 24px; }
-  .article-body li { font-size: 16px; color: #334155; line-height: 1.7; margin-bottom: 6px; }
-  .article-body code { font-family: var(--font-mono); font-size: 13px; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: var(--cs-blue-mid); }
-  .article-body pre { background: #0f2347; border-radius: var(--radius); padding: 20px; margin-bottom: 18px; overflow-x: auto; }
-  .article-body pre code { background: none; color: #00d4ff; font-size: 13px; }
-  .article-body blockquote { border-left: 3px solid var(--cs-cyan); padding: 12px 20px; margin: 0 0 18px; background: #f8fafc; border-radius: 0 var(--radius) var(--radius) 0; }
-  .article-body blockquote p { margin: 0; color: #475569; }
-  .article-meta { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #e2e8f0; }
-  .article-section-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--cs-cyan); }
-  .read-time { font-size: 13px; color: var(--cs-gray-400); }
-  .article-date { font-size: 13px; color: var(--cs-gray-400); }
-  .blurred-content { filter: blur(5px); pointer-events: none; user-select: none; }
+  body { background: #020813; }
+
+  .intel-article-shell {
+    background: #020813;
+    color: #cbd5e1;
+    padding: 72px 20px 64px;
+  }
+
+  .intel-article-wrapper {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .article-header { margin-bottom: 34px; }
+
+  .category-breadcrumbs {
+    color: #64748b;
+    font-family: Consolas, Monaco, monospace;
+    font-size: 12px;
+    letter-spacing: .03em;
+    margin-bottom: 14px;
+    text-transform: uppercase;
+  }
+
+  .category-breadcrumbs a {
+    color: #64748b;
+    text-decoration: none;
+    text-underline-offset: 3px;
+  }
+
+  .category-breadcrumbs a:hover {
+    color: #00d2ff;
+    text-decoration: underline;
+  }
+
+  .article-kicker-row {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .article-date {
+    color: #64748b;
+    font-family: Consolas, Monaco, monospace;
+    font-size: 13px;
+  }
+
+  .main-title {
+    color: #fff;
+    font-size: clamp(30px, 5vw, 48px);
+    font-weight: 850;
+    line-height: 1.08;
+    margin: 0 0 22px;
+    max-width: 900px;
+  }
+
+  .executive-metric-strip {
+    background: #090f1c;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-bottom: 6px;
+    overflow: hidden;
+  }
+
+  .metric-node {
+    border-right: 1px solid #1e293b;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+    padding: 14px 18px;
+  }
+
+  .metric-node:last-child { border-right: 0; }
+
+  .metric-node .label {
+    color: #64748b;
+    font-family: Consolas, Monaco, monospace;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .07em;
+  }
+
+  .metric-node .value {
+    color: #fff;
+    font-size: 14px;
+    font-weight: 750;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  .cyan-text { color: #00d2ff !important; }
+  .monospace-font { font-family: Consolas, Monaco, monospace; }
+
+  .article-body-grid {
+    display: grid;
+    gap: 40px;
+    grid-template-columns: minmax(0, 1fr) 270px;
+  }
+
+  .content-primary-column { min-width: 0; }
+
+  .content-primary-column h2 {
+    color: #fff;
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1.25;
+    margin: 36px 0 16px;
+  }
+
+  .content-primary-column h3,
+  .content-primary-column h4 {
+    color: #e2e8f0;
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1.35;
+    margin: 28px 0 12px;
+  }
+
+  .content-primary-column p {
+    color: #cbd5e1;
+    font-size: 17px;
+    line-height: 1.78;
+    margin: 0 0 20px;
+  }
+
+  .content-primary-column p:first-child {
+    color: #f1f5f9;
+    font-size: 20px;
+    font-weight: 550;
+    line-height: 1.65;
+  }
+
+  .content-primary-column ul,
+  .content-primary-column ol {
+    color: #cbd5e1;
+    margin: 0 0 22px 22px;
+    padding: 0;
+  }
+
+  .content-primary-column li {
+    font-size: 16px;
+    line-height: 1.7;
+    margin-bottom: 8px;
+  }
+
+  .content-primary-column a {
+    color: #00d2ff;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .content-primary-column code {
+    background: rgba(0, 210, 255, .08);
+    border: 1px solid rgba(0, 210, 255, .18);
+    border-radius: 4px;
+    color: #38bdf8;
+    font-family: Consolas, Monaco, monospace;
+    font-size: .88em;
+    padding: 2px 6px;
+  }
+
+  .content-primary-column blockquote,
+  .intel-callout-box {
+    background: rgba(0, 210, 255, .035);
+    border-left: 3px solid #00d2ff;
+    border-radius: 0 8px 8px 0;
+    color: #94a3b8;
+    margin: 30px 0;
+    padding: 16px 20px;
+  }
+
+  .content-primary-column blockquote p {
+    color: #94a3b8;
+    font-size: 15px;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .content-primary-column blockquote strong { color: #f1f5f9; }
+
+  .technical-code-frame {
+    background: #050b14;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    margin: 30px 0;
+    overflow: hidden;
+  }
+
+  .code-header {
+    align-items: center;
+    background: #090f1c;
+    border-bottom: 1px solid #1e293b;
+    color: #64748b;
+    display: flex;
+    font-family: Consolas, Monaco, monospace;
+    font-size: 12px;
+    justify-content: space-between;
+    padding: 10px 14px;
+  }
+
+  .copy-btn {
+    background: transparent;
+    border: 1px solid #1e293b;
+    border-radius: 4px;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 3px 8px;
+  }
+
+  .copy-btn:hover {
+    border-color: #334155;
+    color: #fff;
+  }
+
+  .technical-code-frame pre {
+    margin: 0;
+    overflow-x: auto;
+    padding: 18px;
+  }
+
+  .technical-code-frame code {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    color: #38bdf8;
+    display: block;
+    font-family: Consolas, Monaco, monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    min-width: max-content;
+    padding: 0;
+  }
+
+  .content-secondary-sidebar { min-width: 0; }
+
+  .sidebar-widget {
+    background: #090f1c;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    padding: 20px;
+    position: sticky;
+    top: 84px;
+  }
+
+  .sidebar-widget h4 {
+    color: #fff;
+    font-size: 13px;
+    font-weight: 850;
+    letter-spacing: .08em;
+    margin: 0 0 14px;
+    text-transform: uppercase;
+  }
+
+  .sidebar-list,
+  .related-links {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .sidebar-list li,
+  .related-links a {
+    color: #94a3b8;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .sidebar-list strong { color: #e2e8f0; }
+
+  .related-links a {
+    text-decoration: none;
+    text-underline-offset: 3px;
+  }
+
+  .related-links a:hover {
+    color: #00d2ff;
+    text-decoration: underline;
+  }
+
+  .loading-state,
+  .empty-state {
+    background: #090f1c;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    color: #94a3b8;
+    padding: 48px 20px;
+    text-align: center;
+  }
+
+  .gate-wrapper {
+    background: #090f1c;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    min-height: 280px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .gate-wrapper .blurred-content { padding: 28px; }
+
+  .gate-wrapper .blurred-content p {
+    color: #94a3b8;
+    font-size: 17px;
+    line-height: 1.75;
+  }
+
+  .gate-wrapper .gate-card {
+    background: rgba(9, 15, 28, .98);
+    border: 1px solid #1e293b;
+  }
+
+  .blurred-content {
+    filter: blur(5px);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  @media (max-width: 860px) {
+    .intel-article-shell { padding: 56px 16px 48px; }
+    .article-body-grid {
+      grid-template-columns: 1fr;
+      gap: 26px;
+    }
+    .content-secondary-sidebar { display: none; }
+    .executive-metric-strip { grid-template-columns: 1fr; }
+    .metric-node {
+      border-bottom: 1px solid #1e293b;
+      border-right: 0;
+      padding: 14px;
+    }
+    .metric-node:last-child { border-bottom: 0; }
+    .main-title { font-size: clamp(28px, 9vw, 36px); }
+    .content-primary-column p { font-size: 16px; }
+    .content-primary-column p:first-child { font-size: 18px; }
+  }
 </style>
 </head>
 <body>
@@ -57,33 +386,30 @@
   <a href="#" class="drawer-login" onclick="CS.Auth.showLoginModal();return false;">Login</a>
 </div>
 
-<!-- Article Hero -->
-<section class="hero-dark section" style="padding:48px 24px 40px;">
-  <div class="container">
-    <a href="../intelligence.html" style="font-size:13px;color:rgba(255,255,255,0.4);text-decoration:none;display:inline-flex;align-items:center;gap:6px;margin-bottom:20px;">
-      ← Back to Intel Briefs
-    </a>
-    <div id="article-hero-content">
-      <div style="color:rgba(255,255,255,0.4);font-size:14px;">Loading...</div>
-    </div>
-  </div>
-</section>
-
-<!-- Article Body -->
-<section class="section" style="background:var(--cs-gray-100);padding:56px 24px;">
-  <div class="container">
-    <div class="article-body" id="article-body">
-      <div style="text-align:center;padding:60px;color:var(--cs-gray-400);" id="article-loading">
-        Loading article...
+<main class="intel-article-shell">
+  <article class="intel-article-wrapper">
+    <header class="article-header">
+      <div class="category-breadcrumbs" id="article-breadcrumbs">
+        <a href="../intelligence.html">Intel Center</a> / Loading
       </div>
+      <div id="article-hero-content">
+        <div class="loading-state">Loading article...</div>
+      </div>
+    </header>
+
+    <div class="article-body-grid">
+      <div class="content-primary-column article-body" id="article-body">
+        <div class="loading-state" id="article-loading">Loading article...</div>
+      </div>
+      <aside class="content-secondary-sidebar" id="article-sidebar" aria-label="Article context"></aside>
     </div>
-  </div>
-</section>
+  </article>
+</main>
 
 <footer>
   <div class="footer-inner">
     <div class="footer-grid">
-      <div><div class="footer-logo">CyberSense<span>.Solutions</span></div><p class="footer-mission">Delivering actionable cybersecurity intelligence, daily awareness briefings, and professional training to teams that can't afford to be caught off guard.</p><div class="footer-socials"><a href="#" class="footer-social-icon">in</a><a href="#" class="footer-social-icon">f</a><a href="#" class="footer-social-icon">▶</a><a href="#" class="footer-social-icon">𝕏</a><a href="#" class="footer-social-icon">tt</a></div></div>
+      <div><div class="footer-logo">CyberSense<span>.Solutions</span></div><p class="footer-mission">Delivering actionable cybersecurity intelligence, daily awareness briefings, and professional training to teams that can't afford to be caught off guard.</p><div class="footer-socials"><a href="#" class="footer-social-icon">in</a><a href="#" class="footer-social-icon">f</a><a href="#" class="footer-social-icon">yt</a><a href="#" class="footer-social-icon">X</a><a href="#" class="footer-social-icon">tt</a></div></div>
       <div class="footer-col"><h4>Platform</h4><ul><li><a href="../index.html">Home</a></li><li><a href="../radar.html">Threat Radar</a></li><li><a href="../intelligence.html">Intel Briefs</a></li><li><a href="../newsletter.html">Newsletter</a></li></ul></div>
       <div class="footer-col"><h4>Legal</h4><ul><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li><li><a href="../about.html">Contact Us</a></li></ul></div>
     </div>
@@ -95,30 +421,79 @@
 <script src="../auth.js"></script>
 <script src="../main.js"></script>
 <script>
-// Simple markdown to HTML converter
-function mdToHtml(md) {
-  if (!md) return '';
-  return md
-    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-    .replace(/^#### (.+)$/gm, '<h4>$1</h4>')
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function stripMarkdown(value) {
+  return String(value || '')
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/[*_`>]/g, '')
+    .replace(/\[(.+?)\]\(.+?\)/g, '$1')
+    .trim();
+}
+
+function inlineMd(value) {
+  return escapeHtml(value)
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
     .replace(/`(.+?)`/g, '<code>$1</code>')
-    .replace(/^> (.+)$/gm, '<blockquote><p>$1</p></blockquote>')
-    .replace(/^- (.+)$/gm, '<li>$1</li>')
-    .replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>')
-    .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
-    .replace(/\n\n/g, '</p><p>')
-    .replace(/^(?!<[hul]|<block)(.+)$/gm, '<p>$1</p>')
-    .replace(/<p><\/p>/g, '')
-    .replace(/<p>(<[hul])/g, '$1')
-    .replace(/(<\/[hul][^>]*>)<\/p>/g, '$1');
+    .replace(/\[(.+?)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+}
+
+function mdToHtml(md) {
+  if (!md) return '';
+  const codeBlocks = [];
+  const protectedMd = md.replace(/```([\w-]+)?\n([\s\S]*?)```/g, (_, lang, code) => {
+    const label = lang ? `${lang} snippet` : 'technical excerpt';
+    const token = `@@CODE_BLOCK_${codeBlocks.length}@@`;
+    codeBlocks.push(`
+      <div class="technical-code-frame">
+        <div class="code-header">
+          <span>${escapeHtml(label)}</span>
+          <button class="copy-btn" type="button">Copy</button>
+        </div>
+        <pre><code>${escapeHtml(code.trim())}</code></pre>
+      </div>`);
+    return token;
+  });
+
+  return protectedMd
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(Boolean)
+    .map((block) => {
+      const codeMatch = block.match(/^@@CODE_BLOCK_(\d+)@@$/);
+      if (codeMatch) return codeBlocks[Number(codeMatch[1])] || '';
+      if (/^####\s+/.test(block)) return `<h4>${inlineMd(block.replace(/^####\s+/, ''))}</h4>`;
+      if (/^###\s+/.test(block)) return `<h3>${inlineMd(block.replace(/^###\s+/, ''))}</h3>`;
+      if (/^##\s+/.test(block)) return `<h2>${inlineMd(block.replace(/^##\s+/, ''))}</h2>`;
+      if (/^>\s+/m.test(block)) {
+        const quote = block.replace(/^>\s?/gm, '').replace(/\n/g, '<br>');
+        return `<blockquote><p>${inlineMd(quote)}</p></blockquote>`;
+      }
+      if (/^-\s+/m.test(block)) {
+        const items = block.split('\n').filter((line) => /^-\s+/.test(line)).map((line) => `<li>${inlineMd(line.replace(/^-\s+/, ''))}</li>`).join('');
+        return `<ul>${items}</ul>`;
+      }
+      if (/^\d+\.\s+/m.test(block)) {
+        const items = block.split('\n').filter((line) => /^\d+\.\s+/.test(line)).map((line) => `<li>${inlineMd(line.replace(/^\d+\.\s+/, ''))}</li>`).join('');
+        return `<ol>${items}</ol>`;
+      }
+      return `<p>${inlineMd(block.replace(/\n/g, ' '))}</p>`;
+    })
+    .join('\n');
 }
 
 function sectionLabel(section) {
   const map = { threat: 'Threat Intelligence', policy: 'Policy Update', innovation: 'Innovation', growth: 'Professional Growth', training: 'Training' };
-  return map[section] || section;
+  return map[section] || section || 'Intel Brief';
 }
 
 function badgeClass(section) {
@@ -130,49 +505,156 @@ function formatDate(ts) {
   return new Date(ts).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 }
 
+function sectionHref(section) {
+  const map = { threat: '../threat.html', policy: '../policy.html', innovation: '../innovation.html', growth: '../growth.html', training: '../training.html' };
+  return map[section] || '../intelligence.html';
+}
+
+function articleContext(section) {
+  const map = {
+    threat: {
+      domain: 'Threat Operations',
+      stack: 'Detection, Exposure, Response',
+      mitigations: 'Containment and Monitoring',
+      related: ['Threat Intelligence Repository', 'Daily Awareness Briefings', 'Security Training Catalog']
+    },
+    policy: {
+      domain: 'Governance and Compliance',
+      stack: 'Policy Controls and Audit Evidence',
+      mitigations: 'Control Mapping',
+      related: ['Governance Frameworks Portal', 'NIST and CISA References', 'Executive Risk Reviews']
+    },
+    innovation: {
+      domain: 'Software Supply Chain',
+      stack: 'CI/CD and Automation Systems',
+      mitigations: 'Pipeline Guardrails',
+      related: ['Emerging Tech Blueprint', 'AI Security Architecture', 'Secure Delivery Workflows']
+    },
+    growth: {
+      domain: 'Professional Growth',
+      stack: 'Team Capability and Market Signals',
+      mitigations: 'Upskilling Roadmap',
+      related: ['Executive Analytics Hub', 'Career Progression Signals', 'Training Resources']
+    },
+    training: {
+      domain: 'Workforce Readiness',
+      stack: 'Awareness and Practice Labs',
+      mitigations: 'Training Reinforcement',
+      related: ['Interactive Training Catalog', 'Daily Awareness Briefings', 'Role-Based Learning Paths']
+    }
+  };
+  return map[section] || map.threat;
+}
+
+function estimateReadTime(article) {
+  if (article.read_time_min) return `${article.read_time_min} Min Read`;
+  const words = stripMarkdown(article.body_md || article.teaser || '').split(/\s+/).filter(Boolean).length;
+  return `${Math.max(1, Math.ceil(words / 225))} Min Read`;
+}
+
+function renderSidebar(article) {
+  const context = articleContext(article.section);
+  return `
+    <div class="sidebar-widget">
+      <h4>Article Matrix</h4>
+      <ul class="sidebar-list">
+        <li><strong>Domain:</strong> ${escapeHtml(context.domain)}</li>
+        <li><strong>Stack:</strong> ${escapeHtml(context.stack)}</li>
+        <li><strong>Mitigation:</strong> ${escapeHtml(context.mitigations)}</li>
+      </ul>
+    </div>
+    <div class="sidebar-widget">
+      <h4>Related Intelligence</h4>
+      <ul class="related-links">
+        ${context.related.map((item) => `<li><a href="${sectionHref(article.section)}">${escapeHtml(item)}</a></li>`).join('')}
+      </ul>
+    </div>`;
+}
+
+function renderArticleHeader(article) {
+  const context = articleContext(article.section);
+  const published = article.published_at ? `<span class="article-date">${formatDate(article.published_at)}</span>` : '';
+  return `
+    <div class="article-kicker-row">
+      <span class="badge ${badgeClass(article.section)}">${sectionLabel(article.section)}</span>
+      ${published}
+    </div>
+    <h1 class="main-title">${escapeHtml(article.title)}</h1>
+    <div class="executive-metric-strip">
+      <div class="metric-node">
+        <span class="label">IMPACT DOMAIN</span>
+        <span class="value cyan-text">${escapeHtml(context.domain)}</span>
+      </div>
+      <div class="metric-node">
+        <span class="label">TARGET STACK</span>
+        <span class="value">${escapeHtml(context.stack)}</span>
+      </div>
+      <div class="metric-node">
+        <span class="label">MITIGATION LENS</span>
+        <span class="value">${escapeHtml(context.mitigations)}</span>
+      </div>
+      <div class="metric-node">
+        <span class="label">EST. READ</span>
+        <span class="value monospace-font">${estimateReadTime(article)}</span>
+      </div>
+    </div>`;
+}
+
+function bindCopyButtons(root) {
+  root.querySelectorAll('.copy-btn').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const code = button.closest('.technical-code-frame')?.querySelector('code')?.textContent || '';
+      try {
+        await navigator.clipboard.writeText(code);
+        button.textContent = 'Copied';
+        setTimeout(() => { button.textContent = 'Copy'; }, 1400);
+      } catch (_) {
+        button.textContent = 'Select';
+        setTimeout(() => { button.textContent = 'Copy'; }, 1400);
+      }
+    });
+  });
+}
+
 async function loadArticle(user) {
   const params = new URLSearchParams(window.location.search);
-  const slug   = params.get('slug');
+  const slug = params.get('slug');
 
   if (!slug) {
-    document.getElementById('article-hero-content').innerHTML = '<div style="color:rgba(255,255,255,0.5);">No article specified.</div>';
-    document.getElementById('article-body').innerHTML = '<div style="text-align:center;padding:60px;color:var(--cs-gray-400);">Invalid article link.</div>';
+    document.getElementById('article-breadcrumbs').innerHTML = '<a href="../intelligence.html">Intel Center</a> / Invalid Link';
+    document.getElementById('article-hero-content').innerHTML = '<h1 class="main-title">Article link unavailable</h1>';
+    document.getElementById('article-body').innerHTML = '<div class="empty-state">Invalid article link.</div>';
+    document.getElementById('article-sidebar').innerHTML = '';
     return;
   }
 
   if (!user) {
+    document.getElementById('article-breadcrumbs').innerHTML = '<a href="../intelligence.html">Intel Center</a> / Subscriber Access';
     document.getElementById('article-hero-content').innerHTML = `
-      <h1 style="font-size:clamp(22px,4vw,38px);font-weight:700;color:var(--cs-white);margin-bottom:16px;">Intel Brief</h1>
-      <p style="color:rgba(255,255,255,0.5);margin-bottom:20px;">Sign in to read this intelligence brief.</p>
+      <h1 class="main-title">Intel Brief</h1>
+      <p style="color:#94a3b8;margin-bottom:20px;">Sign in to read this intelligence brief.</p>
       <a href="#" class="btn btn-primary" onclick="CS.Auth.showLoginModal();return false;">Sign In Free</a>`;
-    document.getElementById('article-loading').remove();
+    document.getElementById('article-body').innerHTML = '';
+    document.getElementById('article-sidebar').innerHTML = '';
     return;
   }
 
   try {
     const article = await CS.Auth.apiFetch(`/api/content/articles/${slug}`);
 
-    // Update page title
-    document.getElementById('page-title').textContent = `${article.title} — CyberSense.Solutions`;
+    document.getElementById('page-title').textContent = `${article.title} - CyberSense.Solutions`;
+    document.getElementById('article-breadcrumbs').innerHTML = `
+      <a href="../intelligence.html">Intel Center</a> / <a href="${sectionHref(article.section)}">${sectionLabel(article.section)}</a>`;
+    document.getElementById('article-hero-content').innerHTML = renderArticleHeader(article);
+    document.getElementById('article-sidebar').innerHTML = renderSidebar(article);
 
-    // Hero
-    document.getElementById('article-hero-content').innerHTML = `
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-        <span class="badge ${badgeClass(article.section)}">${sectionLabel(article.section)}</span>
-        ${article.read_time_min ? `<span style="font-size:13px;color:rgba(255,255,255,0.4);">${article.read_time_min} min read</span>` : ''}
-        ${article.published_at ? `<span style="font-size:13px;color:rgba(255,255,255,0.4);">· ${formatDate(article.published_at)}</span>` : ''}
-      </div>
-      <h1 style="font-size:clamp(22px,4vw,40px);font-weight:700;color:var(--cs-white);line-height:1.2;max-width:760px;">${article.title}</h1>`;
-
-    // Body
     const body = document.getElementById('article-body');
 
     if (article.blurred) {
-      // Gated content — show teaser + upgrade gate
       body.innerHTML = `
-        <div class="gate-wrapper" style="border-radius:var(--radius-lg);">
+        <div class="gate-wrapper">
           <div class="blurred-content" aria-hidden="true">
-            <p>${article.teaser || ''}</p>
+            <p>${escapeHtml(article.teaser || '')}</p>
           </div>
           <div class="gate-overlay">
             <div class="gate-card">
@@ -184,15 +666,17 @@ async function loadArticle(user) {
         </div>`;
     } else {
       body.innerHTML = mdToHtml(article.body_md);
+      bindCopyButtons(body);
     }
-
-  } catch(e) {
+  } catch (e) {
     if (e.status === 404 || e.code === 'NOT_FOUND') {
-      document.getElementById('article-hero-content').innerHTML = '<h1 style="color:var(--cs-white);">Article not found</h1>';
-      document.getElementById('article-body').innerHTML = '<div style="text-align:center;padding:60px;color:var(--cs-gray-400);">This article may have been moved or is no longer available.</div>';
+      document.getElementById('article-breadcrumbs').innerHTML = '<a href="../intelligence.html">Intel Center</a> / Not Found';
+      document.getElementById('article-hero-content').innerHTML = '<h1 class="main-title">Article not found</h1>';
+      document.getElementById('article-body').innerHTML = '<div class="empty-state">This article may have been moved or is no longer available.</div>';
     } else {
-      document.getElementById('article-body').innerHTML = '<div style="text-align:center;padding:60px;color:var(--cs-gray-400);">Content temporarily unavailable.</div>';
+      document.getElementById('article-body').innerHTML = '<div class="empty-state">Content temporarily unavailable.</div>';
     }
+    document.getElementById('article-sidebar').innerHTML = '';
   }
 }
 
