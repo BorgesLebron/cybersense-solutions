@@ -6,9 +6,164 @@
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png">
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png">
 <title>Threat Intelligence - CyberSense.Solutions</title>
-<meta name="description" content="CyberSense threat intelligence repository for historical threat reports, breach analysis, and CISA KEV references.">
+<meta name="description" content="Live threat feed, CISA KEV catalog, published intel articles, and reference documentation for threat intelligence practitioners.">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="auth.css">
+<link rel="stylesheet" href="repositories.css">
+<style>
+  .threat-live-grid {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 20px;
+    margin-bottom: 32px;
+  }
+  .live-panel {
+    background: #090f1c;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .live-panel-hdr {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 16px;
+    border-bottom: 1px solid rgba(255,255,255,.05);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.3px;
+    text-transform: uppercase;
+    color: #64748b;
+    font-family: Consolas, Monaco, monospace;
+  }
+  .live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 6px rgba(34,197,94,.8);
+    flex-shrink: 0;
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+  .live-dot-red {
+    background: #ef4444;
+    box-shadow: 0 0 6px rgba(239,68,68,.8);
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .35; }
+  }
+  .feed-scroll {
+    max-height: 440px;
+    overflow-y: auto;
+  }
+  .feed-scroll::-webkit-scrollbar { width: 4px; }
+  .feed-scroll::-webkit-scrollbar-track { background: transparent; }
+  .feed-scroll::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 2px; }
+  .threat-tbl {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .threat-tbl th {
+    padding: 9px 12px;
+    text-align: left;
+    color: #475569;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    border-bottom: 1px solid #1e293b;
+    font-family: Consolas, Monaco, monospace;
+    position: sticky;
+    top: 0;
+    background: #090f1c;
+  }
+  .threat-tbl td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(30,41,59,.5);
+    vertical-align: top;
+  }
+  .threat-tbl tr:last-child td { border-bottom: 0; }
+  .sev-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .06em;
+    padding: 3px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    font-family: Consolas, Monaco, monospace;
+    white-space: nowrap;
+  }
+  .sev-critical { background: rgba(239,68,68,.15); color: #f87171; border: 1px solid rgba(239,68,68,.28); }
+  .sev-high     { background: rgba(249,115,22,.13); color: #fb923c; border: 1px solid rgba(249,115,22,.26); }
+  .sev-medium   { background: rgba(234,179,8,.11);  color: #fbbf24; border: 1px solid rgba(234,179,8,.24); }
+  .sev-low      { background: rgba(34,197,94,.09);  color: #4ade80; border: 1px solid rgba(34,197,94,.2); }
+  .t-name { color: #e2e8f0; font-weight: 650; line-height: 1.35; }
+  .t-cve  { color: #475569; font-size: 11px; font-family: Consolas, Monaco, monospace; margin-top: 3px; }
+  .cvss-score { font-family: Consolas, Monaco, monospace; font-size: 13px; font-weight: 700; }
+  .cvss-crit { color: #f87171; }
+  .cvss-high { color: #fb923c; }
+  .cvss-med  { color: #fbbf24; }
+  .cvss-low  { color: #4ade80; }
+  .kev-scroll {
+    max-height: 440px;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .kev-scroll::-webkit-scrollbar { width: 4px; }
+  .kev-scroll::-webkit-scrollbar-track { background: transparent; }
+  .kev-scroll::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 2px; }
+  .kev-entry {
+    background: #070d19;
+    border: 1px solid #1e293b;
+    border-radius: 6px;
+    padding: 9px 12px;
+  }
+  .kev-cve  { font-family: Consolas, Monaco, monospace; font-size: 12px; font-weight: 800; color: #67e8f9; }
+  .kev-prod { font-size: 12px; color: #94a3b8; margin-top: 3px; line-height: 1.35; }
+  .kev-date { font-size: 11px; color: #475569; font-family: Consolas, Monaco, monospace; margin-top: 4px; }
+  .article-list { display: flex; flex-direction: column; }
+  .article-row {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 14px;
+    padding: 13px 0;
+    border-bottom: 1px solid #1e293b;
+    align-items: baseline;
+  }
+  .article-row:last-child { border-bottom: 0; }
+  .article-date { color: #475569; font-family: Consolas, Monaco, monospace; font-size: 12px; }
+  .article-link { color: #cbd5e1; font-weight: 650; text-decoration: none; font-size: 14px; line-height: 1.45; }
+  .article-link:hover { color: #67e8f9; }
+  .ref-row { padding: 11px 0; border-bottom: 1px solid #1e293b; }
+  .ref-row:last-child { border-bottom: 0; }
+  .ref-name-link {
+    color: #cbd5e1;
+    font-weight: 650;
+    font-size: 14px;
+    text-decoration: none;
+    line-height: 1.4;
+  }
+  .ref-name-link:hover { color: #67e8f9; text-decoration: underline; text-underline-offset: 3px; }
+  .ref-desc { color: #64748b; font-size: 13px; margin: 4px 0 0; line-height: 1.45; }
+  .feed-notice {
+    padding: 20px 16px;
+    text-align: center;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .feed-notice a { color: #67e8f9; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  .feed-meta { padding: 8px 14px; font-size: 11px; color: #334155; font-family: Consolas, Monaco, monospace; border-top: 1px solid rgba(255,255,255,.04); }
+  @media (max-width: 860px) {
+    .threat-live-grid { grid-template-columns: 1fr; }
+    .article-row { grid-template-columns: 1fr; gap: 4px; }
+  }
+</style>
 </head>
 <body>
 <nav class="nav" role="navigation" aria-label="Main navigation">
@@ -29,50 +184,92 @@
 <main class="repo-main">
   <section class="repo-shell">
     <a href="resources.html" class="repo-back">&lt;-- Back To Resources</a>
-    <p class="repo-kicker">Zero-Code Threat Intelligence Feed</p>
+    <p class="repo-kicker">Threat Intelligence Center</p>
     <h1 class="repo-title">Threat Intelligence</h1>
-    <p class="repo-copy">A chronological ledger for tactical indicators, incident handling references, forensic logging, and source links. Live Radar integration remains an Alan-owned handoff; this page is the repository-ready surface.</p>
+    <p class="repo-copy">Live threat feed from the Rick/Barbara pipeline, CISA Known Exploited Vulnerabilities catalog, published CyberSense intel articles, and practitioner reference documentation organized by operational function.</p>
 
+    <!-- ── Live Feed + CISA KEV ───────────────────────────────────────────── -->
     <section class="repo-section">
-      <h2 class="repo-section-title">Active Telemetry Shell</h2>
-      <div class="repo-grid-layout two-col">
-        <article class="intel-log-card">
-          <div class="log-header-row">
-            <span class="badge badge-crit">Critical</span>
-            <span class="log-time">2026-06-01 15:34 UTC</span>
+      <h2 class="repo-section-title">Live Feed</h2>
+      <div class="threat-live-grid">
+
+        <div class="live-panel">
+          <div class="live-panel-hdr">
+            <span class="live-dot"></span>
+            <span>Active Threats — Rick Intelligence Feed</span>
           </div>
-          <h3 class="vulnerability-id">CISA KEV Target: CVE-2026-48027</h3>
-          <p class="telemetry-details">Observed active exploitation trends leveraging code injection patterns against exposed enterprise deployment surfaces.</p>
-          <div class="asset-actions"><a href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog" class="action-link primary" target="_blank" rel="noopener noreferrer">CISA KEV Source &#8599;</a></div>
-        </article>
-        <article class="intel-log-card">
-          <div class="log-header-row">
-            <span class="badge badge-crit">Critical</span>
-            <span class="log-time">Source-linked</span>
+          <div class="feed-scroll" id="threat-feed">
+            <div class="feed-notice" id="threat-gate">
+              Sign in to view the live threat feed.<br>
+              <a href="#" onclick="CS.Auth.showLoginModal();return false;">Sign in free &rarr;</a>
+            </div>
           </div>
-          <h3 class="vulnerability-id">MITRE D3FEND and CVSS Baseline References</h3>
-          <p class="telemetry-details">Defensive technique taxonomy and severity scoring references remain source-only external links.</p>
-          <div class="asset-actions"><a href="https://d3fend.mitre.org/" class="action-link source" target="_blank" rel="noopener noreferrer">MITRE D3FEND &#8599;</a><a href="https://www.first.org/cvss/v4.0/specification-document" class="action-link source" target="_blank" rel="noopener noreferrer">CVSS v4.0 &#8599;</a></div>
-        </article>
+          <div class="feed-meta" id="threat-meta"></div>
+        </div>
+
+        <div class="live-panel">
+          <div class="live-panel-hdr">
+            <span class="live-dot live-dot-red"></span>
+            <span>CISA KEV — Confirmed Exploited</span>
+          </div>
+          <div class="kev-scroll" id="kev-list">
+            <div class="feed-notice">Loading KEV catalog&hellip;</div>
+          </div>
+        </div>
+
       </div>
     </section>
 
+    <!-- ── Published Intel Articles ──────────────────────────────────────── -->
+    <section class="repo-section">
+      <h2 class="repo-section-title">Published Intel Articles</h2>
+      <div id="articles-container">
+        <div class="feed-notice" id="articles-gate">
+          Sign in to view published threat intelligence articles.<br>
+          <a href="#" onclick="CS.Auth.showLoginModal();return false;">Sign in free &rarr;</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Reference Documentation ───────────────────────────────────────── -->
     <div class="repo-grid-layout two-col">
       <section class="repo-section">
         <h2 class="repo-section-title">Incident &amp; Asset Handlers</h2>
         <div class="resource-list">
-          <div class="resource-row"><div><div class="resource-title">NIST SP 800-61r3 Incident Response Recommendations</div><p class="resource-desc">Cybersecurity risk management considerations for incident response.</p></div><a href="Policy/Threat%20Intelligence/NIST%20SP%20800-61r3%20-%20Incident%20Response%20recommendations%20and%20Considerations%20for%20Cybersecurity%20Risk%20Management..pdf" class="action-link primary">Download PDF</a></div>
-          <div class="resource-row"><div><div class="resource-title">NIST SP 800-150 Cyber Threat Information Sharing</div><p class="resource-desc">Guidance for structured threat information sharing.</p></div><a href="Policy/Threat%20Intelligence/NIST%20SP%20800-150%20Guide%20to%20Cyber%20Threat%20Information%20Sharing.pdf" class="action-link primary">Download PDF</a></div>
-          <div class="resource-row"><div><div class="resource-title">NIST SP 800-40 r4 Patch Management</div><p class="resource-desc">Patch and vulnerability management planning baseline.</p></div><a href="Policy/Threat%20Intelligence/NIST%20SP%20800-40%20r4%20Patch%20Management.pdf" class="action-link primary">Download PDF</a></div>
-          <div class="resource-row"><div><div class="resource-title">NIST SP 800-137A Assessing ISCM Programs</div><p class="resource-desc">Continuous monitoring program assessment reference.</p></div><a href="Policy/Threat%20Intelligence/NIST%20SP%20800-137A%20Assessing%20Information%20Security%20Continuous%20Monitoring%20(ISCM)%20Programs.pdf" class="action-link primary">Download PDF</a></div>
+          <div class="ref-row">
+            <a href="Policy/Threat%20Intelligence/NIST%20SP%20800-61r3%20-%20Incident%20Response%20recommendations%20and%20Considerations%20for%20Cybersecurity%20Risk%20Management..pdf" class="ref-name-link">NIST SP 800-61r3 Incident Response Recommendations</a>
+            <p class="ref-desc">Cybersecurity risk management considerations for incident response.</p>
+          </div>
+          <div class="ref-row">
+            <a href="Policy/Threat%20Intelligence/NIST%20SP%20800-150%20Guide%20to%20Cyber%20Threat%20Information%20Sharing.pdf" class="ref-name-link">NIST SP 800-150 Cyber Threat Information Sharing</a>
+            <p class="ref-desc">Guidance for structured threat information sharing.</p>
+          </div>
+          <div class="ref-row">
+            <a href="Policy/Threat%20Intelligence/NIST%20SP%20800-40%20r4%20Patch%20Management.pdf" class="ref-name-link">NIST SP 800-40 r4 Patch Management</a>
+            <p class="ref-desc">Patch and vulnerability management planning baseline.</p>
+          </div>
+          <div class="ref-row">
+            <a href="Policy/Threat%20Intelligence/NIST%20SP%20800-137A%20Assessing%20Information%20Security%20Continuous%20Monitoring%20(ISCM)%20Programs.pdf" class="ref-name-link">NIST SP 800-137A Assessing ISCM Programs</a>
+            <p class="ref-desc">Continuous monitoring program assessment reference.</p>
+          </div>
         </div>
       </section>
+
       <section class="repo-section">
         <h2 class="repo-section-title">Investigative Forensics</h2>
         <div class="resource-list">
-          <div class="resource-row"><div><div class="resource-title">INTERPOL Cybercrime and Electronic Evidence Guide</div><p class="resource-desc">Criminal justice statistics and electronic evidence reference.</p></div><a href="Policy/Threat%20Intelligence/INTERPOL%20-%20Guide%20for%20Criminal%20Justice%20Statistics%20on%20Cybercrime%20and%20Electronic%20Evidence.pdf" class="action-link primary">Download PDF</a></div>
-          <div class="resource-row"><div><div class="resource-title">NIST IR 8428 DFIR Framework for OT</div><p class="resource-desc">Digital forensics and incident response for operational technology.</p></div><a href="Policy/Threat%20Intelligence/NIST%20IR%208428%20-%20Digital%20Forensics%20and%20Incident%20Response%20(DFIR)%20Framework%20for%20Operational%20Technology%20(OT).%20.pdf" class="action-link primary">Download PDF</a></div>
-          <div class="resource-row"><div><div class="resource-title">NIST IR 8387 Digital Evidence Preservation</div><p class="resource-desc">Evidence handler considerations for digital preservation.</p></div><a href="Policy/Threat%20Intelligence/NIST%20IR%208387%20-%20Digital%20Evidence%20Preservation.%20Considerations%20for%20Evidence%20Handlers.%20pdf.pdf" class="action-link primary">Download PDF</a></div>
+          <div class="ref-row">
+            <a href="Policy/Threat%20Intelligence/INTERPOL%20-%20Guide%20for%20Criminal%20Justice%20Statistics%20on%20Cybercrime%20and%20Electronic%20Evidence.pdf" class="ref-name-link">INTERPOL Cybercrime and Electronic Evidence Guide</a>
+            <p class="ref-desc">Criminal justice statistics and electronic evidence reference.</p>
+          </div>
+          <div class="ref-row">
+            <a href="Policy/Threat%20Intelligence/NIST%20IR%208428%20-%20Digital%20Forensics%20and%20Incident%20Response%20(DFIR)%20Framework%20for%20Operational%20Technology%20(OT).%20.pdf" class="ref-name-link">NIST IR 8428 DFIR Framework for OT</a>
+            <p class="ref-desc">Digital forensics and incident response for operational technology.</p>
+          </div>
+          <div class="ref-row">
+            <a href="Policy/Threat%20Intelligence/NIST%20IR%208387%20-%20Digital%20Evidence%20Preservation.%20Considerations%20for%20Evidence%20Handlers.%20pdf.pdf" class="ref-name-link">NIST IR 8387 Digital Evidence Preservation</a>
+            <p class="ref-desc">Evidence handler considerations for digital preservation.</p>
+          </div>
         </div>
       </section>
     </div>
@@ -80,16 +277,183 @@
     <section class="repo-section">
       <h2 class="repo-section-title">Risk Calculation Baselines</h2>
       <div class="resource-list">
-        <div class="resource-row"><div><div class="resource-title">NIST SP 800-30 r1 Guide for Conducting Risk Assessments</div><p class="resource-desc">Risk assessment methodology baseline.</p></div><a href="Policy/Threat%20Intelligence/NIST%20SP%20800-30%20r1%20Guide%20for%20Conducting%20Risk%20Assessments.pdf" class="action-link primary">Download PDF</a></div>
-        <div class="resource-row"><div><div class="resource-title">NIST SP 800-34 Contingency Planning Guide</div><p class="resource-desc">Contingency planning reference for federal information systems.</p></div><a href="Policy/Threat%20Intelligence/NIST%20SP%20800-34%20Contingency%20Planning%20Guide%20for%20Federal%20Information%20Systems.pdf" class="action-link primary">Download PDF</a></div>
-        <div class="resource-row"><div><div class="resource-title">NIST SP 800-46r2 Telework, Remote Access, and BYOD Security</div><p class="resource-desc">Enterprise telework and remote access security guidance.</p></div><a href="Policy/Threat%20Intelligence/NIST%20SP%20800-46r2%20Guide%20to%20Enterprise%20Telework,%20Remote%20Access,%20%26%20BYOD%20security.pdf" class="action-link primary">Download PDF</a></div>
+        <div class="ref-row">
+          <a href="Policy/Threat%20Intelligence/NIST%20SP%20800-30%20r1%20Guide%20for%20Conducting%20Risk%20Assessments.pdf" class="ref-name-link">NIST SP 800-30 r1 Guide for Conducting Risk Assessments</a>
+          <p class="ref-desc">Risk assessment methodology baseline.</p>
+        </div>
+        <div class="ref-row">
+          <a href="Policy/Threat%20Intelligence/NIST%20SP%20800-34%20Contingency%20Planning%20Guide%20for%20Federal%20Information%20Systems.pdf" class="ref-name-link">NIST SP 800-34 Contingency Planning Guide</a>
+          <p class="ref-desc">Contingency planning reference for federal information systems.</p>
+        </div>
+        <div class="ref-row">
+          <a href="Policy/Threat%20Intelligence/NIST%20SP%20800-46r2%20Guide%20to%20Enterprise%20Telework,%20Remote%20Access,%20%26%20BYOD%20security.pdf" class="ref-name-link">NIST SP 800-46r2 Telework, Remote Access, and BYOD Security</a>
+          <p class="ref-desc">Enterprise telework and remote access security guidance.</p>
+        </div>
       </div>
     </section>
+
+    <section class="repo-section">
+      <h2 class="repo-section-title">Active Source References</h2>
+      <div class="resource-list">
+        <div class="ref-row">
+          <a href="https://d3fend.mitre.org/" class="ref-name-link" target="_blank" rel="noopener noreferrer">MITRE D3FEND &mdash; Defensive Technique Taxonomy &#8599;</a>
+          <p class="ref-desc">Countermeasure knowledge base mapping defensive techniques to adversary tactics.</p>
+        </div>
+        <div class="ref-row">
+          <a href="https://attack.mitre.org/" class="ref-name-link" target="_blank" rel="noopener noreferrer">MITRE ATT&amp;CK &mdash; Adversary Tactics and Techniques &#8599;</a>
+          <p class="ref-desc">Knowledge base of adversary behavior based on real-world observations.</p>
+        </div>
+        <div class="ref-row">
+          <a href="https://www.first.org/cvss/v4.0/specification-document" class="ref-name-link" target="_blank" rel="noopener noreferrer">CVSS v4.0 Specification Document &#8599;</a>
+          <p class="ref-desc">Current vulnerability severity scoring specification from FIRST.</p>
+        </div>
+        <div class="ref-row">
+          <a href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog" class="ref-name-link" target="_blank" rel="noopener noreferrer">CISA Known Exploited Vulnerabilities Catalog &#8599;</a>
+          <p class="ref-desc">Authoritative source for confirmed, weaponized vulnerabilities requiring immediate remediation.</p>
+        </div>
+        <div class="ref-row">
+          <a href="https://nvd.nist.gov/" class="ref-name-link" target="_blank" rel="noopener noreferrer">NIST National Vulnerability Database &#8599;</a>
+          <p class="ref-desc">U.S. government repository of standards-based vulnerability management data.</p>
+        </div>
+        <div class="ref-row">
+          <a href="https://www.cisa.gov/cybersecurity-advisories" class="ref-name-link" target="_blank" rel="noopener noreferrer">CISA Cybersecurity Advisories &#8599;</a>
+          <p class="ref-desc">Current advisories, alerts, and analysis from the Cybersecurity and Infrastructure Security Agency.</p>
+        </div>
+      </div>
+    </section>
+
   </section>
 </main>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div><div class="footer-logo">CyberSense<span>.Solutions</span></div><p class="footer-mission">Delivering actionable cybersecurity intelligence, daily awareness briefings, and professional training to teams that can't afford to be caught off guard.</p></div>
+      <div class="footer-col"><h4>Platform</h4><ul><li><a href="index.html">Home</a></li><li><a href="radar.html">Threat Radar</a></li><li><a href="intelligence.html">Intel</a></li><li><a href="newsletter.html">Newsletter</a></li><li><a href="resources.html">Resources</a></li></ul></div>
+      <div class="footer-col"><h4>Legal</h4><ul><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li><li><a href="about.html">Contact Us</a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><span>&copy; 2026 CyberSense.Solutions. All rights reserved.</span><span>Security awareness starts here.</span></div>
+  </div>
+</footer>
 
 <script>window.CS_API_BASE = 'https://api.cybersense.solutions';</script>
 <script src="auth.js"></script>
 <script src="main.js"></script>
+<script>
+const API = window.CS_API_BASE;
+
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function fmtDate(ts) {
+  if (!ts) return '—';
+  return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+}
+
+function sevClass(s) {
+  if (s === 'critical') return 'sev-critical';
+  if (s === 'high')     return 'sev-high';
+  if (s === 'medium')   return 'sev-medium';
+  return 'sev-low';
+}
+
+function cvssClass(score) {
+  const n = parseFloat(score);
+  if (!Number.isFinite(n)) return '';
+  if (n >= 9) return 'cvss-crit';
+  if (n >= 7) return 'cvss-high';
+  if (n >= 4) return 'cvss-med';
+  return 'cvss-low';
+}
+
+async function loadKev() {
+  const list = document.getElementById('kev-list');
+  try {
+    const res = await fetch(`${API}/api/content/cisa-kev`);
+    if (!res.ok) throw new Error(`${res.status}`);
+    const data = await res.json();
+    const vulns = Array.isArray(data.vulnerabilities) ? data.vulnerabilities : [];
+    const recent = [...vulns]
+      .sort((a, b) => Date.parse(b.dateAdded || 0) - Date.parse(a.dateAdded || 0))
+      .slice(0, 18);
+    if (!recent.length) {
+      list.innerHTML = '<div class="feed-notice">KEV catalog unavailable.</div>';
+      return;
+    }
+    list.innerHTML = recent.map(v => `
+      <div class="kev-entry">
+        <div class="kev-cve">${esc(v.cveID)}</div>
+        <div class="kev-prod">${esc(v.vendorProject)} &mdash; ${esc(v.product)}</div>
+        <div class="kev-date">Added ${esc(fmtDate(v.dateAdded))}</div>
+      </div>`).join('');
+  } catch {
+    list.innerHTML = '<div class="feed-notice">KEV catalog temporarily unavailable.</div>';
+  }
+}
+
+async function loadThreats(user) {
+  const feed = document.getElementById('threat-feed');
+  const meta = document.getElementById('threat-meta');
+  if (!user) return;
+  try {
+    const res = await CS.Auth.apiFetch('/api/content/radar?limit=100');
+    const threats = res.data || [];
+    if (!threats.length) {
+      feed.innerHTML = '<div class="feed-notice">No threat records in the feed yet.</div>';
+      return;
+    }
+    feed.innerHTML = `
+      <table class="threat-tbl" aria-label="Live threat records">
+        <thead><tr><th>Sev</th><th>Threat</th><th>CVSS</th><th>Date</th></tr></thead>
+        <tbody>${threats.map(t => `
+          <tr>
+            <td><span class="sev-badge ${sevClass(t.severity)}">${esc(t.severity || '—')}</span></td>
+            <td>
+              <div class="t-name">${esc(t.threat_name)}</div>
+              ${t.cve_id ? `<div class="t-cve">${esc(t.cve_id)}</div>` : ''}
+            </td>
+            <td><span class="cvss-score ${cvssClass(t.cvss_score)}">${t.cvss_score != null ? esc(String(t.cvss_score)) : '—'}</span></td>
+            <td style="color:#475569;font-family:Consolas,Monaco,monospace;font-size:11px;white-space:nowrap;">${esc(fmtDate(t.ingested_at))}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+    const crit = threats.filter(t => t.severity === 'critical').length;
+    const high = threats.filter(t => t.severity === 'high').length;
+    meta.textContent = `${threats.length} records — ${crit} critical · ${high} high`;
+  } catch {
+    feed.innerHTML = '<div class="feed-notice">Threat feed temporarily unavailable.</div>';
+  }
+}
+
+async function loadArticles(user) {
+  const container = document.getElementById('articles-container');
+  if (!user) return;
+  try {
+    const res = await CS.Auth.apiFetch('/api/content/articles?section=threat&limit=30');
+    const articles = (res.data || []).filter(a => a.section === 'threat');
+    if (!articles.length) {
+      container.innerHTML = '<div class="feed-notice">No published threat intelligence articles yet.</div>';
+      return;
+    }
+    container.innerHTML = `<div class="article-list">${articles.map(a => `
+      <div class="article-row">
+        <span class="article-date">${esc(fmtDate(a.published_at))}</span>
+        <a href="intel/article.html?slug=${esc(a.slug)}" class="article-link">${esc(a.title)}</a>
+      </div>`).join('')}</div>`;
+  } catch {
+    container.innerHTML = '<div class="feed-notice">Articles temporarily unavailable.</div>';
+  }
+}
+
+function init(user) {
+  loadKev();
+  loadThreats(user);
+  loadArticles(user);
+}
+
+document.addEventListener('cs:login', e => init(e.detail));
+document.addEventListener('cs:guest', () => init(null));
+</script>
 </body>
 </html>
