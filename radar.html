@@ -240,6 +240,47 @@
 .embed body,.embed{overflow-x:hidden;}
 .embed .rdr-stats{padding:10px 16px;}
 .embed .rdr-dash{padding:12px 16px 20px;}
+
+/* ── T1: Mobile Card Stack ─────────────────── */
+.radar-mobile-view{display:none;flex-direction:column;position:relative;overflow:hidden;flex:1;}
+.radar-card{padding:11px 14px;border-bottom:1px solid rgba(255,255,255,0.05);}
+.card-top-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap;}
+.card-threat-name{font-size:12px;font-weight:700;color:rgba(255,255,255,0.85);line-height:1.35;margin-bottom:4px;}
+.card-meta-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.card-cve{font-size:10px;color:var(--cs-dimmer);font-family:var(--cs-mono);}
+.card-cvss{font-size:10px;font-family:var(--cs-mono);color:rgba(255,255,255,0.4);}
+.row-blurred{filter:blur(5px);opacity:0.25;user-select:none;pointer-events:none;}
+.conversion-curtain{position:absolute;bottom:0;left:0;right:0;height:68%;background:linear-gradient(to top,#0f172a 80%,rgba(15,23,42,0.1) 100%);display:flex;align-items:flex-end;justify-content:center;padding-bottom:22px;pointer-events:auto;}
+.curtain-cta{text-align:center;padding:0 16px;}
+.curtain-cta h4{font-size:13px;font-weight:700;color:#fff;margin:0 0 6px;text-shadow:0 0 10px rgba(0,212,255,0.35);}
+.curtain-cta p{font-size:11px;color:rgba(255,255,255,0.45);margin:0 0 14px;line-height:1.5;}
+@media(max-width:768px){
+  .rdr-feed-scroll{display:none!important;}
+  .radar-mobile-view{display:flex;}
+  #radar-gate{display:none!important;}
+}
+@media(min-width:769px){.radar-mobile-view{display:none!important;}}
+
+/* ── T2: Asset Tag Pills ───────────────────── */
+.asset-tag-pills{display:inline-flex;gap:4px;flex-wrap:wrap;margin-top:3px;}
+.asset-tag-pill{display:inline-flex;align-items:center;padding:2px 6px;border-radius:10px;font-size:9px;font-weight:700;letter-spacing:.05em;border:1px solid;white-space:nowrap;font-family:var(--cs-mono);}
+.tag-ai{background:rgba(124,111,255,0.12);color:#a78bfa;border-color:rgba(124,111,255,0.3);}
+.tag-cloud{background:rgba(0,212,255,0.09);color:#67e8f9;border-color:rgba(0,212,255,0.24);}
+
+/* ── T3: Heatmap Tooltip ───────────────────── */
+.hm-tooltip{position:fixed;z-index:9000;background:#07111f;border:1px solid rgba(0,212,255,0.35);border-radius:8px;padding:13px 16px;max-width:290px;box-shadow:0 0 20px rgba(0,212,255,0.12);pointer-events:none;}
+.hm-tooltip-coords{font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--cs-cyan);font-family:var(--cs-mono);margin-bottom:8px;}
+.hm-tooltip-brief{font-size:12px;color:rgba(255,255,255,0.72);line-height:1.6;}
+.hm-cell{cursor:pointer;transition:transform .1s,box-shadow .12s;}
+.hm-cell:hover{transform:scale(1.14);box-shadow:0 0 8px rgba(0,212,255,0.3);}
+
+/* ── T4: Historical Mode Toggle ────────────── */
+.hist-mode-toggle{display:flex;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,0.05);flex-shrink:0;gap:0;}
+.hist-mode-btn{padding:5px 14px;font-size:9px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--cs-dimmer);cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:transparent;transition:all .15s;font-family:var(--cs-mono);}
+.hist-mode-btn:first-child{border-radius:4px 0 0 4px;}
+.hist-mode-btn:last-child{border-radius:0 4px 4px 0;border-left:none;}
+.hist-mode-btn.active{background:rgba(0,212,255,0.11);border-color:rgba(0,212,255,0.42);color:var(--cs-cyan);}
+.hist-mode-btn:hover:not(.active){color:rgba(255,255,255,0.5);border-color:rgba(255,255,255,0.18);}
 </style>
 </head>
 <body>
@@ -412,6 +453,7 @@
             </div>
           </div>
         </div>
+        <div id="radar-mobile-view" class="radar-mobile-view" aria-label="Threat radar mobile view"></div>
         <div class="rdr-meta" id="radar-meta"></div>
         <a href="threat.html" class="rdr-archive-link">Browse Threat Archive &rarr;</a>
       </div>
@@ -472,6 +514,10 @@
         <div class="rdr-panel-hdr" onclick="expandPanel('historical')">
           <span>10-Year Historical Database</span>
           <span class="rdr-expand-btn" title="Expand">⤢</span>
+        </div>
+        <div class="hist-mode-toggle">
+          <button class="hist-mode-btn active" onclick="switchHistMode('volume',this)">View Volume</button>
+          <button class="hist-mode-btn" onclick="switchHistMode('vector',this)">View Vector</button>
         </div>
         <div class="hist-tabs" id="hist-tabs">
           <div class="hist-tab active" onclick="switchHistTab('industry',this)">By Industry</div>
@@ -682,6 +728,50 @@ const HIST = {
   }
 };
 
+// T4: Threat actor attribution distribution by view dimension
+const HIST_VECTOR = {
+  industry:{
+    labels:['Finance','Healthcare','Government','Technology','Energy','Retail'],
+    datasets:[
+      {label:'Nation-State / Espionage',data:[35,28,55,42,48,18],color:'#7c6fff'},
+      {label:'Ransomware-as-a-Service', data:[42,58,30,38,35,62],color:'#ff3b3b'},
+      {label:'Hacktivism',              data:[23,14,15,20,17,20],color:'#ffd700'},
+    ],
+    tableHead:['Industry','Nation-State','RaaS','Hacktivism'],
+    tableRows:[['Finance','35%','42%','23%'],['Healthcare','28%','58%','14%'],['Government','55%','30%','15%'],['Technology','42%','38%','20%'],['Energy','48%','35%','17%'],['Retail','18%','62%','20%']],
+  },
+  type:{
+    labels:['Remote Code Execution','Ransomware','Phishing','Privilege Escalation','Auth Bypass','Supply Chain','Zero-Day'],
+    datasets:[
+      {label:'Nation-State / Espionage',data:[48,12,22,38,30,65,58],color:'#7c6fff'},
+      {label:'Ransomware-as-a-Service', data:[28,82,44,38,42,25,22],color:'#ff3b3b'},
+      {label:'Hacktivism',              data:[24,6,34,24,28,10,20], color:'#ffd700'},
+    ],
+    tableHead:['Attack Type','Nation-State','RaaS','Hacktivism'],
+    tableRows:[['Remote Code Execution','48%','28%','24%'],['Ransomware','12%','82%','6%'],['Phishing','22%','44%','34%'],['Privilege Escalation','38%','38%','24%'],['Auth Bypass','30%','42%','28%'],['Supply Chain Attack','65%','25%','10%'],['Zero-Day Exploit','58%','22%','20%']],
+  },
+  country:{
+    labels:['United States','United Kingdom','Germany','Japan','France','Australia','Canada','India','Brazil','Italy'],
+    datasets:[
+      {label:'Nation-State / Espionage',data:[40,38,45,52,35,30,32,28,22,34],color:'#7c6fff'},
+      {label:'Ransomware-as-a-Service', data:[38,44,38,30,48,52,50,55,62,48],color:'#ff3b3b'},
+      {label:'Hacktivism',              data:[22,18,17,18,17,18,18,17,16,18],color:'#ffd700'},
+    ],
+    tableHead:['Country','Nation-State','RaaS','Hacktivism'],
+    tableRows:[['United States','40%','38%','22%'],['United Kingdom','38%','44%','18%'],['Germany','45%','38%','17%'],['Japan','52%','30%','18%'],['France','35%','48%','17%'],['Australia','30%','52%','18%'],['Canada','32%','50%','18%'],['India','28%','55%','17%'],['Brazil','22%','62%','16%'],['Italy','34%','48%','18%']],
+  },
+  financial:{
+    labels:['2015','2016','2017','2018','2019','2020','2021','2022','2023','2024'],
+    datasets:[
+      {label:'Nation-State / Espionage',data:[42,38,44,48,40,35,32,38,41,44],color:'#7c6fff'},
+      {label:'Ransomware-as-a-Service', data:[18,28,34,38,44,50,54,44,42,40],color:'#ff3b3b'},
+      {label:'Hacktivism',              data:[40,34,22,14,16,15,14,18,17,16],color:'#ffd700'},
+    ],
+    tableHead:['Year','Nation-State %','RaaS %','Hacktivism %'],
+    tableRows:[['2015','42%','18%','40%'],['2016','38%','28%','34%'],['2017','44%','34%','22%'],['2018','48%','38%','14%'],['2019','40%','44%','16%'],['2020','35%','50%','15%'],['2021','32%','54%','14%'],['2022','38%','44%','18%'],['2023','41%','42%','17%'],['2024','44%','40%','16%']],
+  },
+};
+
 /* ════════════════════════════════════════════════
    STATE
 ════════════════════════════════════════════════ */
@@ -695,6 +785,7 @@ let radarAngle = 0;
 let radarAnimId = null;
 let radarBlips = [];
 let currentHistTab = 'industry';
+let currentHistMode = 'volume';
 let kevData = [...CISA_KEVS_FALLBACK];
 let kevLive = false;
 
@@ -815,6 +906,23 @@ function renderTop10(threats) {
 }
 
 /* ════════════════════════════════════════════════
+   T2: ASSET TAGGING
+════════════════════════════════════════════════ */
+const AI_INFRA_RE   = /litellm|langflow|langgraph|ollama|\bllm\b|agentic\s+ai|ai\s+infra/i;
+const CLOUD_NATIVE_RE = /kubernetes|k8s|\bdocker\b|container|serverless|\blambda\b|cloud.native|terraform|\biac\b|\bhelm\b|istio|envoy|cloud\s+config/i;
+
+function computeAssetTags(text) {
+  const tags = [];
+  if (AI_INFRA_RE.test(text))    tags.push({ label:'AI Infrastructure', cls:'tag-ai' });
+  if (CLOUD_NATIVE_RE.test(text)) tags.push({ label:'Cloud Native',      cls:'tag-cloud' });
+  return tags;
+}
+function renderAssetTags(tags) {
+  if (!tags.length) return '';
+  return `<div class="asset-tag-pills">${tags.map(t=>`<span class="asset-tag-pill ${t.cls}">${t.label}</span>`).join('')}</div>`;
+}
+
+/* ════════════════════════════════════════════════
    LIVE RADAR FEED
 ════════════════════════════════════════════════ */
 function threatRow(t) {
@@ -822,12 +930,46 @@ function threatRow(t) {
   const article = t.article_link
     ? `<a href="intel/article.html?slug=${t.article_link.split('/').pop()}" class="rdr-link">Brief →</a>`
     : `<span class="rdr-pending">Pending</span>`;
+  const tagText = (t.threat_name||'') + ' ' + (t.cve_id||'') + ' ' + (t.tags||[]).join(' ');
+  const tagHtml = renderAssetTags(computeAssetTags(tagText));
   return `<tr class="threat-row" data-severity="${t.severity||''}" data-name="${(t.threat_name||'').toLowerCase()}" data-cve="${(t.cve_id||'').toLowerCase()}">
     <td>${sevBadge(t.severity)}</td>
-    <td class="rdr-cell-name">${t.threat_name}<div class="rdr-cell-cve">${t.cve_id||''}</div></td>
+    <td class="rdr-cell-name">${t.threat_name}${tagHtml}<div class="rdr-cell-cve">${t.cve_id||''}</div></td>
     <td class="rdr-cell-cvss">${parseFloat(t.cvss_score||0).toFixed(1)}</td>
     <td>${article}</td>
   </tr>`;
+}
+
+/* ── T1: Mobile card helpers ── */
+function mobileCard(t, isBlurred) {
+  const tagText = (t.threat_name||'') + ' ' + (t.cve_id||'') + ' ' + (t.tags||[]).join(' ');
+  const tagHtml = renderAssetTags(computeAssetTags(tagText));
+  return `<div class="radar-card${isBlurred?' row-blurred':''}">
+    <div class="card-top-row">${sevBadge(t.severity)}${t.cve_id?`<span class="card-cve">${t.cve_id}</span>`:''}</div>
+    <div class="card-threat-name">${t.threat_name||'—'}</div>
+    ${tagHtml}
+    <div class="card-meta-row"><span class="card-cvss">CVSS ${parseFloat(t.cvss_score||0).toFixed(1)}</span></div>
+  </div>`;
+}
+
+function renderMobileCards(threats, isSub) {
+  const el = document.getElementById('radar-mobile-view');
+  if (!el || !threats.length) { if(el) el.innerHTML=''; return; }
+  let html = mobileCard(threats[0], false);
+  const rest = threats.slice(1);
+  if (!isSub && rest.length) {
+    html += rest.slice(0, 5).map(t => mobileCard(t, true)).join('');
+    html += `<div class="conversion-curtain">
+      <div class="curtain-cta">
+        <h4>Unlock Full Radar Feed</h4>
+        <p>All tracked threats plus real-time CVE alerts. Free to start.</p>
+        <a href="newsletter.html#subscribe" class="btn btn-primary btn-sm">Subscribe Free</a>
+      </div>
+    </div>`;
+  } else {
+    html += rest.map(t => mobileCard(t, false)).join('');
+  }
+  el.innerHTML = html;
 }
 
 function renderFeed(threats, isSub) {
@@ -843,6 +985,7 @@ function renderFeed(threats, isSub) {
   if (hidden.length) blurred.innerHTML = hidden.map(threatRow).join('');
   const showing = isSub ? threats.length : Math.min(FREE_LIMIT,threats.length);
   meta.textContent = `Showing ${showing} of ${threats.length} threats · NVD CVSS + CyberSense analyst severity`;
+  renderMobileCards(threats, isSub);
 }
 
 function filterFeed() {
@@ -895,10 +1038,11 @@ function fmtDate(str) {
 }
 
 function kevEntryHTML(k) {
+  const tagHtml = renderAssetTags(computeAssetTags((k.attack||'') + ' ' + (k.desc||'') + ' ' + (k.product||'')));
   return `<div class="kev-entry">
     <div class="kev-row-top">
       <div>
-        <div class="kev-cve">${k.cve}</div>
+        <div class="kev-cve">${k.cve}${tagHtml ? `&nbsp;${tagHtml}` : ''}</div>
         <div class="kev-vendor">${k.vendor} &mdash; <span style="color:rgba(255,255,255,0.38);">${k.product}</span></div>
       </div>
       <span class="kev-badge">KEV</span>
@@ -981,11 +1125,49 @@ async function loadCISAKEV() {
 /* ════════════════════════════════════════════════
    HISTORICAL DATABASE
 ════════════════════════════════════════════════ */
+function switchHistMode(mode, el) {
+  currentHistMode = mode;
+  document.querySelectorAll('.hist-mode-btn').forEach(b=>b.classList.remove('active'));
+  if (el) el.classList.add('active');
+  if (mode === 'vector') renderHistoricalVector(currentHistTab);
+  else renderHistorical(currentHistTab);
+}
+
 function switchHistTab(tab, el) {
   currentHistTab = tab;
   document.querySelectorAll('.hist-tab').forEach(t=>t.classList.remove('active'));
   if (el) el.classList.add('active');
-  renderHistorical(tab);
+  if (currentHistMode === 'vector') renderHistoricalVector(tab);
+  else renderHistorical(tab);
+}
+
+function renderHistoricalVector(tab) {
+  if (charts.hist) { charts.hist.destroy(); charts.hist = null; }
+  const d = HIST_VECTOR[tab];
+  const ctx = document.getElementById('chart-hist');
+  charts.hist = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: d.labels,
+      datasets: d.datasets.map(ds=>({ label:ds.label, data:ds.data, backgroundColor:ds.color+'99', borderColor:ds.color, borderWidth:1, borderRadius:2 }))
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{labels:{color:'rgba(255,255,255,0.5)',boxWidth:10,padding:10,font:{size:9}},position:'top'},
+        tooltip:{mode:'index',intersect:false,callbacks:{label:c=>` ${c.dataset.label}: ${c.raw}%`}}
+      },
+      scales:{
+        x:{stacked:true,grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'rgba(255,255,255,0.3)',font:{size:8},maxRotation:35}},
+        y:{stacked:true,max:100,grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'rgba(255,255,255,0.3)',callback:v=>v+'%'},beginAtZero:true}
+      }
+    }
+  });
+  const colors = d.datasets.map(ds=>ds.color);
+  document.getElementById('hist-thead').innerHTML='<tr>'+d.tableHead.map(h=>`<th>${h}</th>`).join('')+'</tr>';
+  document.getElementById('hist-tbody').innerHTML=d.tableRows.map(row=>
+    '<tr>'+row.map((c,i)=>`<td${i>0?` style="color:${colors[i-1]||'var(--cs-cyan)'};font-weight:700;"`:''} >${c}</td>`).join('')+'</tr>'
+  ).join('');
 }
 
 function renderHistorical(tab) {
@@ -1242,6 +1424,62 @@ function computeHeatmapRows(threats) {
     .filter(row=>row.vals.some(v=>v>0));
   return rows.length ? rows : null;
 }
+/* ── T3: Tooltip map ── */
+const HM_TOOLTIP_MAP = {
+  'Injection|Edge Devices':        'Prioritize firmware input validation on edge devices. Enforce strict allowlists for CLI parameters and management web UIs exposed to untrusted networks.',
+  'Injection|Cloud':               'Audit IAM permission boundaries. Parameterize all cloud API calls and enforce input validation on serverless function triggers and API gateway inputs.',
+  'Injection|OS / Kernel':         'Patch system call interfaces promptly. Enforce seccomp profiles and restrict kernel module loading to signed, verified binaries only.',
+  'Injection|Software':            'Enforce parameterized queries and prepared statements across all data access layers. Integrate SAST into CI/CD gates for injection pattern detection.',
+  'Memory Corruption|Edge Devices':'Enforce ASLR and stack canaries in firmware builds. Segment device memory and disable debug interfaces in production deployments.',
+  'Memory Corruption|Cloud':       'Use memory-safe container runtimes. Enforce strict resource limits and isolate workloads with namespace-level and cgroup controls.',
+  'Memory Corruption|OS / Kernel': 'Apply kernel hardening patches immediately — this is the highest-activity cluster for memory corruption. Enable KASLR and enforce kernel pointer restrictions.',
+  'Memory Corruption|Software':    'Migrate sensitive parsing components to memory-safe languages where feasible. Enforce bounds checking and fuzz critical parsing routines in CI.',
+  'Authentication|Edge Devices':   'Disable default credentials and enforce certificate-based authentication on all management interfaces. Rotate credentials after any device replacement.',
+  'Authentication|Cloud':          'High activity cluster: Enforce short-lived IAM session tokens. Audit orphaned service accounts for wildcard privileges and rotate credentials on a defined cycle.',
+  'Authentication|OS / Kernel':    'Enforce PAM hardening and key-based SSH authentication. Disable password-based root login and audit all privilege escalation paths.',
+  'Authentication|Software':       'Implement MFA across all authentication surfaces. Rotate API keys and session tokens regularly. Audit source for hardcoded credentials.',
+  'Cryptographic|Edge Devices':    'Disable legacy cipher suites (TLS 1.0/1.1, RC4, DES) in firmware. Ensure OTA update channels enforce cryptographic signature validation.',
+  'Cryptographic|Cloud':           'Enforce TLS 1.3 in transit and AES-256 at rest for all storage volumes and object buckets. Audit key management lifecycle and rotation policy.',
+  'Cryptographic|OS / Kernel':     'Ensure disk encryption keys are stored in HSMs or TPM-backed keystores. Audit kernel entropy sources used for key material generation.',
+  'Cryptographic|Software':        'Audit cryptographic library versions. Replace deprecated algorithms (MD5, SHA-1). Enforce CSPRNG for all session token and key generation.',
+  'Misconfiguration|Edge Devices': 'Automate compliance scanning for edge device configs. Remove unused services and close non-essential ports on management interfaces.',
+  'Misconfiguration|Cloud':        'High activity cluster: Run CSPM continuously. Enforce least-privilege IAM and scan for publicly exposed storage buckets and open security groups.',
+  'Misconfiguration|OS / Kernel':  'Enforce CIS Benchmark baselines via automated scanning. Remove unnecessary system services and restrict kernel module loading to signed binaries.',
+  'Misconfiguration|Software':     'Harden application server configurations. Remove default error pages and debug endpoints. Enforce security headers on all HTTP responses.',
+  'Access Control|Edge Devices':   'Enforce network segmentation and ACL-level isolation between device management and data planes.',
+  'Access Control|Cloud':          'High activity cluster: Ensure IAM policies enforce short-lived sessions. Verify that orphaned service accounts do not possess wildcard privileges. Audit cross-account trust relationships.',
+  'Access Control|OS / Kernel':    'Audit sudo rules and SUID binaries. Enforce mandatory access control profiles (AppArmor / SELinux) on all high-value processes.',
+  'Access Control|Software':       'Enforce RBAC with explicit deny defaults. Audit all authorization check bypasses and validate object-level access on every request path.',
+};
+
+let hmTooltipEl = null;
+function getHmTooltip() {
+  if (!hmTooltipEl) {
+    hmTooltipEl = document.createElement('div');
+    hmTooltipEl.className = 'hm-tooltip';
+    hmTooltipEl.style.display = 'none';
+    document.body.appendChild(hmTooltipEl);
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.hm-cell')) hmTooltipEl.style.display = 'none';
+    });
+  }
+  return hmTooltipEl;
+}
+function showHmTooltip(e, rowName, tierName, val) {
+  e.stopPropagation();
+  const tt = getHmTooltip();
+  const brief = HM_TOOLTIP_MAP[`${rowName}|${tierName}`]
+    || `Activity cluster detected: ${rowName} × ${tierName}. Review controls specific to this tier.`;
+  tt.innerHTML = `<div class="hm-tooltip-coords">${rowName} &times; ${tierName} &mdash; Activity ${val}/10</div><div class="hm-tooltip-brief">${brief}</div>`;
+  tt.style.display = 'block';
+  const r = tt.getBoundingClientRect(), vw = window.innerWidth, vh = window.innerHeight;
+  let x = e.clientX + 12, y = e.clientY + 12;
+  if (x + r.width  > vw - 8) x = e.clientX - r.width  - 12;
+  if (y + r.height > vh - 8) y = e.clientY - r.height - 12;
+  tt.style.left = Math.max(8, x) + 'px';
+  tt.style.top  = Math.max(8, y) + 'px';
+}
+
 let liveHmRows = null;
 function hmColor(v) {
   // 0–10 → low navy to high cyan
@@ -1262,8 +1500,11 @@ function buildHeatmapHTML(expanded, rows) {
     </tr></thead>
     <tbody>${rows.map(row=>`<tr>
       <td style="font-family:var(--cs-mono);padding:${cellPad};color:rgba(255,255,255,0.65);">${row.name}</td>
-      ${row.vals.map(v=>`<td style="padding:${cellPad};">
-        <span class="hm-cell" style="background:${hmColor(v)};color:${v>=7?'rgba(255,255,255,0.9)':'rgba(255,255,255,0.55)'};">${v}</span>
+      ${row.vals.map((v,ti)=>`<td style="padding:${cellPad};">
+        <span class="hm-cell"
+          style="background:${hmColor(v)};color:${v>=7?'rgba(255,255,255,0.9)':'rgba(255,255,255,0.55)'};"
+          onclick="showHmTooltip(event,'${row.name}','${HM_TIERS[ti]}',${v})"
+          role="button" tabindex="0" aria-label="${row.name} × ${HM_TIERS[ti]}, activity ${v}">${v}</span>
       </td>`).join('')}
     </tr>`).join('')}</tbody>
   </table>`;
