@@ -1493,7 +1493,10 @@ async function refreshArticleAgentTasks(agentName, taskType) {
       WHERE t.agent_name = $1
         AND t.task_type = $2
         AND t.content_type = 'article'
-        AND t.status IN ('queued', 'failed', 'escalated')
+        AND (
+          t.status IN ('queued', 'failed', 'escalated')
+          OR (t.status = 'in_progress' AND t.started_at < now() - INTERVAL '5 minutes')
+        )
         AND a.pipeline_status::text = ANY($3)
       ORDER BY t.content_id, t.started_at DESC NULLS LAST, t.id DESC
     )
