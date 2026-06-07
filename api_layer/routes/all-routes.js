@@ -1463,6 +1463,21 @@ adminRouter.post('/trigger/manual-pipeline-start', requireAdminToken(['gm']), as
     if (!growth || typeof growth !== 'string')
       return res.status(400).json(err('INVALID_INPUT', 'growth must be a URL string'));
 
+    // Idempotency check at route level — return a clear user-facing response, not a 500
+    const targetDate = edition_date || (() => {
+      const d = new Date(); d.setDate(d.getDate() + 1);
+      return d.toLocaleDateString('en-CA', { timeZone: 'America/Chicago' });
+    })();
+    const existing = await db.getBriefingByDate(targetDate);
+    if (existing) {
+      return res.json({
+        success: false,
+        existing_briefing_id: existing.id,
+        existing_status: existing.pipeline_status,
+        message: `Briefing already exists for ${targetDate} (status: ${existing.pipeline_status}). Delete it to start fresh, or choose a different edition date.`,
+      });
+    }
+
     const { executeRuthManualInitial } = require('../services/ruth_runtime');
     const result = await executeRuthManualInitial({ threats, growth, innovations, edition_date });
 

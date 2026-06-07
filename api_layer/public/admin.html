@@ -652,6 +652,16 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
                 <button class="pc-btn" id="btn-mp-start" onclick="startManualPipeline()">Start Pipeline</button>
               </div>
 
+              <!-- Existing briefing conflict -->
+              <div id="mp-existing-conflict" style="display:none;margin:6px 0 2px;padding:10px;background:rgba(220,38,38,.08);border:0.5px solid #dc2626;border-radius:5px;font-size:11px;">
+                <div style="color:#dc2626;font-weight:600;margin-bottom:4px;">Briefing already exists for this date</div>
+                <div style="color:var(--color-text-secondary);margin-bottom:8px;">Status: <span id="mp-existing-status" style="font-weight:600;"></span> — ID: <code id="mp-existing-id" style="font-size:10px;user-select:all;"></code></div>
+                <div style="display:flex;gap:6px;">
+                  <button class="pc-btn" style="background:#dc2626;font-size:11px;padding:5px 10px;" onclick="deleteExistingBriefing()">Delete &amp; Start Over</button>
+                  <span style="font-size:10px;color:var(--color-text-tertiary);align-self:center;">Or pick a different edition date above</span>
+                </div>
+              </div>
+
               <!-- Step 2 — Kirby -->
               <div class="mp-step-label">Step 2 — Training Byte</div>
               <div class="pc-trigger-row">
@@ -2087,6 +2097,14 @@ async function startManualPipeline() {
       document.getElementById('mp-step2-status').textContent = `Kirby will process: "${esc(res.kirby_threat_title || res.kirby_threat_url)}"`;
       btn.classList.remove('loading'); btn.classList.add('success'); btn.textContent = '✓ Done';
       document.getElementById('btn-mp-kirby').disabled = false;
+      document.getElementById('mp-existing-conflict').style.display = 'none';
+    } else if (res.existing_briefing_id) {
+      pcLog(`Step 1 blocked: ${res.message}`, false);
+      document.getElementById('mp-step1-status').textContent = `Conflict: ${res.existing_status} briefing exists for this date`;
+      document.getElementById('mp-existing-id').textContent = res.existing_briefing_id;
+      document.getElementById('mp-existing-status').textContent = res.existing_status || '';
+      document.getElementById('mp-existing-conflict').style.display = '';
+      btn.disabled = false; btn.textContent = 'Start Pipeline'; btn.classList.remove('loading');
     } else {
       throw new Error(res.error || res.message || 'Step 1 failed');
     }
@@ -2094,6 +2112,20 @@ async function startManualPipeline() {
     pcLog(`Step 1 failed: ${e.message}`, false);
     btn.disabled = false; btn.textContent = 'Start Pipeline'; btn.classList.remove('loading');
     document.getElementById('mp-step1-status').textContent = `Failed: ${e.message}`;
+  }
+}
+
+async function deleteExistingBriefing() {
+  const id = document.getElementById('mp-existing-id').textContent.trim();
+  if (!id) return;
+  if (!confirm(`Delete briefing ${id}? This cannot be undone.`)) return;
+  try {
+    await CS.Auth.apiFetch(`/api/admin/briefings/${id}`, { method: 'DELETE' });
+    pcLog(`✓ Briefing ${id} deleted — click Start Pipeline to begin fresh.`, true);
+    document.getElementById('mp-existing-conflict').style.display = 'none';
+    document.getElementById('mp-step1-status').textContent = 'Enter 6 URLs above then start';
+  } catch (e) {
+    pcLog(`Delete failed: ${e.message}`, false);
   }
 }
 

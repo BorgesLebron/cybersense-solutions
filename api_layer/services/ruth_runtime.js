@@ -508,9 +508,6 @@ async function executeRuthManualInitial({ threats: threatUrls, growth: growthUrl
 
   console.log(JSON.stringify({ ts, runtime: 'ruth', event: 'MANUAL_INITIAL_START', edition_date: editionDate }));
 
-  const existing = await db.getBriefingByDate(editionDate);
-  if (existing) throw new Error(`Briefing already exists for ${editionDate} — delete it first or choose a different date`);
-
   const [threatContents, innovationContents, growthContent] = await Promise.all([
     Promise.all(threatUrls.map(url => fetchArticleContent(url))),
     Promise.all(innovationUrls.map(url => fetchArticleContent(url))),
