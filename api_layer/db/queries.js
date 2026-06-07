@@ -526,6 +526,8 @@ const createBriefing = ({ edition_date, edition_number, subject_line, body_md, t
 
 const getBriefingByDate = (date) => q1('SELECT * FROM briefings WHERE edition_date=$1', [date]);
 const getBriefingById = (id) => q1('SELECT * FROM briefings WHERE id=$1', [id]);
+const updateBriefingTrainingByte = (id, training_byte_id) =>
+  q1('UPDATE briefings SET training_byte_id=$2 WHERE id=$1 RETURNING *', [id, training_byte_id]);
 
 const updateBriefingEditorial = (id, { subject_line, body_md, description, file_path }) => {
   const updates = [];
@@ -1064,7 +1066,7 @@ module.exports = {
   processIntoRepository, getRepositoryQueue, getRepositorySummary, listApprovedBriefingPreviews, getRepositoryItemDetail, getApprovedContentReferences,
   createArticle, getArticle, getArticleById, listArticles, listArticlesForPreview, advanceArticleStatus, incrementArticleViews,
   getPublishedArticleStats, getArticlePipelineQueue,
-  createBriefing, getBriefingByDate, getBriefingById, updateBriefingEditorial, listBriefings, advanceBriefingStatus, revertBriefingForRevision,
+  createBriefing, getBriefingByDate, getBriefingById, updateBriefingEditorial, updateBriefingTrainingByte, listBriefings, advanceBriefingStatus, revertBriefingForRevision,
   logPipelineEvent, countRejections, countAgentRejections24h, listPipelineEvents, getKirbyPipelineEvents,
   createSocialPost, updateSocialMetrics, listSocialPosts, getSocialPerformance,
   createTrainingModule, getTrainingModulesByStatus, listTrainingModules, getTrainingModule, advanceModuleStatus,

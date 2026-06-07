@@ -277,4 +277,45 @@ async function pollKirbyTasks() {
   }
 }
 
-module.exports = { pollKirbyTasks, ensureKirbyToken };
+// ── Manual pipeline ───────────────────────────────────────────────────────────
+
+async function produceManualTrainingByte({ briefingId, threatUrl, threatTitle, threatContent }) {
+  const ts = new Date().toISOString();
+  console.log(JSON.stringify({ ts, runtime: 'kirby', event: 'MANUAL_BYTE_START', briefing_id: briefingId }));
+
+  const prompt = `THREAT DATA:
+Title: ${threatTitle}
+Source: ${threatUrl}
+Content: ${threatContent}
+
+Task: Generate a Daily Training Byte based on this threat.`;
+
+  const kirbyMsg = await getKirbyClient().messages.create({
+    model:      KIRBY_MODEL,
+    max_tokens: 512,
+    system:     KIRBY_SYSTEM_PROMPT,
+    messages:   [{ role: 'user', content: prompt }],
+  });
+  const text = (kirbyMsg.content[0]?.text || '').trim();
+
+  const title = `Training Byte: ${threatTitle.slice(0, 80)}`;
+  const byte = await db.createTrainingModule({
+    title,
+    type:         'training_byte',
+    phase:        'library',
+    zt_module:    'threat_defense',
+    access_tier:  'freemium',
+    duration_min: 5,
+    content_url:  null,
+    body_md:      text,
+    created_by:   'Kirby',
+  });
+
+  await db.advanceModuleStatus(byte.id, 'published');
+  await db.updateBriefingTrainingByte(briefingId, byte.id);
+
+  console.log(JSON.stringify({ ts, runtime: 'kirby', event: 'MANUAL_BYTE_COMPLETE', briefing_id: briefingId, byte_id: byte.id }));
+  return { byte_id: byte.id, title };
+}
+
+module.exports = { pollKirbyTasks, ensureKirbyToken, produceManualTrainingByte };
