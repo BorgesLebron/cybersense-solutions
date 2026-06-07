@@ -416,8 +416,23 @@ function getRepositoryDisplayContent(detail) {
   return JSON.stringify(normalized, null, 2);
 }
 
-function renderArticleMarkdown(md) {
-  const safe = escapeHtml(md || 'No article body available.');
+function canonicalArticleTitle(value) {
+  return String(value || '')
+    .replace(/[*_`]/g, '')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+function normalizeArticleMarkdown(md, title) {
+  const body = String(md || '').replace(/\r\n?/g, '\n').trim();
+  const heading = body.match(/^#\s+(.+?)\s*(?:\n+|$)/);
+  if (!heading || canonicalArticleTitle(heading[1]) !== canonicalArticleTitle(title)) return body;
+  return body.slice(heading[0].length).trimStart();
+}
+
+function renderArticleMarkdown(md, title) {
+  const safe = escapeHtml(normalizeArticleMarkdown(md || 'No article body available.', title));
   return safe
     .replace(/^### (.*)$/gm, '<h3 style="font-size:14px;margin:18px 0 8px;color:var(--color-text-primary);">$1</h3>')
     .replace(/^## (.*)$/gm, '<h2 style="font-size:16px;margin:20px 0 10px;color:var(--color-text-primary);">$1</h2>')
@@ -450,7 +465,7 @@ async function openArticleReview(id) {
       <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:8px;">Summary</div>
       <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.6;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:8px;padding:13px;margin-bottom:20px;">${escapeHtml(article.summary || 'No summary available.')}</div>
       <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:8px;">Article Body</div>
-      <div style="font-size:13px;color:var(--color-text-primary);line-height:1.75;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:8px;padding:16px;max-height:430px;overflow-y:auto;margin-bottom:20px;">${renderArticleMarkdown(article.body_md)}</div>
+      <div style="font-size:13px;color:var(--color-text-primary);line-height:1.75;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:8px;padding:16px;max-height:430px;overflow-y:auto;margin-bottom:20px;">${renderArticleMarkdown(article.body_md, article.title)}</div>
       ${(article.pipeline_status === 'approved' || article.raw_stage === 'approved') ? `
         <div class="approve-strip ready" style="border-radius:8px;">
           <span class="as-label ready">Maya approved. Final HITL release will publish this article link to Intel.</span>
