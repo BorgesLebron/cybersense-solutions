@@ -1442,6 +1442,107 @@ adminRouter.post('/trigger/maya-approve', requireAdminToken(['gm']), async (req,
   } catch (e) { next(e); }
 });
 
+// ── GET briefing by ID (for HITL preview) ────────────────────────────────────
+adminRouter.get('/briefings/:id', requireAdminToken(['gm', 'editor']), async (req, res, next) => {
+  try {
+    const briefing = await db.getBriefingById(req.params.id);
+    if (!briefing) return res.status(404).json(err('NOT_FOUND', 'Briefing not found'));
+    res.json(briefing);
+  } catch (e) { next(e); }
+});
+
+// ── Manual newsletter pipeline (GM only) ─────────────────────────────────────
+// Step 1: Ruth fetches 6 URLs and drafts with [TRAINING BYTE PLACEHOLDER]
+adminRouter.post('/trigger/manual-pipeline-start', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    const { threats, growth, innovations, edition_date } = req.body;
+    if (!Array.isArray(threats) || threats.length !== 3)
+      return res.status(400).json(err('INVALID_INPUT', 'threats must be array of 3 URLs'));
+    if (!Array.isArray(innovations) || innovations.length !== 2)
+      return res.status(400).json(err('INVALID_INPUT', 'innovations must be array of 2 URLs'));
+    if (!growth || typeof growth !== 'string')
+      return res.status(400).json(err('INVALID_INPUT', 'growth must be a URL string'));
+
+    const { executeRuthManualInitial } = require('../services/ruth_runtime');
+    const result = await executeRuthManualInitial({ threats, growth, innovations, edition_date });
+
+    res.json({ success: true, ...result, message: `Draft created for ${result.edition_date} — trigger Kirby next.` });
+  } catch (e) { next(e); }
+});
+
+// Step 2: Kirby generates Training Byte from the selected threat
+adminRouter.post('/trigger/manual-kirby-byte', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    const { briefing_id, threat_url, threat_title, threat_content } = req.body;
+    if (!briefing_id) return res.status(400).json(err('INVALID_INPUT', 'briefing_id required'));
+
+    const { produceManualTrainingByte } = require('../services/kirby_runtime');
+    const result = await produceManualTrainingByte({
+      briefingId:    briefing_id,
+      threatUrl:     threat_url || '',
+      threatTitle:   threat_title || threat_url || 'Threat Advisory',
+      threatContent: threat_content || '',
+    });
+
+    res.json({ success: true, ...result, message: `Training Byte produced: "${result.title}" — trigger Ruth to integrate.` });
+  } catch (e) { next(e); }
+});
+
+// Step 3: Ruth integrates Training Byte into draft and creates Peter task
+adminRouter.post('/trigger/ruth-integrate-byte', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    const { briefing_id } = req.body;
+    if (!briefing_id) return res.status(400).json(err('INVALID_INPUT', 'briefing_id required'));
+
+    const { executeRuthIntegration } = require('../services/ruth_runtime');
+    await executeRuthIntegration(briefing_id);
+
+    const action = await ensureEditorialTask('Peter', 'dev_edit_briefing', briefing_id);
+    const { pollPeterTasks } = require('../services/peter_runtime');
+    await pollPeterTasks();
+
+    const result = await checkEditorialTaskResult('Peter', 'dev_edit_briefing', briefing_id);
+    if (result?.status === 'complete')
+      return res.json({ success: true, peter_complete: true, message: 'Ruth integration complete. Peter dev edit done — review draft for HITL.' });
+    if (result?.status === 'failed')
+      return res.json({ success: true, peter_complete: false, message: `Ruth integration complete. Peter failed: ${result.error_message || 'check Railway logs'}` });
+
+    res.json({ success: true, peter_complete: false, message: 'Ruth integration complete. Peter is running — refresh shortly for HITL review.' });
+  } catch (e) { next(e); }
+});
+
+// HITL editorial approval after Peter — logs review and triggers Ed
+adminRouter.post('/trigger/hitl-approve-draft', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    const briefing = await db.pool.query(
+      `SELECT id, edition_number, pipeline_status FROM briefings WHERE pipeline_status NOT IN ('published') ORDER BY edition_date DESC LIMIT 1`
+    ).then(r => r.rows[0] || null);
+
+    if (!briefing) return res.status(400).json(err('NOT_FOUND', 'No active briefing found'));
+
+    await db.logPipelineEvent({
+      content_type: 'briefing',
+      content_id:   briefing.id,
+      from_status:  briefing.pipeline_status,
+      to_status:    'eic_review',
+      agent_name:   'human_executive',
+      notes:        `HITL editorial review approved — Edition ${briefing.edition_number}. Proceeding to Ed.`,
+    });
+
+    const action = await ensureEditorialTask('Ed', 'eic_review_briefing', briefing.id);
+    const { pollEdTasks } = require('../services/ed_runtime');
+    await pollEdTasks();
+
+    const result = await checkEditorialTaskResult('Ed', 'eic_review_briefing', briefing.id);
+    if (result?.status === 'complete')
+      return res.json({ success: true, message: `HITL approved. Ed EIC review complete — Edition ${briefing.edition_number} advanced.` });
+    if (result?.status === 'failed')
+      return res.json({ success: true, warning: true, message: `HITL approved. Ed failed: ${result.error_message || 'check Railway logs'}` });
+
+    res.json({ success: true, message: `HITL approved — Edition ${briefing.edition_number}. Ed is running.` });
+  } catch (e) { next(e); }
+});
+
 // ── Ivan/Charlie acquisition trigger (GM only) ────────────────────────────────
 // Manual intake run — optional topic filter to target a specific feed category.
 // topic: 'innovation' | 'policy' | 'growth' | null (null = all types)

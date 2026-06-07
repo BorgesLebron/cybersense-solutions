@@ -1020,21 +1020,23 @@ function startScheduler() {
     // Each cycle submits all new qualifying items up to DAILY_MAX caps (10 innovation, 5 growth).
     // Daily minimum (6 innovation, 3 growth) validated by runAcquisitionDeliveryCheck at 06:05 CT.
     cron.schedule('50 */4 * * *',   pollIvanCharlieTasks,          { timezone: 'America/Chicago' });
-    // Training + Sales — Kirby fires at 04:00 CT (30 min before Ruth) on production nights
-    cron.schedule('0 4 * * 0-4',    runKirbyDailyCycle,            { timezone: 'America/Chicago' });
-    cron.schedule('*/2 4-6 * * 0-4', pollKirbyTasks,               { timezone: 'America/Chicago' });
+    // Training + Sales — AUTO-DISABLED: manual pipeline active (ALAN-082).
+    // Re-enable when agent article selection is restored.
+    // cron.schedule('0 4 * * 0-4',    runKirbyDailyCycle,            { timezone: 'America/Chicago' });
+    // cron.schedule('*/2 4-6 * * 0-4', pollKirbyTasks,               { timezone: 'America/Chicago' });
     cron.schedule('0 8 * * *',      runRenewalOutreach,            { timezone: 'America/Chicago' });
     cron.schedule('30 8 * * *',     runAccountHealthCheck,         { timezone: 'America/Chicago' });
     cron.schedule('0 9 * * *',      runLeadQualificationCheck,     { timezone: 'America/Chicago' });
     // Content + credentials
     cron.schedule('0 0 * * 1-5',    runMidnightContentUpdate,      { timezone: 'America/Chicago' });
     cron.schedule('0 23 * * 0',     runLinkedInTokenRefresh,       { timezone: 'America/Chicago' });
-    // Awareness pipeline kickoff — Sun–Thu mornings (0-4) for Mon–Fri delivery
+    // Awareness pipeline kickoff — AUTO-DISABLED: manual pipeline active (ALAN-082).
+    // Re-enable when agent article selection is restored.
     cron.schedule('30 4 * * 1-5',   runDailyBriefingEmailDistribution, { timezone: 'America/Chicago' });
-    cron.schedule('30 4 * * 0-4',   runRuthDailyCycle,             { timezone: 'America/Chicago' });
+    // cron.schedule('30 4 * * 0-4',   runRuthDailyCycle,             { timezone: 'America/Chicago' });
     cron.schedule('0 7 * * 1-5',    runOliverDailyPost,            { timezone: 'America/Chicago' });
-    // Agent runtime task pollers — Sun–Thu only, matching production nights
-    cron.schedule('*/2 4-9 * * 0-4', pollRuthTasks,                { timezone: 'America/Chicago' });
+    // Agent runtime task pollers — Ruth AUTO-DISABLED: manual pipeline active (ALAN-082).
+    // cron.schedule('*/2 4-9 * * 0-4', pollRuthTasks,                { timezone: 'America/Chicago' });
     cron.schedule('*/2 4-9 * * 0-4', pollPeterTasks,               { timezone: 'America/Chicago' });
     cron.schedule('*/2 4-9 * * 0-4', pollEdTasks,                  { timezone: 'America/Chicago' });
     cron.schedule('*/2 * * * *',      pollJamesTasks,               { timezone: 'America/Chicago' });
