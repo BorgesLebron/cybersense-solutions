@@ -9,6 +9,7 @@ const jwt       = require('jsonwebtoken');
 const Anthropic = require('@anthropic-ai/sdk');
 const db        = require('../db/queries');
 const { notifyAgents } = require('./agents');
+const { normalizeArticleBodyMarkdown } = require('./article_markdown');
 
 const API_BASE = () =>
   process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
@@ -34,7 +35,6 @@ Editorial priorities:
 - Prefer "threat actors", "cybercriminals", or "actors" over "attacker".
 
 Required article structure:
-- Title
 - Executive Summary
 - What Happened
 - Why It Matters
@@ -42,7 +42,7 @@ Required article structure:
 - Recommended Actions
 - Closing Assessment
 
-Output only the draft article in Markdown. Do not include meta-commentary, source notes, or internal workflow references.
+Begin with one level-one Markdown heading containing the article title. Use a numbered Markdown list for Recommended Actions. Output only the draft article in Markdown. Do not include meta-commentary, source notes, or internal workflow references.
 `.trim();
 
 function buildJamesPrompt(item) {
@@ -229,16 +229,17 @@ async function applyJamesDraft(item) {
   });
   const text = (msg.content[0]?.text || '').trim();
 
-  const body_md = (text || '').trim();
-  const issues = validateJamesDraft(body_md);
+  const rawBody = (text || '').trim();
+  const issues = validateJamesDraft(rawBody);
   if (issues.length > 0) return { issues };
 
+  const title = extractArticleTitle(rawBody, item.title);
   return {
     issues: [],
-    title: extractArticleTitle(body_md, item.title),
+    title,
     section: item.section,
     access_tier: 'monthly',
-    body_md,
+    body_md: normalizeArticleBodyMarkdown(rawBody, title),
     source_ids: [item.source_id],
   };
 }

@@ -10,6 +10,7 @@ const jwt       = require('jsonwebtoken');
 const Anthropic = require('@anthropic-ai/sdk');
 const db        = require('../db/queries');
 const { notifyAgents } = require('./agents');
+const { normalizeArticleBodyMarkdown } = require('./article_markdown');
 
 const API_BASE = () =>
   process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
@@ -35,7 +36,6 @@ Editorial priorities:
 - Prefer "threat actors", "cybercriminals", or "actors" over "attacker".
 
 Required article structure:
-- Title
 - Executive Summary
 - What Happened
 - Why It Matters
@@ -43,7 +43,7 @@ Required article structure:
 - Recommended Actions
 - Closing Assessment
 
-Output only the revised article in Markdown. Do not include meta-commentary, edit notes, or internal workflow references.
+The article title is stored separately. Do not repeat it as a level-one heading in the body. Begin with ## Executive Summary. Use a numbered Markdown list for Recommended Actions. Output only the revised article in Markdown. Do not include meta-commentary, edit notes, or internal workflow references.
 `.trim();
 
 function buildJasonPrompt(article) {
@@ -146,7 +146,7 @@ async function applyJasonEdit(article) {
   });
   const text = (msg.content[0]?.text || '').trim();
 
-  const body_md = (text || '').trim();
+  const body_md = normalizeArticleBodyMarkdown((text || '').trim(), article.title);
   const llmIssues = validateIntelArticleDraft(body_md);
   if (llmIssues.length > 0) return { issues: llmIssues };
 

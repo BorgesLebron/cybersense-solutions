@@ -14,6 +14,7 @@ const crypto = require('crypto');
 const jwt    = require('jsonwebtoken');
 const db     = require('../db/queries');
 const { notifyAgents } = require('./agents');
+const { validateArticleMarkdown } = require('./article_markdown');
 
 const API_BASE = () =>
   process.env.API_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
@@ -123,6 +124,8 @@ function applyArticleQAReview(article) {
 
   if (!['threat', 'policy', 'innovation', 'growth', 'training'].includes(article.section))
     issues.push(`invalid section ${article.section || '(empty)'}`);
+
+  issues.push(...validateArticleMarkdown(article.body_md, article.title));
 
   return { issues };
 }

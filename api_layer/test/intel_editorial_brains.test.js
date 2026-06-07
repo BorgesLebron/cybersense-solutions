@@ -1,19 +1,18 @@
-jest.mock('ai', () => ({
-  generateText: jest.fn(),
-}));
+const mockAnthropicCreate = jest.fn();
+jest.mock('@anthropic-ai/sdk', () => jest.fn().mockImplementation(() => ({
+  messages: { create: mockAnthropicCreate },
+})));
 
-jest.mock('@ai-sdk/google', () => ({
-  createGoogleGenerativeAI: jest.fn(() => jest.fn(() => ({ model: 'mock-gemini' }))),
-}));
-
-const { generateText } = require('ai');
-const { createGoogleGenerativeAI } = require('@ai-sdk/google');
 const db = require('../db/queries');
 const james = require('../services/james_runtime');
 const jason = require('../services/jason_runtime');
 const rob = require('../services/rob_runtime');
 const jeff = require('../services/jeff_runtime');
 const maya = require('../services/maya_runtime');
+const {
+  normalizeArticleBodyMarkdown,
+  validateArticleMarkdown,
+} = require('../services/article_markdown');
 
 jest.mock('../db/queries', () => ({
   getArticleById: jest.fn(),
@@ -31,8 +30,6 @@ jest.mock('../services/agents', () => ({
 global.fetch = jest.fn();
 
 const validArticle = `
-# Verifiable Credentials Need Operational Trust
-
 ## Executive Summary
 Recent digital identity activity shows that wallet support alone does not create durable institutional trust. Security leaders need governance, issuer verification, lifecycle controls, and practical operating models before credentials can support sensitive workflows.
 
@@ -46,11 +43,17 @@ For practitioners, the relevant risk is not whether a credential can be stored i
 Organizations adopting credentials should define issuer assurance levels, verification policy, monitoring expectations, and exception handling. Without those controls, wallet adoption may increase complexity while leaving accountability unclear.
 
 ## Recommended Actions
-Security and identity teams should map credential use cases to risk tiers, validate revocation mechanics, document relying-party obligations, and test user recovery paths before expanding production use.
+1. Map credential use cases to defined risk tiers and issuer assurance requirements.
+2. Validate revocation mechanics, relying-party obligations, and exception handling.
+3. Test user recovery paths before expanding production use.
 
 ## Closing Assessment
 Verifiable credentials remain promising, but trust is an operating model rather than a feature. Programs that treat governance, verification, and lifecycle management as first-class requirements will be better positioned for resilient adoption.
-`.repeat(2);
+`;
+
+const validArticleWithTitle = `# Verifiable Credentials Need Operational Trust
+
+${validArticle}`;
 
 const article = {
   id: 'article-1',
@@ -105,15 +108,18 @@ describe('James, Jason, Rob, and Jeff Intel article pipeline brains', () => {
   });
 
   test('James applies mocked article draft when repository item is valid', async () => {
-    generateText.mockResolvedValueOnce({ text: validArticle });
+    mockAnthropicCreate.mockResolvedValueOnce({
+      content: [{ text: validArticleWithTitle }],
+    });
 
     const result = await james.applyJamesDraft(repositoryItem);
 
     expect(result.issues).toEqual([]);
     expect(result.title).toBe('Verifiable Credentials Need Operational Trust');
+    expect(result.body_md).toMatch(/^## Executive Summary/);
+    expect(result.body_md).not.toContain('# Verifiable Credentials Need Operational Trust');
     expect(result.section).toBe('innovation');
     expect(result.source_ids).toEqual(['source-1']);
-    expect(createGoogleGenerativeAI).toHaveBeenCalledWith({ apiKey: 'test-intel-editorial-key' });
   });
 
   test('James candidate query casts mixed priority enums to text', async () => {
@@ -156,13 +162,14 @@ describe('James, Jason, Rob, and Jeff Intel article pipeline brains', () => {
   });
 
   test('Jason applies mocked developmental edit when article is valid', async () => {
-    generateText.mockResolvedValueOnce({ text: validArticle });
+    mockAnthropicCreate.mockResolvedValueOnce({
+      content: [{ text: validArticle }],
+    });
 
     const result = await jason.applyJasonEdit(article);
 
     expect(result.issues).toEqual([]);
     expect(result.body_md).toContain('Operational Implications');
-    expect(createGoogleGenerativeAI).toHaveBeenCalledWith({ apiKey: 'test-intel-editorial-key' });
   });
 
   test('Rob prompt carries Jason draft and article context', () => {
@@ -174,17 +181,20 @@ describe('James, Jason, Rob, and Jeff Intel article pipeline brains', () => {
   });
 
   test('Rob applies mocked EIC review when article is valid', async () => {
-    generateText.mockResolvedValueOnce({ text: validArticle });
+    mockAnthropicCreate.mockResolvedValueOnce({
+      content: [{ text: validArticle }],
+    });
 
     const result = await rob.applyRobReview(article);
 
     expect(result.issues).toEqual([]);
     expect(result.body_md).toContain('Closing Assessment');
-    expect(createGoogleGenerativeAI).toHaveBeenCalledWith({ apiKey: 'test-intel-editorial-key' });
   });
 
   test('Rob advances EIC-reviewed articles to eic_review so Jeff dispatch fires', async () => {
-    generateText.mockResolvedValueOnce({ text: validArticle });
+    mockAnthropicCreate.mockResolvedValueOnce({
+      content: [{ text: validArticle }],
+    });
     db.getArticleById.mockResolvedValueOnce({ ...article, pipeline_status: 'dev_edit' });
     db.updateTask.mockResolvedValue({});
     db.pool.query.mockResolvedValue({ rows: [{ ...article, body_md: validArticle }] });
@@ -211,6 +221,25 @@ describe('James, Jason, Rob, and Jeff Intel article pipeline brains', () => {
     const result = jeff.applyArticleQAReview({ ...article, body_md: validArticle });
 
     expect(result.issues).toEqual([]);
+  });
+
+  test('article Markdown normalization removes a duplicated leading title', () => {
+    const normalized = normalizeArticleBodyMarkdown(
+      '# Verifiable Credentials Need Operational Trust\n\n## Executive Summary\nBody.',
+      'Verifiable Credentials Need Operational Trust'
+    );
+
+    expect(normalized).toBe('## Executive Summary\nBody.');
+  });
+
+  test('article Markdown QA flags duplicate titles and unnumbered recommended actions', () => {
+    const issues = validateArticleMarkdown(
+      '# Verifiable Credentials Need Operational Trust\n\n## Recommended Actions\nReview identity controls.',
+      'Verifiable Credentials Need Operational Trust'
+    );
+
+    expect(issues).toContain('body_md repeats the article title as a level-one heading');
+    expect(issues).toContain('Recommended Actions must use an ordered Markdown list');
   });
 
   test('Jeff advances articles from eic_review to qa after QA pass', async () => {

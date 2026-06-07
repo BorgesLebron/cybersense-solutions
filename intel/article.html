@@ -445,10 +445,52 @@ function inlineMd(value) {
     .replace(/\[(.+?)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
 }
 
-function mdToHtml(md) {
+function canonicalTitle(value) {
+  return String(value || '')
+    .replace(/[*_`]/g, '')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+function normalizeArticleMarkdown(md, title) {
+  const body = String(md || '').replace(/\r\n?/g, '\n').trim();
+  const heading = body.match(/^#\s+(.+?)\s*(?:\n+|$)/);
+  if (!heading || canonicalTitle(heading[1]) !== canonicalTitle(title)) return body;
+  return body.slice(heading[0].length).trimStart();
+}
+
+function renderOrderedList(block) {
+  const items = [];
+  let current = '';
+
+  block.split('\n').forEach((line) => {
+    const item = line.match(/^\d+\.\s+(.+)/);
+    if (item) {
+      if (current) items.push(current);
+      current = item[1].trim();
+    } else if (current && line.trim()) {
+      current += ` ${line.trim()}`;
+    }
+  });
+  if (current) items.push(current);
+
+  return `<ol>${items.map((item) => `<li>${inlineMd(item)}</li>`).join('')}</ol>`;
+}
+
+function renderHeadingBlock(block, level, marker) {
+  const lines = block.split('\n');
+  const heading = lines.shift().replace(marker, '');
+  const remainder = lines.join(' ').trim();
+  const paragraph = remainder ? `<p>${inlineMd(remainder)}</p>` : '';
+  return `<h${level}>${inlineMd(heading)}</h${level}>${paragraph}`;
+}
+
+function mdToHtml(md, title) {
   if (!md) return '';
   const codeBlocks = [];
-  const protectedMd = md.replace(/```([\w-]+)?\n([\s\S]*?)```/g, (_, lang, code) => {
+  const normalizedMd = normalizeArticleMarkdown(md, title);
+  const protectedMd = normalizedMd.replace(/```([\w-]+)?\n([\s\S]*?)```/g, (_, lang, code) => {
     const label = lang ? `${lang} snippet` : 'technical excerpt';
     const token = `@@CODE_BLOCK_${codeBlocks.length}@@`;
     codeBlocks.push(`
@@ -469,9 +511,10 @@ function mdToHtml(md) {
     .map((block) => {
       const codeMatch = block.match(/^@@CODE_BLOCK_(\d+)@@$/);
       if (codeMatch) return codeBlocks[Number(codeMatch[1])] || '';
-      if (/^####\s+/.test(block)) return `<h4>${inlineMd(block.replace(/^####\s+/, ''))}</h4>`;
-      if (/^###\s+/.test(block)) return `<h3>${inlineMd(block.replace(/^###\s+/, ''))}</h3>`;
-      if (/^##\s+/.test(block)) return `<h2>${inlineMd(block.replace(/^##\s+/, ''))}</h2>`;
+      if (/^#\s+/.test(block)) return renderHeadingBlock(block, 2, /^#\s+/);
+      if (/^####\s+/.test(block)) return renderHeadingBlock(block, 4, /^####\s+/);
+      if (/^###\s+/.test(block)) return renderHeadingBlock(block, 3, /^###\s+/);
+      if (/^##\s+/.test(block)) return renderHeadingBlock(block, 2, /^##\s+/);
       if (/^>\s+/m.test(block)) {
         const quote = block.replace(/^>\s?/gm, '').replace(/\n/g, '<br>');
         return `<blockquote><p>${inlineMd(quote)}</p></blockquote>`;
@@ -481,12 +524,12 @@ function mdToHtml(md) {
         return `<ul>${items}</ul>`;
       }
       if (/^\d+\.\s+/m.test(block)) {
-        const items = block.split('\n').filter((line) => /^\d+\.\s+/.test(line)).map((line) => `<li>${inlineMd(line.replace(/^\d+\.\s+/, ''))}</li>`).join('');
-        return `<ol>${items}</ol>`;
+        return renderOrderedList(block);
       }
       return `<p>${inlineMd(block.replace(/\n/g, ' '))}</p>`;
     })
-    .join('\n');
+    .join('\n')
+    .replace(/<\/ol>\s*<ol>/g, '');
 }
 
 function sectionLabel(section) {
@@ -663,7 +706,7 @@ async function loadArticle(user) {
           </div>
         </div>`;
     } else {
-      body.innerHTML = mdToHtml(article.body_md);
+      body.innerHTML = mdToHtml(article.body_md, article.title);
       bindCopyButtons(body);
     }
   } catch (e) {
