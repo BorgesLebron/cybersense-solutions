@@ -1527,6 +1527,10 @@ adminRouter.post('/trigger/ruth-integrate-byte', requireAdminToken(['gm']), asyn
 });
 
 // HITL editorial approval after Peter — logs review and triggers Ed
+// HITL editorial approval — cascades through the full remaining chain: Ed → Jeff → Maya.
+// Each agent is polled inline so the result is confirmed before the next stage starts.
+// Maya's approval leaves the briefing in 'maya' status, ready for the final HITL gate
+// (advance-to-hitl → approved → Matt).
 adminRouter.post('/trigger/hitl-approve-draft', requireAdminToken(['gm']), async (req, res, next) => {
   try {
     const briefing = await db.pool.query(
@@ -1541,20 +1545,46 @@ adminRouter.post('/trigger/hitl-approve-draft', requireAdminToken(['gm']), async
       from_status:  briefing.pipeline_status,
       to_status:    'eic_review',
       agent_name:   'human_executive',
-      notes:        `HITL editorial review approved — Edition ${briefing.edition_number}. Proceeding to Ed.`,
+      notes:        `HITL editorial review approved — Edition ${briefing.edition_number}. Running Ed → Jeff → Maya.`,
     });
 
-    const action = await ensureEditorialTask('Ed', 'eic_review_briefing', briefing.id);
+    const chain = [];
+
+    // Ed — EIC review
+    await ensureEditorialTask('Ed', 'eic_review_briefing', briefing.id);
     const { pollEdTasks } = require('../services/ed_runtime');
     await pollEdTasks();
+    const edResult = await checkEditorialTaskResult('Ed', 'eic_review_briefing', briefing.id);
+    if (edResult?.status === 'failed')
+      return res.json({ success: true, warning: true, chain: ['ed:failed'], message: `HITL approved. Ed failed: ${edResult.error_message || 'check Railway logs'}` });
+    chain.push(edResult?.status === 'complete' ? 'ed:complete' : 'ed:running');
 
-    const result = await checkEditorialTaskResult('Ed', 'eic_review_briefing', briefing.id);
-    if (result?.status === 'complete')
-      return res.json({ success: true, message: `HITL approved. Ed EIC review complete — Edition ${briefing.edition_number} advanced.` });
-    if (result?.status === 'failed')
-      return res.json({ success: true, warning: true, message: `HITL approved. Ed failed: ${result.error_message || 'check Railway logs'}` });
+    if (edResult?.status === 'complete') {
+      // Jeff — QA (rule-based, fast). Task was created by Ed's AWARENESS_DISPATCH.
+      await ensureEditorialTask('Jeff', 'qa_briefing', briefing.id);
+      const { pollJeffTasks } = require('../services/jeff_runtime');
+      await pollJeffTasks();
+      const jeffResult = await checkEditorialTaskResult('Jeff', 'qa_briefing', briefing.id);
+      if (jeffResult?.status === 'failed')
+        return res.json({ success: true, warning: true, chain, message: `Ed complete. Jeff QA failed: ${jeffResult.error_message || 'check Railway logs'}` });
+      chain.push(jeffResult?.status === 'complete' ? 'jeff:complete' : 'jeff:running');
 
-    res.json({ success: true, message: `HITL approved — Edition ${briefing.edition_number}. Ed is running.` });
+      if (jeffResult?.status === 'complete') {
+        // Maya — approval
+        await ensureEditorialTask('Maya', 'approve_briefing', briefing.id);
+        const { pollMayaTasks } = require('../services/maya_runtime');
+        await pollMayaTasks();
+        const mayaResult = await checkEditorialTaskResult('Maya', 'approve_briefing', briefing.id);
+        if (mayaResult?.status === 'failed')
+          return res.json({ success: true, warning: true, chain, message: `Ed + Jeff complete. Maya failed: ${mayaResult.error_message || 'check Railway logs'}` });
+        chain.push(mayaResult?.status === 'complete' ? 'maya:complete' : 'maya:running');
+
+        if (mayaResult?.status === 'complete')
+          return res.json({ success: true, chain, message: `Edition ${briefing.edition_number} — Ed ✓ Jeff ✓ Maya ✓. Use the HITL action above to advance to approved, then trigger Matt.` });
+      }
+    }
+
+    res.json({ success: true, chain, message: `HITL approved — Edition ${briefing.edition_number}. Chain: ${chain.join(' → ')}. Reload shortly to see final status.` });
   } catch (e) { next(e); }
 });
 

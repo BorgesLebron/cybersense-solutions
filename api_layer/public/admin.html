@@ -730,8 +730,8 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
               <button class="pc-btn" id="btn-hitl-save" onclick="saveHITLEdits()" style="margin-top:6px;">Save Edits</button>
             </div>
             <div style="margin-top:10px;padding-top:10px;border-top:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;gap:10px;">
-              <button class="pc-btn" id="btn-hitl-approve" onclick="approveHITLAndContinue()" style="background:#1D9E75;">Approved — Proceed to Ed</button>
-              <span style="font-size:10px;color:var(--color-text-tertiary);">Logs your HITL review and triggers Ed automatically</span>
+              <button class="pc-btn" id="btn-hitl-approve" onclick="approveHITLAndContinue()" style="background:#1D9E75;">Approved — Run Ed → Jeff → Maya</button>
+              <span style="font-size:10px;color:var(--color-text-tertiary);">Logs HITL review, then runs the full editorial chain in sequence</span>
             </div>
           </div>
 
@@ -2229,13 +2229,19 @@ async function saveHITLEdits() {
 
 async function approveHITLAndContinue() {
   const btn = document.getElementById('btn-hitl-approve');
-  btn.disabled = true; btn.textContent = 'Approving…';
-  pcLog('HITL approved — logging review and triggering Ed…');
+  btn.disabled = true; btn.textContent = 'Running Ed → Jeff → Maya…';
+  pcLog('HITL approved — running Ed → Jeff → Maya in sequence…');
   try {
     const res = await CS.Auth.apiFetch('/api/admin/trigger/hitl-approve-draft', { method: 'POST' });
-    pcLog(`✓ ${res.message || 'HITL approved. Ed triggered.'}`, true);
-    btn.textContent = '✓ Approved';
-    document.getElementById('hitl-review-section').style.display = 'none';
+    const ok = !res.warning;
+    pcLog(`${ok ? '✓' : '⚠'} ${res.message || 'HITL chain complete.'}`, ok);
+    if (ok) {
+      btn.textContent = '✓ Ed → Jeff → Maya Complete';
+      document.getElementById('hitl-review-section').style.display = 'none';
+    } else {
+      btn.textContent = '⚠ Chain stopped — see log';
+      btn.disabled = false;
+    }
     loadPipelineControlStatus();
     loadNewsletterStatus();
   } catch (e) {
