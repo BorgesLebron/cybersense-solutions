@@ -141,6 +141,12 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
 .nl-chat-send{margin-top:8px;padding:8px 12px;border:0;border-radius:8px;background:#185FA5;color:#fff;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;}
 .nl-chat-send:disabled{opacity:.55;cursor:not-allowed;}
 @media(max-width:900px){.nl-status-card{grid-template-columns:1fr}.nl-pipeline{grid-template-columns:repeat(2,1fr)}}
+.mp-url-input{width:100%;padding:6px 9px;border:0.5px solid var(--color-border-primary);border-radius:5px;background:var(--color-background-primary);color:var(--color-text-primary);font-family:inherit;font-size:11px;box-sizing:border-box;outline:none;}
+.mp-url-input:focus{border-color:#185FA5;}
+.mp-step-label{font-size:10px;font-weight:700;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:.6px;margin:10px 0 6px;}
+.hitl-tab-btn{font-size:11px;padding:4px 10px;border-radius:4px;border:0.5px solid var(--color-border-primary);cursor:pointer;font-family:inherit;}
+.hitl-tab-btn.active{background:#185FA5;color:#fff;border-color:#185FA5;}
+.hitl-tab-btn:not(.active){background:var(--color-background-secondary);color:var(--color-text-secondary);}
 .pc-trigger-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:0.5px solid var(--color-border-tertiary);}
 .pc-trigger-row:last-of-type{border-bottom:none;}
 .pc-trigger-info{flex:1;min-width:0;}
@@ -611,7 +617,7 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
           </div>
         </div>
         <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--color-border-tertiary);">
-          <div class="panel-sub" style="margin-bottom:10px;">Pipeline controls — Manual triggers for missed or failed cron windows — Kirby (04:00 CT) → Ruth (04:30 CT) → Peter → Ed → Jeff → Maya → HITL → Laura</div>
+          <div class="panel-sub" style="margin-bottom:10px;">Manual pipeline — Enter 6 article URLs to start production — Ruth → Kirby → Ruth → Peter → HITL → Ed → Jeff → Maya → Matt → Distribution</div>
           <div class="metric-row">
             <div class="met"><div class="met-lbl">Training byte today</div><div class="met-val" id="pc-byte-val">—</div><div class="met-delta nt" id="pc-byte-note">Loading...</div></div>
             <div class="met"><div class="met-lbl">Next edition stage</div><div class="met-val" id="pc-brief-val">—</div><div class="met-delta nt" id="pc-brief-note">Loading...</div></div>
@@ -620,22 +626,52 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
           </div>
           <div class="grid2">
             <div class="card">
-              <div class="card-hd">Production pipeline <span id="pc-prod-badge" class="badge b-gray">Loading</span></div>
-            <div class="pc-trigger-row">
-              <div class="pc-trigger-info">
-                <div class="pc-trigger-label">Kirby — Training Byte</div>
-                <div class="pc-trigger-desc" id="pc-kirby-desc">Checking...</div>
+              <div class="card-hd">Manual Pipeline <span class="badge b-amber">Manual Mode</span></div>
+
+              <!-- Step 1 — Article URLs -->
+              <div class="mp-step-label">Step 1 — Enter Article URLs</div>
+              <div style="display:grid;gap:5px;margin-bottom:10px;">
+                <div style="font-size:10px;color:var(--color-text-tertiary);margin-bottom:2px;">Situational Awareness — 3 Threat URLs</div>
+                <input class="mp-url-input" id="mp-threat-1" placeholder="Threat 1 URL" type="url">
+                <input class="mp-url-input" id="mp-threat-2" placeholder="Threat 2 URL" type="url">
+                <input class="mp-url-input" id="mp-threat-3" placeholder="Threat 3 URL" type="url">
+                <div style="font-size:10px;color:var(--color-text-tertiary);margin:5px 0 2px;">Career Development — 1 Growth URL</div>
+                <input class="mp-url-input" id="mp-growth" placeholder="Growth URL" type="url">
+                <div style="font-size:10px;color:var(--color-text-tertiary);margin:5px 0 2px;">Modernization &amp; AI Insight — 2 Innovation URLs</div>
+                <input class="mp-url-input" id="mp-innovation-1" placeholder="Innovation 1 URL" type="url">
+                <input class="mp-url-input" id="mp-innovation-2" placeholder="Innovation 2 URL" type="url">
+                <div style="font-size:10px;color:var(--color-text-tertiary);margin:5px 0 2px;">Edition Date (leave blank for next production day)</div>
+                <input class="mp-url-input" id="mp-edition-date" placeholder="YYYY-MM-DD" type="date" style="width:160px;">
               </div>
-              <button class="pc-btn" id="btn-kirby" onclick="triggerPipeline('kirby-cycle','btn-kirby','Trigger Kirby')" disabled>Trigger Kirby</button>
-            </div>
-            <div class="pc-trigger-row">
-              <div class="pc-trigger-info">
-                <div class="pc-trigger-label">Ruth — Briefing Composition</div>
-                <div class="pc-trigger-desc" id="pc-ruth-desc">Checking...</div>
+
+              <div class="pc-trigger-row">
+                <div class="pc-trigger-info">
+                  <div class="pc-trigger-label">Ruth — Fetch &amp; Draft Newsletter</div>
+                  <div class="pc-trigger-desc" id="mp-step1-status">Enter 6 URLs above then start</div>
+                </div>
+                <button class="pc-btn" id="btn-mp-start" onclick="startManualPipeline()">Start Pipeline</button>
               </div>
-              <button class="pc-btn" id="btn-ruth" onclick="triggerPipeline('ruth-cycle','btn-ruth','Trigger Ruth')" disabled>Trigger Ruth</button>
+
+              <!-- Step 2 — Kirby -->
+              <div class="mp-step-label">Step 2 — Training Byte</div>
+              <div class="pc-trigger-row">
+                <div class="pc-trigger-info">
+                  <div class="pc-trigger-label">Kirby — Training Byte</div>
+                  <div class="pc-trigger-desc" id="mp-step2-status">Waiting for Step 1</div>
+                </div>
+                <button class="pc-btn" id="btn-mp-kirby" onclick="triggerManualKirby()" disabled>Run Kirby</button>
+              </div>
+
+              <!-- Step 3 — Ruth Integration -->
+              <div class="mp-step-label">Step 3 — Integrate &amp; Send to Peter</div>
+              <div class="pc-trigger-row" style="border-bottom:none;">
+                <div class="pc-trigger-info">
+                  <div class="pc-trigger-label">Ruth — Integrate &amp; Send to Peter</div>
+                  <div class="pc-trigger-desc" id="mp-step3-status">Waiting for Kirby</div>
+                </div>
+                <button class="pc-btn" id="btn-mp-integrate" onclick="triggerRuthIntegrate()" disabled>Integrate &amp; Send</button>
+              </div>
             </div>
-          </div>
           <div class="card">
             <div class="card-hd">Normalization &amp; Distribution</div>
             <div class="pc-trigger-row">
@@ -666,6 +702,29 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
             </div>
             <button class="pc-btn" id="btn-peter" onclick="triggerPipeline('peter-edit','btn-peter','Trigger Peter')" disabled>Trigger Peter</button>
           </div>
+
+          <!-- HITL Review Panel — appears after Peter completes -->
+          <div id="hitl-review-section" style="display:none;margin:8px 0 4px;padding:12px;background:var(--color-background-tertiary);border-radius:6px;border:1px solid var(--color-border-secondary);">
+            <div style="font-size:12px;font-weight:600;color:var(--color-text-primary);margin-bottom:4px;">HITL Editorial Review</div>
+            <div style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:10px;">Review Peter's dev edit. Edit the draft if needed, then approve to send to Ed.</div>
+            <div style="display:flex;gap:6px;margin-bottom:10px;">
+              <button class="hitl-tab-btn active" id="hitl-btn-preview" onclick="showHITLTab('preview')">Preview</button>
+              <button class="hitl-tab-btn" id="hitl-btn-edit" onclick="showHITLTab('edit')">Edit Draft</button>
+              <button class="hitl-tab-btn" onclick="loadHITLPreview()" style="margin-left:auto;">↻ Refresh</button>
+            </div>
+            <div id="hitl-tab-preview">
+              <pre id="hitl-preview" style="font-size:11px;line-height:1.6;max-height:300px;overflow-y:auto;background:var(--color-background-secondary);padding:10px;border-radius:4px;border:0.5px solid var(--color-border-tertiary);white-space:pre-wrap;word-break:break-word;color:var(--color-text-secondary);">Loading draft...</pre>
+            </div>
+            <div id="hitl-tab-edit" style="display:none;">
+              <textarea id="hitl-edit-textarea" style="width:100%;height:260px;font-size:11px;line-height:1.5;background:var(--color-background-secondary);border:0.5px solid var(--color-border-primary);border-radius:4px;padding:10px;color:var(--color-text-primary);resize:vertical;box-sizing:border-box;" placeholder="Draft loads here..."></textarea>
+              <button class="pc-btn" id="btn-hitl-save" onclick="saveHITLEdits()" style="margin-top:6px;">Save Edits</button>
+            </div>
+            <div style="margin-top:10px;padding-top:10px;border-top:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;gap:10px;">
+              <button class="pc-btn" id="btn-hitl-approve" onclick="approveHITLAndContinue()" style="background:#1D9E75;">Approved — Proceed to Ed</button>
+              <span style="font-size:10px;color:var(--color-text-tertiary);">Logs your HITL review and triggers Ed automatically</span>
+            </div>
+          </div>
+
           <div class="pc-trigger-row">
             <div class="pc-trigger-info">
               <div class="pc-trigger-label">Ed — EIC Review</div>
@@ -1974,6 +2033,182 @@ async function triggerPipeline(endpoint, btnId, label) {
       btn.classList.remove('error');
       btn.disabled = false;
     }, 4000);
+  }
+}
+
+// ── Manual Pipeline ───────────────────────────────────────────────────────────
+let _mpState = { briefing_id: null, kirby_threat_url: null, kirby_threat_title: null, kirby_threat_content: null };
+
+function pcLog(msg, ok = null) {
+  const log = document.getElementById('pc-log');
+  if (!log) return;
+  const ts = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const badge = ok === null ? 'b-blue' : (ok ? 'b-green' : 'b-red');
+  const label = ok === null ? 'INFO' : (ok ? 'OK' : 'FAIL');
+  const entry = document.createElement('div');
+  entry.className = 'pc-log-entry';
+  entry.innerHTML = `<span class="pc-log-ts">${esc(ts)}</span><span class="badge ${badge}">${label}</span><span>${esc(msg)}</span>`;
+  if (log.textContent.trim() === 'No triggers fired this session.') log.innerHTML = '';
+  if (log.firstChild) log.insertBefore(entry, log.firstChild);
+  else log.appendChild(entry);
+}
+
+async function startManualPipeline() {
+  const threats = [
+    document.getElementById('mp-threat-1').value.trim(),
+    document.getElementById('mp-threat-2').value.trim(),
+    document.getElementById('mp-threat-3').value.trim(),
+  ];
+  const innovations = [
+    document.getElementById('mp-innovation-1').value.trim(),
+    document.getElementById('mp-innovation-2').value.trim(),
+  ];
+  const growth = document.getElementById('mp-growth').value.trim();
+  const edition_date = document.getElementById('mp-edition-date').value.trim() || undefined;
+
+  if (threats.some(u => !u) || innovations.some(u => !u) || !growth) {
+    pcLog('Fill all 6 URL fields before starting.', false);
+    return;
+  }
+
+  const btn = document.getElementById('btn-mp-start');
+  btn.disabled = true; btn.textContent = 'Running...'; btn.classList.add('loading');
+  document.getElementById('mp-step1-status').textContent = 'Fetching articles and drafting...';
+  pcLog('Step 1 — Ruth fetching articles and drafting newsletter…');
+
+  try {
+    const res = await CS.Auth.apiFetch('/api/admin/trigger/manual-pipeline-start', {
+      method: 'POST', body: JSON.stringify({ threats, innovations, growth, edition_date }),
+    });
+    if (res.success) {
+      _mpState = { briefing_id: res.briefing_id, kirby_threat_url: res.kirby_threat_url, kirby_threat_title: res.kirby_threat_title, kirby_threat_content: res.kirby_threat_content };
+      pcLog(`✓ Step 1 — ${res.message}`, true);
+      document.getElementById('mp-step1-status').textContent = `✓ Draft created (${res.edition_date})`;
+      document.getElementById('mp-step2-status').textContent = `Kirby will process: "${esc(res.kirby_threat_title || res.kirby_threat_url)}"`;
+      btn.classList.remove('loading'); btn.classList.add('success'); btn.textContent = '✓ Done';
+      document.getElementById('btn-mp-kirby').disabled = false;
+    } else {
+      throw new Error(res.error || res.message || 'Step 1 failed');
+    }
+  } catch (e) {
+    pcLog(`Step 1 failed: ${e.message}`, false);
+    btn.disabled = false; btn.textContent = 'Start Pipeline'; btn.classList.remove('loading');
+    document.getElementById('mp-step1-status').textContent = `Failed: ${e.message}`;
+  }
+}
+
+async function triggerManualKirby() {
+  if (!_mpState.briefing_id) { pcLog('Complete Step 1 first.', false); return; }
+  const btn = document.getElementById('btn-mp-kirby');
+  btn.disabled = true; btn.textContent = 'Running...'; btn.classList.add('loading');
+  document.getElementById('mp-step2-status').textContent = 'Kirby generating Training Byte…';
+  pcLog('Step 2 — Kirby generating Training Byte…');
+
+  try {
+    const res = await CS.Auth.apiFetch('/api/admin/trigger/manual-kirby-byte', {
+      method: 'POST', body: JSON.stringify({
+        briefing_id:    _mpState.briefing_id,
+        threat_url:     _mpState.kirby_threat_url,
+        threat_title:   _mpState.kirby_threat_title,
+        threat_content: _mpState.kirby_threat_content,
+      }),
+    });
+    if (res.success) {
+      pcLog(`✓ Step 2 — ${res.message}`, true);
+      document.getElementById('mp-step2-status').textContent = `✓ ${res.title || 'Byte created'}`;
+      document.getElementById('mp-step3-status').textContent = 'Ready — click to integrate and send to Peter';
+      btn.classList.remove('loading'); btn.classList.add('success'); btn.textContent = '✓ Done';
+      document.getElementById('btn-mp-integrate').disabled = false;
+    } else {
+      throw new Error(res.error || res.message || 'Step 2 failed');
+    }
+  } catch (e) {
+    pcLog(`Step 2 failed: ${e.message}`, false);
+    btn.disabled = false; btn.textContent = 'Run Kirby'; btn.classList.remove('loading');
+    document.getElementById('mp-step2-status').textContent = `Failed: ${e.message}`;
+  }
+}
+
+async function triggerRuthIntegrate() {
+  if (!_mpState.briefing_id) { pcLog('Complete Steps 1 and 2 first.', false); return; }
+  const btn = document.getElementById('btn-mp-integrate');
+  btn.disabled = true; btn.textContent = 'Integrating...'; btn.classList.add('loading');
+  document.getElementById('mp-step3-status').textContent = 'Ruth integrating and sending to Peter…';
+  pcLog('Step 3 — Ruth integrating Training Byte and sending to Peter…');
+
+  try {
+    const res = await CS.Auth.apiFetch('/api/admin/trigger/ruth-integrate-byte', {
+      method: 'POST', body: JSON.stringify({ briefing_id: _mpState.briefing_id }),
+    });
+    if (res.success) {
+      pcLog(`✓ Step 3 — ${res.message}`, true);
+      document.getElementById('mp-step3-status').textContent = res.peter_complete ? '✓ Peter complete — review draft for HITL' : '✓ Sent to Peter — refresh shortly';
+      btn.classList.remove('loading'); btn.classList.add('success'); btn.textContent = '✓ Done';
+      if (res.peter_complete) { loadHITLPreview(); }
+    } else {
+      throw new Error(res.error || res.message || 'Step 3 failed');
+    }
+  } catch (e) {
+    pcLog(`Step 3 failed: ${e.message}`, false);
+    btn.disabled = false; btn.textContent = 'Integrate & Send'; btn.classList.remove('loading');
+    document.getElementById('mp-step3-status').textContent = `Failed: ${e.message}`;
+  }
+}
+
+function showHITLTab(tab) {
+  document.getElementById('hitl-tab-preview').style.display = tab === 'preview' ? '' : 'none';
+  document.getElementById('hitl-tab-edit').style.display = tab === 'edit' ? '' : 'none';
+  document.getElementById('hitl-btn-preview').classList.toggle('active', tab === 'preview');
+  document.getElementById('hitl-btn-edit').classList.toggle('active', tab === 'edit');
+}
+
+async function loadHITLPreview() {
+  if (!_mpState.briefing_id) return;
+  document.getElementById('hitl-review-section').style.display = '';
+  document.getElementById('hitl-preview').textContent = 'Loading draft…';
+  try {
+    const data = await CS.Auth.apiFetch(`/api/admin/briefings/${_mpState.briefing_id}`);
+    const body = data.body_md || '';
+    document.getElementById('hitl-preview').textContent = body;
+    document.getElementById('hitl-edit-textarea').value = body;
+  } catch (e) {
+    document.getElementById('hitl-preview').textContent = `Error loading draft: ${e.message}`;
+  }
+}
+
+async function saveHITLEdits() {
+  if (!_mpState.briefing_id) return;
+  const body_md = document.getElementById('hitl-edit-textarea').value;
+  const btn = document.getElementById('btn-hitl-save');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    await CS.Auth.apiFetch(`/api/admin/briefings/${_mpState.briefing_id}`, {
+      method: 'PATCH', body: JSON.stringify({ body_md }),
+    });
+    document.getElementById('hitl-preview').textContent = body_md;
+    pcLog('✓ Draft edits saved.', true);
+    btn.textContent = '✓ Saved';
+    setTimeout(() => { btn.disabled = false; btn.textContent = 'Save Edits'; }, 2000);
+  } catch (e) {
+    pcLog(`Save failed: ${e.message}`, false);
+    btn.disabled = false; btn.textContent = 'Save Edits';
+  }
+}
+
+async function approveHITLAndContinue() {
+  const btn = document.getElementById('btn-hitl-approve');
+  btn.disabled = true; btn.textContent = 'Approving…';
+  pcLog('HITL approved — logging review and triggering Ed…');
+  try {
+    const res = await CS.Auth.apiFetch('/api/admin/trigger/hitl-approve-draft', { method: 'POST' });
+    pcLog(`✓ ${res.message || 'HITL approved. Ed triggered.'}`, true);
+    btn.textContent = '✓ Approved';
+    document.getElementById('hitl-review-section').style.display = 'none';
+    loadPipelineControlStatus();
+    loadNewsletterStatus();
+  } catch (e) {
+    pcLog(`Approval failed: ${e.message}`, false);
+    btn.disabled = false; btn.textContent = 'Approved — Proceed to Ed';
   }
 }
 

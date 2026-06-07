@@ -379,4 +379,216 @@ async function pollRuthTasks() {
   }
 }
 
-module.exports = { pollRuthTasks, ensureRuthToken };
+// ── Manual pipeline ───────────────────────────────────────────────────────────
+
+const MANUAL_ACQUISITIONS_SYSTEM_PROMPT = `You are the lead writer for CyberSense: Daily Digital Awareness Brief, a daily professional intelligence newsletter for security-aware workforces. Write the complete, publication-ready newsletter — not an outline.
+
+OUTPUT FORMAT — use these exact ## section headings in this order:
+
+## Opening Brief
+2–3 paragraphs (150–200 words). Identify the unifying theme across today's content. Do not name individual threats — write at the pattern level. Professional, direct tone.
+
+## Situational Awareness
+Three threat entries. Each entry:
+- A plain-text title on its own line (no markdown formatting — no **, no ##, no bold markers)
+- Exactly 2 paragraphs: (1) what the threat is and why it matters, (2) organizational impact
+- Do NOT include recommended actions, defensive guidance, or remediation steps
+- Separate entries with ---
+
+## Training Byte
+Write exactly the following placeholder on its own line and nothing else for this section:
+[TRAINING BYTE PLACEHOLDER]
+
+## Career Development
+One entry. Format exactly as follows — three lines, nothing more:
+Line 1: Short title (the name of the course, certification, webinar, or training program — under 10 words)
+Line 2: 1–2 sentence description of what it covers and why it matters for security professionals
+Line 3: Link: [url from source]
+
+## Modernization and AI Insight
+Two entries separated by ---. Each entry:
+- A plain-text article title on its own line (the actual development being covered — not a section label)
+- 2–3 paragraphs reporting on the specific event, release, or research finding
+- Write about actual events from the provided sources. Do not write newsletter commentary or meta-analysis.
+
+## Final Thought
+One closing paragraph (50–80 words). Synthesize the day's theme into a forward-looking perspective. Do not append any footer, metadata, or publication boilerplate.
+
+RULES:
+- Do not include "Correct Answer" in the Knowledge Check — that section belongs in the Training Byte (handled separately).
+- The SUBJECT line must be a thematic 5–7 word headline capturing the edition theme — NOT a restatement of any individual threat title.
+- Do not append CyberSense footer text or date lines after Final Thought.`;
+
+const MANUAL_INTEGRATION_SYSTEM_PROMPT = `You are Ruth, lead writer for CyberSense Daily Awareness Brief. A complete newsletter draft has been written with a [TRAINING BYTE PLACEHOLDER] in the Training Byte section. Your task is to replace that placeholder with the provided Training Byte content.
+
+RULES:
+- Replace [TRAINING BYTE PLACEHOLDER] with the provided Training Byte content exactly as given
+- Do not modify any other section of the draft
+- Preserve all formatting, headings, and structure exactly
+- Return the complete updated draft only — no preamble or commentary`;
+
+async function fetchArticleContent(url) {
+  try {
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'CyberSense-NewsBot/1.0' },
+      signal: AbortSignal.timeout(12000),
+    });
+    if (!res.ok) return `[Content unavailable — HTTP ${res.status}]`;
+    const html = await res.text();
+    return html
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 2500);
+  } catch (e) {
+    return `[Fetch failed: ${e.message}]`;
+  }
+}
+
+function extractTitle(url, content) {
+  const candidate = content.slice(0, 300).split(/[|\n]/).find(s => s.trim().length > 15 && s.trim().length < 120);
+  if (candidate) return candidate.trim();
+  try { return new URL(url).hostname.replace('www.', ''); } catch { return url.slice(0, 60); }
+}
+
+function formatManualTopicSelection(threatItems, innovationItems, growthItem, editionDate) {
+  const lines = [
+    `Edition Date: ${editionDate}`,
+    '',
+    'SITUATIONAL AWARENESS — THREAT INTELLIGENCE:',
+    ...threatItems.map((t, i) => [
+      `${i + 1}. ${t.title}`,
+      `   Source: ${t.url}`,
+      `   Content: ${t.content}`,
+    ].join('\n')),
+    '',
+    'MODERNIZATION AND AI INSIGHT:',
+    ...innovationItems.map((t, i) => [
+      `${i + 1}. ${t.title}`,
+      `   Source: ${t.url}`,
+      `   Content: ${t.content}`,
+    ].join('\n')),
+    '',
+    'CAREER DEVELOPMENT / PROFESSIONAL GROWTH:',
+    `1. ${growthItem.title}`,
+    `   Source: ${growthItem.url}`,
+    `   Content: ${growthItem.content}`,
+    '',
+    'TRAINING BYTE — Write [TRAINING BYTE PLACEHOLDER] exactly as shown. Do not write any training content here.',
+    '',
+    '---',
+    'After your draft, append one line: SUBJECT: <concise email subject line for this edition, under 60 characters>',
+  ];
+  return lines.join('\n');
+}
+
+async function buildManualAcquisitionsOutline(threatItems, innovationItems, growthItem, editionDate) {
+  const client = new Anthropic();
+  const message = await client.messages.create({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 1800,
+    system: MANUAL_ACQUISITIONS_SYSTEM_PROMPT,
+    messages: [{ role: 'user', content: formatManualTopicSelection(threatItems, innovationItems, growthItem, editionDate) }],
+  });
+
+  const text = (message.content[0]?.text || '').trim();
+  const subjectMatch = text.match(/^SUBJECT:\s*(.+)$/m);
+  const subjectLine = subjectMatch
+    ? subjectMatch[1].trim().slice(0, 120)
+    : `Daily Awareness Brief — ${editionDate}`;
+  const body_md = text.replace(/^SUBJECT:.*$/m, '').trimEnd();
+  return { subjectLine, body_md };
+}
+
+async function executeRuthManualInitial({ threats: threatUrls, growth: growthUrl, innovations: innovationUrls, edition_date }) {
+  const ts = new Date().toISOString();
+  const editionDate = edition_date || nextCtDate();
+
+  console.log(JSON.stringify({ ts, runtime: 'ruth', event: 'MANUAL_INITIAL_START', edition_date: editionDate }));
+
+  const existing = await db.getBriefingByDate(editionDate);
+  if (existing) throw new Error(`Briefing already exists for ${editionDate} — delete it first or choose a different date`);
+
+  const [threatContents, innovationContents, growthContent] = await Promise.all([
+    Promise.all(threatUrls.map(url => fetchArticleContent(url))),
+    Promise.all(innovationUrls.map(url => fetchArticleContent(url))),
+    fetchArticleContent(growthUrl),
+  ]);
+
+  const threatItems = threatUrls.map((url, i) => ({
+    url, content: threatContents[i], title: extractTitle(url, threatContents[i]),
+  }));
+  const innovationItems = innovationUrls.map((url, i) => ({
+    url, content: innovationContents[i], title: extractTitle(url, innovationContents[i]),
+  }));
+  const growthItem = { url: growthUrl, content: growthContent, title: extractTitle(growthUrl, growthContent) };
+
+  const { subjectLine, body_md } = await buildManualAcquisitionsOutline(threatItems, innovationItems, growthItem, editionDate);
+
+  const NIL = '00000000-0000-0000-0000-000000000000';
+  const result = await db.createBriefing({
+    edition_date: editionDate,
+    subject_line: subjectLine,
+    body_md,
+    threat_item_ids: [NIL, NIL, NIL],
+    innovation_item_ids: [NIL, NIL],
+    growth_item_id: NIL,
+    training_byte_id: null,
+  });
+
+  console.log(JSON.stringify({ ts, runtime: 'ruth', event: 'MANUAL_INITIAL_COMPLETE', edition_date: editionDate, briefing_id: result.id }));
+
+  return {
+    briefing_id: result.id,
+    edition_date: editionDate,
+    kirby_threat_url: threatItems[0].url,
+    kirby_threat_title: threatItems[0].title,
+    kirby_threat_content: threatItems[0].content,
+  };
+}
+
+async function buildRuthIntegration(body_md, trainingByte) {
+  const client = new Anthropic();
+  const message = await client.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 2000,
+    system: MANUAL_INTEGRATION_SYSTEM_PROMPT,
+    messages: [{
+      role: 'user',
+      content: `DRAFT:\n${body_md}\n\n---\n\nTRAINING BYTE TO INSERT:\n#### ${trainingByte.title.replace(/^Training Byte:\s*/i, '')}\n\n${trainingByte.body_md}`,
+    }],
+  });
+  return (message.content[0]?.text || '').trim();
+}
+
+async function executeRuthIntegration(briefingId) {
+  const ts = new Date().toISOString();
+
+  const briefing = await db.getBriefingById(briefingId);
+  if (!briefing) throw new Error(`Briefing ${briefingId} not found`);
+  if (!briefing.training_byte_id) throw new Error('No training byte linked — trigger Kirby first');
+
+  const trainingByte = await db.pool.query(
+    'SELECT * FROM training_modules WHERE id=$1',
+    [briefing.training_byte_id]
+  ).then(r => r.rows[0] || null);
+  if (!trainingByte) throw new Error('Training byte record not found');
+
+  console.log(JSON.stringify({ ts, runtime: 'ruth', event: 'MANUAL_INTEGRATION_START', briefing_id: briefingId }));
+
+  const integrated_body_md = await buildRuthIntegration(briefing.body_md, trainingByte);
+
+  if (integrated_body_md.includes('[TRAINING BYTE PLACEHOLDER]')) {
+    throw new Error('LLM did not replace placeholder — retry integration');
+  }
+
+  await db.updateBriefingEditorial(briefingId, { body_md: integrated_body_md });
+
+  console.log(JSON.stringify({ ts, runtime: 'ruth', event: 'MANUAL_INTEGRATION_COMPLETE', briefing_id: briefingId }));
+
+  return { success: true, briefing_id: briefingId };
+}
+
+module.exports = { pollRuthTasks, ensureRuthToken, executeRuthManualInitial, executeRuthIntegration };
