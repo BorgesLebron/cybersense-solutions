@@ -5,11 +5,87 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png">
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/BorgesLebron/hectorborges-portfolio/main/assets/csicon.png">
-<title>Policy &amp; Guidelines - CyberSense.Solutions</title>
-<meta name="description" content="Cybersecurity policy, compliance, privacy, and guidance resources.">
+<title>Policy &amp; Guidance - CyberSense.Solutions</title>
+<meta name="description" content="Published policy intelligence plus categorized cybersecurity policy, compliance, privacy, and guidance documentation.">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="auth.css">
 <link rel="stylesheet" href="repositories.css">
+<style>
+  .article-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .article-row {
+    align-items: baseline;
+    border-bottom: 1px solid #1e293b;
+    display: grid;
+    gap: 14px;
+    grid-template-columns: 80px 1fr;
+    padding: 13px 0;
+  }
+
+  .article-row:last-child { border-bottom: 0; }
+
+  .article-date {
+    color: #475569;
+    font-family: Consolas, Monaco, monospace;
+    font-size: 12px;
+  }
+
+  .article-link {
+    color: #cbd5e1;
+    font-weight: 650;
+    line-height: 1.45;
+    text-decoration: none;
+  }
+
+  .article-link {
+    font-size: 14px;
+  }
+
+  .article-link:hover {
+    color: #67e8f9;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .ref-row {
+    border-bottom: 1px solid #1e293b;
+    padding: 11px 0;
+  }
+
+  .ref-row:last-child { border-bottom: 0; }
+
+  .ref-desc {
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.45;
+    margin: 4px 0 0;
+  }
+
+  .feed-notice {
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.55;
+    padding: 20px 16px;
+    text-align: center;
+  }
+
+  .feed-notice a {
+    color: #67e8f9;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  @media (max-width: 860px) {
+    .article-row {
+      gap: 4px;
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
 </head>
 <body>
 <nav class="nav" role="navigation" aria-label="Main navigation">
@@ -32,28 +108,85 @@
     <a href="resources.html" class="repo-back">&lt;-- Back To Resources</a>
     <p class="repo-kicker">Governance Frameworks Portal</p>
     <h1 class="repo-title">Policy &amp; Guidance</h1>
-    <p class="repo-copy">Foundational documents, global compliance architectures, identity baselines, software supply-chain guidance, and legislative reference material organized into operational buckets.</p>
+    <p class="repo-copy">Published CyberSense policy analysis first, followed by foundational documents, global compliance architectures, identity baselines, software supply-chain guidance, and legislative reference material organized into operational buckets.</p>
+
+    <section class="repo-section">
+      <h2 class="repo-section-title">Published Intel Articles</h2>
+      <div id="articles-container">
+        <div class="feed-notice" id="articles-gate">
+          Sign in to view published policy and guidance articles.<br>
+          <a href="#" onclick="CS.Auth.showLoginModal();return false;">Sign in free &rarr;</a>
+        </div>
+      </div>
+    </section>
 
     <section class="repo-section">
       <h2 class="repo-section-title">Authoritative Frameworks</h2>
       <div class="resource-list">
-        <div class="resource-row"><div><div class="resource-title">DoD Cybersecurity Reference Architecture (CSRA)</div><p class="resource-desc">Department of Defense reference architecture for cybersecurity alignment.</p></div><a href="Policy/Policy%20%26%20Guidance/DoD%20Cybersecurity%20Reference%20Architecture%20(CSRA).pdf" class="action-link primary">Download PDF</a></div>
-        <div class="resource-row"><div><div class="resource-title">NIST SP 800-53 r5 Security and Privacy Controls</div><p class="resource-desc">Security and privacy control catalog for information systems and organizations.</p></div><a href="Policy/Policy%20%26%20Guidance/NIST%20SP%20800-53%20r5%20Security%20and%20Privacy%20Controls%20for%20Information%20Systems%20and%20Organizations.pdf" class="action-link primary">Download PDF</a></div>
-        <div class="resource-row"><div><div class="resource-title">NIST SP 800-37 r2 Risk Management Framework</div><p class="resource-desc">Risk management framework for system authorization and continuous monitoring.</p></div><a href="Policy/Policy%20%26%20Guidance/NIST%20SP%20800-37%20r2%20Risk%20Management%20Framework%20for%20Information%20Systems%20and%20Organizations.pdf" class="action-link primary">Download PDF</a></div>
-        <div class="resource-row"><div><div class="resource-title">Cybersecurity Framework v1.0</div><p class="resource-desc">Original NIST cybersecurity framework reference baseline.</p></div><a href="Policy/Policy%20%26%20Guidance/Cybersecurity%20Framework%20v.1.pdf" class="action-link primary">Download PDF</a></div>
-        <div class="resource-row"><div><div class="resource-title">NIST CSF 2.0</div><p class="resource-desc">Current NIST cybersecurity framework with governance as a core function.</p></div><a href="Policy/Policy%20%26%20Guidance/NIST%20CSF%202.0.pdf" class="action-link primary">Download PDF</a></div>
-        <div class="resource-row"><div><div class="resource-title">CISA Cross-Sector Cybersecurity Performance Goals</div><p class="resource-desc">Cross-sector cyber performance goals for baseline resilience.</p></div><a href="Policy/Policy%20%26%20Guidance/CISA%20Cross-Sector%20Cybersecurity%20Performance%20Goals%20(CPGs).pdf" class="action-link primary">Download PDF</a></div>
-        <div class="resource-row"><div><div class="resource-title">NIST SP 800-60 Mapping Guides</div><p class="resource-desc">Information type and system categorization references, volumes 1 and 2 plus interagency working draft.</p></div><div class="asset-actions"><a href="Policy/Policy%20%26%20Guidance/NIST%20SP%20800-60%20v1r1%20Guide%20for%20Mapping%20Types%20of%20Information%20and%20Information%20Systems%20to%20Security%20Categories%20Vol%201.pdf" class="action-link primary">Vol 1</a><a href="Policy/Policy%20%26%20Guidance/NIST%20SP%20800-60%20v2r1%20Guide%20for%20Mapping%20Types%20of%20Information%20and%20Information%20Systems%20to%20Security%20Categories%20Vol%202.pdf" class="action-link primary">Vol 2</a><a href="Policy/Policy%20%26%20Guidance/NIST%20SP%20800-60r2.iwd%20Guide%20for%20Mapping%20Types%20of%20Information%20and%20Systems%20to%20Security%20Categories.pdf" class="action-link primary">IWD</a></div></div>
-        <div class="resource-row"><div><div class="resource-title">ISO 27001 Official ISO Hub</div><p class="resource-desc">Commercial standard reference. Source-only to avoid unauthorized redistribution.</p></div><a href="https://www.iso.org/isoiec-27001-information-security.html" class="action-link source" target="_blank" rel="noopener noreferrer">Access Source &#8599;</a></div>
+        <div class="ref-row">
+          <a href="Policy/Policy%20%26%20Guidance/DoD%20Cybersecurity%20Reference%20Architecture%20(CSRA).pdf" class="resource-title resource-title-link">DoD Cybersecurity Reference Architecture (CSRA)</a>
+          <p class="ref-desc">Department of Defense reference architecture for cybersecurity alignment.</p>
+        </div>
+        <div class="ref-row">
+          <a href="Policy/Policy%20%26%20Guidance/NIST%20SP%20800-53%20r5%20Security%20and%20Privacy%20Controls%20for%20Information%20Systems%20and%20Organizations.pdf" class="resource-title resource-title-link">NIST SP 800-53 r5 Security and Privacy Controls</a>
+          <p class="ref-desc">Security and privacy control catalog for information systems and organizations.</p>
+        </div>
+        <div class="ref-row">
+          <a href="Policy/Policy%20%26%20Guidance/NIST%20SP%20800-37%20r2%20Risk%20Management%20Framework%20for%20Information%20Systems%20and%20Organizations.pdf" class="resource-title resource-title-link">NIST SP 800-37 r2 Risk Management Framework</a>
+          <p class="ref-desc">Risk management framework for system authorization and continuous monitoring.</p>
+        </div>
+        <div class="ref-row">
+          <a href="Policy/Policy%20%26%20Guidance/Cybersecurity%20Framework%20v.1.pdf" class="resource-title resource-title-link">Cybersecurity Framework v1.0</a>
+          <p class="ref-desc">Original NIST cybersecurity framework reference baseline.</p>
+        </div>
+        <div class="ref-row">
+          <a href="Policy/Policy%20%26%20Guidance/NIST%20CSF%202.0.pdf" class="resource-title resource-title-link">NIST Cybersecurity Framework 2.0</a>
+          <p class="ref-desc">Current NIST cybersecurity framework with governance as a core function.</p>
+        </div>
+        <div class="ref-row">
+          <a href="Policy/Policy%20%26%20Guidance/CISA%20Cross-Sector%20Cybersecurity%20Performance%20Goals%20(CPGs).pdf" class="resource-title resource-title-link">CISA Cross-Sector Cybersecurity Performance Goals</a>
+          <p class="ref-desc">Cross-sector cyber performance goals for baseline resilience.</p>
+        </div>
+        <div class="ref-row">
+          <a href="https://www.iso.org/isoiec-27001-information-security.html" class="resource-title resource-title-link" target="_blank" rel="noopener noreferrer">ISO 27001 Official ISO Hub &#8599;</a>
+          <p class="ref-desc">Commercial standard reference. Source-only access to avoid unauthorized redistribution.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="repo-section">
+      <h2 class="repo-section-title">Security Categorization</h2>
+      <div class="resource-list">
+        <div class="ref-row">
+          <a href="Policy/Policy%20%26%20Guidance/NIST%20SP%20800-60%20v1r1%20Guide%20for%20Mapping%20Types%20of%20Information%20and%20Information%20Systems%20to%20Security%20Categories%20Vol%201.pdf" class="resource-title resource-title-link">NIST SP 800-60 v1r1 Security Categorization, Volume 1</a>
+          <p class="ref-desc">Information type and system categorization reference, volume 1.</p>
+        </div>
+        <div class="ref-row">
+          <a href="Policy/Policy%20%26%20Guidance/NIST%20SP%20800-60%20v2r1%20Guide%20for%20Mapping%20Types%20of%20Information%20and%20Information%20Systems%20to%20Security%20Categories%20Vol%202.pdf" class="resource-title resource-title-link">NIST SP 800-60 v2r1 Security Categorization, Volume 2</a>
+          <p class="ref-desc">Information type and system categorization reference, volume 2.</p>
+        </div>
+        <div class="ref-row">
+          <a href="Policy/Policy%20%26%20Guidance/NIST%20SP%20800-60r2.iwd%20Guide%20for%20Mapping%20Types%20of%20Information%20and%20Systems%20to%20Security%20Categories.pdf" class="resource-title resource-title-link">NIST SP 800-60r2 Interagency Working Draft</a>
+          <p class="ref-desc">Draft mapping guide for information and systems to security categories.</p>
+        </div>
       </div>
     </section>
 
     <section class="repo-section">
       <h2 class="repo-section-title">Zero-Trust Architecture</h2>
       <div class="resource-list">
-        <div class="resource-row"><div><div class="resource-title">NIST SP 800-207 Zero Trust Architecture</div><p class="resource-desc">Canonical zero-trust architecture reference.</p></div><a href="Policy/Policy%20%26%20Guidance/NIST%20SP%20800-207%20Zero%20Trust%20Architecture.pdf" class="action-link primary">Download PDF</a></div>
-        <div class="resource-row"><div><div class="resource-title">CISA Zero Trust Maturity Model v2.0</div><p class="resource-desc">Federal maturity model for zero-trust capability planning.</p></div><a href="Policy/Policy%20%26%20Guidance/CISA%20Zero%20Trust%20Maturity%20Model%20(Version%202.0).pdf" class="action-link primary">Download PDF</a></div>
-        <div class="resource-row"><div><div class="resource-title">NCCoE Implementing Zero Trust Architecture</div><p class="resource-desc">Applied zero-trust implementation reference from NCCoE.</p></div><a href="Policy/Policy%20%26%20Guidance/NCCoE%20-%20Implementing%20Zero%20Trust%20Architecture.pdf" class="action-link primary">Download PDF</a></div>
+        <div class="ref-row">
+          <a href="Policy/Policy%20%26%20Guidance/NIST%20SP%20800-207%20Zero%20Trust%20Architecture.pdf" class="resource-title resource-title-link">NIST SP 800-207 Zero Trust Architecture</a>
+          <p class="ref-desc">Canonical zero-trust architecture reference.</p>
+        </div>
+        <div class="ref-row">
+          <a href="Policy/Policy%20%26%20Guidance/CISA%20Zero%20Trust%20Maturity%20Model%20(Version%202.0).pdf" class="resource-title resource-title-link">CISA Zero Trust Maturity Model v2.0</a>
+          <p class="ref-desc">Federal maturity model for zero-trust capability planning.</p>
+        </div>
+        <div class="ref-row">
+          <a href="Policy/Policy%20%26%20Guidance/NCCoE%20-%20Implementing%20Zero%20Trust%20Architecture.pdf" class="resource-title resource-title-link">NCCoE Implementing Zero Trust Architecture</a>
+          <p class="ref-desc">Applied zero-trust implementation reference from NCCoE.</p>
+        </div>
       </div>
     </section>
 
@@ -61,17 +194,36 @@
       <section class="repo-section">
         <h2 class="repo-section-title">Cloud &amp; Identity Baselines</h2>
         <div class="resource-list">
-          <div class="resource-row"><div><div class="resource-title">NSA CISA Cloud Top-10 IAM</div><p class="resource-desc">Cloud identity and access management baseline risks.</p></div><a href="Policy/Policy%20%26%20Guidance/NSA%20CISA%20CSI-Cloud%20Top-10%20Identity%20Access%20Management.pdf" class="action-link primary">Download PDF</a></div>
-          <div class="resource-row"><div><div class="resource-title">NIST SP 800-63b Digital Identity Guidelines</div><p class="resource-desc">Authentication and digital identity assurance guidance.</p></div><a href="Policy/Policy%20%26%20Guidance/NIST%20SP%20800-63b%20Digital%20Identity%20Guidelines.pdf" class="action-link primary">Download PDF</a></div>
+          <div class="ref-row">
+            <a href="Policy/Policy%20%26%20Guidance/NSA%20CISA%20CSI-Cloud%20Top-10%20Identity%20Access%20Management.pdf" class="resource-title resource-title-link">NSA CISA Cloud Top-10 Identity Access Management</a>
+            <p class="ref-desc">Cloud identity and access management baseline risks.</p>
+          </div>
+          <div class="ref-row">
+            <a href="Policy/Policy%20%26%20Guidance/NIST%20SP%20800-63b%20Digital%20Identity%20Guidelines.pdf" class="resource-title resource-title-link">NIST SP 800-63b Digital Identity Guidelines</a>
+            <p class="ref-desc">Authentication and digital identity assurance guidance.</p>
+          </div>
         </div>
       </section>
+
       <section class="repo-section">
         <h2 class="repo-section-title">Statutory Regulatory Text</h2>
         <div class="resource-list">
-          <div class="resource-row"><div><div class="resource-title">HIPAA Administrative Simplification</div><p class="resource-desc">Administrative simplification reference for healthcare data handling.</p></div><a href="Policy/Policy%20%26%20Guidance/HIPAA%20Administrative%20Simplification.pdf" class="action-link primary">Download PDF</a></div>
-          <div class="resource-row"><div><div class="resource-title">HIPAA Security Standards Matrix</div><p class="resource-desc">Appendix A security standards matrix.</p></div><a href="Policy/Policy%20%26%20Guidance/HIPAA%20-%20Appendix%20A%20to%20Subpart%20C%20of%20Part%20164%E2%80%94Security%20Standards%20-%20Matrix.pdf" class="action-link primary">Download PDF</a></div>
-          <div class="resource-row"><div><div class="resource-title">NIST SP 800-66r2 HIPAA Security Rule</div><p class="resource-desc">Implementation guidance for the HIPAA Security Rule.</p></div><a href="Policy/Policy%20%26%20Guidance/NIST%20SP%20800-66r2%20Implementing%20the%20Health%20Insurance%20Portability%20and%20Accountability%20Act%20(HIPAA)%20Security%20Rule.pdf" class="action-link primary">Download PDF</a></div>
-          <div class="resource-row"><div><div class="resource-title">PCI DSS v4.0.1 Official Document Portal</div><p class="resource-desc">Commercial payment-card standard portal. Source-only access.</p></div><a href="https://www.pcisecuritystandards.org/document_library/" class="action-link source" target="_blank" rel="noopener noreferrer">Access Source &#8599;</a></div>
+          <div class="ref-row">
+            <a href="Policy/Policy%20%26%20Guidance/HIPAA%20Administrative%20Simplification.pdf" class="resource-title resource-title-link">HIPAA Administrative Simplification</a>
+            <p class="ref-desc">Administrative simplification reference for healthcare data handling.</p>
+          </div>
+          <div class="ref-row">
+            <a href="Policy/Policy%20%26%20Guidance/HIPAA%20-%20Appendix%20A%20to%20Subpart%20C%20of%20Part%20164%E2%80%94Security%20Standards%20-%20Matrix.pdf" class="resource-title resource-title-link">HIPAA Security Standards Matrix</a>
+            <p class="ref-desc">Appendix A security standards matrix.</p>
+          </div>
+          <div class="ref-row">
+            <a href="Policy/Policy%20%26%20Guidance/NIST%20SP%20800-66r2%20Implementing%20the%20Health%20Insurance%20Portability%20and%20Accountability%20Act%20(HIPAA)%20Security%20Rule.pdf" class="resource-title resource-title-link">NIST SP 800-66r2 HIPAA Security Rule</a>
+            <p class="ref-desc">Implementation guidance for the HIPAA Security Rule.</p>
+          </div>
+          <div class="ref-row">
+            <a href="https://www.pcisecuritystandards.org/document_library/" class="resource-title resource-title-link" target="_blank" rel="noopener noreferrer">PCI DSS v4.0.1 Official Document Portal &#8599;</a>
+            <p class="ref-desc">Commercial payment-card standard portal. Source-only access.</p>
+          </div>
         </div>
       </section>
     </div>
@@ -80,15 +232,28 @@
       <section class="repo-section">
         <h2 class="repo-section-title">Organizational Templates</h2>
         <div class="resource-list">
-          <div class="resource-row"><div><div class="resource-title">NIST SP 1299 CSF Resources &amp; Overview Guide</div><p class="resource-desc">Resource overview for applying the Cybersecurity Framework.</p></div><a href="Policy/Policy%20%26%20Guidance/NIST%20SP%201299%20CSF%20Resources%20%26%20Overview%20Guide.pdf" class="action-link primary">Download PDF</a></div>
-          <div class="resource-row"><div><div class="resource-title">Adopt the NIST</div><p class="resource-desc">Use CSF and NIST overview resources as organizational adoption templates.</p></div><a href="Policy/Policy%20%26%20Guidance/NIST%20SP%201299%20CSF%20Resources%20%26%20Overview%20Guide.pdf" class="action-link primary">Download PDF</a></div>
+          <div class="ref-row">
+            <a href="Policy/Policy%20%26%20Guidance/NIST%20SP%201299%20CSF%20Resources%20%26%20Overview%20Guide.pdf" class="resource-title resource-title-link">NIST SP 1299 CSF Resources and Overview Guide</a>
+            <p class="ref-desc">Resource overview for applying the Cybersecurity Framework.</p>
+          </div>
+          <div class="ref-row">
+            <a href="Policy/Policy%20%26%20Guidance/NIST%20SP%201299%20CSF%20Resources%20%26%20Overview%20Guide.pdf" class="resource-title resource-title-link">Adopt the NIST</a>
+            <p class="ref-desc">Use CSF and NIST overview resources as organizational adoption templates.</p>
+          </div>
         </div>
       </section>
+
       <section class="repo-section">
         <h2 class="repo-section-title">Supply Chain &amp; Infrastructure</h2>
         <div class="resource-list">
-          <div class="resource-row"><div><div class="resource-title">NIST SP 800-171r3 Protecting CUI</div><p class="resource-desc">Security requirements for controlled unclassified information in nonfederal systems.</p></div><a href="Policy/Policy%20%26%20Guidance/NIST%20SP%20800-171r3%20Protecting%20Controlled%20Unclassified%20Information%20in%20Nonfederal%20Systems%20and%20Organizations.pdf" class="action-link primary">Download PDF</a></div>
-          <div class="resource-row"><div><div class="resource-title">NIST SP 800-218 Secure Software Development Framework</div><p class="resource-desc">Secure software development framework for modern delivery pipelines.</p></div><a href="Policy/Policy%20%26%20Guidance/NIST%20SP%20800-218%20%E2%80%94%20Secure%20Software%20Development%20Framework%20(SSDF).pdf" class="action-link primary">Download PDF</a></div>
+          <div class="ref-row">
+            <a href="Policy/Policy%20%26%20Guidance/NIST%20SP%20800-171r3%20Protecting%20Controlled%20Unclassified%20Information%20in%20Nonfederal%20Systems%20and%20Organizations.pdf" class="resource-title resource-title-link">NIST SP 800-171r3 Protecting CUI</a>
+            <p class="ref-desc">Security requirements for controlled unclassified information in nonfederal systems.</p>
+          </div>
+          <div class="ref-row">
+            <a href="Policy/Policy%20%26%20Guidance/NIST%20SP%20800-218%20%E2%80%94%20Secure%20Software%20Development%20Framework%20(SSDF).pdf" class="resource-title resource-title-link">NIST SP 800-218 Secure Software Development Framework</a>
+            <p class="ref-desc">Secure software development framework for modern delivery pipelines.</p>
+          </div>
         </div>
       </section>
     </div>
@@ -98,5 +263,38 @@
 <script>window.CS_API_BASE = 'https://api.cybersense.solutions';</script>
 <script src="auth.js"></script>
 <script src="main.js"></script>
+<script>
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function fmtDate(ts) {
+  if (!ts) return '--';
+  return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+}
+
+async function loadArticles(user) {
+  const container = document.getElementById('articles-container');
+  if (!user) return;
+  try {
+    const res = await CS.Auth.apiFetch('/api/content/articles?section=policy&limit=30');
+    const articles = (res.data || []).filter(a => a.section === 'policy');
+    if (!articles.length) {
+      container.innerHTML = '<div class="feed-notice">No published policy and guidance articles yet.</div>';
+      return;
+    }
+    container.innerHTML = `<div class="article-list">${articles.map(a => `
+      <div class="article-row">
+        <span class="article-date">${esc(fmtDate(a.published_at))}</span>
+        <a href="intel/article.html?slug=${esc(a.slug)}" class="article-link">${esc(a.title)}</a>
+      </div>`).join('')}</div>`;
+  } catch {
+    container.innerHTML = '<div class="feed-notice">Articles temporarily unavailable.</div>';
+  }
+}
+
+document.addEventListener('cs:login', e => loadArticles(e.detail));
+document.addEventListener('cs:guest', () => loadArticles(null));
+</script>
 </body>
 </html>
