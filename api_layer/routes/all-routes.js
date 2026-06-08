@@ -1737,6 +1737,22 @@ adminRouter.post('/trigger/article-james', requireAdminToken(['gm']), async (req
   } catch (e) { next(e); }
 });
 
+adminRouter.post('/trigger/article-james-url', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    const { url, article_type } = req.body || {};
+    if (!url || !/^https?:\/\/.+/i.test(url)) {
+      return res.status(400).json({ error: 'url is required and must be a valid http/https URL' });
+    }
+    const validTypes = ['threat', 'innovation', 'growth', 'policy'];
+    const sourceType = validTypes.includes(article_type) ? article_type : 'threat';
+    const { executeJamesManualUrl } = require('../services/james_runtime');
+    const { pollJasonTasks } = require('../services/scheduler');
+    const article = await executeJamesManualUrl(url, sourceType);
+    await pollJasonTasks();
+    return res.json({ triggered: true, agent: 'James', success: true, article_id: article.id, message: `James drafted article from URL (${sourceType}). Jason notified — check Articles Console.` });
+  } catch (e) { next(e); }
+});
+
 adminRouter.post('/trigger/article-jason', requireAdminToken(['gm']), async (req, res, next) => {
   try {
     const refreshed = await refreshArticleAgentTasks('Jason', 'dev_edit');

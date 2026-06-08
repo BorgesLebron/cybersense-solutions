@@ -250,7 +250,7 @@ function renderCareerDevCard(content) {
   }
 
   const bodyLines = lines.slice(bodyStart).map(l => {
-    const linkMatch = l.trim().match(/^Link:\s*(https?:\/\/\S+)/i);
+    const linkMatch = l.trim().match(/^(?:Link|Register|URL|Source|Read more):\s*(https?:\/\/\S+)/i);
     if (linkMatch) return `[Read More ↗](${linkMatch[1]})`;
     return l;
   });
@@ -604,12 +604,13 @@ async function executeMattHtmlGeneration(task) {
 async function pollMattTasks() {
   try {
     const tasks = await db.pool.query(`
-      SELECT * FROM agent_tasks
-      WHERE agent_name = 'Matt'
-        AND task_type   = 'generate_newsletter_html'
-        AND status      IN ('queued', 'escalated')
-        AND started_at  > now() - INTERVAL '${POLL_WINDOW_HOURS} hours'
-      ORDER BY started_at ASC
+      SELECT t.* FROM agent_tasks t
+      JOIN briefings b ON b.id = t.content_id AND b.file_path IS NULL
+      WHERE t.agent_name = 'Matt'
+        AND t.task_type   = 'generate_newsletter_html'
+        AND t.status      IN ('queued', 'escalated')
+        AND t.started_at  > now() - INTERVAL '${POLL_WINDOW_HOURS} hours'
+      ORDER BY t.started_at ASC
       LIMIT 3
     `).then(r => r.rows);
 
