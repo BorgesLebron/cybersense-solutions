@@ -289,6 +289,68 @@ async function executeJamesDraftArticle(task, opts = {}) {
   }
 }
 
+async function fetchUrlContent(url) {
+  try {
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'CyberSense-NewsBot/1.0' },
+      signal: AbortSignal.timeout(12000),
+    });
+    if (!res.ok) return `[Content unavailable — HTTP ${res.status}]`;
+    const html = await res.text();
+    return html
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 3000);
+  } catch (e) {
+    return `[Fetch failed: ${e.message}]`;
+  }
+}
+
+function extractUrlTitle(url, content) {
+  const candidate = content.slice(0, 300).split(/[|\n]/).find(s => s.trim().length > 15 && s.trim().length < 120);
+  if (candidate) return candidate.trim();
+  try { return new URL(url).hostname.replace('www.', ''); } catch { return url.slice(0, 60); }
+}
+
+async function executeJamesManualUrl(url, articleType) {
+  const ts = new Date().toISOString();
+  const sourceType = articleType || 'threat';
+  const section = ['innovation', 'growth', 'policy'].includes(sourceType) ? sourceType : 'threat';
+
+  console.log(JSON.stringify({ ts, runtime: 'james', event: 'MANUAL_URL_START', url, source_type: sourceType }));
+
+  const content = await fetchUrlContent(url);
+  const title = extractUrlTitle(url, content);
+
+  const item = {
+    repository_id: null,
+    source_id: ZERO_UUID,
+    source_type: sourceType,
+    section,
+    title,
+    category: sourceType,
+    priority: null,
+    tags: [],
+    source_url: url,
+    summary: content,
+    normalized_data: {},
+  };
+
+  const draft = await applyJamesDraft(item);
+  if (draft.issues.length > 0) {
+    const error = `Intel article draft blocked: ${draft.issues.join('; ')}`;
+    console.error(JSON.stringify({ ts, runtime: 'james', event: 'MANUAL_URL_BLOCKED', url, issues: draft.issues }));
+    throw new Error(error);
+  }
+
+  const article = await apiCall('/api/pipeline/articles', 'POST', draft);
+  console.log(JSON.stringify({ ts, runtime: 'james', event: 'MANUAL_URL_COMPLETE', url, article_id: article.id }));
+  return article;
+}
+
 async function pollJamesTasks() {
   try {
     const tasks = await db.pool.query(`
@@ -313,6 +375,7 @@ async function pollJamesTasks() {
 module.exports = {
   pollJamesTasks,
   executeJamesDraftArticle,
+  executeJamesManualUrl,
   ensureJamesToken,
   getNextIntelArticleCandidate,
   applyJamesDraft,
