@@ -12,11 +12,11 @@ function loadPublicArticleRenderer() {
   }
 
   const source = html.slice(start, end);
-  return new Function(`${source}; return { mdToHtml };`)();
+  return new Function(`${source}; return { mdToHtml, renderArticleBanner };`)();
 }
 
 describe('public Intel article Markdown rendering', () => {
-  const { mdToHtml } = loadPublicArticleRenderer();
+  const { mdToHtml, renderArticleBanner } = loadPublicArticleRenderer();
 
   test('removes a duplicated body title already rendered in the article header', () => {
     const title = 'Field-Based Plasma Research';
@@ -52,4 +52,30 @@ Research context.`;
     expect(rendered).toContain('<li>First action.</li>');
     expect(rendered).toContain('<li>Fifth action.</li>');
   });
+
+  test('renders a ready article banner with its committed image and alt text', () => {
+    const rendered = renderArticleBanner({
+      title: 'When the Source Goes Dark',
+      banner_status: 'ready',
+      banner_image_url: 'https://cybersense.solutions/headlineBanner/source-goes-dark.png?v=2',
+      banner_alt_text: 'Illustrated article banner',
+    });
+
+    expect(rendered).toContain('class="article-banner"');
+    expect(rendered).toContain('src="https://cybersense.solutions/headlineBanner/source-goes-dark.png?v=2"');
+    expect(rendered).toContain('alt="Illustrated article banner"');
+    expect(rendered).toContain('width="1200"');
+    expect(rendered).toContain('height="630"');
+  });
+
+  test.each(['pending', 'generating', 'failed', 'skipped', null])(
+    'omits banners that are not ready (%s)',
+    (bannerStatus) => {
+      expect(renderArticleBanner({
+        title: 'Legacy Article',
+        banner_status: bannerStatus,
+        banner_image_url: 'https://example.com/banner.png',
+      })).toBe('');
+    },
+  );
 });
