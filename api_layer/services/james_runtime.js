@@ -292,26 +292,60 @@ async function executeJamesDraftArticle(task, opts = {}) {
 async function fetchUrlContent(url) {
   try {
     const res = await fetch(url, {
-      headers: { 'User-Agent': 'CyberSense-NewsBot/1.0' },
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; CyberSense-NewsBot/1.0)',
+        'Accept': 'text/html,application/xhtml+xml',
+      },
       signal: AbortSignal.timeout(12000),
     });
-    if (!res.ok) return `[Content unavailable — HTTP ${res.status}]`;
-    const html = await res.text();
-    return html
+    if (!res.ok) return { rawHtml: '', content: `[Content unavailable — HTTP ${res.status}]` };
+    const rawHtml = await res.text();
+
+    const stripped = rawHtml
       .replace(/<script[\s\S]*?<\/script>/gi, '')
-      .replace(/<style[\s\S]*?<\/style>/gi, '')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-      .slice(0, 3000);
+      .replace(/<style[\s\S]*?<\/style>/gi, '');
+
+    // Prefer semantic content containers over raw page text
+    const containerMatch = stripped.match(/<(?:article|main)[^>]*>([\s\S]*?)<\/(?:article|main)>/i);
+    if (containerMatch) {
+      return {
+        rawHtml,
+        content: containerMatch[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 4000),
+      };
+    }
+
+    // Fall back to aggregated <p> content (skips nav/header/footer boilerplate)
+    const paras = [];
+    const pRegex = /<p[^>]*>([\s\S]*?)<\/p>/gi;
+    let m;
+    while ((m = pRegex.exec(stripped)) !== null) {
+      const text = m[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      if (text.length > 50) paras.push(text);
+      if (paras.join('\n\n').length >= 4000) break;
+    }
+    if (paras.length >= 2) return { rawHtml, content: paras.join('\n\n').slice(0, 4000) };
+
+    // Last resort: full text strip from document start
+    return {
+      rawHtml,
+      content: stripped.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 4000),
+    };
   } catch (e) {
-    return `[Fetch failed: ${e.message}]`;
+    return { rawHtml: '', content: `[Fetch failed: ${e.message}]` };
   }
 }
 
-function extractUrlTitle(url, content) {
-  const candidate = content.slice(0, 300).split(/[|\n]/).find(s => s.trim().length > 15 && s.trim().length < 120);
-  if (candidate) return candidate.trim();
+function extractUrlTitle(url, rawHtml) {
+  const og = rawHtml.match(/<meta[^>]+property="og:title"[^>]+content="([^"]+)"/i)
+          || rawHtml.match(/<meta[^>]+content="([^"]+)"[^>]+property="og:title"/i);
+  if (og?.[1]) return og[1].replace(/\s+/g, ' ').trim().slice(0, 120);
+
+  const h1 = rawHtml.match(/<h1[^>]*>([^<]{10,120})<\/h1>/i);
+  if (h1?.[1]) return h1[1].replace(/\s+/g, ' ').trim();
+
+  const pt = rawHtml.match(/<title[^>]*>([^<]+)<\/title>/i);
+  if (pt?.[1]) return pt[1].replace(/[|\-–—].*$/, '').replace(/\s+/g, ' ').trim().slice(0, 120);
+
   try { return new URL(url).hostname.replace('www.', ''); } catch { return url.slice(0, 60); }
 }
 
@@ -323,8 +357,8 @@ async function executeJamesManualUrl(url, articleType) {
   console.log(JSON.stringify({ ts, runtime: 'james', event: 'MANUAL_URL_START', url, source_type: sourceType }));
 
   try {
-    const content = await fetchUrlContent(url);
-    const title = extractUrlTitle(url, content);
+    const { rawHtml, content } = await fetchUrlContent(url);
+    const title = extractUrlTitle(url, rawHtml);
 
     console.log(JSON.stringify({ ts, runtime: 'james', event: 'MANUAL_URL_FETCH_OK', url, title, content_len: content.length }));
 
