@@ -74,8 +74,25 @@
     border-radius: 8px;
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    margin-bottom: 6px;
+    margin-bottom: 0;
     overflow: hidden;
+  }
+
+  .article-banner {
+    background: #050b14;
+    border: 1px solid #1e293b;
+    border-radius: 10px;
+    box-shadow: 0 18px 48px rgba(0, 0, 0, .28);
+    margin: 24px 0 0;
+    overflow: hidden;
+  }
+
+  .article-banner img {
+    aspect-ratio: 1200 / 630;
+    display: block;
+    height: auto;
+    object-fit: cover;
+    width: 100%;
   }
 
   .metric-node {
@@ -428,6 +445,28 @@ function escapeHtml(value) {
     .replace(/'/g, '&#039;');
 }
 
+function renderArticleBanner(article) {
+  if (article.banner_status !== 'ready' || !article.banner_image_url) return '';
+
+  const altText = article.banner_alt_text || `${article.title} - CyberSense.Solutions article banner`;
+  return `
+    <figure class="article-banner">
+      <img src="${escapeHtml(article.banner_image_url)}"
+           alt="${escapeHtml(altText)}"
+           width="1200"
+           height="630"
+           loading="eager"
+           decoding="async">
+    </figure>`;
+}
+
+function bindArticleBanner(root) {
+  const image = root.querySelector('.article-banner img');
+  if (!image) return;
+
+  image.addEventListener('error', () => image.closest('.article-banner')?.remove(), { once: true });
+}
+
 function stripMarkdown(value) {
   return String(value || '')
     .replace(/```[\s\S]*?```/g, '')
@@ -638,7 +677,8 @@ function renderArticleHeader(article) {
         <span class="label">EST. READ</span>
         <span class="value monospace-font">${estimateReadTime(article)}</span>
       </div>
-    </div>`;
+    </div>
+    ${renderArticleBanner(article)}`;
 }
 
 function bindCopyButtons(root) {
@@ -686,7 +726,9 @@ async function loadArticle(user) {
     document.getElementById('page-title').textContent = `${article.title} - CyberSense.Solutions`;
     document.getElementById('article-breadcrumbs').innerHTML = `
       <a href="../intelligence.html">Intel Center</a> / <a href="${sectionHref(article.section)}">${sectionLabel(article.section)}</a>`;
-    document.getElementById('article-hero-content').innerHTML = renderArticleHeader(article);
+    const hero = document.getElementById('article-hero-content');
+    hero.innerHTML = renderArticleHeader(article);
+    bindArticleBanner(hero);
     document.getElementById('article-sidebar').innerHTML = renderSidebar(article);
 
     const body = document.getElementById('article-body');
