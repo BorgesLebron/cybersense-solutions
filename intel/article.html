@@ -4,7 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title id="page-title">Intel Brief - CyberSense.Solutions</title>
-<meta name="description" content="CyberSense.Solutions - analyst-written cybersecurity intelligence.">
+<meta name="description" id="meta-description" content="CyberSense.Solutions - analyst-written cybersecurity intelligence.">
+<meta property="og:site_name" content="CyberSense.Solutions">
+<meta property="og:type" content="article">
+<meta property="og:title" id="og-title" content="Intel Brief — CyberSense.Solutions">
+<meta property="og:description" id="og-description" content="Analyst-written cybersecurity intelligence for security professionals.">
+<meta property="og:url" id="og-url" content="">
+<meta property="og:image" id="og-image" content="https://cybersense.solutions/assets/og-default.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" id="tw-title" content="Intel Brief — CyberSense.Solutions">
+<meta name="twitter:description" id="tw-description" content="Analyst-written cybersecurity intelligence for security professionals.">
+<meta name="twitter:image" id="tw-image" content="https://cybersense.solutions/assets/og-default.png">
 <link rel="stylesheet" href="../styles.css">
 <link rel="stylesheet" href="../auth.css">
 <link rel="icon" type="image/png" href="/assets/csicon.png">
@@ -354,6 +364,42 @@
     user-select: none;
   }
 
+  .article-cta-strip {
+    align-items: center;
+    background: linear-gradient(135deg, #090f1c 0%, #0a1628 100%);
+    border: 1px solid #1e3a5f;
+    border-radius: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: space-between;
+    margin-top: 48px;
+    padding: 24px 28px;
+  }
+
+  .article-cta-strip .cta-text { flex: 1; min-width: 0; }
+
+  .article-cta-strip .cta-text strong {
+    color: #fff;
+    display: block;
+    font-size: 18px;
+    font-weight: 850;
+    margin-bottom: 4px;
+  }
+
+  .article-cta-strip .cta-text span {
+    color: #94a3b8;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .article-cta-strip .cta-actions {
+    align-items: center;
+    display: flex;
+    flex-shrink: 0;
+    gap: 10px;
+  }
+
   @media (max-width: 860px) {
     .intel-article-shell { padding: 56px 16px 48px; }
     .article-body-grid {
@@ -697,6 +743,46 @@ function bindCopyButtons(root) {
   });
 }
 
+async function publicFetch(path) {
+  const res = await fetch(`${window.CS_API_BASE}${path}`);
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    const e = new Error(json.error?.message || json.message || 'Request failed');
+    e.status = res.status;
+    e.code = json.error?.code || json.code;
+    throw e;
+  }
+  return res.json();
+}
+
+function updateSocialMeta(article) {
+  const title = `${article.title} — CyberSense.Solutions`;
+  const desc = stripMarkdown(article.body_md || '').slice(0, 160);
+  const url = window.location.href;
+  const img = article.banner_image_url || 'https://cybersense.solutions/assets/og-default.png';
+
+  document.getElementById('page-title').textContent = title;
+  document.getElementById('meta-description').setAttribute('content', desc);
+  ['og-title', 'tw-title'].forEach(id => document.getElementById(id)?.setAttribute('content', title));
+  ['og-description', 'tw-description'].forEach(id => document.getElementById(id)?.setAttribute('content', desc));
+  ['og-image', 'tw-image'].forEach(id => document.getElementById(id)?.setAttribute('content', img));
+  document.getElementById('og-url')?.setAttribute('content', url);
+}
+
+function renderCtaStrip(user) {
+  if (user) return '';
+  return `
+    <div class="article-cta-strip">
+      <div class="cta-text">
+        <strong>Stay ahead of the threat landscape.</strong>
+        <span>Get daily intelligence briefs, Threat Radar access, and full Intel Center — free.</span>
+      </div>
+      <div class="cta-actions">
+        <a href="#" onclick="CS.Auth.showLoginModal();return false;" class="btn btn-primary btn-sm">Sign Up Free</a>
+      </div>
+    </div>`;
+}
+
 async function loadArticle(user) {
   const params = new URLSearchParams(window.location.search);
   const slug = params.get('slug');
@@ -709,21 +795,10 @@ async function loadArticle(user) {
     return;
   }
 
-  if (!user) {
-    document.getElementById('article-breadcrumbs').innerHTML = '<a href="../intelligence.html">Intel Center</a> / Subscriber Access';
-    document.getElementById('article-hero-content').innerHTML = `
-      <h1 class="main-title">Intel Brief</h1>
-      <p style="color:#94a3b8;margin-bottom:20px;">Sign in to read this intelligence brief.</p>
-      <a href="#" class="btn btn-primary" onclick="CS.Auth.showLoginModal();return false;">Sign In Free</a>`;
-    document.getElementById('article-body').innerHTML = '';
-    document.getElementById('article-sidebar').innerHTML = '';
-    return;
-  }
-
   try {
-    const article = await CS.Auth.apiFetch(`/api/content/articles/${slug}`);
+    const article = await publicFetch(`/api/content/articles/${slug}`);
 
-    document.getElementById('page-title').textContent = `${article.title} - CyberSense.Solutions`;
+    updateSocialMeta(article);
     document.getElementById('article-breadcrumbs').innerHTML = `
       <a href="../intelligence.html">Intel Center</a> / <a href="${sectionHref(article.section)}">${sectionLabel(article.section)}</a>`;
     const hero = document.getElementById('article-hero-content');
@@ -732,25 +807,8 @@ async function loadArticle(user) {
     document.getElementById('article-sidebar').innerHTML = renderSidebar(article);
 
     const body = document.getElementById('article-body');
-
-    if (article.blurred) {
-      body.innerHTML = `
-        <div class="gate-wrapper">
-          <div class="blurred-content" aria-hidden="true">
-            <p>${escapeHtml(article.teaser || '')}</p>
-          </div>
-          <div class="gate-overlay">
-            <div class="gate-card">
-              <h3>Standard subscribers get full access</h3>
-              <p>Unlock all Intel Briefs for $9/month. No ads. No noise.</p>
-              <a href="#" onclick="CS.Auth.showLoginModal();return false;" class="btn btn-primary btn-sm">See Plans</a>
-            </div>
-          </div>
-        </div>`;
-    } else {
-      body.innerHTML = mdToHtml(article.body_md, article.title);
-      bindCopyButtons(body);
-    }
+    body.innerHTML = mdToHtml(article.body_md, article.title) + renderCtaStrip(user);
+    bindCopyButtons(body);
   } catch (e) {
     if (e.status === 404 || e.code === 'NOT_FOUND') {
       document.getElementById('article-breadcrumbs').innerHTML = '<a href="../intelligence.html">Intel Center</a> / Not Found';

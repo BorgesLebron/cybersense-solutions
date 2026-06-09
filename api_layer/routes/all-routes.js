@@ -49,7 +49,7 @@ contentRouter.get('/articles', requireUserToken('free'), async (req, res, next) 
   } catch (e) { next(e); }
 });
 
-contentRouter.get('/articles/:slug', requireUserToken('free'), async (req, res, next) => {
+contentRouter.get('/articles/:slug', async (req, res, next) => {
   try {
     const article = await db.getArticle(req.params.slug);
     if (!article || article.pipeline_status !== 'published') return res.status(404).json(err('NOT_FOUND', 'Article not found'));
