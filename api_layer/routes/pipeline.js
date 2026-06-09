@@ -5,6 +5,7 @@ const router = express.Router();
 const db = require('../db/queries');
 const { requireAgentToken, validatePipelineTransition, err } = require('../middleware/auth');
 const { notifyAgents, triggerEscalationCheck } = require('../services/agents');
+const { isArticleBannerReleaseable } = require('../services/lucy_runtime');
 
 const INTEL_AGENTS = ['James', 'Jason', 'Rob', 'Jeff', 'Maya', 'Henry', 'Laura'];
 const AWARENESS_AGENTS = ['Ruth', 'Peter', 'Ed', 'Jeff', 'Maya', 'Henry', 'Laura'];
@@ -208,6 +209,24 @@ router.patch('/articles/:id/status', requireAgentToken([...INTEL_AGENTS]), async
       });
     }
 
+    if (to_status === 'eic_review' && updated.banner_status === 'pending') {
+      const lucyTask = await db.createTask({
+        agent_name: 'Lucy',
+        task_type: 'generate_article_banner',
+        content_type: 'article',
+        content_id: id,
+        sla_deadline: null,
+      });
+      await notifyAgents(['Lucy'], {
+        type: 'ARTICLE_BANNER_REQUESTED',
+        article_id: id,
+        title: article.title,
+        from_agent: agent_name,
+        task_id: lucyTask.id,
+        message: `Rob completed EIC review for "${article.title}". Generate its article banner in parallel with Jeff QA.`,
+      });
+    }
+
     if (to_status === 'approved') {
       await notifyAgents(['Laura'], {
         type: 'ARTICLE_READY_FOR_HITL_RELEASE',
@@ -378,6 +397,12 @@ router.post('/release', requireAgentToken(['Laura', 'Henry']), async (req, res, 
     if (!content) return res.status(404).json(err('NOT_FOUND', 'Content not found'));
     if (!content.maya_approved_at && content.pipeline_status !== 'approved')
       return res.status(422).json(err('NOT_APPROVED', 'Content has not received Maya approval. Distribution blocked.'));
+    if (content_type === 'article' && !isArticleBannerReleaseable(content)) {
+      return res.status(422).json(err(
+        'BANNER_NOT_READY',
+        'Article banner must be ready or explicitly skipped by a GM before release.'
+      ));
+    }
 
     if (content_type === 'article') await db.advanceArticleStatus(content_id, 'published');
     else if (content_type === 'briefing') await db.advanceBriefingStatus(content_id, 'published');

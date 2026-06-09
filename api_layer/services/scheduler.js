@@ -14,6 +14,7 @@ const { pollJamesTasks }        = require('./james_runtime');
 const { pollJasonTasks }        = require('./jason_runtime');
 const { pollRobTasks }          = require('./rob_runtime');
 const { pollJeffTasks }         = require('./jeff_runtime');
+const { pollLucyTasks }         = require('./lucy_runtime');
 const { pollRickTasks }         = require('./rick_runtime');
 const { pollIvanCharlieTasks, DAILY_MIN_INNOVATION, DAILY_MIN_GROWTH } = require('./ivan_charlie_runtime');
 const { pollBarbaraTasks }      = require('./barbara_runtime');
@@ -1043,11 +1044,12 @@ function startScheduler() {
     cron.schedule('*/2 4-9 * * 0-4', pollJasonTasks,               { timezone: 'America/Chicago' });
     cron.schedule('*/2 4-9 * * 0-4', pollRobTasks,                 { timezone: 'America/Chicago' });
     cron.schedule('*/2 * * * *',      pollJeffTasks,                { timezone: 'America/Chicago' });
+    cron.schedule('*/2 * * * *',      pollLucyTasks,                { timezone: 'America/Chicago' });
     cron.schedule('*/2 * * * *',      pollMayaTasks,                { timezone: 'America/Chicago' });
     cron.schedule('*/2 * * * *',      pollMattTasks,                { timezone: 'America/Chicago' });
     cron.schedule('0 */4 * * *',     pollRickTasks,                 { timezone: 'America/Chicago' });
     cron.schedule('30 */4 * * *',    pollBarbaraTasks,              { timezone: 'America/Chicago' });
-    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SCHEDULER_STARTED', jobs: 34 }));
+    console.log(JSON.stringify({ ts: new Date().toISOString(), event: 'SCHEDULER_STARTED', jobs: 35 }));
   } catch (e) {
     console.warn('node-cron not installed — scheduler disabled. Install with: npm install node-cron');
   }
@@ -1081,6 +1083,7 @@ module.exports = {
   pollJasonTasks,
   pollRobTasks,
   pollJeffTasks,
+  pollLucyTasks,
   pollMayaTasks,
   pollMattTasks,
   pollRickTasks,

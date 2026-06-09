@@ -1293,14 +1293,39 @@ async function loadArticlesData() {
         const statusText  = a.error_message || a.status_label || a.hold || 'In production';
         const isBlocked   = statusText.startsWith('Blocked');
         const stageClass  = STAGE_COLOR[a.pipeline_status] || 'b-gray';
-        const releaseBtn  = a.pipeline_status === 'approved'
+        const bannerStatus = a.banner_status || 'pending';
+        const bannerClass = {
+          pending: 'b-gray', generating: 'b-blue', ready: 'b-green',
+          failed: 'b-red', skipped: 'b-amber',
+        }[bannerStatus] || 'b-gray';
+        const bannerReady = bannerStatus === 'ready' || bannerStatus === 'skipped';
+        const bannerEligible = ['eic_review', 'qa', 'maya', 'approved'].includes(a.pipeline_status);
+        const bannerAction = bannerStatus === 'failed' ? 'retry' : 'generate';
+        const bannerActionLabel = bannerStatus === 'failed' ? 'Retry banner' :
+          bannerStatus === 'ready' ? 'Regenerate' : 'Generate banner';
+        const bannerControls = !bannerEligible
+          ? '<span style="font-size:10px;color:var(--color-text-tertiary);">Available after Rob review</span>'
+          : bannerStatus === 'generating'
+          ? '<span style="font-size:10px;color:var(--color-text-tertiary);">Lucy working...</span>'
+          : `<button style="font-size:10px;padding:3px 7px;border-radius:4px;background:#0f172a;color:#cbd5e1;border:1px solid var(--color-border-tertiary);cursor:pointer;" onclick="runBannerAction('${esc(a.id)}','${bannerAction}',this)">${bannerActionLabel}</button>
+             ${bannerStatus !== 'skipped' ? `<button style="font-size:10px;padding:3px 7px;border-radius:4px;background:#3f1d1d;color:#fecaca;border:1px solid #7f1d1d;cursor:pointer;" onclick="skipArticleBanner('${esc(a.id)}',this)">Skip</button>` : ''}`;
+        const bannerPreview = a.banner_image_url
+          ? `<a href="${esc(a.banner_image_url)}" target="_blank" rel="noopener" style="font-size:10px;color:#38bdf8;">Preview image</a>`
+          : '';
+        let releaseBtn  = a.pipeline_status === 'approved'
           ? `<button style="font-size:11px;padding:3px 10px;border-radius:4px;background:#185FA5;color:#fff;border:none;cursor:pointer;flex-shrink:0;" onclick="releaseArticle('${esc(a.id)}',this)">Release →</button>`
           : '';
+        if (a.pipeline_status === 'approved' && !bannerReady) {
+          releaseBtn = '<button disabled title="Generate or skip the banner before release" style="font-size:11px;padding:3px 10px;border-radius:4px;background:#334155;color:#94a3b8;border:none;flex-shrink:0;">Banner required</button>';
+        }
         return `<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--color-border-tertiary);">
           <div style="flex:1;min-width:0;">
             <span class="badge ${stageClass}" style="font-size:10px;margin-bottom:3px;display:inline-block;">${esc(a.stage)}</span>
+            <span class="badge ${bannerClass}" style="font-size:10px;margin:0 0 3px 4px;display:inline-block;">Banner: ${esc(bannerStatus)}</span>
             <div style="font-size:13px;font-weight:500;color:var(--color-text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${esc(a.title)}">${esc(a.title)}</div>
             <div style="font-size:11px;color:${isBlocked ? 'var(--color-text-danger)' : 'var(--color-text-tertiary)'};">${esc(statusText)}</div>
+            ${a.banner_error ? `<div style="font-size:10px;color:var(--color-text-danger);margin-top:2px;">Lucy: ${esc(a.banner_error)}</div>` : ''}
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:5px;">${bannerControls}${bannerPreview}</div>
           </div>
           ${releaseBtn}
         </div>`;
@@ -1445,6 +1470,37 @@ async function releaseArticle(id, btn) {
     btn.disabled = false;
     btn.textContent = 'Release →';
     alert('Release failed: ' + (e.message || 'Unknown error'));
+  }
+}
+
+async function runBannerAction(id, action, btn) {
+  btn.disabled = true;
+  const original = btn.textContent;
+  btn.textContent = 'Queued...';
+  try {
+    await CS.Auth.apiFetch('/api/admin/articles/' + id + '/banner/' + action, { method: 'POST' });
+    await loadArticlesData();
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = original;
+    alert('Banner request failed: ' + (e.message || 'Unknown error'));
+  }
+}
+
+async function skipArticleBanner(id, btn) {
+  const reason = prompt('Why should this article be released without a banner?');
+  if (!reason) return;
+  btn.disabled = true;
+  try {
+    await CS.Auth.apiFetch('/api/admin/articles/' + id + '/banner/skip', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason }),
+    });
+    await loadArticlesData();
+  } catch (e) {
+    btn.disabled = false;
+    alert('Banner skip failed: ' + (e.message || 'Unknown error'));
   }
 }
 

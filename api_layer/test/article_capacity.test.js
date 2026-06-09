@@ -22,6 +22,7 @@ jest.mock('../services/james_runtime', () => ({ pollJamesTasks: jest.fn() }));
 jest.mock('../services/jason_runtime', () => ({ pollJasonTasks: jest.fn() }));
 jest.mock('../services/rob_runtime', () => ({ pollRobTasks: jest.fn() }));
 jest.mock('../services/jeff_runtime', () => ({ pollJeffTasks: jest.fn() }));
+jest.mock('../services/lucy_runtime', () => ({ pollLucyTasks: jest.fn() }));
 jest.mock('../services/rick_runtime', () => ({ pollRickTasks: jest.fn() }));
 jest.mock('../services/ivan_charlie_runtime', () => ({ pollIvanCharlieTasks: jest.fn() }));
 jest.mock('../services/barbara_runtime', () => ({ pollBarbaraTasks: jest.fn() }));
