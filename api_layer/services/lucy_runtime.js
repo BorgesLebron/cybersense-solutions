@@ -2,6 +2,7 @@
 
 const path = require('path');
 const sharp = require('sharp');
+const opentype = require('opentype.js');
 const db = require('../db/queries');
 const { notifyAgents } = require('./agents');
 const { commitBufferToGithub } = require('./github_content');
@@ -15,6 +16,8 @@ const PUBLIC_BASE_URL = (process.env.PUBLIC_SITE_URL || 'https://cybersense.solu
 const FONT_ROOT = path.resolve(__dirname, '..', 'assets', 'fonts');
 const HEADLINE_FONT = path.join(FONT_ROOT, 'BricolageGrotesque-Bold.ttf');
 const BODY_FONT = path.join(FONT_ROOT, 'InstrumentSans-Bold.ttf');
+let _headlineFont;
+let _bodyFont;
 
 const SECTION_LABELS = {
   threat: 'THREAT INTELLIGENCE',
@@ -78,52 +81,40 @@ function wrapHeadline(title, maxChars = 31, maxLines = 3) {
   return kept;
 }
 
-async function createTextLayer({ text, fontfile, font, width, height, color, align = 'left' }) {
-  return sharp({
-    text: {
-      text: `<span foreground="${color}">${escapeMarkup(text)}</span>`,
-      font,
-      fontfile,
-      width,
-      height,
-      align,
-      rgba: true,
-      wrap: 'word-char',
-    },
-  }).png().toBuffer();
+function loadFonts() {
+  _headlineFont ||= opentype.loadSync(HEADLINE_FONT);
+  _bodyFont ||= opentype.loadSync(BODY_FONT);
+  return { headline: _headlineFont, body: _bodyFont };
+}
+
+function textPath(font, text, x, baseline, fontSize, color) {
+  const glyphPath = font.getPath(text, x, baseline, fontSize);
+  return `<path d="${glyphPath.toPathData(2)}" fill="${color}"/>`;
+}
+
+function buildTypographyLayer(article) {
+  const fonts = loadFonts();
+  const headlineLines = wrapHeadline(article.title);
+  const category = SECTION_LABELS[article.section] || 'CYBERSECURITY INTELLIGENCE';
+  const brand = 'CyberSense.Solutions';
+  const brandSize = 20;
+  const brandWidth = fonts.body.getAdvanceWidth(brand, brandSize);
+
+  const headlinePaths = headlineLines.map((line, index) =>
+    textPath(fonts.headline, line, 54, 215 + index * 60, 58, '#FFFFFF')
+  ).join('');
+
+  return Buffer.from(`
+    <svg width="${BANNER_WIDTH}" height="${BANNER_HEIGHT}" xmlns="http://www.w3.org/2000/svg">
+      ${textPath(fonts.body, category, 82, 104, 18, '#00D2FF')}
+      ${headlinePaths}
+      ${textPath(fonts.body, brand, 1146 - brandWidth, 598, brandSize, '#FFFFFF')}
+    </svg>
+  `);
 }
 
 async function composeBanner(baseImage, article) {
-  const headline = wrapHeadline(article.title).join('\n');
-  const category = SECTION_LABELS[article.section] || 'CYBERSECURITY INTELLIGENCE';
-
-  const [headlineLayer, categoryLayer, brandLayer] = await Promise.all([
-    createTextLayer({
-      text: headline,
-      fontfile: HEADLINE_FONT,
-      font: 'Bricolage Grotesque Bold 58',
-      width: 670,
-      height: 250,
-      color: '#FFFFFF',
-    }),
-    createTextLayer({
-      text: category,
-      fontfile: BODY_FONT,
-      font: 'Instrument Sans Bold 18',
-      width: 320,
-      height: 34,
-      color: '#00D2FF',
-    }),
-    createTextLayer({
-      text: 'CyberSense.Solutions',
-      fontfile: BODY_FONT,
-      font: 'Instrument Sans Bold 20',
-      width: 300,
-      height: 36,
-      color: '#FFFFFF',
-      align: 'right',
-    }),
-  ]);
+  const typographyLayer = buildTypographyLayer(article);
 
   const shading = Buffer.from(`
     <svg width="${BANNER_WIDTH}" height="${BANNER_HEIGHT}" xmlns="http://www.w3.org/2000/svg">
@@ -150,9 +141,7 @@ async function composeBanner(baseImage, article) {
     .resize(BANNER_WIDTH, BANNER_HEIGHT, { fit: 'cover', position: 'attention' })
     .composite([
       { input: shading, top: 0, left: 0 },
-      { input: categoryLayer, top: 78, left: 82 },
-      { input: headlineLayer, top: 166, left: 54 },
-      { input: brandLayer, top: 576, left: 846 },
+      { input: typographyLayer, top: 0, left: 0 },
     ])
     .png({ compressionLevel: 9, adaptiveFiltering: true })
     .toBuffer();
@@ -223,6 +212,7 @@ async function executeLucyBanner(task) {
     }
     const filePath = `headlineBanner/${article.slug}.png`;
     const bannerUrl = `${PUBLIC_BASE_URL}/${filePath}`;
+    const versionedBannerUrl = `${bannerUrl}?v=${Date.now()}`;
 
     await commitBufferToGithub({
       filePath,
@@ -234,7 +224,7 @@ async function executeLucyBanner(task) {
 
     await db.updateArticleBanner(article.id, {
       status: 'ready',
-      imageUrl: bannerUrl,
+      imageUrl: versionedBannerUrl,
       altText: `${article.title} - CyberSense.Solutions article banner`,
       generatedAt: new Date(),
       error: null,
@@ -252,7 +242,7 @@ async function executeLucyBanner(task) {
     await notifyAgents(['Maya', 'Laura'], {
       type: 'ARTICLE_BANNER_READY',
       article_id: article.id,
-      banner_image_url: bannerUrl,
+      banner_image_url: versionedBannerUrl,
       message: `Lucy completed the article banner for "${article.title}".`,
     });
 

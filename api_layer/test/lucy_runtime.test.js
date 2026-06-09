@@ -84,10 +84,21 @@ describe('Lucy article banner runtime', () => {
 
     const result = await composeBanner(base, article);
     const metadata = await sharp(result).metadata();
+    const { data, info } = await sharp(result).raw().toBuffer({ resolveWithObject: true });
+    let brightPixels = 0;
+    for (let i = 0; i < data.length; i += info.channels) {
+      const red = data[i];
+      const green = data[i + 1];
+      const blue = data[i + 2];
+      if ((red > 220 && green > 220 && blue > 220) || (green > 170 && blue > 200)) {
+        brightPixels++;
+      }
+    }
 
     expect(metadata.format).toBe('png');
     expect(metadata.width).toBe(BANNER_WIDTH);
     expect(metadata.height).toBe(BANNER_HEIGHT);
+    expect(brightPixels).toBeGreaterThan(5000);
   });
 
   test('accepts the deployed TOGETHER_AI_API_KEY alias', async () => {
