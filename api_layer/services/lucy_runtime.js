@@ -159,8 +159,8 @@ async function composeBanner(baseImage, article) {
 }
 
 async function generateBaseImage(article) {
-  const apiKey = process.env.TOGETHER_API_KEY;
-  if (!apiKey) throw new Error('TOGETHER_API_KEY not configured');
+  const apiKey = process.env.TOGETHER_API_KEY || process.env.TOGETHER_AI_API_KEY;
+  if (!apiKey) throw new Error('TOGETHER_API_KEY or TOGETHER_AI_API_KEY not configured');
 
   const response = await fetch(TOGETHER_IMAGES_URL, {
     method: 'POST',
@@ -228,7 +228,7 @@ async function executeLucyBanner(task) {
       filePath,
       content: banner,
       commitMessage: `[LUCY] Article headline banner - ${article.title} (Lucy)`,
-      token: process.env.GITHUB_ARTICLE_ASSET_TOKEN,
+      token: process.env.GITHUB_ARTICLE_ASSET_TOKEN || process.env.GITHUB_NEWSLETTER_TOKEN,
       userAgent: 'cybersense-lucy-runtime',
     });
 

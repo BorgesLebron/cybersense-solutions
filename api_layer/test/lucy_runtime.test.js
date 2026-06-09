@@ -34,6 +34,14 @@ const article = {
 };
 
 describe('Lucy article banner runtime', () => {
+  const originalFetch = global.fetch;
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+    delete process.env.TOGETHER_API_KEY;
+    delete process.env.TOGETHER_AI_API_KEY;
+  });
+
   test('builds a text-free editorial image prompt from article context', () => {
     const prompt = buildImagePrompt(article);
 
@@ -75,5 +83,26 @@ describe('Lucy article banner runtime', () => {
     expect(metadata.format).toBe('png');
     expect(metadata.width).toBe(BANNER_WIDTH);
     expect(metadata.height).toBe(BANNER_HEIGHT);
+  });
+
+  test('accepts the deployed TOGETHER_AI_API_KEY alias', async () => {
+    process.env.TOGETHER_AI_API_KEY = 'railway-together-key';
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: [{ b64_json: Buffer.from('image').toString('base64') }] }),
+    });
+
+    const { generateBaseImage } = require('../services/lucy_runtime');
+    const result = await generateBaseImage(article);
+
+    expect(result.toString()).toBe('image');
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer railway-together-key',
+        }),
+      })
+    );
   });
 });
