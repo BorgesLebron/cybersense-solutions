@@ -442,6 +442,41 @@ function renderArticleMarkdown(md, title) {
     .join('');
 }
 
+function articleBannerReady(article) {
+  return article.banner_status === 'skipped'
+    || (article.banner_status === 'ready' && Boolean(article.banner_image_url));
+}
+
+function renderArticleBannerReview(article) {
+  const status = article.banner_status || 'pending';
+  if (status === 'ready' && article.banner_image_url) {
+    return `
+      <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:8px;">Article Banner</div>
+      <div style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:8px;padding:10px;margin-bottom:20px;">
+        <img src="${escapeHtml(article.banner_image_url)}"
+             alt="${escapeHtml(article.banner_alt_text || article.title || 'CyberSense article banner')}"
+             style="display:block;width:100%;aspect-ratio:1200/630;object-fit:cover;border-radius:6px;background:#020813;">
+      </div>`;
+  }
+  if (status === 'skipped') {
+    return `
+      <div class="gate-banner warn" style="margin-bottom:20px;">
+        <div class="gate-icon">!</div>
+        <div><div class="gate-text-title">Banner intentionally skipped</div><div class="gate-text-body">${escapeHtml(article.banner_skipped_reason || 'A GM authorized release without an article banner.')}</div></div>
+      </div>`;
+  }
+  const detail = status === 'failed'
+    ? escapeHtml(article.banner_error || 'Lucy could not generate the banner.')
+    : status === 'generating'
+      ? 'Lucy is generating the article banner.'
+      : 'The article banner has not been generated yet.';
+  return `
+    <div class="gate-banner warn" style="margin-bottom:20px;">
+      <div class="gate-icon">!</div>
+      <div><div class="gate-text-title">Banner ${escapeHtml(status)}</div><div class="gate-text-body">${detail} Generate, retry, or skip it from the Articles admin controls before release.</div></div>
+    </div>`;
+}
+
 async function openArticleReview(id) {
   let article = articles.find(a => a.id === id);
   try {
@@ -461,19 +496,21 @@ async function openArticleReview(id) {
         <span>Status: ${escapeHtml(article.pipeline_status || article.raw_stage || 'preview')}</span>
         <span>Tier: ${escapeHtml(article.access_tier || '')}</span>
         ${article.read_time_min ? `<span>${article.read_time_min} min read</span>` : ''}
+        <span>Banner: ${escapeHtml(article.banner_status || 'pending')}</span>
       </div>
+      ${renderArticleBannerReview(article)}
       <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:8px;">Summary</div>
       <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.6;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:8px;padding:13px;margin-bottom:20px;">${escapeHtml(article.summary || 'No summary available.')}</div>
       <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:8px;">Article Body</div>
       <div style="font-size:13px;color:var(--color-text-primary);line-height:1.75;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:8px;padding:16px;max-height:430px;overflow-y:auto;margin-bottom:20px;">${renderArticleMarkdown(article.body_md, article.title)}</div>
-      ${(article.pipeline_status === 'approved' || article.raw_stage === 'approved') ? `
+      ${(article.pipeline_status === 'approved' || article.raw_stage === 'approved') && articleBannerReady(article) ? `
         <div class="approve-strip ready" style="border-radius:8px;">
           <span class="as-label ready">Maya approved. Final HITL release will publish this article link to Intel.</span>
           <button class="action-btn primary" onclick="approveArticle('${escapeHtml(article.id)}')">Approve Release</button>
         </div>` : `
         <div class="gate-banner warn" style="margin-bottom:0;">
           <div class="gate-icon">!</div>
-          <div><div class="gate-text-title">Not ready for final HITL</div><div class="gate-text-body">This article is still with ${escapeHtml(article.agent || 'the editorial pipeline')}.</div></div>
+          <div><div class="gate-text-title">Not ready for final HITL</div><div class="gate-text-body">${(article.pipeline_status === 'approved' || article.raw_stage === 'approved') ? 'The article is editorially approved, but its banner must be ready or explicitly skipped.' : `This article is still with ${escapeHtml(article.agent || 'the editorial pipeline')}.`}</div></div>
         </div>`}
     </div>`;
   document.getElementById('item-modal').classList.add('open');
@@ -896,7 +933,7 @@ function renderArticles() {
 
   el.innerHTML = `<div class="article-list">` + filtered.map(a => {
     const approved = articleApproved[a.id];
-    const canRelease = a.raw_stage === 'approved';
+    const canRelease = a.raw_stage === 'approved' && articleBannerReady(a);
     return `<div class="article-row" title="${escapeHtml(a.summary || 'Click to review article')}" onclick="openArticleReview('${a.id}')">
       <span class="ar-badge ${a.type}">${a.type === 'innovation' ? 'Innovation' : a.type === 'threat' ? 'Threat Intel' : a.type === 'policy' ? 'Policy' : a.type === 'growth' ? 'Growth' : 'Training'}</span>
       <div class="ar-body">
