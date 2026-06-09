@@ -6,6 +6,7 @@ const contentRouter = express.Router();
 const db = require('../db/queries');
 const { requireUserToken, requireAdminToken, gateContent, TIER_RANK, AGENT_PERMISSIONS, err } = require('../middleware/auth');
 const { sendBriefingEmail } = require('../services/sendgrid');
+const { isArticleBannerReleaseable, pollLucyTasks } = require('../services/lucy_runtime');
 
 function unlockArticle(article) {
   return {
@@ -766,6 +767,16 @@ opsRouter.get('/articles/preview', requireAdminToken(), async (req, res, next) =
       body_md: r.body_md,
       access_tier: r.access_tier,
       read_time_min: r.read_time_min,
+      banner_status: r.banner_status,
+      banner_image_url: r.banner_image_url,
+      banner_alt_text: r.banner_alt_text,
+      banner_error: r.banner_error,
+      banner_attempts: r.banner_attempts,
+      banner_generated_at: r.banner_generated_at,
+      banner_skipped_by: r.banner_skipped_by,
+      banner_skipped_reason: r.banner_skipped_reason,
+      banner_skipped_at: r.banner_skipped_at,
+      share_page_url: r.share_page_url,
       updated: r.updated || '',
     })));
   } catch (e) { next(e); }
@@ -784,6 +795,16 @@ opsRouter.get('/articles/:id/review', requireAdminToken(), async (req, res, next
       access_tier: article.access_tier,
       pipeline_status: article.pipeline_status,
       read_time_min: article.read_time_min,
+      banner_status: article.banner_status,
+      banner_image_url: article.banner_image_url,
+      banner_alt_text: article.banner_alt_text,
+      banner_error: article.banner_error,
+      banner_attempts: article.banner_attempts,
+      banner_generated_at: article.banner_generated_at,
+      banner_skipped_by: article.banner_skipped_by,
+      banner_skipped_reason: article.banner_skipped_reason,
+      banner_skipped_at: article.banner_skipped_at,
+      share_page_url: article.share_page_url,
       summary: article.body_md ? article.body_md.replace(/[#*_`>\n\r-]+/g, ' ').trim().slice(0, 320) : '',
     });
   } catch (e) { next(e); }
@@ -795,6 +816,12 @@ opsRouter.post('/articles/:id/approve-release', requireAdminToken(), async (req,
     if (!article) return res.status(404).json(err('NOT_FOUND', 'Article not found'));
     if (article.pipeline_status !== 'approved') {
       return res.status(422).json(err('INVALID_STATUS', 'Only Maya-approved articles can be released from Preview Articles'));
+    }
+    if (!isArticleBannerReleaseable(article)) {
+      return res.status(422).json(err(
+        'BANNER_NOT_READY',
+        'Article banner must be ready or explicitly skipped by a GM before release.'
+      ));
     }
 
     const updated = await db.advanceArticleStatus(article.id, 'published');
@@ -2150,6 +2177,7 @@ adminRouter.get('/articles/status', requireAdminToken(), async (req, res, next) 
           content_id, agent_name, task_type, status, error_message, started_at, completed_at
         FROM agent_tasks
         WHERE content_type = 'article' AND content_id = ANY($1)
+          AND NOT (agent_name = 'Lucy' AND task_type = 'generate_article_banner')
         ORDER BY content_id, started_at DESC
       `, [ids]).then(r => r.rows);
       tasks.forEach(t => { tasksByArticle[t.content_id] = t; });
@@ -2195,6 +2223,16 @@ adminRouter.get('/articles/status', requireAdminToken(), async (req, res, next) 
         updated_at:      updatedAt,
         datetime_group:  dateTimeGroup,
         public_url:      `/intel/article.html?slug=${a.slug}`,
+        banner_status:   a.banner_status,
+        banner_image_url: a.banner_image_url || null,
+        banner_alt_text: a.banner_alt_text || null,
+        banner_error:    a.banner_error || null,
+        banner_attempts: Number(a.banner_attempts || 0),
+        banner_generated_at: a.banner_generated_at || null,
+        banner_skipped_by: a.banner_skipped_by || null,
+        banner_skipped_reason: a.banner_skipped_reason || null,
+        banner_skipped_at: a.banner_skipped_at || null,
+        share_page_url:  a.share_page_url || null,
       };
     });
 
@@ -2238,6 +2276,130 @@ adminRouter.get('/articles/status', requireAdminToken(), async (req, res, next) 
         created_at:    e.created_at,
       })),
       generated_at: new Date().toISOString(),
+    });
+  } catch (e) { next(e); }
+});
+
+adminRouter.post(
+  ['/articles/:id/banner/generate', '/articles/:id/banner/retry'],
+  requireAdminToken(['gm']),
+  async (req, res, next) => {
+    try {
+      const article = await db.getArticleById(req.params.id);
+      if (!article) return res.status(404).json(err('NOT_FOUND', 'Article not found'));
+      if (!['eic_review', 'qa', 'maya', 'approved'].includes(String(article.pipeline_status))) {
+        return res.status(422).json(err(
+          'ARTICLE_NOT_READY_FOR_BANNER',
+          'Lucy can generate a banner only after Rob completes EIC review.'
+        ));
+      }
+
+      const activeTask = await db.pool.query(
+        `SELECT id FROM agent_tasks
+         WHERE content_type='article' AND content_id=$1
+           AND agent_name='Lucy' AND task_type='generate_article_banner'
+           AND status IN ('queued','in_progress','escalated')
+         LIMIT 1`,
+        [article.id]
+      ).then(r => r.rows[0] || null);
+      if (activeTask) {
+        return res.status(409).json(err('BANNER_TASK_EXISTS', 'An active Lucy banner task already exists'));
+      }
+
+      await db.updateArticleBanner(article.id, {
+        status: 'pending',
+        error: null,
+        clearSkip: true,
+      });
+      const task = await db.createTask({
+        agent_name: 'Lucy',
+        task_type: 'generate_article_banner',
+        content_type: 'article',
+        content_id: article.id,
+        sla_deadline: null,
+      });
+      await db.logAuditEvent({
+        actor: req.user.id,
+        action: req.path.endsWith('/retry') ? 'article_banner_retry' : 'article_banner_generate',
+        target_agent: 'Lucy',
+        reason: `Lucy banner requested for "${article.title}"`,
+        affected_content_id: article.id,
+      });
+      await notifyAgents(['Lucy'], {
+        type: 'ARTICLE_BANNER_REQUESTED',
+        article_id: article.id,
+        title: article.title,
+        task_id: task.id,
+        requested_by: req.user.id,
+      });
+
+      void pollLucyTasks();
+      res.status(202).json({
+        queued: true,
+        article_id: article.id,
+        task_id: task.id,
+        banner_status: 'pending',
+      });
+    } catch (e) { next(e); }
+  }
+);
+
+adminRouter.post('/articles/:id/banner/skip', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    const article = await db.getArticleById(req.params.id);
+    if (!article) return res.status(404).json(err('NOT_FOUND', 'Article not found'));
+    if (!['eic_review', 'qa', 'maya', 'approved'].includes(String(article.pipeline_status))) {
+      return res.status(422).json(err(
+        'ARTICLE_NOT_READY_FOR_BANNER',
+        'A banner can be skipped only after Rob completes EIC review.'
+      ));
+    }
+
+    const reason = String(req.body?.reason || '').trim();
+    if (reason.length < 8) {
+      return res.status(400).json(err('SKIP_REASON_REQUIRED', 'A specific skip reason of at least 8 characters is required'));
+    }
+
+    const skippedAt = new Date();
+    const updated = await db.updateArticleBanner(article.id, {
+      status: 'skipped',
+      error: null,
+      skippedBy: req.user.id,
+      skippedReason: reason,
+      skippedAt,
+    });
+    await db.pool.query(
+      `UPDATE agent_tasks
+       SET status='failed', completed_at=now(),
+           error_message='Banner skipped by GM while task was active'
+       WHERE content_type='article' AND content_id=$1
+         AND agent_name='Lucy' AND task_type='generate_article_banner'
+         AND status IN ('queued','in_progress','escalated')`,
+      [article.id]
+    );
+    await db.logAuditEvent({
+      actor: req.user.id,
+      action: 'article_banner_skipped',
+      target_agent: 'Lucy',
+      reason,
+      affected_content_id: article.id,
+    });
+    await db.logPipelineEvent({
+      content_type: 'article',
+      content_id: article.id,
+      from_status: article.pipeline_status,
+      to_status: article.pipeline_status,
+      agent_name: 'human_executive',
+      notes: `Article banner skipped by GM: ${reason}`,
+    });
+
+    res.json({
+      skipped: true,
+      article_id: article.id,
+      banner_status: updated.banner_status,
+      banner_skipped_by: updated.banner_skipped_by,
+      banner_skipped_reason: updated.banner_skipped_reason,
+      banner_skipped_at: updated.banner_skipped_at,
     });
   } catch (e) { next(e); }
 });

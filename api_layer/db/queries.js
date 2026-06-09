@@ -449,6 +449,44 @@ const createArticle = async ({ title, section, body_md, access_tier, source_ids,
 const getArticle = (slug) => q1('SELECT * FROM articles WHERE slug=$1', [slug]);
 const getArticleById = (id) => q1('SELECT * FROM articles WHERE id=$1', [id]);
 
+const updateArticleBanner = (id, {
+  status,
+  imageUrl,
+  altText,
+  generatedAt,
+  error,
+  incrementAttempts = false,
+  clearSkip = false,
+  skippedBy,
+  skippedReason,
+  skippedAt,
+} = {}) =>
+  q1(`UPDATE articles SET
+        banner_status = COALESCE($2::banner_status, banner_status),
+        banner_image_url = CASE WHEN $3::boolean THEN NULL ELSE COALESCE($4, banner_image_url) END,
+        banner_alt_text = CASE WHEN $3::boolean THEN NULL ELSE COALESCE($5, banner_alt_text) END,
+        banner_generated_at = CASE WHEN $3::boolean THEN NULL ELSE COALESCE($6, banner_generated_at) END,
+        banner_error = $7,
+        banner_attempts = banner_attempts + CASE WHEN $8::boolean THEN 1 ELSE 0 END,
+        banner_skipped_by = CASE WHEN $9::boolean THEN NULL ELSE COALESCE($10, banner_skipped_by) END,
+        banner_skipped_reason = CASE WHEN $9::boolean THEN NULL ELSE COALESCE($11, banner_skipped_reason) END,
+        banner_skipped_at = CASE WHEN $9::boolean THEN NULL ELSE COALESCE($12, banner_skipped_at) END
+      WHERE id=$1 RETURNING *`,
+    [
+      id,
+      status || null,
+      status === 'skipped',
+      imageUrl || null,
+      altText || null,
+      generatedAt || null,
+      error || null,
+      incrementAttempts,
+      clearSkip,
+      skippedBy || null,
+      skippedReason || null,
+      skippedAt || null,
+    ]);
+
 const listArticles = ({ section, access_tier, status = 'published', page = 1, limit = 20, min_body_length = 1000 } = {}) => {
   const conds = [`pipeline_status=$1`];
   const params = [status];
@@ -460,12 +498,16 @@ const listArticles = ({ section, access_tier, status = 'published', page = 1, li
   }
   params.push(limit, (page - 1) * limit);
   return q(`SELECT id,title,slug,section,access_tier,pipeline_status,published_at,view_count,read_time_min,
-                   LEFT(regexp_replace(coalesce(body_md,''), E'[#*_>\\n\\r-]+', ' ', 'g'), 240) AS teaser
+                    banner_status,banner_image_url,banner_alt_text,share_page_url,
+                    LEFT(regexp_replace(coalesce(body_md,''), E'[#*_>\\n\\r-]+', ' ', 'g'), 240) AS teaser
             FROM articles WHERE ${conds.join(' AND ')} ORDER BY published_at DESC NULLS LAST LIMIT $${params.length - 1} OFFSET $${params.length}`, params);
 };
 
 const listArticlesForPreview = () =>
   q(`SELECT id, section AS type, title, slug, body_md, access_tier, read_time_min,
+            banner_status::text, banner_image_url, banner_alt_text, banner_error,
+            banner_generated_at, banner_attempts, banner_skipped_by,
+            banner_skipped_reason, banner_skipped_at, share_page_url,
             pipeline_status::text AS stage,
             CASE pipeline_status::text
               WHEN 'draft' THEN 'James'
@@ -1064,7 +1106,7 @@ module.exports = {
   createThreatRecord, getThreatRecords, getThreatById, linkThreatToArticle,
   createIntelItem, getIntelItems, getIntelRadarItems,
   processIntoRepository, getRepositoryQueue, getRepositorySummary, listApprovedBriefingPreviews, getRepositoryItemDetail, getApprovedContentReferences,
-  createArticle, getArticle, getArticleById, listArticles, listArticlesForPreview, advanceArticleStatus, incrementArticleViews,
+  createArticle, getArticle, getArticleById, updateArticleBanner, listArticles, listArticlesForPreview, advanceArticleStatus, incrementArticleViews,
   getPublishedArticleStats, getArticlePipelineQueue,
   createBriefing, getBriefingByDate, getBriefingById, updateBriefingEditorial, updateBriefingTrainingByte, listBriefings, advanceBriefingStatus, revertBriefingForRevision,
   logPipelineEvent, countRejections, countAgentRejections24h, listPipelineEvents, getKirbyPipelineEvents,
