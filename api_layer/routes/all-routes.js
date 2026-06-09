@@ -854,6 +854,26 @@ opsRouter.post('/articles/:id/approve-release', requireAdminToken(), async (req,
   } catch (e) { next(e); }
 });
 
+opsRouter.post('/articles/:id/reject-delete', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    const article = await db.getArticleById(req.params.id);
+    if (!article) return res.status(404).json(err('NOT_FOUND', 'Article not found'));
+    if (article.pipeline_status === 'published') {
+      return res.status(422).json(err('INVALID_STATUS', 'Published articles cannot be rejected here.'));
+    }
+    await db.logPipelineEvent({
+      content_type: 'article',
+      content_id: article.id,
+      from_status: article.pipeline_status,
+      to_status: 'rejected',
+      agent_name: 'Hector',
+      notes: `Article rejected and deleted at HITL review: "${article.title}"`,
+    });
+    await db.deleteArticle(article.id);
+    res.json({ id: article.id, title: article.title, deleted: true });
+  } catch (e) { next(e); }
+});
+
 // Carousel preview — infrastructure not yet built (Lucy/Oliver generate ad hoc).
 // Returns empty array so the production panel shows the correct empty state.
 opsRouter.get('/carousels/preview', requireAdminToken(), async (req, res, next) => {

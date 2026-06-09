@@ -449,6 +449,13 @@ const createArticle = async ({ title, section, body_md, access_tier, source_ids,
 const getArticle = (slug) => q1('SELECT * FROM articles WHERE slug=$1', [slug]);
 const getArticleById = (id) => q1('SELECT * FROM articles WHERE id=$1', [id]);
 
+const deleteArticle = async (id) => {
+  await q('UPDATE threat_records SET article_id=NULL WHERE article_id=$1', [id]);
+  await q('UPDATE intel_items SET article_id=NULL WHERE article_id=$1', [id]);
+  await q("UPDATE agent_tasks SET status='cancelled' WHERE content_id=$1 AND status IN ('queued','in_progress')", [id]);
+  return q1('DELETE FROM articles WHERE id=$1 RETURNING id,title', [id]);
+};
+
 const updateArticleBanner = (id, {
   status,
   imageUrl,
@@ -1106,7 +1113,7 @@ module.exports = {
   createThreatRecord, getThreatRecords, getThreatById, linkThreatToArticle,
   createIntelItem, getIntelItems, getIntelRadarItems,
   processIntoRepository, getRepositoryQueue, getRepositorySummary, listApprovedBriefingPreviews, getRepositoryItemDetail, getApprovedContentReferences,
-  createArticle, getArticle, getArticleById, updateArticleBanner, listArticles, listArticlesForPreview, advanceArticleStatus, incrementArticleViews,
+  createArticle, getArticle, getArticleById, deleteArticle, updateArticleBanner, listArticles, listArticlesForPreview, advanceArticleStatus, incrementArticleViews,
   getPublishedArticleStats, getArticlePipelineQueue,
   createBriefing, getBriefingByDate, getBriefingById, updateBriefingEditorial, updateBriefingTrainingByte, listBriefings, advanceBriefingStatus, revertBriefingForRevision,
   logPipelineEvent, countRejections, countAgentRejections24h, listPipelineEvents, getKirbyPipelineEvents,
