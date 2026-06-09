@@ -12,7 +12,7 @@ const BANNER_WIDTH = 1200;
 const BANNER_HEIGHT = 630;
 const POLL_WINDOW_HOURS = 48;
 const PUBLIC_BASE_URL = (process.env.PUBLIC_SITE_URL || 'https://cybersense.solutions').replace(/\/$/, '');
-const FONT_ROOT = path.resolve(__dirname, '..', '..', 'tools', 'fonts');
+const FONT_ROOT = path.resolve(__dirname, '..', 'assets', 'fonts');
 const HEADLINE_FONT = path.join(FONT_ROOT, 'BricolageGrotesque-Bold.ttf');
 const BODY_FONT = path.join(FONT_ROOT, 'InstrumentSans-Bold.ttf');
 
