@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const sharp = require('sharp');
 
 jest.mock('../db/queries', () => ({
@@ -68,6 +70,9 @@ describe('Lucy article banner runtime', () => {
   });
 
   test('composes a deterministic 1200x630 PNG with bundled fonts', async () => {
+    expect(fs.existsSync(path.resolve(__dirname, '..', 'assets', 'fonts', 'BricolageGrotesque-Bold.ttf'))).toBe(true);
+    expect(fs.existsSync(path.resolve(__dirname, '..', 'assets', 'fonts', 'InstrumentSans-Bold.ttf'))).toBe(true);
+
     const base = await sharp({
       create: {
         width: 1344,
