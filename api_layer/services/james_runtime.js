@@ -322,33 +322,42 @@ async function executeJamesManualUrl(url, articleType) {
 
   console.log(JSON.stringify({ ts, runtime: 'james', event: 'MANUAL_URL_START', url, source_type: sourceType }));
 
-  const content = await fetchUrlContent(url);
-  const title = extractUrlTitle(url, content);
+  try {
+    const content = await fetchUrlContent(url);
+    const title = extractUrlTitle(url, content);
 
-  const item = {
-    repository_id: null,
-    source_id: ZERO_UUID,
-    source_type: sourceType,
-    section,
-    title,
-    category: sourceType,
-    priority: null,
-    tags: [],
-    source_url: url,
-    summary: content,
-    normalized_data: {},
-  };
+    console.log(JSON.stringify({ ts, runtime: 'james', event: 'MANUAL_URL_FETCH_OK', url, title, content_len: content.length }));
 
-  const draft = await applyJamesDraft(item);
-  if (draft.issues.length > 0) {
-    const error = `Intel article draft blocked: ${draft.issues.join('; ')}`;
-    console.error(JSON.stringify({ ts, runtime: 'james', event: 'MANUAL_URL_BLOCKED', url, issues: draft.issues }));
-    throw new Error(error);
+    const item = {
+      repository_id: null,
+      source_id: ZERO_UUID,
+      source_type: sourceType,
+      section,
+      title,
+      category: sourceType,
+      priority: null,
+      tags: [],
+      source_url: url,
+      summary: content,
+      normalized_data: {},
+    };
+
+    const draft = await applyJamesDraft(item);
+    if (draft.issues.length > 0) {
+      const error = `Intel article draft blocked: ${draft.issues.join('; ')}`;
+      console.error(JSON.stringify({ ts, runtime: 'james', event: 'MANUAL_URL_BLOCKED', url, issues: draft.issues }));
+      throw new Error(error);
+    }
+
+    draft.source_ids = [];
+
+    const article = await apiCall('/api/pipeline/articles', 'POST', draft);
+    console.log(JSON.stringify({ ts, runtime: 'james', event: 'MANUAL_URL_COMPLETE', url, article_id: article.id, slug: article.slug }));
+    return article;
+  } catch (e) {
+    console.error(JSON.stringify({ ts, runtime: 'james', event: 'MANUAL_URL_ERROR', url, source_type: sourceType, error: e.message }));
+    throw e;
   }
-
-  const article = await apiCall('/api/pipeline/articles', 'POST', draft);
-  console.log(JSON.stringify({ ts, runtime: 'james', event: 'MANUAL_URL_COMPLETE', url, article_id: article.id }));
-  return article;
 }
 
 async function pollJamesTasks() {
