@@ -49,6 +49,11 @@ Required structure:
 - Modernization and AI Insight
 - Final Thought
 
+INVIOLABLE FORMATTING RULES — do not override under any circumstance:
+- Modernization and AI Insight must contain exactly two entries separated by ---. Preserve both entries as written. Do not merge, consolidate, summarize, or drop either entry regardless of perceived similarity.
+- Situational Awareness must contain exactly three threat entries separated by ---.
+- Training Byte must reproduce the provided content exactly — do not rewrite it.
+
 Output only the final newsletter text in Markdown. Do not include meta-commentary, edit notes, explanations, or references to subordinate agents.
 `.trim();
 
@@ -82,6 +87,16 @@ function validateFinalEdition(text) {
 
   if (/^(sure|certainly|here is|below is)\b/i.test(body)) {
     issues.push('LLM final edition contains conversational preamble');
+  }
+
+  // Modernization must have exactly 2 entries separated by ---
+  const modIdx   = body.toLowerCase().indexOf('modernization');
+  const finalIdx = body.toLowerCase().indexOf('## final', modIdx > -1 ? modIdx : 0);
+  if (modIdx > -1) {
+    const modSection = finalIdx > modIdx ? body.slice(modIdx, finalIdx) : body.slice(modIdx);
+    if (!/\n---/.test(modSection)) {
+      issues.push('Modernization section missing --- separator — must contain exactly 2 entries');
+    }
   }
 
   return issues;
