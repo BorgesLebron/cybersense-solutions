@@ -452,7 +452,7 @@ const getArticleById = (id) => q1('SELECT * FROM articles WHERE id=$1', [id]);
 const deleteArticle = async (id) => {
   await q('UPDATE threat_records SET article_id=NULL WHERE article_id=$1', [id]);
   await q('UPDATE intel_items SET article_id=NULL WHERE article_id=$1', [id]);
-  await q("UPDATE agent_tasks SET status='cancelled' WHERE content_id=$1 AND status IN ('queued','in_progress')", [id]);
+  await q("DELETE FROM agent_tasks WHERE content_id=$1 AND status IN ('queued','in_progress')", [id]);
   return q1('DELETE FROM articles WHERE id=$1 RETURNING id,title', [id]);
 };
 
