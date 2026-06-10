@@ -54,7 +54,7 @@ Output only the final newsletter text in Markdown. Do not include meta-commentar
 
 function buildEdPrompt(briefing) {
   const trainingByteBlock = briefing.training_byte_body_md
-    ? `Training Byte — reproduce this content exactly in the Training Byte section (title: "${briefing.training_byte_title}"):\n\n${briefing.training_byte_body_md}`
+    ? `Training Byte — in the Training Byte section, write **${briefing.training_byte_title}** as a standalone bold line (the topic title), then reproduce the following body content exactly:\n\n${briefing.training_byte_body_md}`
     : `Training byte ID: ${briefing.training_byte_id || 'missing'} — write a Training Byte aligned to today's threats`;
 
   return `
