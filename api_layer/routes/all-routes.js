@@ -858,16 +858,11 @@ opsRouter.post('/articles/:id/reject-delete', requireAdminToken(['gm']), async (
   try {
     const article = await db.getArticleById(req.params.id);
     if (!article) return res.status(404).json(err('NOT_FOUND', 'Article not found'));
-    if (article.pipeline_status === 'published') {
-      return res.status(422).json(err('INVALID_STATUS', 'Published articles cannot be rejected here.'));
-    }
     await db.logPipelineEvent({
-      content_type: 'article',
-      content_id: article.id,
-      from_status: article.pipeline_status,
-      to_status: 'rejected',
+      content_type: 'article', content_id: article.id,
+      from_status: article.pipeline_status, to_status: 'rejected',
       agent_name: 'Hector',
-      notes: `Article rejected and deleted at HITL review: "${article.title}"`,
+      notes: `Article force-deleted at HITL review (was ${article.pipeline_status}): "${article.title}"`,
     });
     await db.deleteArticle(article.id);
     res.json({ id: article.id, title: article.title, deleted: true });
@@ -2300,6 +2295,19 @@ adminRouter.get('/articles/status', requireAdminToken(), async (req, res, next) 
       })),
       generated_at: new Date().toISOString(),
     });
+  } catch (e) { next(e); }
+});
+
+adminRouter.get('/articles/recent-published', requireAdminToken(['gm']), async (req, res, next) => {
+  try {
+    const articles = await db.pool.query(`
+      SELECT id, title, slug, section, published_at
+      FROM articles
+      WHERE pipeline_status = 'published'
+      ORDER BY published_at DESC NULLS LAST
+      LIMIT 10
+    `).then(r => r.rows);
+    res.json({ articles });
   } catch (e) { next(e); }
 });
 

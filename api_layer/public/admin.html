@@ -489,6 +489,10 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
             <div class="card-hd">Article pipeline <span id="ar-status-badge" class="badge b-gray">Loading</span></div>
             <div id="ar-article-list" style="min-height:48px;"></div>
           </div>
+          <div class="card" style="margin-top:10px;">
+            <div class="card-hd">Recently published <span style="font-size:10px;color:var(--color-text-tertiary);font-weight:400;">— delete to unpublish</span></div>
+            <div id="ar-published-list" style="min-height:32px;"><div style="font-size:12px;color:var(--color-text-tertiary);padding:6px 0;">Loading...</div></div>
+          </div>
           <div class="card nl-chat">
             <div class="card-hd">Troubleshoot with Maya</div>
             <div class="nl-chat-log" id="ar-chat-log">
@@ -1328,13 +1332,31 @@ async function loadArticlesData() {
             ${a.banner_error ? `<div style="font-size:10px;color:var(--color-text-danger);margin-top:2px;">Lucy: ${esc(a.banner_error)}</div>` : ''}
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:5px;">${bannerControls}${bannerPreview}</div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">
-            ${releaseBtn}
-            ${rejectBtn}
-          </div>
+          <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">${releaseBtn}${rejectBtn}</div>
         </div>`;
       }).join('');
     }
+
+    try {
+      const { articles: pubArticles } = await CS.Auth.apiFetch('/api/admin/articles/recent-published');
+      const pubEl = document.getElementById('ar-published-list');
+      if (pubEl) {
+        if (!pubArticles || !pubArticles.length) {
+          pubEl.innerHTML = '<div style="font-size:12px;color:var(--color-text-tertiary);padding:6px 0;">No published articles.</div>';
+        } else {
+          pubEl.innerHTML = pubArticles.map(a => {
+            const dateStr = a.published_at ? new Date(a.published_at).toLocaleDateString('en-US', { month:'short', day:'numeric' }) : '—';
+            return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--color-border-tertiary);">
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:12px;font-weight:500;color:var(--color-text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${esc(a.title)}">${esc(a.title)}</div>
+                <div style="font-size:10px;color:var(--color-text-tertiary);">${esc(a.section)} · ${dateStr}</div>
+              </div>
+              <button style="font-size:11px;padding:3px 8px;border-radius:4px;background:#450a0a;color:#fca5a5;border:1px solid #7f1d1d;cursor:pointer;flex-shrink:0;" onclick="rejectDeleteArticle('${esc(a.id)}',${JSON.stringify(a.title)},this)">Delete</button>
+            </div>`;
+          }).join('');
+        }
+      }
+    } catch (_) {}
 
     const barsEl = document.getElementById('ar-section-bars');
     if (total === 0) {
@@ -1460,6 +1482,18 @@ function renderArticleTriggerControls(articles, summary) {
 function countDesc(count, label, agent) {
   if (!count) return 'No articles currently waiting for ' + agent;
   return count + ' ' + label + (count === 1 ? '' : 's') + ' ready or recoverable';
+}
+
+async function rejectDeleteArticle(id, title, btn) {
+  if (!confirm('Force-delete this article?\n\n"' + title + '"\n\nSource items will be returned to the pipeline pool.')) return;
+  btn.disabled = true; btn.textContent = '...';
+  try {
+    await CS.Auth.apiFetch('/api/ops/articles/' + id + '/reject-delete', { method: 'POST' });
+    await loadArticlesData();
+  } catch (e) {
+    btn.disabled = false; btn.textContent = 'Delete';
+    alert('Delete failed: ' + (e.message || 'Unknown error'));
+  }
 }
 
 async function releaseArticle(id, btn) {
