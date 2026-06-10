@@ -744,7 +744,11 @@ body{font-family:var(--font-sans);font-size:13px;background:var(--color-backgrou
               <pre id="hitl-preview" style="font-size:11px;line-height:1.6;max-height:300px;overflow-y:auto;background:var(--color-background-secondary);padding:10px;border-radius:4px;border:0.5px solid var(--color-border-tertiary);white-space:pre-wrap;word-break:break-word;color:var(--color-text-secondary);">Loading draft...</pre>
             </div>
             <div id="hitl-tab-edit" style="display:none;">
-              <textarea id="hitl-edit-textarea" style="width:100%;height:260px;font-size:11px;line-height:1.5;background:var(--color-background-secondary);border:0.5px solid var(--color-border-primary);border-radius:4px;padding:10px;color:var(--color-text-primary);resize:vertical;box-sizing:border-box;" placeholder="Draft loads here..."></textarea>
+              <div style="margin-bottom:6px;">
+                <label style="font-size:10px;font-weight:600;color:var(--color-text-secondary);display:block;margin-bottom:3px;">Subject Line</label>
+                <input id="hitl-subject-input" type="text" style="width:100%;font-size:11px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-primary);border-radius:4px;padding:6px 10px;color:var(--color-text-primary);box-sizing:border-box;" placeholder="Edition subject line…" maxlength="120">
+              </div>
+              <textarea id="hitl-edit-textarea" style="width:100%;height:240px;font-size:11px;line-height:1.5;background:var(--color-background-secondary);border:0.5px solid var(--color-border-primary);border-radius:4px;padding:10px;color:var(--color-text-primary);resize:vertical;box-sizing:border-box;" placeholder="Draft loads here..."></textarea>
               <button class="pc-btn" id="btn-hitl-save" onclick="saveHITLEdits()" style="margin-top:6px;">Save Edits</button>
             </div>
             <div style="margin-top:10px;padding-top:10px;border-top:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;gap:10px;">
@@ -2325,6 +2329,8 @@ async function loadHITLPreview() {
     const body = data.body_md || '';
     document.getElementById('hitl-preview').textContent = body;
     document.getElementById('hitl-edit-textarea').value = body;
+    const subjectEl = document.getElementById('hitl-subject-input');
+    if (subjectEl) subjectEl.value = data.subject_line || '';
   } catch (e) {
     document.getElementById('hitl-preview').textContent = `Error loading draft: ${e.message}`;
   }
@@ -2333,11 +2339,14 @@ async function loadHITLPreview() {
 async function saveHITLEdits() {
   if (!_mpState.briefing_id) return;
   const body_md = document.getElementById('hitl-edit-textarea').value;
+  const subject_line = (document.getElementById('hitl-subject-input')?.value || '').trim();
   const btn = document.getElementById('btn-hitl-save');
   btn.disabled = true; btn.textContent = 'Saving…';
+  const payload = { body_md };
+  if (subject_line) payload.subject_line = subject_line;
   try {
     await CS.Auth.apiFetch(`/api/admin/briefings/${_mpState.briefing_id}`, {
-      method: 'PATCH', body: JSON.stringify({ body_md }),
+      method: 'PATCH', body: JSON.stringify(payload),
     });
     document.getElementById('hitl-preview').textContent = body_md;
     pcLog('✓ Draft edits saved.', true);

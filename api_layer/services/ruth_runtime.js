@@ -494,10 +494,13 @@ async function buildManualAcquisitionsOutline(threatItems, innovationItems, grow
   });
 
   const text = (message.content[0]?.text || '').trim();
-  const subjectMatch = text.match(/^SUBJECT:\s*(.+)$/m);
+  const subjectMatch  = text.match(/^SUBJECT:\s*(.+)$/m);
+  const h1ThemeMatch  = text.match(/^#\s+[^:\n]+:\s*(.+)$/m);
   const subjectLine = subjectMatch
     ? subjectMatch[1].trim().slice(0, 120)
-    : `Daily Awareness Brief — ${editionDate}`;
+    : h1ThemeMatch
+      ? h1ThemeMatch[1].trim().slice(0, 120)
+      : `Daily Awareness Brief — ${editionDate}`;
   const body_md = text.replace(/^SUBJECT:.*$/m, '').trimEnd();
   return { subjectLine, body_md };
 }
