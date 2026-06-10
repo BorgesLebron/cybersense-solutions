@@ -135,13 +135,12 @@ async function apiCall(path, method = 'GET', body = null) {
 function normalizeCandidate(row) {
   const normalized = row.normalized_data || {};
   const source = row.source_data || {};
-  const sourceType = row.source_type === 'policy' ? 'innovation' : row.source_type;
 
   return {
     repository_id: row.repository_id,
     source_id: row.source_id,
     source_type: row.source_type,
-    section: sourceType === 'threat' ? 'threat' : sourceType,
+    section: row.source_type,
     title: row.title || normalized.title || source.headline || source.threat_name || 'CyberSense Intel Article',
     category: row.category || normalized.category || source.category || row.source_type,
     summary: row.summary || normalized.summary || source.summary || source.raw_data || '',
@@ -206,6 +205,10 @@ async function getNextIntelArticleCandidate(sourceType = null) {
     LEFT JOIN threat_records t ON t.id = r.source_id AND r.source_type = 'threat'
     WHERE r.ready_for_intel = true
       AND r.source_type = ANY($1)
+      AND (
+        (r.source_type = 'threat' AND t.id IS NOT NULL) OR
+        (r.source_type IN ('innovation','growth','policy') AND i.id IS NOT NULL)
+      )
       AND COALESCE(i.article_id, t.article_id) IS NULL
     ORDER BY CASE r.source_type
       WHEN 'threat'     THEN 1
