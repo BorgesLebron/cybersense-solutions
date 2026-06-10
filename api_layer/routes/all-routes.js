@@ -1738,8 +1738,8 @@ adminRouter.post('/trigger/article-james', requireAdminToken(['gm']), async (req
           await executeJamesDraftArticle(resetTask, { sourceType: filteredType });
           const finalTask = await db.pool.query('SELECT status, error_message FROM agent_tasks WHERE id=$1', [t.id]).then(r => r.rows[0]);
           if (finalTask?.status === 'complete') {
-            await pollJasonTasks();
-            return res.json({ triggered: true, agent: 'James', source_type: filteredType, success: true, message: `Stuck task cleared and completed${typeLabel}. Jason has been notified.` });
+            setImmediate(() => pollJasonTasks().catch(e => console.error(JSON.stringify({ ts: new Date().toISOString(), runtime: 'article-james-trigger', event: 'JASON_BG_ERROR', error: e.message }))));
+            return res.json({ triggered: true, agent: 'James', source_type: filteredType, success: true, message: `Stuck task cleared and completed${typeLabel}. Jason is running — check Articles Console in ~30s.` });
           }
           return res.json({ triggered: true, agent: 'James', source_type: filteredType, success: false, message: `Task reset — James ${finalTask?.status || 'unknown'}: ${finalTask?.error_message || 'check Railway logs'}` });
         }
@@ -1772,10 +1772,11 @@ adminRouter.post('/trigger/article-james', requireAdminToken(['gm']), async (req
     ).then(r => r.rows[0]);
 
     if (finalTask?.status === 'complete') {
-      // Jason's cron only runs 4–9 AM CT. Poll immediately so manual afternoon
-      // triggers don't leave the article stuck queued until next morning.
-      await pollJasonTasks();
-      return res.json({ triggered: true, agent: 'James', source_type: filteredType, success: true, message: `James drafted an article${typeLabel}. Jason has been notified — check Articles Console.` });
+      // Jason's cron only runs 4–9 AM CT. Fire immediately in the background so
+      // manual afternoon triggers don't leave articles queued until next morning.
+      // setImmediate avoids Railway HTTP timeout from blocking James+Jason LLM calls.
+      setImmediate(() => pollJasonTasks().catch(e => console.error(JSON.stringify({ ts: new Date().toISOString(), runtime: 'article-james-trigger', event: 'JASON_BG_ERROR', error: e.message }))));
+      return res.json({ triggered: true, agent: 'James', source_type: filteredType, success: true, message: `James drafted an article${typeLabel}. Jason is running — check Articles Console in ~30s.` });
     }
     if (finalTask?.status === 'failed') {
       return res.json({ triggered: true, agent: 'James', source_type: filteredType, success: false, message: `James failed${typeLabel}: ${finalTask.error_message || 'check Railway logs'}` });
@@ -1795,8 +1796,10 @@ adminRouter.post('/trigger/article-james-url', requireAdminToken(['gm']), async 
     const { executeJamesManualUrl } = require('../services/james_runtime');
     const { pollJasonTasks } = require('../services/scheduler');
     const article = await executeJamesManualUrl(url, sourceType);
-    await pollJasonTasks();
-    return res.json({ triggered: true, agent: 'James', success: true, article_id: article.id, message: `James drafted article from URL (${sourceType}). Jason notified — check Articles Console.` });
+    // Fire Jason in background — combined James+Jason LLM time can exceed Railway's
+    // HTTP timeout, causing silent failures where Hector sees James→Rob skipping Jason.
+    setImmediate(() => pollJasonTasks().catch(e => console.error(JSON.stringify({ ts: new Date().toISOString(), runtime: 'article-james-url-trigger', event: 'JASON_BG_ERROR', error: e.message }))));
+    return res.json({ triggered: true, agent: 'James', success: true, article_id: article.id, message: `James drafted article from URL (${sourceType}). Jason is running — check Articles Console in ~30s.` });
   } catch (e) { next(e); }
 });
 
