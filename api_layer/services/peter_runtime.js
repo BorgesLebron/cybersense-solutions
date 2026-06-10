@@ -60,6 +60,11 @@ Required structure:
 - Modernization and AI Insight
 - Final Thought
 
+INVIOLABLE FORMATTING RULES — do not override under any circumstance:
+- Final Thought must appear as a top-level section heading and must contain a closing editorial reflection. It is not optional.
+- Modernization and AI Insight must contain exactly two entries separated by ---.
+- Situational Awareness must contain exactly three threat entries separated by ---.
+
 Output only the revised newsletter draft in Markdown. Do not include meta-commentary, edit notes, explanations, or references to internal workflow.
 `.trim();
 
@@ -173,17 +178,24 @@ async function applyDevEdit(briefing) {
 
   if (issues.length > 0) return { issues };
 
-  const { text } = await generateText({
-    model: getPeterBrain(),
-    system: PETER_SYSTEM_PROMPT,
-    prompt: buildPeterPrompt(briefing),
-  });
+  const MAX_ATTEMPTS = 3;
+  let lastIssues = [];
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const { text } = await generateText({
+      model: getPeterBrain(),
+      system: PETER_SYSTEM_PROMPT,
+      prompt: buildPeterPrompt(briefing),
+    });
 
-  const body_md = (text || '').trim();
-  const llmIssues = validateEditedDraft(body_md);
-  if (llmIssues.length > 0) return { issues: llmIssues };
+    const body_md = (text || '').trim();
+    const llmIssues = validateEditedDraft(body_md);
+    if (llmIssues.length === 0) return { issues: [], body_md };
 
-  return { issues: [], body_md };
+    lastIssues = llmIssues;
+    console.warn(JSON.stringify({ ts: new Date().toISOString(), runtime: 'peter', event: 'RETRY', attempt, issues: llmIssues }));
+  }
+
+  return { issues: lastIssues };
 }
 
 // ── Task execution ────────────────────────────────────────────────────────────
