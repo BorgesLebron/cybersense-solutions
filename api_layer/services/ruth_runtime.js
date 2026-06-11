@@ -457,6 +457,8 @@ function formatManualTopicSelection(threatItems, innovationItems, growthItem, ed
   const lines = [
     `Edition Date: ${editionDate}`,
     '',
+    'Begin your response with exactly one line in this format: SUBJECT: <thematic 5-7 word headline for this edition>',
+    '',
     'SITUATIONAL AWARENESS — THREAT INTELLIGENCE:',
     ...threatItems.map((t, i) => [
       `${i + 1}. ${t.title}`,
@@ -477,9 +479,6 @@ function formatManualTopicSelection(threatItems, innovationItems, growthItem, ed
     `   Content: ${growthItem.content}`,
     '',
     'TRAINING BYTE — Write [TRAINING BYTE PLACEHOLDER] exactly as shown. Do not write any training content here.',
-    '',
-    '---',
-    'After your draft, append one line: SUBJECT: <concise email subject line for this edition, under 60 characters>',
   ];
   return lines.join('\n');
 }
@@ -488,7 +487,7 @@ async function buildManualAcquisitionsOutline(threatItems, innovationItems, grow
   const client = new Anthropic();
   const message = await client.messages.create({
     model: 'claude-sonnet-4-6',
-    max_tokens: 1800,
+    max_tokens: 4096,
     system: MANUAL_ACQUISITIONS_SYSTEM_PROMPT,
     messages: [{ role: 'user', content: formatManualTopicSelection(threatItems, innovationItems, growthItem, editionDate) }],
   });
