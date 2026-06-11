@@ -109,9 +109,17 @@ contentRouter.get('/briefings/:date', requireUserToken('free'), async (req, res,
 contentRouter.get('/radar', requireUserToken('free'), async (req, res, next) => {
   try {
     const { severity, page = 1, limit = 50 } = req.query;
-    const threats = await db.getThreatRecords({ severity, page: +page, limit: +limit });
+    const [threats, countRow] = await Promise.all([
+      db.getThreatRecords({ severity, page: +page, limit: +limit }),
+      db.pool.query(
+        severity
+          ? `SELECT COUNT(*) FROM threat_records WHERE severity=$1`
+          : `SELECT COUNT(*) FROM threat_records`,
+        severity ? [severity] : []
+      ).then(r => r.rows[0]),
+    ]);
     const data = threats.map(t => ({ id: t.id, severity: t.severity, threat_name: t.threat_name, cve_id: t.cve_id, cvss_score: t.cvss_score, category: t.category, threat_category: t.threat_category || null, cwe_id: t.cwe_id || null, sector_tags: t.sector_tags || [], tags: t.tags, priority: t.priority, ingested_at: t.ingested_at, article_link: t.has_article ? `/intel/${t.article_id}` : null }));
-    res.json({ data, meta: { page: +page, limit: +limit, subscriber_view: true } });
+    res.json({ data, meta: { page: +page, limit: +limit, total: +countRow.count, subscriber_view: true } });
   } catch (e) { next(e); }
 });
 
