@@ -830,13 +830,13 @@ function sevBadge(s) {
 /* ════════════════════════════════════════════════
    STATS BAR
 ════════════════════════════════════════════════ */
-function updateStats(threats, totalOverride) {
-  const total = threats.length;
-  const crit  = threats.filter(t=>t.severity==='critical').length;
-  const high  = threats.filter(t=>t.severity==='high').length;
-  const med   = threats.filter(t=>t.severity==='medium').length;
-  const low   = total - crit - high - med;
-  document.getElementById('stat-total').textContent   = totalOverride != null ? totalOverride.toLocaleString() : total;
+function updateStats(threats, totalOverride, breakdown) {
+  const total = totalOverride != null ? totalOverride : threats.length;
+  const crit  = breakdown ? breakdown.critical : threats.filter(t=>t.severity==='critical').length;
+  const high  = breakdown ? breakdown.high     : threats.filter(t=>t.severity==='high').length;
+  const med   = breakdown ? breakdown.medium   : threats.filter(t=>t.severity==='medium').length;
+  const low   = breakdown ? breakdown.low      : total - crit - high - med;
+  document.getElementById('stat-total').textContent   = total.toLocaleString();
   document.getElementById('stat-crit').textContent    = crit;
   document.getElementById('stat-high').textContent    = high;
   document.getElementById('stat-med').textContent     = med;
@@ -1757,7 +1757,7 @@ async function loadRadar(user) {
   try {
     const data = await CS.Auth.apiFetch('/api/content/radar?limit=500');
     allThreats = data.data || [];
-    updateStats(allThreats, data.meta?.total);
+    updateStats(allThreats, data.meta?.total, data.meta?.breakdown);
     renderTop10(allThreats);
     renderFeed(allThreats, isSub);
     renderHeatmap(allThreats);
